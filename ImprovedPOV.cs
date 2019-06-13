@@ -40,10 +40,13 @@ namespace Acidbubbles.VaM.Plugins
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
-
+        private FreeControllerV3 _headControl;
         private JSONStorableFloat _cameraRecess;
         private JSONStorableFloat _cameraUpDown;
         private JSONStorableBool _hideFace;
+        private JSONStorableBool _possessedOnly;
+        private bool _active;
+        private bool _destroyed;
 
         public override void Init()
         {
@@ -55,19 +58,41 @@ namespace Acidbubbles.VaM.Plugins
                 _person = containingAtom;
                 _mainCamera = CameraTarget.centerTarget.targetCamera;
                 _possessor = SuperController.FindObjectsOfType(typeof(Possessor)).Where(p => p.name == "CenterEye").Select(p => p as Possessor).First();
+                _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
 
 #if (POV_DIAGNOSTICS)
                 SuperController.LogMessage("PoV Person: " + GetDebugHierarchy(_person.gameObject));
 #endif
 
                 InitControls();
-                UpdateCameraPosition();
-                UpdateFaceMaterialsEnabled();
-                UpdatePossessorMeshVisibility();
+                ApplyAll();
             }
             catch (Exception e)
             {
                 SuperController.LogError("Failed to initialize Improved PoV: " + e);
+            }
+        }
+
+        public void OnDestroy()
+        {
+            _destroyed = true;
+            ApplyAll();
+        }
+
+        public void Update()
+        {
+            if (_destroyed) return;
+            var possessed = _headControl.possessed || !_possessedOnly.val;
+
+            if (!_active && possessed)
+            {
+                _active = true;
+                ApplyAll();
+            }
+            else if (_active && !possessed)
+            {
+                _active = false;
+                ApplyAll();
             }
         }
 
@@ -89,7 +114,7 @@ namespace Acidbubbles.VaM.Plugins
                 var recessSlider = CreateSlider(_cameraRecess, false);
                 recessSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    UpdateCameraPosition();
+                    ApplyCameraPosition();
                 });
 
                 _cameraUpDown = new JSONStorableFloat("Camera UpDown", 0f, -0.2f, 0.2f, false);
@@ -97,7 +122,7 @@ namespace Acidbubbles.VaM.Plugins
                 var upDownSlider = CreateSlider(_cameraUpDown, false);
                 upDownSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    UpdateCameraPosition();
+                    ApplyCameraPosition();
                 });
 
                 var clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
@@ -113,8 +138,17 @@ namespace Acidbubbles.VaM.Plugins
                 var hideFaceCheckbox = CreateToggle(_hideFace, true);
                 hideFaceCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
-                    UpdateFaceMaterialsEnabled();
+                    ApplyFaceMaterialsEnabled();
                 });
+
+                _possessedOnly = new JSONStorableBool("Possessed Only", true);
+                RegisterBool(_possessedOnly);
+                var possessedOnlyCheckbox = CreateToggle(_possessedOnly, true);
+                possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
+                {
+                    ApplyAll();
+                });
+
             }
             catch (Exception e)
             {
@@ -122,17 +156,23 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
-        private void UpdateFaceMaterialsEnabled()
+        private void ApplyAll()
+        {
+            ApplyCameraPosition();
+            ApplyFaceMaterialsEnabled();
+            ApplyPossessorMeshVisibility();
+        }
+
+        private void ApplyFaceMaterialsEnabled()
         {
             try
             {
                 var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
-                var enabled = !_hideFace.val;
+                var enabled = _destroyed || !_active || !_hideFace.val;
 
                 for (int i = 0; i < skin.GPUmaterials.Length; i++)
                 {
                     Material mat = skin.GPUmaterials[i];
-                    SuperController.LogMessage(mat.name);
                     if (MaterialsToHide.Any(materialToHide => mat.name.StartsWith(materialToHide)))
                     {
                         skin.materialsEnabled[i] = enabled;
@@ -147,8 +187,10 @@ namespace Acidbubbles.VaM.Plugins
 
 #if (POV_DIAGNOSTICS)
 
-        private void UpdateFaceShaders() {
-            try{
+        private void ApplyFaceShaders()
+        {
+            try
+            {
                 var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
                 var standardShader = Shader.Find("Standard");
                 // https://docs.unity3d.com/ScriptReference/Material-shader.html
@@ -186,7 +228,7 @@ namespace Acidbubbles.VaM.Plugins
 
 #endif
 
-        private void UpdateCameraPosition()
+        private void ApplyCameraPosition()
         {
             try
             {
@@ -200,11 +242,13 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
-        private void UpdatePossessorMeshVisibility()
+        private void ApplyPossessorMeshVisibility()
         {
-            _possessor.gameObject.transform.Find("Capsule").gameObject.SetActive(false);
-            _possessor.gameObject.transform.Find("Sphere1").gameObject.SetActive(false);
-            _possessor.gameObject.transform.Find("Sphere2").gameObject.SetActive(false);
+            var meshActive = _destroyed || !_active;
+
+            _possessor.gameObject.transform.Find("Capsule").gameObject.SetActive(meshActive);
+            _possessor.gameObject.transform.Find("Sphere1").gameObject.SetActive(meshActive);
+            _possessor.gameObject.transform.Find("Sphere2").gameObject.SetActive(meshActive);
         }
 
 #if (POV_DIAGNOSTICS)

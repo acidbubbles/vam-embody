@@ -12,7 +12,7 @@ Still under development. A short list of what's done or not:
 - [x] Hide the mouth and lips (not really useful, but it's less scary when seen in a mirror)
 - [x] Hide the possessor geometry (MonitorRig or CenterEye)
 - [ ] If using materials to hide stuff, make sure we only hide our face, not other models'
-- [ ] Only hide the face mesh when in possession (might require a dirty flag)
+- [x] Only hide the face mesh when in possession (might require a dirty flag)
 - [ ] Import a nose (without collision) and make it follow the camera
 - [ ] Render the face material in mirrors (the monitor rig does the reverse thing right now)
 - [x] Sensible defaults when importing
