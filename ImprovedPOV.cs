@@ -2,104 +2,212 @@
 using System;
 using System.Linq;
 using UnityEngine;
-#if(POV_DIAGNOSTICS)
+#if (POV_DIAGNOSTICS)
 using System.Collections.Generic;
 #endif
 
-namespace Acidbubbles.VAM.Plugins
+namespace Acidbubbles.VaM.Plugins
 {
     /// <summary>
-    /// Improved POV handling so that possession actually feels right.
+    /// Improved PoV handling so that possession actually feels right.
+    /// Source: https://github.com/acidbubbles/vam-improved-pov
     /// Credits to https://www.reddit.com/user/ShortRecognition/ for the original HeadPossessDepthFix from which
-    /// this plugin took heavy inspiration: https://www.reddit.com/r/VAMscenes/comments/9z9b71/script_headpossessdepthfix/
+    /// this plugin took heavy inspiration: https://www.reddit.com/r/VaMscenes/comments/9z9b71/script_headpossessdepthfix/
     /// </summary>
-    public class ImprovedPOV : MVRScript
+    public class ImprovedPoV : MVRScript
     {
+        private const string PluginLabel = "Improved PoV Plugin - by Acidbubbles";
+
+        private static readonly string[] MaterialsToHide = new[]
+        {
+            "Lacrimals",
+            "Pupils",
+            "Lips",
+            "Gums",
+            "Irises",
+            "Teeth",
+            "Face",
+            "InnerMouth",
+            "Tongue",
+            "EyeReflection",
+            "Nostrils",
+            "Cornea",
+            "Eyelashes",
+            "Sclera",
+            "Ears"
+        };
+
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
 
         private JSONStorableFloat _cameraRecess;
         private JSONStorableFloat _cameraUpDown;
+        private JSONStorableBool _hideFace;
 
         public override void Init()
         {
             try
             {
-                pluginLabelJSON.val = "Improved POV Plugin - by Acidbubbles";
+                pluginLabelJSON.val = PluginLabel;
                 if (!AssertPerson(containingAtom)) return;
 
                 _person = containingAtom;
                 _mainCamera = CameraTarget.centerTarget.targetCamera;
                 _possessor = SuperController.FindObjectsOfType(typeof(Possessor)).Where(p => p.name == "CenterEye").Select(p => p as Possessor).First();
 
-                RegisterPossessor();
+#if (POV_DIAGNOSTICS)
+                SuperController.LogMessage("PoV Person: " + GetDebugHierarchy(_person.gameObject));
+#endif
+
+                InitControls();
+                UpdateCameraPosition();
+                UpdateFaceMaterialsEnabled();
+                UpdatePossessorMeshVisibility();
             }
             catch (Exception e)
             {
-                SuperController.LogError("Failed to initialize Improved POV: " + e);
+                SuperController.LogError("Failed to initialize Improved PoV: " + e);
             }
         }
 
-        protected void FixedUpdate()
-        {
-            if (_person == null)
-                return;
-        }
-
-        private static bool AssertPerson(Atom containingAtom)
+        private bool AssertPerson(Atom containingAtom)
         {
             if (containingAtom.type == "Person")
                 return true;
 
-            SuperController.LogError($"Please apply the ImprovedPOV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
+            SuperController.LogError($"Please apply the ImprovedPoV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
             return false;
         }
 
-        private void RegisterPossessor()
+        private void InitControls()
         {
             try
             {
-                _cameraRecess = new JSONStorableFloat("Camera Recess", 0.0f, 0f, .2f, false);
+                _cameraRecess = new JSONStorableFloat("Camera Recess", 0.05f, 0f, .2f, false);
                 RegisterFloat(_cameraRecess);
-                var recessSlider = CreateSlider(_cameraRecess);
+                var recessSlider = CreateSlider(_cameraRecess, false);
                 recessSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    MoveHead();
+                    UpdateCameraPosition();
                 });
 
                 _cameraUpDown = new JSONStorableFloat("Camera UpDown", 0f, -0.2f, 0.2f, false);
                 RegisterFloat(_cameraUpDown);
-                var upDownSlider = CreateSlider(_cameraUpDown);
+                var upDownSlider = CreateSlider(_cameraUpDown, false);
                 upDownSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    MoveHead();
+                    UpdateCameraPosition();
                 });
 
-                var clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, true);
+                var clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
                 RegisterFloat(clipDistance);
-                var clipSlider = CreateSlider(clipDistance, true);
+                var clipSlider = CreateSlider(clipDistance, false);
                 clipSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     _mainCamera.nearClipPlane = val;
                 });
+
+                _hideFace = new JSONStorableBool("Hide Face", true);
+                RegisterBool(_hideFace);
+                var hideFaceCheckbox = CreateToggle(_hideFace, true);
+                hideFaceCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
+                {
+                    UpdateFaceMaterialsEnabled();
+                });
             }
             catch (Exception e)
             {
-                SuperController.LogError("Failed to register possessor: " + e);
+                SuperController.LogError("Failed to register controls: " + e);
             }
         }
 
-        private void MoveHead()
+        private void UpdateFaceMaterialsEnabled()
         {
-            var pos = _possessor.transform.position;
-            _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * _cameraRecess.val - _mainCamera.transform.rotation * Vector3.down * _cameraUpDown.val - _mainCamera.transform.rotation * Vector3.right;
-            _possessor.transform.position = pos;
+            try
+            {
+                var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
+                var enabled = !_hideFace.val;
 
+                for (int i = 0; i < skin.GPUmaterials.Length; i++)
+                {
+                    Material mat = skin.GPUmaterials[i];
+                    SuperController.LogMessage(mat.name);
+                    if (MaterialsToHide.Any(materialToHide => mat.name.StartsWith(materialToHide)))
+                    {
+                        skin.materialsEnabled[i] = enabled;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to toggle face materials: " + e);
+            }
         }
 
-        #if(POV_DIAGNOSTICS)
-        #region Debugging
+#if (POV_DIAGNOSTICS)
+
+        private void UpdateFaceShaders() {
+            try{
+                var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
+                var standardShader = Shader.Find("Standard");
+                // https://docs.unity3d.com/ScriptReference/Material-shader.html
+                // https://forum.unity.com/threads/transparency-with-standard-surface-shader.394551/
+                // https://answers.unity.com/questions/244837/shader-help-adding-transparency-to-a-shader.html
+                // TODO: Print out which shaders are used by the mirror and by the face
+                foreach (var material in skin.GPUmaterials)
+                {
+                    if (MaterialsToHide.Contains(material.name))
+                    {
+                        // TODO: Transparent (should also work)
+                        material.shader = standardShader;
+                        material.SetOverrideTag("RenderType", "Transparent");
+                        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                        material.SetInt("_ZWrite", 0);
+                        material.DisableKeyword("_ALPHATEST_ON");
+                        material.EnableKeyword("_ALPHABLEND_ON");
+                        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                        material.SetFloat("_Mode", 2.0f);
+
+                        // TODO: Cutoff (desired effect)
+                        // material.SetOverrideTag("RenderType", "Cutout");
+                        // material.EnableKeyword("_ALPHATEST_ON");
+                        // material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to update face shaders: " + e);
+            }
+        }
+
+#endif
+
+        private void UpdateCameraPosition()
+        {
+            try
+            {
+                var pos = _possessor.transform.position;
+                _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * _cameraRecess.val - _mainCamera.transform.rotation * Vector3.down * _cameraUpDown.val;
+                _possessor.transform.position = pos;
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to update camera position: " + e);
+            }
+        }
+
+        private void UpdatePossessorMeshVisibility()
+        {
+            _possessor.gameObject.transform.Find("Capsule").gameObject.SetActive(false);
+            _possessor.gameObject.transform.Find("Sphere1").gameObject.SetActive(false);
+            _possessor.gameObject.transform.Find("Sphere2").gameObject.SetActive(false);
+        }
+
+#if (POV_DIAGNOSTICS)
 
         private static void DumpSceneGameObjects()
         {
@@ -134,7 +242,6 @@ namespace Acidbubbles.VAM.Plugins
             return string.Join(" -> ", items.ToArray());
         }
 
-        #endregion
-        #endif
+#endif
     }
 }
