@@ -136,6 +136,7 @@ namespace Acidbubbles.VaM.Plugins
             }
             else if (_dirty)
             {
+                _dirty = false;
                 ApplyAll();
             }
         }
