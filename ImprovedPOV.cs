@@ -56,6 +56,8 @@ namespace Acidbubbles.VaM.Plugins
         private bool _active;
         // Whether the script is currently enabled, i.e. not destroyed or disabled in Person/Plugin
         private bool _enabled;
+        // Whether operations could not be completed because some items were not yet ready
+        private bool _dirty;
 
         public override void Init()
         {
@@ -132,6 +134,10 @@ namespace Acidbubbles.VaM.Plugins
                 _active = false;
                 ApplyAll();
             }
+            else if (_dirty)
+            {
+                ApplyAll();
+            }
         }
 
         private void InitControls()
@@ -200,8 +206,13 @@ namespace Acidbubbles.VaM.Plugins
         {
             try
             {
-                var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
                 var enabled = !_active || !_hideFace.val;
+                var skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
+                if (skin == null)
+                {
+                    _dirty = true;
+                    return;
+                }
 
                 for (int i = 0; i < skin.GPUmaterials.Length; i++)
                 {
