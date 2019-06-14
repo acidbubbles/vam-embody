@@ -2,6 +2,14 @@
 
 Improved POV handling so that possession actually feels right.
 
+## How to use
+
+Add the plugin to the Person you want to possess. Then, enter possess mode and that should be it! Keep in mind however that you will not see your face when looking in a mirror!
+
+![What you'll see in the mirror](https://i.imgur.com/iwAhsSl.png)
+
+You can use the recess and up/down controls to adjust for your specific morphs, and optionally disable the "Hide Face" option if you have a mirror (but you'll have to reduce the camera recess accordingly).
+
 ## Status
 
 Still under development. A short list of what's done or not:
