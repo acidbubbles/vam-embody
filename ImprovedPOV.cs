@@ -42,20 +42,34 @@ namespace Acidbubbles.VaM.Plugins
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
+
         private FreeControllerV3 _headControl;
         private JSONStorableFloat _cameraRecess;
         private JSONStorableFloat _cameraUpDown;
+        private JSONStorableFloat _clipDistance;
         private JSONStorableBool _hideFace;
         private JSONStorableBool _possessedOnly;
+
+        // Whether the current configuration is valid, which otherwise prevents enabling and using the plugin
+        private bool _valid;
+        // Whether the PoV effects are currently active, i.e. in possession mode
         private bool _active;
-        private bool _destroyed;
+        // Whether the script is currently enabled, i.e. not destroyed or disabled in Person/Plugin
+        private bool _enabled;
 
         public override void Init()
         {
             try
             {
-                pluginLabelJSON.val = PluginLabel;
-                if (!AssertPerson(containingAtom)) return;
+                if (string.IsNullOrEmpty(pluginLabelJSON.val))
+                    pluginLabelJSON.val = PluginLabel;
+
+                if (containingAtom.type != "Person")
+                {
+                    _valid = false;
+                    SuperController.LogError($"Please apply the ImprovedPoV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
+                    return;
+                }
 
                 _person = containingAtom;
                 _mainCamera = CameraTarget.centerTarget.targetCamera;
@@ -67,7 +81,8 @@ namespace Acidbubbles.VaM.Plugins
 #endif
 
                 InitControls();
-                ApplyAll();
+                _valid = true;
+                _enabled = true;
             }
             catch (Exception e)
             {
@@ -75,15 +90,36 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
+        public void OnDisable()
+        {
+            if (!_enabled) return;
+
+            _active = false;
+            _enabled = false;
+            ApplyAll();
+        }
+
+        public void OnEnable()
+        {
+            if (!_valid || _enabled) return;
+
+            _enabled = true;
+            ApplyAll();
+        }
+
         public void OnDestroy()
         {
-            _destroyed = true;
+            if (!_enabled) return;
+
+            _active = false;
+            _enabled = false;
             ApplyAll();
         }
 
         public void Update()
         {
-            if (_destroyed) return;
+            if (!_enabled) return;
+
             var possessed = _headControl.possessed || !_possessedOnly.val;
 
             if (!_active && possessed)
@@ -98,20 +134,11 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
-        private bool AssertPerson(Atom containingAtom)
-        {
-            if (containingAtom.type == "Person")
-                return true;
-
-            SuperController.LogError($"Please apply the ImprovedPoV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
-            return false;
-        }
-
         private void InitControls()
         {
             try
             {
-                _cameraRecess = new JSONStorableFloat("Camera Recess", 0.05f, 0f, .2f, false);
+                _cameraRecess = new JSONStorableFloat("Camera Recess", 0.06f, 0f, .2f, false);
                 RegisterFloat(_cameraRecess);
                 var recessSlider = CreateSlider(_cameraRecess, false);
                 recessSlider.slider.onValueChanged.AddListener(delegate (float val)
@@ -127,12 +154,12 @@ namespace Acidbubbles.VaM.Plugins
                     ApplyCameraPosition();
                 });
 
-                var clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
-                RegisterFloat(clipDistance);
-                var clipSlider = CreateSlider(clipDistance, false);
+                _clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
+                RegisterFloat(_clipDistance);
+                var clipSlider = CreateSlider(_clipDistance, false);
                 clipSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    _mainCamera.nearClipPlane = val;
+                    ApplyCameraPosition();
                 });
 
                 _hideFace = new JSONStorableBool("Hide Face", true);
@@ -160,6 +187,10 @@ namespace Acidbubbles.VaM.Plugins
 
         private void ApplyAll()
         {
+#if (POV_DIAGNOSTICS)
+            SuperController.LogMessage("PoV Apply; Valid: " + _valid + " Enabled: " + _enabled + " Active: " + _active);
+#endif
+
             ApplyCameraPosition();
             ApplyFaceMaterialsEnabled();
             ApplyPossessorMeshVisibility();
@@ -170,7 +201,7 @@ namespace Acidbubbles.VaM.Plugins
             try
             {
                 var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
-                var enabled = _destroyed || !_active || !_hideFace.val;
+                var enabled = !_active || !_hideFace.val;
 
                 for (int i = 0; i < skin.GPUmaterials.Length; i++)
                 {
@@ -234,8 +265,12 @@ namespace Acidbubbles.VaM.Plugins
         {
             try
             {
+                _mainCamera.nearClipPlane = _active ? _clipDistance.val : 0.01f;
+
+                var cameraRecess = _active ? _cameraRecess.val : 0;
+                var cameraUpDown = _active ? _cameraUpDown.val : 0;
                 var pos = _possessor.transform.position;
-                _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * _cameraRecess.val - _mainCamera.transform.rotation * Vector3.down * _cameraUpDown.val;
+                _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraRecess - _mainCamera.transform.rotation * Vector3.down * cameraUpDown;
                 _possessor.transform.position = pos;
             }
             catch (Exception e)
@@ -246,11 +281,18 @@ namespace Acidbubbles.VaM.Plugins
 
         private void ApplyPossessorMeshVisibility()
         {
-            var meshActive = _destroyed || !_active;
+            try
+            {
+                var meshActive = !_active;
 
-            _possessor.gameObject.transform.Find("Capsule").gameObject.SetActive(meshActive);
-            _possessor.gameObject.transform.Find("Sphere1").gameObject.SetActive(meshActive);
-            _possessor.gameObject.transform.Find("Sphere2").gameObject.SetActive(meshActive);
+                _possessor.gameObject.transform.Find("Capsule")?.gameObject.SetActive(meshActive);
+                _possessor.gameObject.transform.Find("Sphere1")?.gameObject.SetActive(meshActive);
+                _possessor.gameObject.transform.Find("Sphere2")?.gameObject.SetActive(meshActive);
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to update possessor mesh visibility: " + e);
+            }
         }
 
 #if (POV_DIAGNOSTICS)

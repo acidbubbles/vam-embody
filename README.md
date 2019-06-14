@@ -17,10 +17,10 @@ Still under development. A short list of what's done or not:
 - [ ] Render the face material in mirrors (the monitor rig does the reverse thing right now)
 - [x] Sensible defaults when importing
 - [ ] Test for Oculus, Vive and more (see the Leap Possess plugin for ovr condition)
-- [ ] Test loading scenes with it, with and without possession, adding and removing
+- [x] Test loading scenes with it, with and without possession, adding and removing
 - [ ] Add options for what to hide, as well as a few tips
 - [ ] Subscribe to UpdateManager singleton and update once, after that unregister the Update call
-- [ ] Reset the possession camera and mesh status when removing the plugin
+- [x] Reset the possession camera and mesh status when removing the plugin
 
 ## Credits
 
