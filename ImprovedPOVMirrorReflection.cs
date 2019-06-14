@@ -2,13 +2,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.XR;
 
 [ExecuteInEditMode]
-public class MirrorReflection : JSONStorable
+public class ImprovedPOVMirrorReflection : MVRScript
 {
-	public MirrorReflection slaveReflection;
+	// Acidbubbles: Whether this is the real thing, or just the plugin
+	private bool _actualMirror;
+	// /Acidbubbles
+
+	public ImprovedPOVMirrorReflection slaveReflection;
 
 	protected JSONStorableBool disablePixelLightsJSON;
 
@@ -414,6 +420,10 @@ public class MirrorReflection : JSONStorable
 
 	public void OnWillRenderObject()
 	{
+		// Acidbubbles: Only for actual mirror
+		if(!_actualMirror) return;
+		// /Acidbubbles
+
 		Renderer component = GetComponent<Renderer>();
 		if (!base.enabled || !(bool)component || !(bool)component.sharedMaterial || !component.enabled || !globalEnabled)
 		{
@@ -446,6 +456,9 @@ public class MirrorReflection : JSONStorable
 			QualitySettings.pixelLightCount = 0;
 		}
 		UpdateCameraModes(current, reflectionCamera);
+		// Acidbubbles: Show materials that were hidden by the ImprovedPOV plugin
+		ShowPoVMaterials();
+		// /Acidbubbles
 		Vector3 position = current.transform.position;
 		if (current.stereoEnabled)
 		{
@@ -548,8 +561,54 @@ public class MirrorReflection : JSONStorable
 		{
 			QualitySettings.pixelLightCount = pixelLightCount;
 		}
+		// Acidbubbles: Hide materials that were temporarily shown for the ImprovedPoV plugin
+		HidePoVMaterials();
+		// /Acidbubbles
 		s_InsideRendering = false;
 	}
+
+	// Acidbubbles: PoV Material show/hide functions
+	public struct ShownSkin
+	{
+		public DAZSkinV2 skin;
+		public int index;
+	}
+	private List<ShownSkin> _shownMaterials = new List<ShownSkin>();
+	private List<ShownSkin> _otherMaterials = new List<ShownSkin>();
+	private void ShowPoVMaterials(){
+		// TODO: Cache the list of specific materials to hide, and update the list using a broadcast message
+		foreach(var characterSelector in GameObject.FindObjectsOfType<DAZCharacterSelector>())
+		{
+			var skin = characterSelector.selectedCharacter.skin;
+			for(var index = 0; index < skin.GPUmaterials.Length; index++){
+				var material = skin.GPUmaterials[index];
+				var enabled = skin.materialsEnabled[index];
+				if(!enabled){
+					_shownMaterials.Add(new ShownSkin{skin = skin, index = index});
+					skin.materialsEnabled[index] = true;
+					skin.dazMesh.materialsEnabled[index] = true;
+				} else {
+					_otherMaterials.Add(new ShownSkin{skin = skin, index = index});
+					material.color = new Color(1f, 0f, 0f, 0f);
+				}
+			}
+		}
+	}
+
+	private void HidePoVMaterials(){
+		foreach (var shown in _shownMaterials)
+        {
+            shown.skin.materialsEnabled[shown.index] = false;
+            shown.skin.dazMesh.materialsEnabled[shown.index] = false;
+        }
+		_shownMaterials.Clear();
+		foreach (var shown in _otherMaterials)
+        {
+			shown.skin.GPUmaterials[shown.index].color = new Color(1f, 1f, 1f, 0f);
+        }
+		_otherMaterials.Clear();
+	}
+	// /Acidbubbles
 
 	protected void UpdateCameraModes(Camera src, Camera dest)
 	{
@@ -662,8 +721,79 @@ public class MirrorReflection : JSONStorable
 		reflectionMat.m33 = 1f;
 	}
 
-	protected void Init()
+	// Acidbubbles
+	private void PrintDebugStatus()
 	{
+        SuperController.LogMessage("Root objects: " + string.Join("; ", SceneManager.GetActiveScene().GetRootGameObjects().Select(x => x.name).ToArray()));
+		SuperController.LogMessage("Original mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<MirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
+		SuperController.LogMessage("PoV mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<ImprovedPOVMirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
+	}
+
+	private static string GetDebugHierarchy(GameObject o)
+	{
+		var items = new List<string>(new[] { o.name });
+		GameObject parent = o;
+		for (int i = 0; i < 100; i++)
+		{
+			parent = parent.transform.parent?.gameObject;
+			if (parent == null || parent == o) break;
+			items.Insert(0, parent.gameObject.name);
+		}
+		return string.Join(" -> ", items.ToArray());
+	}
+
+	private void ReplaceMirrorScriptAndCreatedObjects<TBefore, TAfter>(GameObject target)
+		where TBefore: MonoBehaviour
+		where TAfter: MonoBehaviour
+	{
+			foreach(var childMirror in target.GetComponentsInChildren<TBefore>().Where(x => !x.name.StartsWith("plugin#"))){
+				var childMirrorGameObject = childMirror.gameObject;
+				SuperController.LogMessage("- Removing child mirror from " + GetDebugHierarchy(childMirrorGameObject));
+				var childMirrorInstanceId = childMirror.GetInstanceID();
+				Destroy(childMirror);
+				foreach(var childMirrorObject in SceneManager.GetActiveScene().GetRootGameObjects().Where(x => x.name.StartsWith("Mirror Refl Camera id" + childMirrorInstanceId + " for " )))
+				{
+					SuperController.LogMessage("-   Removing object " + childMirrorObject.name);
+					Destroy(childMirrorObject);
+				}
+				SuperController.LogMessage("- Adding new child mirror on " + GetDebugHierarchy(childMirrorGameObject));
+				childMirrorGameObject.AddComponent<TAfter>();
+			}
+	}
+	// /Acidbubbles
+
+	public override void Init()
+	{
+		// Acidbubbles: Disable the original MirrorReflection in the actual mirror children
+		try{
+			PrintDebugStatus();
+			if(containingAtom == null && gameObject == null){
+				SuperController.LogMessage("Mirror Plugin Empty Init");
+                return; // It will be called again
+            }
+			if(containingAtom != null) {
+				// We are now in the plugin. Let's inject the component on the mirror itself.
+				var pluginTarget = containingAtom.gameObject;
+				SuperController.LogMessage("Mirror Plugin Init " + pluginTarget.name + " " + GetInstanceID());
+				ReplaceMirrorScriptAndCreatedObjects<MirrorReflection, ImprovedPOVMirrorReflection>(pluginTarget);
+				PrintDebugStatus();
+				return;
+			}
+			if(gameObject.name.StartsWith("plugin#")){
+				// This is applied on the plugin gameobject, we don't want to initalize a mirror here
+				SuperController.LogMessage("Mirror Plugin GameObject Init " + gameObject.name + " " + GetInstanceID());
+				return;
+			}
+			// This is the real thing!
+			SuperController.LogMessage("Real Mirror Component Init " + gameObject.name + " " + GetInstanceID());
+			_actualMirror = true;
+		}
+		catch(Exception e)
+		{
+			SuperController.LogError("Failed to initialize ImprovedPoVMirrorReflection" + e);
+		}
+		// /Acidbubbles
+
 		Material material = null;
 		Renderer component = GetComponent<Renderer>();
 		if (component != null)
@@ -733,6 +863,10 @@ public class MirrorReflection : JSONStorable
 
 	public override void InitUI()
 	{
+		// Acidbubbles: Only for actual mirror
+		if(!_actualMirror) return;
+		// /Acidbubbles
+
 		if (!(UITransform != null))
 		{
 			return;
@@ -781,6 +915,10 @@ public class MirrorReflection : JSONStorable
 
 	public override void InitUIAlt()
 	{
+		// Acidbubbles: Only for actual mirror
+		if(!_actualMirror) return;
+		// /Acidbubbles
+
 		if (!(UITransformAlt != null))
 		{
 			return;
@@ -827,8 +965,22 @@ public class MirrorReflection : JSONStorable
 		}
 	}
 
+	private void OnDestroy() {
+		OnDisable();
+	}
+
 	private void OnDisable()
 	{
+		// Acidbubbles: For the plugin, disable the children POV mirrors, otherwise disable normally
+		if(containingAtom != null) {
+			SuperController.LogMessage("Mirror Plugin Disable " + containingAtom.gameObject.name + " " + GetInstanceID());
+			ReplaceMirrorScriptAndCreatedObjects<ImprovedPOVMirrorReflection, MirrorReflection>(containingAtom.gameObject);
+			return;
+		}
+		if(!_actualMirror) return;
+		SuperController.LogMessage("Actual Mirror Disable " + containingAtom.gameObject.name + " " + GetInstanceID());
+		// /Acidbubbles
+
 		if ((bool)m_ReflectionTextureRight)
 		{
 			UnityEngine.Object.DestroyImmediate(m_ReflectionTextureRight);
@@ -874,6 +1026,9 @@ public class MirrorReflection : JSONStorable
 
 	private void Update()
 	{
+		// Acidbubbles: Only for actual mirror
+		if(!_actualMirror) return;
+
 		Renderer component = GetComponent<Renderer>();
 		if (component != null)
 		{
