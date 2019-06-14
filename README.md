@@ -25,3 +25,5 @@ Still under development. A short list of what's done or not:
 ## Credits
 
 [ShortRecognition](https://www.reddit.com/user/ShortRecognition/) for the [original HeadPossessDepthFix](https://www.reddit.com/r/VAMscenes/comments/9z9b71/script_headpossessdepthfix/) from which this plugin took heavy inspiration.
+
+Thanks for Marko, VAMDeluxe, LFE for your previous help on Discord.

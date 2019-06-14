@@ -13,6 +13,7 @@ namespace Acidbubbles.VaM.Plugins
     /// Source: https://github.com/acidbubbles/vam-improved-pov
     /// Credits to https://www.reddit.com/user/ShortRecognition/ for the original HeadPossessDepthFix from which
     /// this plugin took heavy inspiration: https://www.reddit.com/r/VaMscenes/comments/9z9b71/script_headpossessdepthfix/
+    /// Thanks for Marko, VAMDeluxe, LFE for your previous help on Discord
     /// </summary>
     public class ImprovedPoV : MVRScript
     {
@@ -34,7 +35,8 @@ namespace Acidbubbles.VaM.Plugins
             "Cornea",
             "Eyelashes",
             "Sclera",
-            "Ears"
+            "Ears",
+            "Tear"
         };
 
         private Atom _person;
