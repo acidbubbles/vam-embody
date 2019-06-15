@@ -14,7 +14,7 @@ public class ImprovedPOVMirrorReflection : MVRScript
 	private bool _actualMirror;
 	// /Acidbubbles
 
-	public ImprovedPOVMirrorReflection slaveReflection;
+	public MirrorReflection slaveReflection;
 
 	protected JSONStorableBool disablePixelLightsJSON;
 
