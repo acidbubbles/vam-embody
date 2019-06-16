@@ -315,6 +315,8 @@ namespace Acidbubbles.VaM.Plugins
         {
             public const string Name = "Shaders";
 
+            private GameObject _previousMaterialsContainer;
+
             string IStrategy.Name
             {
                 get { return Name; }
@@ -322,21 +324,16 @@ namespace Acidbubbles.VaM.Plugins
 
             public void Apply(DAZSkinV2 skin)
             {
-                UpdateFaceShaders(skin);
-            }
+                _previousMaterialsContainer = new GameObject("ImprovedPoV container for skin " + skin.GetInstanceID());
+                var previousMaterialsRenderer = _previousMaterialsContainer.AddComponent<Renderer>();
+                var previousMaterials = new List<Material>();
 
-            public void Restore(DAZSkinV2 skin)
-            {
-                // TODO: Not implemented
-            }
-
-            private void UpdateFaceShaders(DAZSkinV2 skin)
-            {
                 var replacementShader = Shader.Find("Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff");
-                foreach (var material in skin.GPUmaterials)
+                foreach (var material in GetMaterials(skin))
                 {
-                    if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
-                        continue;
+                    var materialClone = new Material(material);
+                    previousMaterials.Add(materialClone);
+                    SuperController.LogMessage("Copied material " + material.name + " to " + materialClone.name);
 
                     // TODO: Keep a reference to the original shader somewhere
                     SuperController.LogMessage("Update " + material.name + " from ");
@@ -349,6 +346,30 @@ namespace Acidbubbles.VaM.Plugins
                     // var color = new Color(0, 0, 0, _alpha.val);
                     // material.SetColor("Diffuse Color", color);
                     // material.SetColor("Specular Color", Color.black);
+                }
+
+                previousMaterialsRenderer.materials = previousMaterials.ToArray();
+            }
+
+            public void Restore(DAZSkinV2 skin)
+            {
+                var previousMaterials = _previousMaterialsContainer.GetComponent<Renderer>().materials;
+                foreach (var material in GetMaterials(skin))
+                {
+                    var previousMaterial = previousMaterials.First(m => m.name == material.name);
+                    material.shader = previousMaterial.shader;
+                }
+                Destroy(_previousMaterialsContainer);
+            }
+
+            private IEnumerable<Material> GetMaterials(DAZSkinV2 skin)
+            {
+                foreach (var material in skin.GPUmaterials)
+                {
+                    if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
+                        continue;
+
+                    yield return material;
                 }
             }
         }

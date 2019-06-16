@@ -570,24 +570,29 @@ public class ImprovedPOVMirrorReflection : MVRScript
 	// Acidbubbles: PoV Material show/hide functions
 	public struct ShownSkin
 	{
-		public DAZSkinV2 skin;
-		public int index;
+		public Material material;
+		public Shader shaderToRestore;
 	}
 	private List<ShownSkin> _shownMaterials = new List<ShownSkin>();
-	private List<ShownSkin> _otherMaterials = new List<ShownSkin>();
 	private bool _debugOutputOnce;
 
 	private void ShowPoVMaterials(){
+		// TODO: Initialize the shader in Init and keep it instead of using Find every render
 		var shader = Shader.Find("Custom/Subsurface/GlossNMCullComputeBuff");
 		if(shader == null)
 		{
 			SuperController.LogMessage("Shader show not found");
 			return;
 		}
-		// TODO: Cache the list of specific materials to hide, and update the list using a broadcast message
+		// TODO: Cache the list of characters and materials to hide, and update the list using a broadcast message
 		foreach(var characterSelector in GameObject.FindObjectsOfType<DAZCharacterSelector>())
 		{
 			var skin = characterSelector.selectedCharacter.skin;
+			var expectedPreviousMaterialsName = "ImprovedPoV container for skin " + skin.GetInstanceID();
+			var previousMaterialsContainer = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(o => o.name == expectedPreviousMaterialsName);
+			if(previousMaterialsContainer == null) continue;
+			var previousMaterials = previousMaterialsContainer.GetComponent<Renderer>().materials;
+
 			if(!_debugOutputOnce){
 				SuperController.LogMessage("Mirror debugging info (once)");
 				_debugOutputOnce = true;
@@ -596,50 +601,24 @@ public class ImprovedPOVMirrorReflection : MVRScript
 					SuperController.LogMessage("Mirror material: " + material.name + ", shader: " + material.shader.name);
 				}
 			}
-			for(var index = 0; index < skin.GPUmaterials.Length; index++){
-				var material = skin.GPUmaterials[index];
-				if(material.shader.name == "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff"){
-					_shownMaterials.Add(new ShownSkin{skin = skin, index = index});
-					material.shader = shader;
-				}
-				/*
-				var enabled = skin.materialsEnabled[index];
-				if(!enabled){
-					_shownMaterials.Add(new ShownSkin{skin = skin, index = index});
-					skin.materialsEnabled[index] = true;
-					skin.dazMesh.materialsEnabled[index] = true;
-				} else {
-					_otherMaterials.Add(new ShownSkin{skin = skin, index = index});
-					material.color = new Color(1f, 0f, 0f, 0f);
-				}
-				*/
+
+			foreach(var material in skin.GPUmaterials){
+				var previousMaterial = previousMaterials.FirstOrDefault(m => m.name == material.name);
+				if(previousMaterial == null) continue;
+
+				// TODO: Use a fixed array since we know how many materials should be in there, avoiding re-allocating a new list every time
+                _shownMaterials.Add(new ShownSkin { material = material, shaderToRestore = material.shader });
+                material.shader = previousMaterial.shader;
 			}
 		}
 	}
 
 	private void HidePoVMaterials(){
-        var shader = Shader.Find("Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff");
-		if(shader == null)
-		{
-			SuperController.LogMessage("Shader hide not found");
-			return;
-		}
 		foreach (var shown in _shownMaterials)
         {
-			shown.skin.GPUmaterials[shown.index].shader = shader;
-			/*
-            shown.skin.materialsEnabled[shown.index] = false;
-            shown.skin.dazMesh.materialsEnabled[shown.index] = false;
-			*/
+			shown.material.shader = shown.shaderToRestore;
         }
 		_shownMaterials.Clear();
-		/*
-		foreach (var shown in _otherMaterials)
-        {
-			shown.skin.GPUmaterials[shown.index].color = new Color(1f, 1f, 1f, 0f);
-        }
-		_otherMaterials.Clear();
-		*/
 	}
 	// /Acidbubbles
 
