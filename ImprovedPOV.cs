@@ -42,13 +42,15 @@ namespace Acidbubbles.VaM.Plugins
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
+        private IStrategy _strategyImpl;
+        private DAZSkinV2 _skin;
 
         private FreeControllerV3 _headControl;
         private JSONStorableFloat _cameraRecess;
         private JSONStorableFloat _cameraUpDown;
         private JSONStorableFloat _clipDistance;
-        private JSONStorableBool _hideFace;
         private JSONStorableBool _possessedOnly;
+        private JSONStorableStringChooser _strategy;
 
         // Whether the current configuration is valid, which otherwise prevents enabling and using the plugin
         private bool _valid;
@@ -111,11 +113,7 @@ namespace Acidbubbles.VaM.Plugins
 
         public void OnDestroy()
         {
-            if (!_enabled) return;
-
-            _active = false;
-            _enabled = false;
-            ApplyAll();
+            OnDisable();
         }
 
         public void Update()
@@ -169,14 +167,6 @@ namespace Acidbubbles.VaM.Plugins
                     ApplyCameraPosition();
                 });
 
-                _hideFace = new JSONStorableBool("Hide Face", true);
-                RegisterBool(_hideFace);
-                var hideFaceCheckbox = CreateToggle(_hideFace, true);
-                hideFaceCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    ApplyFaceMaterialsEnabled();
-                });
-
                 _possessedOnly = new JSONStorableBool("Possessed Only", true);
                 RegisterBool(_possessedOnly);
                 var possessedOnlyCheckbox = CreateToggle(_possessedOnly, true);
@@ -185,6 +175,13 @@ namespace Acidbubbles.VaM.Plugins
                     ApplyAll();
                 });
 
+                _strategy = new JSONStorableStringChooser("Strategy", new List<string> { MaterialsEnabledStrategy.Name, ShaderStrategy.Name }, MaterialsEnabledStrategy.Name, "Strategy");
+                RegisterStringChooser(_strategy);
+                var strategyPopup = CreatePopup(_strategy, true);
+                strategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
+                {
+                    ApplyFaceStrategy();
+                });
             }
             catch (Exception e)
             {
@@ -199,79 +196,79 @@ namespace Acidbubbles.VaM.Plugins
 #endif
 
             ApplyCameraPosition();
-            ApplyFaceMaterialsEnabled();
+            ApplyFaceStrategy();
             ApplyPossessorMeshVisibility();
         }
 
-        private void ApplyFaceMaterialsEnabled()
+        private DAZSkinV2 GetSkin()
+        {
+            if (_skin != null) return _skin;
+            var skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
+            _skin = skin;
+            return skin;
+        }
+
+        private void ApplyFaceStrategy()
         {
             try
             {
-                var enabled = !_active || !_hideFace.val;
-                var skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
+                var skin = GetSkin();
                 if (skin == null)
                 {
                     _dirty = true;
                     return;
                 }
 
-                for (int i = 0; i < skin.GPUmaterials.Length; i++)
+                if (!_active)
                 {
-                    Material mat = skin.GPUmaterials[i];
-                    if (MaterialsToHide.Any(materialToHide => mat.name.StartsWith(materialToHide)))
+                    if (_strategyImpl != null)
                     {
-                        skin.materialsEnabled[i] = enabled;
+                        _strategyImpl.Restore(skin);
+                        _strategyImpl = null;
                     }
+                    return;
                 }
+
+                if (_strategyImpl == null)
+                {
+                    _strategyImpl = CreateStrategy();
+                }
+                else if (_strategyImpl.Name != _strategy.val)
+                {
+                    _strategyImpl.Restore(skin);
+                    _strategyImpl = CreateStrategy();
+                }
+
+                _strategyImpl.Apply(skin);
             }
             catch (Exception e)
             {
-                SuperController.LogError("Failed to toggle face materials: " + e);
+                SuperController.LogError("Failed to execute strategy " + _strategy.val + ": " + e);
             }
         }
 
-#if (POV_DIAGNOSTICS)
-
-        private void ApplyFaceShaders()
+        private IStrategy CreateStrategy()
         {
-            try
+            switch (_strategy.val)
             {
-                var skin = _person.GetComponentInChildren<DAZCharacterSelector>().selectedCharacter.skin;
-                var standardShader = Shader.Find("Standard");
-                // https://docs.unity3d.com/ScriptReference/Material-shader.html
-                // https://forum.unity.com/threads/transparency-with-standard-surface-shader.394551/
-                // https://answers.unity.com/questions/244837/shader-help-adding-transparency-to-a-shader.html
-                // TODO: Print out which shaders are used by the mirror and by the face
-                foreach (var material in skin.GPUmaterials)
-                {
-                    if (MaterialsToHide.Contains(material.name))
-                    {
-                        // TODO: Transparent (should also work)
-                        material.shader = standardShader;
-                        material.SetOverrideTag("RenderType", "Transparent");
-                        material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                        material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                        material.SetInt("_ZWrite", 0);
-                        material.DisableKeyword("_ALPHATEST_ON");
-                        material.EnableKeyword("_ALPHABLEND_ON");
-                        material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-                        material.SetFloat("_Mode", 2.0f);
-
-                        // TODO: Cutoff (desired effect)
-                        // material.SetOverrideTag("RenderType", "Cutout");
-                        // material.EnableKeyword("_ALPHATEST_ON");
-                        // material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                SuperController.LogError("Failed to update face shaders: " + e);
+                case MaterialsEnabledStrategy.Name:
+                    return new MaterialsEnabledStrategy();
+                case ShaderStrategy.Name:
+                    return new ShaderStrategy();
+                default:
+                    throw new InvalidOperationException("Invalid strategy: '" + _strategy.val + "'");
             }
         }
 
-#endif
+        private void ClearStrategy()
+        {
+            if (_strategyImpl == null)
+                return;
+            var skin = GetSkin();
+            if (skin != null)
+                _strategyImpl.Restore(skin);
+            _strategyImpl = null;
+        }
 
         private void ApplyCameraPosition()
         {
@@ -304,6 +301,88 @@ namespace Acidbubbles.VaM.Plugins
             catch (Exception e)
             {
                 SuperController.LogError("Failed to update possessor mesh visibility: " + e);
+            }
+        }
+
+        public interface IStrategy
+        {
+            string Name { get; }
+            void Apply(DAZSkinV2 skin);
+            void Restore(DAZSkinV2 skin);
+        }
+
+        public class ShaderStrategy : IStrategy
+        {
+            public const string Name = "Shaders";
+
+            string IStrategy.Name
+            {
+                get { return Name; }
+            }
+
+            public void Apply(DAZSkinV2 skin)
+            {
+                UpdateFaceShaders(skin);
+            }
+
+            public void Restore(DAZSkinV2 skin)
+            {
+                // TODO: Not implemented
+            }
+
+            private void UpdateFaceShaders(DAZSkinV2 skin)
+            {
+                var replacementShader = Shader.Find("Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff");
+                foreach (var material in skin.GPUmaterials)
+                {
+                    if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
+                        continue;
+
+                    // TODO: Keep a reference to the original shader somewhere
+                    SuperController.LogMessage("Update " + material.name + " from ");
+                    SuperController.LogMessage("-  " + material.shader.name);
+                    // SuperController.LogMessage("-  Diffuse: " + material.GetColor("Diffuse Color"));
+                    // SuperController.LogMessage("-  Specular: " + material.GetColor("Specular Color"));
+                    SuperController.LogMessage("to");
+                    SuperController.LogMessage("-  " + replacementShader.name);
+                    material.shader = replacementShader;
+                    // var color = new Color(0, 0, 0, _alpha.val);
+                    // material.SetColor("Diffuse Color", color);
+                    // material.SetColor("Specular Color", Color.black);
+                }
+            }
+        }
+
+        public class MaterialsEnabledStrategy : IStrategy
+        {
+            public const string Name = "Materials Enabled";
+
+            string IStrategy.Name
+            {
+                get { return Name; }
+            }
+
+            public void Apply(DAZSkinV2 skin)
+            {
+                UpdateMaterialsEnabled(skin, false);
+            }
+
+            public void Restore(DAZSkinV2 skin)
+            {
+                UpdateMaterialsEnabled(skin, true);
+            }
+
+            public void UpdateMaterialsEnabled(DAZSkinV2 skin, bool enabled)
+            {
+
+                for (int i = 0; i < skin.GPUmaterials.Length; i++)
+                {
+                    Material mat = skin.GPUmaterials[i];
+                    if (MaterialsToHide.Any(materialToHide => mat.name.StartsWith(materialToHide)))
+                    {
+                        skin.materialsEnabled[i] = enabled;
+                    }
+                }
             }
         }
 

@@ -575,13 +575,34 @@ public class ImprovedPOVMirrorReflection : MVRScript
 	}
 	private List<ShownSkin> _shownMaterials = new List<ShownSkin>();
 	private List<ShownSkin> _otherMaterials = new List<ShownSkin>();
+	private bool _debugOutputOnce;
+
 	private void ShowPoVMaterials(){
+		var shader = Shader.Find("Custom/Subsurface/GlossNMCullComputeBuff");
+		if(shader == null)
+		{
+			SuperController.LogMessage("Shader show not found");
+			return;
+		}
 		// TODO: Cache the list of specific materials to hide, and update the list using a broadcast message
 		foreach(var characterSelector in GameObject.FindObjectsOfType<DAZCharacterSelector>())
 		{
 			var skin = characterSelector.selectedCharacter.skin;
+			if(!_debugOutputOnce){
+				SuperController.LogMessage("Mirror debugging info (once)");
+				_debugOutputOnce = true;
+				for(var index = 0; index < skin.GPUmaterials.Length; index++){
+					var material = skin.GPUmaterials[index];
+					SuperController.LogMessage("Mirror material: " + material.name + ", shader: " + material.shader.name);
+				}
+			}
 			for(var index = 0; index < skin.GPUmaterials.Length; index++){
 				var material = skin.GPUmaterials[index];
+				if(material.shader.name == "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff"){
+					_shownMaterials.Add(new ShownSkin{skin = skin, index = index});
+					material.shader = shader;
+				}
+				/*
 				var enabled = skin.materialsEnabled[index];
 				if(!enabled){
 					_shownMaterials.Add(new ShownSkin{skin = skin, index = index});
@@ -591,22 +612,34 @@ public class ImprovedPOVMirrorReflection : MVRScript
 					_otherMaterials.Add(new ShownSkin{skin = skin, index = index});
 					material.color = new Color(1f, 0f, 0f, 0f);
 				}
+				*/
 			}
 		}
 	}
 
 	private void HidePoVMaterials(){
+        var shader = Shader.Find("Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff");
+		if(shader == null)
+		{
+			SuperController.LogMessage("Shader hide not found");
+			return;
+		}
 		foreach (var shown in _shownMaterials)
         {
+			shown.skin.GPUmaterials[shown.index].shader = shader;
+			/*
             shown.skin.materialsEnabled[shown.index] = false;
             shown.skin.dazMesh.materialsEnabled[shown.index] = false;
+			*/
         }
 		_shownMaterials.Clear();
+		/*
 		foreach (var shown in _otherMaterials)
         {
 			shown.skin.GPUmaterials[shown.index].color = new Color(1f, 1f, 1f, 0f);
         }
 		_otherMaterials.Clear();
+		*/
 	}
 	// /Acidbubbles
 
