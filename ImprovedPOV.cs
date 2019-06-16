@@ -79,6 +79,7 @@ namespace Acidbubbles.VaM.Plugins
                 _mainCamera = CameraTarget.centerTarget.targetCamera;
                 _possessor = SuperController.FindObjectsOfType(typeof(Possessor)).Where(p => p.name == "CenterEye").Select(p => p as Possessor).First();
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
+                _strategyImpl = new NoStrategy();
 
 #if (POV_DIAGNOSTICS)
                 SuperController.LogMessage("PoV Person: " + GetDebugHierarchy(_person.gameObject));
@@ -175,12 +176,15 @@ namespace Acidbubbles.VaM.Plugins
                     ApplyAll();
                 });
 
-                _strategy = new JSONStorableStringChooser("Strategy", new List<string> { MaterialsEnabledStrategy.Name, ShaderStrategy.Name }, MaterialsEnabledStrategy.Name, "Strategy");
+                var strategies = new List<string> { NoStrategy.Name, MaterialsEnabledStrategy.Name, ShaderStrategy.Name };
+                _strategy = new JSONStorableStringChooser("Strategy", strategies, MaterialsEnabledStrategy.Name, "Strategy");
                 RegisterStringChooser(_strategy);
                 var strategyPopup = CreatePopup(_strategy, true);
                 strategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
                 {
-                    ApplyFaceStrategy();
+                    // TODO: Why is this necessary?
+                    _strategy.val = val;
+                    _dirty = true;
                 });
             }
             catch (Exception e)
@@ -210,9 +214,11 @@ namespace Acidbubbles.VaM.Plugins
 
         private void ApplyFaceStrategy()
         {
+            DAZSkinV2 skin;
+
             try
             {
-                var skin = GetSkin();
+                skin = GetSkin();
                 if (skin == null)
                 {
                     _dirty = true;
@@ -221,42 +227,35 @@ namespace Acidbubbles.VaM.Plugins
 
                 if (!_active)
                 {
-                    if (_strategyImpl != null)
+                    if (_strategyImpl.Name != NoStrategy.Name)
                     {
+                        SuperController.LogMessage("Strategy (clear)");
                         _strategyImpl.Restore(skin);
-                        _strategyImpl = null;
+                        _strategyImpl = new NoStrategy();
                     }
                     return;
                 }
 
-                if (_strategyImpl == null)
+                if (_strategyImpl.Name != _strategy.val)
                 {
-                    _strategyImpl = CreateStrategy();
-                }
-                else if (_strategyImpl.Name != _strategy.val)
-                {
+                    SuperController.LogMessage("Strategy (switch from " + _strategyImpl.Name + " to " + _strategy.val);
                     _strategyImpl.Restore(skin);
-                    _strategyImpl = CreateStrategy();
+                    _strategyImpl = CreateStrategy(_strategy.val);
                 }
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to initialize and/or restore strategy: " + e);
+                return;
+            }
 
+            try {
+                SuperController.LogMessage("Strategy (now): " + _strategyImpl.Name);
                 _strategyImpl.Apply(skin);
             }
             catch (Exception e)
             {
-                SuperController.LogError("Failed to execute strategy " + _strategy.val + ": " + e);
-            }
-        }
-
-        private IStrategy CreateStrategy()
-        {
-            switch (_strategy.val)
-            {
-                case MaterialsEnabledStrategy.Name:
-                    return new MaterialsEnabledStrategy();
-                case ShaderStrategy.Name:
-                    return new ShaderStrategy();
-                default:
-                    throw new InvalidOperationException("Invalid strategy: '" + _strategy.val + "'");
+                SuperController.LogError("Failed to execute strategy " + _strategyImpl.Name + ": " + e);
             }
         }
 
@@ -304,6 +303,21 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
+        private static IStrategy CreateStrategy(string val)
+        {
+            switch (val)
+            {
+                case MaterialsEnabledStrategy.Name:
+                    return new MaterialsEnabledStrategy();
+                case ShaderStrategy.Name:
+                    return new ShaderStrategy();
+                case NoStrategy.Name:
+                    return new NoStrategy();
+                default:
+                    throw new InvalidOperationException("Invalid strategy: '" + val + "'");
+            }
+        }
+
         public interface IStrategy
         {
             string Name { get; }
@@ -313,7 +327,7 @@ namespace Acidbubbles.VaM.Plugins
 
         public class ShaderStrategy : IStrategy
         {
-            public const string Name = "Shaders";
+            public const string Name = "Shaders (allows mirrors)";
 
             private GameObject _previousMaterialsContainer;
 
@@ -324,28 +338,37 @@ namespace Acidbubbles.VaM.Plugins
 
             public void Apply(DAZSkinV2 skin)
             {
+                // Already applied
+                if(_previousMaterialsContainer != null) return;
+
                 _previousMaterialsContainer = new GameObject("ImprovedPoV container for skin " + skin.GetInstanceID());
-                var previousMaterialsRenderer = _previousMaterialsContainer.AddComponent<Renderer>();
+                var previousMaterialsRenderer =_previousMaterialsContainer.AddComponent<MeshRenderer>();
+                if(previousMaterialsRenderer == null) throw new NullReferenceException("Failed to add the MeshRenderer component");
                 var previousMaterials = new List<Material>();
 
-                var replacementShader = Shader.Find("Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff");
-                foreach (var material in GetMaterials(skin))
+                const string replacementShaderName = "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff";
+                var replacementShader = Shader.Find(replacementShaderName);
+                if(replacementShader == null) throw new NullReferenceException("Could not find replacement shader " + replacementShaderName);
+
+                foreach(var material in GetMaterialsToHide(skin))
                 {
                     var materialClone = new Material(material);
                     previousMaterials.Add(materialClone);
-                    SuperController.LogMessage("Copied material " + material.name + " to " + materialClone.name);
 
                     // TODO: Keep a reference to the original shader somewhere
-                    SuperController.LogMessage("Update " + material.name + " from ");
-                    SuperController.LogMessage("-  " + material.shader.name);
-                    // SuperController.LogMessage("-  Diffuse: " + material.GetColor("Diffuse Color"));
-                    // SuperController.LogMessage("-  Specular: " + material.GetColor("Specular Color"));
-                    SuperController.LogMessage("to");
-                    SuperController.LogMessage("-  " + replacementShader.name);
+                    if (material.name.StartsWith("Face"))
+                    {
+                        SuperController.LogMessage("APPLY: Update " + material.name + " from ");
+                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("Diffuse Color") + ", Specular: " + material.GetColor("Specular Color"));
+                    }
                     material.shader = replacementShader;
-                    // var color = new Color(0, 0, 0, _alpha.val);
-                    // material.SetColor("Diffuse Color", color);
-                    // material.SetColor("Specular Color", Color.black);
+                    material.SetColor("Diffuse Color", new Color(0, 0, 0, 1f));
+                    material.SetColor("Specular Color", Color.black);
+                    if (material.name.StartsWith("Face"))
+                    {
+                        SuperController.LogMessage("to");
+                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("Diffuse Color") + ", Specular: " + material.GetColor("Specular Color"));
+                    }
                 }
 
                 previousMaterialsRenderer.materials = previousMaterials.ToArray();
@@ -353,30 +376,54 @@ namespace Acidbubbles.VaM.Plugins
 
             public void Restore(DAZSkinV2 skin)
             {
-                var previousMaterials = _previousMaterialsContainer.GetComponent<Renderer>().materials;
-                foreach (var material in GetMaterials(skin))
+                // Already restored (abnormal)
+                if(_previousMaterialsContainer == null) return;
+
+                var previousMaterials = _previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
+                if(previousMaterials == null) throw new NullReferenceException("previousMaterials");
+                if(previousMaterials.Length == 0) throw new NullReferenceException("previousMaterials exists but is empty");
+
+                foreach (var material in GetMaterialsToHide(skin))
                 {
-                    var previousMaterial = previousMaterials.First(m => m.name == material.name);
+                    // NOTE: The new material would be called "Eyes (Instance)"
+                    var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
+                    if(previousMaterial == null) throw new NullReferenceException("Failed to find material " + material.name+  " in previous materials list: " + string.Join(", ", previousMaterials.Select(m => m.name).ToArray()));
+                    if (material.name.StartsWith("Face"))
+                    {
+                        SuperController.LogMessage("RESTORE: Update " + material.name + " from ");
+                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("Diffuse Color") + ", Specular: " + material.GetColor("Specular Color"));
+                    }
                     material.shader = previousMaterial.shader;
+                    material.SetColor("Diffuse Color", previousMaterial.GetColor("Diffuse Color"));
+                    material.SetColor("Specular Color", previousMaterial.GetColor("Specular Color"));
+                    if (material.name.StartsWith("Face"))
+                    {
+                        SuperController.LogMessage("to");
+                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("Diffuse Color") + ", Specular: " + material.GetColor("Specular Color"));
+                    }
                 }
                 Destroy(_previousMaterialsContainer);
             }
 
-            private IEnumerable<Material> GetMaterials(DAZSkinV2 skin)
+            private IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
             {
+                var materials = new List<Material>(MaterialsToHide.Length);
+
                 foreach (var material in skin.GPUmaterials)
                 {
                     if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
                         continue;
 
-                    yield return material;
+                    materials.Add(material);
                 }
+
+                return materials;
             }
         }
 
         public class MaterialsEnabledStrategy : IStrategy
         {
-            public const string Name = "Materials Enabled";
+            public const string Name = "Materials Enabled (performance)";
 
             string IStrategy.Name
             {
@@ -404,6 +451,24 @@ namespace Acidbubbles.VaM.Plugins
                         skin.materialsEnabled[i] = enabled;
                     }
                 }
+            }
+        }
+
+        public class NoStrategy : IStrategy
+        {
+            public const string Name = "None (face mesh visible)";
+
+            string IStrategy.Name
+            {
+                get { return Name; }
+            }
+
+            public void Apply(DAZSkinV2 skin)
+            {
+            }
+
+            public void Restore(DAZSkinV2 skin)
+            {
             }
         }
 
