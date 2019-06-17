@@ -592,10 +592,12 @@ public class ImprovedPOVMirrorReflection : MVRScript
             foreach (var characterSelector in GameObject.FindObjectsOfType<DAZCharacterSelector>())
             {
                 var skin = characterSelector.selectedCharacter.skin;
-                var expectedPreviousMaterialsName = "ImprovedPoV container for skin " + skin.GetInstanceID();
-                var previousMaterialsContainer = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(o => o.name == expectedPreviousMaterialsName);
-                if (previousMaterialsContainer == null) continue;
-                var previousMaterials = previousMaterialsContainer.GetComponent<Renderer>().materials;
+				var previousMaterialsContainerName = "ImprovedPoV container for skin " + skin.GetInstanceID();
+
+                var previousMaterialsContainer = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(o => o.name == previousMaterialsContainerName);
+				if(previousMaterialsContainer == null) continue;
+
+                var previousMaterials = previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
 
                 if (!_debugOutputOnce)
                 {
@@ -610,12 +612,16 @@ public class ImprovedPOVMirrorReflection : MVRScript
 
                 foreach (var material in skin.GPUmaterials)
                 {
-                    var previousMaterial = previousMaterials.FirstOrDefault(m => m.name == material.name);
+                    // NOTE: The new material would be called "Eyes (Instance)"
+                    var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
                     if (previousMaterial == null) continue;
 
                     // TODO: Use a fixed array since we know how many materials should be in there, avoiding re-allocating a new list every time
                     _shownMaterials.Add(new ShownSkin { material = material, shaderToRestore = material.shader });
-                    material.shader = previousMaterial.shader;
+                    // material.shader = previousMaterial.shader;
+                    material.SetColor("_Color", new Color(0, 1, 0, 0));
+                    // material.SetColor("_Color", previousMaterial.GetColor("_Color"));
+                    // material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
                 }
             }
         }
@@ -633,7 +639,10 @@ public class ImprovedPOVMirrorReflection : MVRScript
         {
             foreach (var shown in _shownMaterials)
             {
-                shown.material.shader = shown.shaderToRestore;
+				var material = shown.material;
+                // material.shader = shown.shaderToRestore;
+				material.SetColor("_Color", new Color(1, 0, 0, 0));
+				// material.SetColor("_SpecColor", Color.black);
             }
             _shownMaterials.Clear();
         }
