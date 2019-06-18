@@ -4,31 +4,11 @@ Improved POV handling so that possession actually feels right.
 
 ## How to use
 
-Add the plugin to the Person you want to possess. Then, enter possess mode and that should be it! Keep in mind however that you will not see your face when looking in a mirror!
+Add the `ImprovedPoV.cs` plugin to the Person you want to possess. Then, add the `ImprovedPoVMirrorReflection` on all mirrors you have in your scene.
 
-![What you'll see in the mirror](https://i.imgur.com/iwAhsSl.png)
+You can use the recess and up/down controls to adjust for your specific morphs, and optionally use the "Materials Enabled" option if you don't have a mirror. It will be very slightly more performant.
 
-You can use the recess and up/down controls to adjust for your specific morphs, and optionally disable the "Hide Face" option if you have a mirror (but you'll have to reduce the camera recess accordingly).
-
-## Status
-
-Still under development. A short list of what's done or not:
-
-- [x] Move the camera at the right position
-- [x] Hide the face mesh
-- [x] Hide the eyeballs (or move them out of view)
-- [x] Hide the mouth and lips (not really useful, but it's less scary when seen in a mirror)
-- [x] Hide the possessor geometry (MonitorRig or CenterEye)
-- [ ] If using materials to hide stuff, make sure we only hide our face, not other models'
-- [x] Only hide the face mesh when in possession (might require a dirty flag)
-- [ ] Import a nose (without collision) and make it follow the camera
-- [ ] Render the face material in mirrors (the monitor rig does the reverse thing right now)
-- [x] Sensible defaults when importing
-- [ ] Test for Oculus, Vive and more (see the Leap Possess plugin for ovr condition)
-- [x] Test loading scenes with it, with and without possession, adding and removing
-- [ ] Add options for what to hide, as well as a few tips
-- [ ] Subscribe to UpdateManager singleton and update once, after that unregister the Update call
-- [x] Reset the possession camera and mesh status when removing the plugin
+To adjust the face, you should play with the World Scale. Close your eyes, put your index finger horizontally at the level of your mouth, and look at where it shows up. Increase or decrease the scale so that your "proportions" fit!
 
 ## Credits
 
