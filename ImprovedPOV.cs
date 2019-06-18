@@ -81,10 +81,6 @@ namespace Acidbubbles.VaM.Plugins
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
                 _strategyImpl = new NoStrategy();
 
-#if (POV_DIAGNOSTICS)
-                SuperController.LogMessage("PoV Person: " + GetDebugHierarchy(_person.gameObject));
-#endif
-
                 InitControls();
                 _valid = true;
                 _enabled = true;
@@ -186,25 +182,6 @@ namespace Acidbubbles.VaM.Plugins
                     _strategy.val = val;
                     _dirty = true;
                 });
-
-#if(POV_DIAGNOSTICS)
-                var debugButton = CreateButton("Debug", true);
-                debugButton.button.onClick.AddListener(delegate ()
-                {
-                    try
-                    {
-                        var skin = GetSkin();
-                        SuperController.LogMessage("DEBUG BEFORE: " + skin.GPUmaterials.FirstOrDefault(m => m.name.StartsWith("Face")).shader.name);
-                        _strategyImpl.Restore(skin);
-                        _strategyImpl.Apply(skin);
-                        SuperController.LogMessage("DEBUG AFTER: " + skin.GPUmaterials.FirstOrDefault(m => m.name.StartsWith("Face")).shader.name);
-                    }
-                    catch (Exception e)
-                    {
-                        SuperController.LogError("Failed to run Debug tool: " + e);
-                    }
-                });
-#endif
             }
             catch (Exception e)
             {
@@ -214,10 +191,6 @@ namespace Acidbubbles.VaM.Plugins
 
         private void ApplyAll()
         {
-#if (POV_DIAGNOSTICS)
-            SuperController.LogMessage("PoV Apply; Valid: " + _valid + " Enabled: " + _enabled + " Active: " + _active);
-#endif
-
             ApplyCameraPosition();
             ApplyFaceStrategy();
             ApplyPossessorMeshVisibility();
@@ -248,7 +221,6 @@ namespace Acidbubbles.VaM.Plugins
                 {
                     if (_strategyImpl.Name != NoStrategy.Name)
                     {
-                        SuperController.LogMessage("Strategy (clear)");
                         _strategyImpl.Restore(skin);
                         _strategyImpl = new NoStrategy();
                     }
@@ -257,7 +229,6 @@ namespace Acidbubbles.VaM.Plugins
 
                 if (_strategyImpl.Name != _strategy.val)
                 {
-                    SuperController.LogMessage("Strategy (switch from " + _strategyImpl.Name + " to " + _strategy.val);
                     _strategyImpl.Restore(skin);
                     _strategyImpl = CreateStrategy(_strategy.val);
                 }
@@ -270,7 +241,6 @@ namespace Acidbubbles.VaM.Plugins
 
             try
             {
-                SuperController.LogMessage("Strategy (now): " + _strategyImpl.Name);
                 _strategyImpl.Apply(skin);
             }
             catch (Exception e)
@@ -339,24 +309,16 @@ namespace Acidbubbles.VaM.Plugins
         {
             public const string Name = "Shaders (allows mirrors)";
 
-
-            // const string replacementShaderName = "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff";
-            // const string replacementShaderName = "Custom/Subsurface/TransparentComputeBuff";
-            // const string replacementShaderName = "";
-
-            private static Dictionary<string, Shader> _shaders = new Dictionary<string, Shader>
+            private static Dictionary<string, Shader> ReplacementShaders = new Dictionary<string, Shader>
             {
                 // Opaque materials
-                // { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
-                // { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlpha") },
-                // { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
                 { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
                 { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff") },
                 { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
 
                 // Transparent materials
                 { "Custom/Subsurface/TransparentGlossNoCullSeparateAlphaComputeBuff", null },
-                { "Custom/Subsurface/TransparentGlossComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/TransparentGlossComputeBuff", null },
                 { "Custom/Subsurface/AlphaMaskComputeBuff", null },
                 { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
             };
@@ -377,15 +339,7 @@ namespace Acidbubbles.VaM.Plugins
             {
                 // Check if already applied
                 if (_previousMaterialsContainer != null)
-                {
                     return;
-                }
-
-                SuperController.LogMessage("Auto swap? " + skin.GPUAutoSwapShader);
-                // TODO?
-                // skin.skinMethod = DAZSkinV2.SkinMethod.CPU;
-                // skin.GPUAutoSwapShader = false;
-                // skin.delayDisplayOneFrame = false;
 
                 _previousMaterialsContainer = new GameObject("ImprovedPoV container for skin " + skin.GetInstanceID());
                 var previousMaterialsRenderer = _previousMaterialsContainer.AddComponent<MeshRenderer>();
@@ -397,27 +351,14 @@ namespace Acidbubbles.VaM.Plugins
                     var materialClone = new Material(material);
                     previousMaterials.Add(materialClone);
 
-                    // TODO: Keep a reference to the original shader somewhere
-                    if (material.name.StartsWith("Face"))
-                    {
-                        SuperController.LogMessage("APPLY: Update " + skin.GetInstanceID() + " material " + material.name + " from ");
-                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
-                    }
                     Shader shader;
-                    if (!_shaders.TryGetValue(material.shader.name, out shader))
-                    {
-                        SuperController.LogError("Missing shader: '" + material.shader.name + "'");
-                    }
+                    if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
+                        SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
                     if(shader != null)
                         material.shader = shader;
-                    // material.SetFloat("_AlphaAdjust", -1f);
-                    // material.SetColor("_Color", new Color(0f, 0f, 0f, 1f));
-                    // material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 1f));
-                    if (material.name.StartsWith("Face"))
-                    {
-                        SuperController.LogMessage("to");
-                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
-                    }
+                    material.SetFloat("_AlphaAdjust", -1f);
+                    material.SetColor("_Color", new Color(0f, 0f, 0f, 1f));
+                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 1f));
                 }
 
                 previousMaterialsRenderer.materials = previousMaterials.ToArray();
@@ -433,27 +374,16 @@ namespace Acidbubbles.VaM.Plugins
 
                 var previousMaterials = _previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
                 if (previousMaterials == null) throw new NullReferenceException("previousMaterials");
-                if (previousMaterials.Length == 0) throw new NullReferenceException("previousMaterials exists but is empty");
 
                 foreach (var material in GetMaterialsToHide(skin))
                 {
                     // NOTE: The new material would be called "Eyes (Instance)"
                     var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
                     if (previousMaterial == null) throw new NullReferenceException("Failed to find material " + material.name + " in previous materials list: " + string.Join(", ", previousMaterials.Select(m => m.name).ToArray()));
-                    // if (material.name.StartsWith("Face"))
-                    {
-                        SuperController.LogMessage("RESTORE: Update " + skin.GetInstanceID() + " material " + material.name + " from ");
-                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
-                    }
                     material.shader = previousMaterial.shader;
                     material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
                     material.SetColor("_Color", previousMaterial.GetColor("_Color"));
                     material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
-                    // if (material.name.StartsWith("Face"))
-                    {
-                        SuperController.LogMessage("to");
-                        SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
-                    }
                 }
                 Destroy(_previousMaterialsContainer);
 
