@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.XR;
 
 [ExecuteInEditMode]
-public class ImprovedPOVMirrorReflection : MVRScript
+public class ImprovedPoVMirrorReflection : MVRScript
 {
 	// Acidbubbles: Whether this is the real thing, or just the plugin
 	private bool _actualMirror;
@@ -771,7 +771,7 @@ public class ImprovedPOVMirrorReflection : MVRScript
 	{
         SuperController.LogMessage("Root objects: " + string.Join("; ", SceneManager.GetActiveScene().GetRootGameObjects().Select(x => x.name).ToArray()));
 		SuperController.LogMessage("Original mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<MirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
-		SuperController.LogMessage("PoV mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<ImprovedPOVMirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
+		SuperController.LogMessage("PoV mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<ImprovedPoVMirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
 	}
 
 	private static string GetDebugHierarchy(GameObject o)
@@ -820,7 +820,7 @@ public class ImprovedPOVMirrorReflection : MVRScript
 				// We are now in the plugin. Let's inject the component on the mirror itself.
 				var pluginTarget = containingAtom.gameObject;
 				SuperController.LogMessage("Mirror Plugin Init " + pluginTarget.name + " " + GetInstanceID());
-				ReplaceMirrorScriptAndCreatedObjects<MirrorReflection, ImprovedPOVMirrorReflection>(pluginTarget);
+				ReplaceMirrorScriptAndCreatedObjects<MirrorReflection, ImprovedPoVMirrorReflection>(pluginTarget);
 				PrintDebugStatus();
 				return;
 			}
@@ -1019,7 +1019,7 @@ public class ImprovedPOVMirrorReflection : MVRScript
 		// Acidbubbles: For the plugin, disable the children POV mirrors, otherwise disable normally
 		if(containingAtom != null) {
 			SuperController.LogMessage("Mirror Plugin Disable " + containingAtom.gameObject.name + " " + GetInstanceID());
-			ReplaceMirrorScriptAndCreatedObjects<ImprovedPOVMirrorReflection, MirrorReflection>(containingAtom.gameObject);
+			ReplaceMirrorScriptAndCreatedObjects<ImprovedPoVMirrorReflection, MirrorReflection>(containingAtom.gameObject);
 			return;
 		}
 		if(!_actualMirror) return;
