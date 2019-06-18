@@ -61,11 +61,16 @@ public class ImprovedPoVMirrorReflection : MVRScript
     }
 
     private void ReplaceMirrorScriptAndCreatedObjects<TBehaviorToRemove, TBehaviorToAdd>()
-        where TBehaviorToRemove : MonoBehaviour
-        where TBehaviorToAdd : MonoBehaviour
+        where TBehaviorToRemove : MirrorReflection
+        where TBehaviorToAdd : MirrorReflection
     {
         foreach (var childMirror in _mirror.GetComponentsInChildren<TBehaviorToRemove>())
         {
+			var uiTransform = childMirror.UITransform;
+			var uiTransformAlt = childMirror.UITransformAlt;
+			var slaveReflection = childMirror.slaveReflection;
+			var reflectLayers = childMirror.m_ReflectLayers;
+
             var childMirrorGameObject = childMirror.gameObject;
 
             var childMirrorInstanceId = childMirror.GetInstanceID();
@@ -77,7 +82,11 @@ public class ImprovedPoVMirrorReflection : MVRScript
                 Destroy(childMirrorObject);
             }
 
-            childMirrorGameObject.AddComponent<TBehaviorToAdd>();
+            var newBehavior = childMirrorGameObject.AddComponent<TBehaviorToAdd>();
+			newBehavior.UITransform = uiTransform;
+			newBehavior.UITransformAlt = uiTransformAlt;
+			newBehavior.slaveReflection = slaveReflection;
+			newBehavior.m_ReflectLayers = reflectLayers;
         }
     }
 
