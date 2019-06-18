@@ -571,9 +571,9 @@ public class ImprovedPoVMirrorReflection : MVRScript
 	public struct ShownSkin
 	{
 		public Material material;
-		public Shader shaderToRestore;
 	}
-	private List<ShownSkin> _shownMaterials = new List<ShownSkin>();
+	// NOTE: 16 is the amount of materials we need to hide in ImprovedPoV
+	private List<ShownSkin> _shownMaterials = new List<ShownSkin>(16);
 	private bool _debugOutputOnce;
 	private bool _failedOnce;
 
@@ -581,13 +581,6 @@ public class ImprovedPoVMirrorReflection : MVRScript
     {
         try
         {
-            // TODO: Initialize the shader in Init and keep it instead of using Find every render
-            var shader = Shader.Find("Custom/Subsurface/GlossNMCullComputeBuff");
-            if (shader == null)
-            {
-                SuperController.LogMessage("Shader show not found");
-                return;
-            }
             // TODO: Cache the list of characters and materials to hide, and update the list using a broadcast message
             foreach (var characterSelector in GameObject.FindObjectsOfType<DAZCharacterSelector>())
             {
@@ -617,11 +610,10 @@ public class ImprovedPoVMirrorReflection : MVRScript
                     if (previousMaterial == null) continue;
 
                     // TODO: Use a fixed array since we know how many materials should be in there, avoiding re-allocating a new list every time
-                    _shownMaterials.Add(new ShownSkin { material = material, shaderToRestore = material.shader });
-                    // material.shader = previousMaterial.shader;
-                    material.SetColor("_Color", new Color(0, 1, 0, 0));
-                    // material.SetColor("_Color", previousMaterial.GetColor("_Color"));
-                    // material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
+                    _shownMaterials.Add(new ShownSkin { material = material });
+                    material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
+                    material.SetColor("_Color", previousMaterial.GetColor("_Color"));
+                    material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
                 }
             }
         }
@@ -640,9 +632,9 @@ public class ImprovedPoVMirrorReflection : MVRScript
             foreach (var shown in _shownMaterials)
             {
 				var material = shown.material;
-                // material.shader = shown.shaderToRestore;
-				material.SetColor("_Color", new Color(1, 0, 0, 0));
-				// material.SetColor("_SpecColor", Color.black);
+				material.SetFloat("_AlphaAdjust", -1f);
+				material.SetColor("_Color", new Color(0f, 0f, 0f, 1f));
+				material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 1f));
             }
             _shownMaterials.Clear();
         }
