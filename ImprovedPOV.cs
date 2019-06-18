@@ -339,11 +339,27 @@ namespace Acidbubbles.VaM.Plugins
         {
             public const string Name = "Shaders (allows mirrors)";
 
-            
+
             // const string replacementShaderName = "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff";
             // const string replacementShaderName = "Custom/Subsurface/TransparentComputeBuff";
-            const string replacementShaderName = "Custom/Subsurface/TransparentCutoutSeparateAlphaComputeBuff";
-            private static Shader replacementShader = Shader.Find(replacementShaderName);
+            // const string replacementShaderName = "";
+
+            private static Dictionary<string, Shader> _shaders = new Dictionary<string, Shader>
+            {
+                // Opaque materials
+                // { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
+                // { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlpha") },
+                // { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
+
+                // Transparent materials
+                { "Custom/Subsurface/TransparentGlossNoCullSeparateAlphaComputeBuff", null },
+                { "Custom/Subsurface/TransparentGlossComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/AlphaMaskComputeBuff", null },
+                { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
+            };
 
             private GameObject _previousMaterialsContainer;
 
@@ -360,7 +376,8 @@ namespace Acidbubbles.VaM.Plugins
             public void Apply(DAZSkinV2 skin, bool save)
             {
                 // Check if already applied
-                if (_previousMaterialsContainer != null) {
+                if (_previousMaterialsContainer != null)
+                {
                     return;
                 }
 
@@ -386,9 +403,16 @@ namespace Acidbubbles.VaM.Plugins
                         SuperController.LogMessage("APPLY: Update " + skin.GetInstanceID() + " material " + material.name + " from ");
                         SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
                     }
-                    material.shader = replacementShader;
-                    material.SetColor("_Color", new Color(1, 0, 0, 0));
-                    material.SetColor("_SpecColor", Color.black);
+                    Shader shader;
+                    if (!_shaders.TryGetValue(material.shader.name, out shader))
+                    {
+                        SuperController.LogError("Missing shader: '" + material.shader.name + "'");
+                    }
+                    if(shader != null)
+                        material.shader = shader;
+                    // material.SetFloat("_AlphaAdjust", -1f);
+                    // material.SetColor("_Color", new Color(0f, 0f, 0f, 1f));
+                    // material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 1f));
                     if (material.name.StartsWith("Face"))
                     {
                         SuperController.LogMessage("to");
@@ -416,15 +440,16 @@ namespace Acidbubbles.VaM.Plugins
                     // NOTE: The new material would be called "Eyes (Instance)"
                     var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
                     if (previousMaterial == null) throw new NullReferenceException("Failed to find material " + material.name + " in previous materials list: " + string.Join(", ", previousMaterials.Select(m => m.name).ToArray()));
-                    if (material.name.StartsWith("Face"))
+                    // if (material.name.StartsWith("Face"))
                     {
                         SuperController.LogMessage("RESTORE: Update " + skin.GetInstanceID() + " material " + material.name + " from ");
                         SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
                     }
                     material.shader = previousMaterial.shader;
+                    material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
                     material.SetColor("_Color", previousMaterial.GetColor("_Color"));
                     material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
-                    if (material.name.StartsWith("Face"))
+                    // if (material.name.StartsWith("Face"))
                     {
                         SuperController.LogMessage("to");
                         SuperController.LogMessage("-  " + material.shader.name + " (Diffuse: " + material.GetColor("_Color") + ", Specular: " + material.GetColor("_SpecColor"));
