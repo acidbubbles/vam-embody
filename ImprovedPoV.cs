@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 #if (POV_DIAGNOSTICS)
 using System.Collections.Generic;
 #endif
@@ -91,21 +92,35 @@ namespace Acidbubbles.VaM.Plugins
             }
         }
 
-        public void OnDisable()
-        {
-            if (!_enabled) return;
-
-            _active = false;
-            _enabled = false;
-            ApplyAll();
-        }
-
         public void OnEnable()
         {
-            if (!_valid || _enabled) return;
+            try
+            {
+                if (!_valid || _enabled) return;
 
-            _enabled = true;
-            ApplyAll();
+                _enabled = true;
+                ApplyAll();
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to enable Improved PoV: " + e);
+            }
+        }
+
+        public void OnDisable()
+        {
+            try
+            {
+                if (!_enabled) return;
+
+                _active = false;
+                _enabled = false;
+                ApplyAll();
+            }
+            catch (Exception e)
+            {
+                SuperController.LogError("Failed to disable Improved PoV: " + e);
+            }
         }
 
         public void OnDestroy()
@@ -173,7 +188,7 @@ namespace Acidbubbles.VaM.Plugins
                 });
 
                 var strategies = new List<string> { NoStrategy.Name, MaterialsEnabledStrategy.Name, ShaderStrategy.Name };
-                _strategy = new JSONStorableStringChooser("Strategy", strategies, MaterialsEnabledStrategy.Name, "Strategy");
+                _strategy = new JSONStorableStringChooser("Strategy", strategies, ShaderStrategy.Name, "Strategy");
                 RegisterStringChooser(_strategy);
                 var strategyPopup = CreatePopup(_strategy, true);
                 strategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
@@ -332,11 +347,6 @@ namespace Acidbubbles.VaM.Plugins
 
             public void Apply(DAZSkinV2 skin)
             {
-                Apply(skin, true);
-            }
-
-            public void Apply(DAZSkinV2 skin, bool save)
-            {
                 // Check if already applied
                 if (_previousMaterialsContainer != null)
                     return;
@@ -354,17 +364,19 @@ namespace Acidbubbles.VaM.Plugins
                     Shader shader;
                     if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
                         SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
-                    if(shader != null)
+                    if (shader != null)
                         material.shader = shader;
                     material.SetFloat("_AlphaAdjust", -1f);
-                    material.SetColor("_Color", new Color(0f, 0f, 0f, 1f));
-                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 1f));
+                    material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
+                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
                 }
 
                 previousMaterialsRenderer.materials = previousMaterials.ToArray();
 
                 // This is a hack to force a refresh of the shaders cache
                 skin.BroadcastMessage("OnApplicationFocus", true);
+                // Notify mirrors
+                BroadcastUpdate();
             }
 
             public void Restore(DAZSkinV2 skin)
@@ -374,21 +386,25 @@ namespace Acidbubbles.VaM.Plugins
 
                 var previousMaterials = _previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
                 if (previousMaterials == null) throw new NullReferenceException("previousMaterials");
+                Destroy(_previousMaterialsContainer);
 
                 foreach (var material in GetMaterialsToHide(skin))
                 {
                     // NOTE: The new material would be called "Eyes (Instance)"
                     var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
                     if (previousMaterial == null) throw new NullReferenceException("Failed to find material " + material.name + " in previous materials list: " + string.Join(", ", previousMaterials.Select(m => m.name).ToArray()));
+                    // NOTE: Setting renderQueue to 5000 is used to detect discarded materials in the mirrors
+                    previousMaterial.renderQueue = 5000;
                     material.shader = previousMaterial.shader;
                     material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
                     material.SetColor("_Color", previousMaterial.GetColor("_Color"));
                     material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
                 }
-                Destroy(_previousMaterialsContainer);
 
                 // This is a hack to force a refresh of the shaders cache
                 skin.BroadcastMessage("OnApplicationFocus", true);
+                // Notify mirrors
+                BroadcastUpdate();
             }
 
             private IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
@@ -404,6 +420,12 @@ namespace Acidbubbles.VaM.Plugins
                 }
 
                 return materials;
+            }
+
+            private void BroadcastUpdate()
+            {
+                var atoms = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(o => o.name == "SceneAtoms");
+                atoms.BroadcastMessage("ImprovedPoVPersonChanged");
             }
         }
 
