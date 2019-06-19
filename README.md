@@ -2,6 +2,19 @@
 
 Improved POV handling so that possession actually feels right.
 
+## Why
+
+The issue is that currently, the possession mode in VaM places the camera in _front_ of the head. That feels like your body is weirdly offset behind you, or like you're floating in front of someone's body.
+
+We want the camera to be exactly where the eyes are. The only solution right now involves increasing the minimum clipping distance, which creates it's own problems. This plugin solves all of this:
+
+- See the model's hairs in front of your eyes as you move the head around
+- Avoid seeing eyeballs and eyelashes when you move your head too fast
+- Use possession with scaled models without seeing the "possessor" white spheres
+- When you look down while your body is tilted backwards (e.g. sitting on a chair), your chest won't be clipped; same thing if you move your fingers near your face
+- If you touch your lips or your face, you can have them match so that physical contact matches what you see
+- Keep your settings as part of your scenes so you don't have to set them every time
+
 ## How to use
 
 Add the `ImprovedPoV.cs` plugin to the Person you want to possess. Then, add the `ImprovedPoVMirrorReflection` on all mirrors you have in your scene.
