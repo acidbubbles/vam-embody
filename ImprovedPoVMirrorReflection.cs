@@ -12,7 +12,6 @@ public class ImprovedPoVMirrorReflection : MVRScript
 
     public override void Init()
     {
-        // Acidbubbles: Disable the original MirrorReflection in the actual mirror children
         try
         {
             _mirror = containingAtom.gameObject;
@@ -22,7 +21,6 @@ public class ImprovedPoVMirrorReflection : MVRScript
         {
             SuperController.LogError("Failed to initialize Improved PoV Mirror" + e);
         }
-        // /Acidbubbles
     }
 
     public void OnEnable()
