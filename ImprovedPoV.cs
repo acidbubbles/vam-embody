@@ -3,9 +3,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if (POV_DIAGNOSTICS)
 using System.Collections.Generic;
-#endif
 
 namespace Acidbubbles.VaM.Plugins
 {
