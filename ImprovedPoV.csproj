@@ -37,7 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="ImprovedPOV.cs" />
+    <Compile Include="ImprovedPoV_Person.cs" />
+    <Compile Include="ImprovedPoV_Mirror.cs" />
   </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

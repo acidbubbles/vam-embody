@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ImprovedPoVMirrorReflection : MVRScript
+public class ImprovedPoV_Mirror : MVRScript
 {
     private GameObject _mirror;
     private bool _active;
@@ -64,10 +64,11 @@ public class ImprovedPoVMirrorReflection : MVRScript
     {
         foreach (var childMirror in _mirror.GetComponentsInChildren<TBehaviorToRemove>())
         {
-			var uiTransform = childMirror.UITransform;
-			var uiTransformAlt = childMirror.UITransformAlt;
-			var slaveReflection = childMirror.slaveReflection;
-			var reflectLayers = childMirror.m_ReflectLayers;
+            var name = childMirror.name;
+            var uiTransform = childMirror.UITransform;
+            var uiTransformAlt = childMirror.UITransformAlt;
+            var slaveReflection = childMirror.slaveReflection;
+            var reflectLayers = childMirror.m_ReflectLayers;
 
             var childMirrorGameObject = childMirror.gameObject;
 
@@ -81,10 +82,11 @@ public class ImprovedPoVMirrorReflection : MVRScript
             }
 
             var newBehavior = childMirrorGameObject.AddComponent<TBehaviorToAdd>();
-			newBehavior.UITransform = uiTransform;
-			newBehavior.UITransformAlt = uiTransformAlt;
-			newBehavior.slaveReflection = slaveReflection;
-			newBehavior.m_ReflectLayers = reflectLayers;
+            newBehavior.name = name;
+            newBehavior.UITransform = uiTransform;
+            newBehavior.UITransformAlt = uiTransformAlt;
+            newBehavior.slaveReflection = slaveReflection;
+            newBehavior.m_ReflectLayers = reflectLayers;
         }
     }
 

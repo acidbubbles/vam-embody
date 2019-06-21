@@ -14,7 +14,7 @@ namespace Acidbubbles.VaM.Plugins
     /// this plugin took heavy inspiration: https://www.reddit.com/r/VaMscenes/comments/9z9b71/script_headpossessdepthfix/
     /// Thanks for Marko, VAMDeluxe, LFE for your previous help on Discord
     /// </summary>
-    public class ImprovedPoV : MVRScript
+    public class ImprovedPoV_Person : MVRScript
     {
         private const string PluginLabel = "Improved PoV Plugin - by Acidbubbles";
 
@@ -80,6 +80,27 @@ namespace Acidbubbles.VaM.Plugins
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
                 _strategyImpl = new NoStrategy();
 
+#if(ImprovedPoV)
+         Application.logMessageReceived += DebugLog;
+#endif
+
+                var scripts = _person.GetComponentsInChildren<MonoBehaviour>();
+                var objs = scripts.GroupBy(s => s.gameObject).Select(x => x.Key);
+                var hair = objs.FirstOrDefault(o => o.name == "FemaleHair");
+                foreach (var res in hair.GetComponentsInChildren<Renderer>())
+                {
+                    if (res == null) continue;
+                    if (res.materials == null) continue;
+                    foreach (var mat in res.materials)
+                    {
+                        if (mat == null) continue;
+                        SuperController.LogMessage("Mat: " + mat.name);
+                    }
+                }
+                // foreach(var obj in objs){
+                //     if (obj.name.Contains("air") && !obj.name.Contains("ollider")) SuperController.LogMessage("Found in obj: " + GetDebugHierarchy(obj));
+                // }
+
                 InitControls();
                 _valid = true;
                 _enabled = true;
@@ -124,6 +145,9 @@ namespace Acidbubbles.VaM.Plugins
         public void OnDestroy()
         {
             OnDisable();
+#if(ImprovedPoV)
+         Application.logMessageReceived -= DebugLog;
+#endif
         }
 
         public void Update()
@@ -412,7 +436,13 @@ namespace Acidbubbles.VaM.Plugins
                 foreach (var material in skin.GPUmaterials)
                 {
                     if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
+                    {
+                        if (material.name.Contains("air"))
+                        {
+                            SuperController.LogMessage("Found on skin: " + material.name);
+                        }
                         continue;
+                    }
 
                     materials.Add(material);
                 }
@@ -513,6 +543,10 @@ namespace Acidbubbles.VaM.Plugins
             return string.Join(" -> ", items.ToArray());
         }
 
+        private void DebugLog(string condition, string stackTrace, LogType type)
+        {
+            SuperController.LogMessage(type + " " + condition + " " + stackTrace);
+        }
 #endif
     }
 }
