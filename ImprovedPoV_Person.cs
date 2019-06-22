@@ -16,8 +16,6 @@ namespace Acidbubbles.VaM.Plugins
     /// </summary>
     public class ImprovedPoV_Person : MVRScript
     {
-        private const string PluginLabel = "Improved PoV Plugin - by Acidbubbles";
-
         private static readonly string[] MaterialsToHide = new[]
         {
             "Lacrimals",
@@ -64,8 +62,6 @@ namespace Acidbubbles.VaM.Plugins
         {
             try
             {
-                if (string.IsNullOrEmpty(pluginLabelJSON.val))
-                    pluginLabelJSON.val = PluginLabel;
 
                 if (containingAtom?.type != "Person")
                 {
@@ -132,7 +128,7 @@ namespace Acidbubbles.VaM.Plugins
         public void OnDestroy()
         {
             OnDisable();
-#if(ImprovedPoV)
+#if (POV_DIAGNOSTICS)
          Application.logMessageReceived -= DebugLog;
 #endif
         }
