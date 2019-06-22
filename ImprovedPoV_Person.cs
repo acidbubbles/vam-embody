@@ -67,7 +67,7 @@ namespace Acidbubbles.VaM.Plugins
                 if (string.IsNullOrEmpty(pluginLabelJSON.val))
                     pluginLabelJSON.val = PluginLabel;
 
-                if (containingAtom.type != "Person")
+                if (containingAtom?.type != "Person")
                 {
                     _valid = false;
                     SuperController.LogError($"Please apply the ImprovedPoV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
@@ -75,31 +75,18 @@ namespace Acidbubbles.VaM.Plugins
                 }
 
                 _person = containingAtom;
-                _mainCamera = CameraTarget.centerTarget.targetCamera;
-                _possessor = SuperController.FindObjectsOfType(typeof(Possessor)).Where(p => p.name == "CenterEye").Select(p => p as Possessor).First();
+                _mainCamera = CameraTarget.centerTarget?.targetCamera;
+                _possessor = SuperController
+                    .FindObjectsOfType(typeof(Possessor))
+                    .Where(p => p.name == "CenterEye")
+                    .Select(p => p as Possessor)
+                    .FirstOrDefault();
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
                 _strategyImpl = new NoStrategy();
 
-#if(POV_DIAGNOSTICS)
-         Application.logMessageReceived += DebugLog;
+#if (POV_DIAGNOSTICS)
+                Application.logMessageReceived += DebugLog;
 #endif
-
-                var scripts = _person.GetComponentsInChildren<MonoBehaviour>();
-                var objs = scripts.GroupBy(s => s.gameObject).Select(x => x.Key);
-                var hair = objs.FirstOrDefault(o => o.name == "FemaleHair");
-                foreach (var res in hair.GetComponentsInChildren<Renderer>())
-                {
-                    if (res == null) continue;
-                    if (res.materials == null) continue;
-                    foreach (var mat in res.materials)
-                    {
-                        if (mat == null) continue;
-                        SuperController.LogMessage("Mat: " + mat.name);
-                    }
-                }
-                // foreach(var obj in objs){
-                //     if (obj.name.Contains("air") && !obj.name.Contains("ollider")) SuperController.LogMessage("Found in obj: " + GetDebugHierarchy(obj));
-                // }
 
                 InitControls();
                 _valid = true;
