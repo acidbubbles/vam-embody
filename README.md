@@ -47,4 +47,6 @@ If there was a way to assign a culling layer to the skin material, and the VR ca
 
 [ShortRecognition](https://www.reddit.com/user/ShortRecognition/) for the [original HeadPossessDepthFix](https://www.reddit.com/r/VAMscenes/comments/9z9b71/script_headpossessdepthfix/) from which this plugin took heavy inspiration.
 
-Thanks for Marko, VAMDeluxe, LFE for your previous help on Discord.
+Thanks for Marko, VAMDeluxe, LFE and MeshedVR for your previous help on Discord.
+
+And, obviously, MeshedVR for Virt-a-Mate, which is a technological wonder worth exploring.
