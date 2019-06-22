@@ -80,7 +80,7 @@ namespace Acidbubbles.VaM.Plugins
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
                 _strategyImpl = new NoStrategy();
 
-#if(ImprovedPoV)
+#if(POV_DIAGNOSTICS)
          Application.logMessageReceived += DebugLog;
 #endif
 
