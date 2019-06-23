@@ -17,7 +17,7 @@ We want the camera to be exactly where the eyes are. The only solution right now
 
 ## How to use
 
-Add the `ImprovedPoV.cs` plugin to the Person you want to possess. Then, add the `ImprovedPoVMirrorReflection` on all mirrors you have in your scene.
+Add the `ImprovedPoV_Person.cs` plugin to the Person you want to possess. Then, add the `ImprovedPoV_Mirror.cs` on all mirrors you have in your scene.
 
 You can use the recess and up/down controls to adjust for your specific morphs, and optionally use the "Materials Enabled" option if you don't have a mirror. It will be very slightly more performant.
 
