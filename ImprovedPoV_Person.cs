@@ -62,7 +62,6 @@ namespace Acidbubbles.VaM.Plugins
         {
             try
             {
-
                 if (containingAtom?.type != "Person")
                 {
                     _valid = false;
@@ -129,7 +128,7 @@ namespace Acidbubbles.VaM.Plugins
         {
             OnDisable();
 #if (POV_DIAGNOSTICS)
-         Application.logMessageReceived -= DebugLog;
+            Application.logMessageReceived -= DebugLog;
 #endif
         }
 
@@ -530,6 +529,44 @@ namespace Acidbubbles.VaM.Plugins
         {
             if (condition == null || condition.StartsWith("Log ") || string.IsNullOrEmpty(stackTrace)) return;
             SuperController.LogMessage(type + " " + condition + " " + stackTrace);
+        }
+
+        private void SimulateSave()
+        {
+            var j = new SimpleJSON.JSONArray();
+            foreach (var atom in SuperController.singleton.GetAtoms())
+            {
+                if (!atom.name.Contains("Mirror") && !atom.name.Contains("Glass")) continue;
+
+                try
+                {
+                    // atom.GetJSON(true, true, true);
+                    foreach (var id in atom.GetStorableIDs())
+                    {
+                        var stor = atom.GetStorableByID(id);
+                        if (stor.gameObject == null) throw new NullReferenceException("123");
+                        try
+                        {
+                            if (stor == null) throw new Exception("Case 1");
+                            if (stor.enabled == false) throw new Exception("Case 2");
+                            SuperController.LogMessage("Storage" + atom.name + "/" + stor.name + " (" + stor.storeId + ")");
+                            string[] value = stor.GetAllFloatAndColorParamNames().ToArray();
+                            SuperController.LogMessage(" -" + string.Join(", ", value));
+                            // var x = stor.name;
+                            // stor.GetJSON();
+                        }
+                        catch (Exception se)
+                        {
+                            SuperController.LogMessage("Error with " + atom.name + "/" + stor.name + ": " + se);
+                        }
+                    }
+                    // atom.Store(j);
+                }
+                catch (Exception je)
+                {
+                    SuperController.LogMessage("Error with " + GetDebugHierarchy(atom.gameObject) + " " + atom + ": " + je);
+                }
+            }
         }
 #endif
     }

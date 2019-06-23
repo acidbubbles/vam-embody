@@ -136,6 +136,9 @@ public class ImprovedPoV_Mirror : MVRScript
 
     public class ImprovedPoVMirrorReflectionDecorator : MirrorReflection
     {
+        // Attempts before stopping trying to find a character. Approximating 90 frames per second, for 20 seconds.
+        public const int MAX_ATTEMPTS = 90 * 10;
+
         public bool active;
         public void CopyFrom(MirrorReflection original)
         {
@@ -235,14 +238,22 @@ public class ImprovedPoV_Mirror : MVRScript
             var activeScene = SceneManager.GetActiveScene();
             GameObject[] rootGameObjects = null;
             DAZCharacterSelector[] selectors = null;
+            var attempts = 0;
             yield return new WaitUntil(() =>
             {
+                if (attempts++ > MAX_ATTEMPTS)
+                    return true;
                 rootGameObjects = activeScene.GetRootGameObjects();
                 var atoms = rootGameObjects.FirstOrDefault(o => o.name == "SceneAtoms");
                 if (atoms == null) return false;
                 selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
                 return selectors != null;
             });
+            if (selectors == null)
+            {
+                SuperController.LogError("Could not find a character for ImprovedPoV mirror");
+                yield break;
+            }
             BuildMaterialsList(rootGameObjects, selectors);
         }
 
