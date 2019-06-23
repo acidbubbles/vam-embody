@@ -528,6 +528,7 @@ namespace Acidbubbles.VaM.Plugins
 
         private void DebugLog(string condition, string stackTrace, LogType type)
         {
+            if (condition == null || condition.StartsWith("Log ") || string.IsNullOrEmpty(stackTrace)) return;
             SuperController.LogMessage(type + " " + condition + " " + stackTrace);
         }
 #endif
