@@ -278,6 +278,9 @@ public class ImprovedPoV_Mirror : MVRScript
                     _materials.Add(new MaterialReference { Previous = previousMaterial, Current = material });
                 }
             }
+
+            // Allow crashing again now that we have fresh data to work with
+            _failedOnce = false;
         }
 
         public new void OnWillRenderObject()
