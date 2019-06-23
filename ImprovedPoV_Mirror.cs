@@ -239,13 +239,21 @@ public class ImprovedPoV_Mirror : MVRScript
             var attempts = 0;
             yield return new WaitUntil(() =>
             {
-                if (attempts++ > MAX_ATTEMPTS)
+                try
+                {
+                    if (attempts++ > MAX_ATTEMPTS)
+                        return true;
+                    rootGameObjects = activeScene.GetRootGameObjects();
+                    var atoms = rootGameObjects.FirstOrDefault(o => o.name == "SceneAtoms");
+                    if (atoms == null) return false;
+                    selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
+                    return selectors != null;
+                }
+                catch (Exception exc)
+                {
+                    SuperController.LogError("Failed waiting for materials for ImprovedPoV mirror: " + exc);
                     return true;
-                rootGameObjects = activeScene.GetRootGameObjects();
-                var atoms = rootGameObjects.FirstOrDefault(o => o.name == "SceneAtoms");
-                if (atoms == null) return false;
-                selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
-                return selectors != null;
+                }
             });
             _isWaitingForMaterials = false;
             if (selectors == null)
@@ -253,7 +261,15 @@ public class ImprovedPoV_Mirror : MVRScript
                 SuperController.LogError("Could not find a character for ImprovedPoV mirror");
                 yield break;
             }
-            BuildMaterialsList(rootGameObjects, selectors);
+            try
+            {
+                BuildMaterialsList(rootGameObjects, selectors);
+            }
+            catch (Exception exc)
+            {
+                _isWaitingForMaterials = false;
+                SuperController.LogError("Failed building materials list for ImprovedPoV mirror: " + exc);
+            }
         }
 
         private void BuildMaterialsList(GameObject[] rootGameObjects, DAZCharacterSelector[] selectors)
