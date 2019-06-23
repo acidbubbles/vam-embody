@@ -99,11 +99,6 @@ public class ImprovedPoV_Mirror : MVRScript
             }
 
             behaviors.Add(newBehavior);
-            newBehavior.name = name;
-            newBehavior.UITransform = uiTransform;
-            newBehavior.UITransformAlt = uiTransformAlt;
-            newBehavior.slaveReflection = slaveReflection;
-            newBehavior.m_ReflectLayers = reflectLayers;
         }
 
         return behaviors.ToArray();
@@ -139,6 +134,7 @@ public class ImprovedPoV_Mirror : MVRScript
         // Attempts before stopping trying to find a character. Approximating 90 frames per second, for 20 seconds.
         public const int MAX_ATTEMPTS = 90 * 10;
 
+        private bool _isWaitingForMaterials;
         public bool active;
         public void CopyFrom(MirrorReflection original)
         {
@@ -228,7 +224,9 @@ public class ImprovedPoV_Mirror : MVRScript
 
         public void ImprovedPoVPersonChanged()
         {
-            if (!active) return;
+            if (!active || _isWaitingForMaterials) return;
+
+            _isWaitingForMaterials = true;
             StartCoroutine(BuildMaterialsListCoroutine());
         }
 
@@ -249,6 +247,7 @@ public class ImprovedPoV_Mirror : MVRScript
                 selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
                 return selectors != null;
             });
+            _isWaitingForMaterials = false;
             if (selectors == null)
             {
                 SuperController.LogError("Could not find a character for ImprovedPoV mirror");
