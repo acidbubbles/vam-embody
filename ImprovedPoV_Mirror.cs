@@ -6,6 +6,12 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Improved PoV Version 0.0.0
+/// Possession that actually feels right.
+/// Assign this script to a mirror so person's faces with ImprovedPoV_Person are visible in that mirror
+/// Source: https://github.com/acidbubbles/vam-improved-pov
+/// </summary>
 public class ImprovedPoV_Mirror : MVRScript
 {
     private GameObject _mirror;
@@ -224,9 +230,7 @@ public class ImprovedPoV_Mirror : MVRScript
 
         public void ImprovedPoVPersonChanged()
         {
-            SuperController.LogMessage("Broadcast received");
             if (!active || _isWaitingForMaterials) return;
-            SuperController.LogMessage("Broadcast handled");
 
             _isWaitingForMaterials = true;
             StartCoroutine(BuildMaterialsListCoroutine());
