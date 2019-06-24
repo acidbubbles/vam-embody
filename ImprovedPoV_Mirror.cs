@@ -224,7 +224,9 @@ public class ImprovedPoV_Mirror : MVRScript
 
         public void ImprovedPoVPersonChanged()
         {
+            SuperController.LogMessage("Broadcast received");
             if (!active || _isWaitingForMaterials) return;
+            SuperController.LogMessage("Broadcast handled");
 
             _isWaitingForMaterials = true;
             StartCoroutine(BuildMaterialsListCoroutine());
@@ -233,21 +235,16 @@ public class ImprovedPoV_Mirror : MVRScript
         public IEnumerator BuildMaterialsListCoroutine()
         {
             _materials.Clear();
-            var activeScene = SceneManager.GetActiveScene();
-            GameObject[] rootGameObjects = null;
-            DAZCharacterSelector[] selectors = null;
+
             var attempts = 0;
+
             yield return new WaitUntil(() =>
             {
                 try
                 {
-                    if (attempts++ > MAX_ATTEMPTS)
-                        return true;
-                    rootGameObjects = activeScene.GetRootGameObjects();
-                    var atoms = rootGameObjects.FirstOrDefault(o => o.name == "SceneAtoms");
-                    if (atoms == null) return false;
-                    selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
-                    return selectors != null;
+                    if (attempts++ > MAX_ATTEMPTS) return true;
+
+                    return BuildMaterialsList();
                 }
                 catch (Exception exc)
                 {
@@ -255,37 +252,52 @@ public class ImprovedPoV_Mirror : MVRScript
                     return true;
                 }
             });
+
             _isWaitingForMaterials = false;
-            if (selectors == null)
-            {
-                SuperController.LogError("Could not find a character for ImprovedPoV mirror");
-                yield break;
-            }
-            try
-            {
-                BuildMaterialsList(rootGameObjects, selectors);
-            }
-            catch (Exception exc)
-            {
-                _isWaitingForMaterials = false;
-                SuperController.LogError("Failed building materials list for ImprovedPoV mirror: " + exc);
-            }
+
+            // Allow crashing again now that we have fresh data to work with
+            _failedOnce = false;
         }
 
-        private void BuildMaterialsList(GameObject[] rootGameObjects, DAZCharacterSelector[] selectors)
+        private bool BuildMaterialsList()
         {
-            foreach (var characterSelector in selectors)
+            var activeScene = SceneManager.GetActiveScene();
+            var rootGameObjects = activeScene.GetRootGameObjects();
+
+            var atoms = rootGameObjects.FirstOrDefault(o => !(o == null) && o.name == "SceneAtoms");
+            if (atoms == null) return false;
+
+            var selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
+            if (selectors == null || selectors.Length == 0) return false;
+
+            var skins = selectors.Select(s => s.selectedCharacter?.skin).Where(s => !(s == null)).ToArray();
+            if (skins.Length != selectors.Length) return false;
+
+            foreach (var skin in skins)
             {
-                var skin = characterSelector.selectedCharacter.skin;
+                if (skin == null || skin.GPUmaterials == null) continue;
+
                 var previousMaterialsContainerName = "ImprovedPoV container for skin " + skin.GetInstanceID();
 
-                var previousMaterialsContainer = rootGameObjects.FirstOrDefault(o => o.name == previousMaterialsContainerName);
-                if (previousMaterialsContainer == null) continue;
+                var previousMaterialsContainer = rootGameObjects.FirstOrDefault(o => !(o == null) && o.name == previousMaterialsContainerName);
 
-                var previousMaterials = previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
+                // This character face is not hidden, skip
+                if (previousMaterialsContainer == null)
+                {
+                    // The shader was destroyed, or not yet initialized
+                    if (!ReferenceEquals(gameObject, null))
+                        return false;
+
+                    continue;
+                }
+
+                var previousMaterials = previousMaterialsContainer.GetComponent<MeshRenderer>()?.materials;
+                if (previousMaterials == null) throw new NullReferenceException("Unable to get materials for skin");
 
                 foreach (var material in skin.GPUmaterials)
                 {
+                    if (material == null) continue;
+
                     // NOTE: The new material would be called "Eyes (Instance)"
                     var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
                     if (previousMaterial == null) continue;
@@ -294,8 +306,7 @@ public class ImprovedPoV_Mirror : MVRScript
                 }
             }
 
-            // Allow crashing again now that we have fresh data to work with
-            _failedOnce = false;
+            return true;
         }
 
         public new void OnWillRenderObject()
