@@ -415,13 +415,7 @@ public class ImprovedPoV_Person : MVRScript
             foreach (var material in skin.GPUmaterials)
             {
                 if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
-                {
-                    if (material.name.Contains("air"))
-                    {
-                        SuperController.LogMessage("Found on skin: " + material.name);
-                    }
                     continue;
-                }
 
                 materials.Add(material);
             }
