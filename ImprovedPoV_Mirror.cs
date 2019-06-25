@@ -15,7 +15,6 @@ using UnityEngine.SceneManagement;
 public class ImprovedPoV_Mirror : MVRScript
 {
     private GameObject _mirror;
-    private ImprovedPoVMirrorReflectionDecorator[] _behaviors;
     private bool _active;
 
     public override void Init()
@@ -24,7 +23,7 @@ public class ImprovedPoV_Mirror : MVRScript
         {
             if (containingAtom == null) throw new NullReferenceException("No containing atom");
             _mirror = containingAtom.gameObject;
-            _behaviors = ReplaceMirrorScriptAndCreatedObjects();
+            ReplaceMirrorScriptAndCreatedObjects();
             OnEnable();
         }
         catch (Exception e)
@@ -37,9 +36,9 @@ public class ImprovedPoV_Mirror : MVRScript
     {
         try
         {
-            if (_mirror == null || _behaviors == null || _active) return;
+            if (_mirror == null || _active) return;
 
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in _mirror.GetComponentsInChildren<ImprovedPoVMirrorReflectionDecorator>())
             {
                 behavior.active = true;
                 behavior.ImprovedPoVPersonChanged();
@@ -57,9 +56,9 @@ public class ImprovedPoV_Mirror : MVRScript
     {
         try
         {
-            if (!_active || _behaviors == null) return;
+            if (!_active) return;
 
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in _mirror.GetComponentsInChildren<ImprovedPoVMirrorReflectionDecorator>())
                 behavior.active = false;
 
             _active = false;
@@ -75,9 +74,8 @@ public class ImprovedPoV_Mirror : MVRScript
         OnDisable();
     }
 
-    private ImprovedPoVMirrorReflectionDecorator[] ReplaceMirrorScriptAndCreatedObjects()
+    private voidReplaceMirrorScriptAndCreatedObjects()
     {
-        var behaviors = new List<ImprovedPoVMirrorReflectionDecorator>();
         foreach (var childMirror in _mirror.GetComponentsInChildren<MirrorReflection>())
         {
             if (childMirror is ImprovedPoVMirrorReflectionDecorator) continue;
@@ -104,10 +102,7 @@ public class ImprovedPoV_Mirror : MVRScript
                 DestroyImmediate(childMirrorObject);
             }
 
-            behaviors.Add(newBehavior);
         }
-
-        return behaviors.ToArray();
     }
 
 #if (POV_DIAGNOSTICS)
