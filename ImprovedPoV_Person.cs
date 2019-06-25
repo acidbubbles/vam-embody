@@ -335,6 +335,7 @@ public class ImprovedPoV_Person : MVRScript
                 // Transparent materials
                 { "Custom/Subsurface/TransparentGlossNoCullSeparateAlphaComputeBuff", null },
                 { "Custom/Subsurface/TransparentGlossComputeBuff", null },
+                { "Custom/Subsurface/TransparentComputeBuff", null },
                 { "Custom/Subsurface/AlphaMaskComputeBuff", null },
                 { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
             };
@@ -415,7 +416,10 @@ public class ImprovedPoV_Person : MVRScript
             foreach (var material in skin.GPUmaterials)
             {
                 if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
+                {
+                    SuperController.LogMessage(material.name + ": " + material.shader.name);
                     continue;
+                }
 
                 materials.Add(material);
             }
