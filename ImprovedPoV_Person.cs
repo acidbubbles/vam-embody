@@ -416,10 +416,7 @@ public class ImprovedPoV_Person : MVRScript
             foreach (var material in skin.GPUmaterials)
             {
                 if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
-                {
-                    SuperController.LogMessage(material.name + ": " + material.shader.name);
                     continue;
-                }
 
                 materials.Add(material);
             }
