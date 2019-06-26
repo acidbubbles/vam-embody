@@ -1,3 +1,5 @@
+#define POV_DIAGNOSTICS
+
 namespace Acidbubbles.ImprovedPoV
 {
     public class NoStrategy : IStrategy

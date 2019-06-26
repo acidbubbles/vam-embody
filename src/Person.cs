@@ -163,7 +163,7 @@ namespace Acidbubbles.ImprovedPoV
                 var possessedOnlyCheckbox = CreateToggle(_possessedOnly, true);
                 possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
-                    ApplyAll();
+                    _dirty = true;
                 });
 
                 var strategies = new List<string> { NoStrategy.Name, MaterialsEnabledStrategy.Name, ShaderStrategy.Name };

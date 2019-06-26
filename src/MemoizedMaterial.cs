@@ -1,3 +1,4 @@
+#define POV_DIAGNOSTICS
 using System.Collections.Generic;
 using UnityEngine;
 

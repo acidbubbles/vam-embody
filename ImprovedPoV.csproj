@@ -41,7 +41,7 @@
     <Compile Include="src/MaterialsHelper.cs" />
     <Compile Include="src/MemoizedPerson.cs" />
     <Compile Include="src/MemoizedMaterial.cs" />
-    <Compile Include="src/State.cs" />
+    <Compile Include="src/SceneWatcher.cs" />
     <Compile Include="src/IStrategy.cs" />
     <Compile Include="src/NoStrategy.cs" />
     <Compile Include="src/MaterialsEnabledStrategy.cs" />

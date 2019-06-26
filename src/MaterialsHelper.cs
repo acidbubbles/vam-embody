@@ -1,3 +1,4 @@
+#define POV_DIAGNOSTICS
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +39,9 @@ namespace Acidbubbles.ImprovedPoV
 
                 materials.Add(material);
             }
+
+            if(materials.Count < 13)
+                throw new Exception("Not enough materials found to hide. List: " + string.Join(", ", skin.GPUmaterials.Select(m => m.name).ToArray()));
 
             return materials;
         }

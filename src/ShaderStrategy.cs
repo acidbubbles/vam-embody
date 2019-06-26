@@ -1,4 +1,4 @@
-using System;
+#define POV_DIAGNOSTICS
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,6 +13,7 @@ namespace Acidbubbles.ImprovedPoV
                 // Opaque materials
                 { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
                 { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff") },
+                { "Custom/Subsurface/GlossNMDetailCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMDetailNoCullSeparateAlphaComputeBuff") },
                 { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
 
                 // Transparent materials
@@ -29,17 +30,25 @@ namespace Acidbubbles.ImprovedPoV
         }
 
         private MemoizedPerson _memoized;
+        private SceneWatcher _watcher;
 
         public void Apply(DAZSkinV2 skin)
         {
-            // Check if already applied
-            if (_memoized != null)
-                return;
+            // TODO: After loading a new skin, only reloading the plugin will work and hide the face. Why?
 
-            var memoized = new MemoizedPerson();
+            if (_memoized != null) return;
+                // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (memoized).");
+
+            SuperController.LogMessage("Apply " + skin.name);
+            _memoized = new MemoizedPerson();
+            _watcher = new SceneWatcher(_memoized);
 
             foreach (var material in MaterialsHelper.GetMaterialsToHide(skin))
             {
+                #if(IMPROVED_POV)
+                if (material.GetInt(MemoizedMaterial.ImprovedPovEnabledShaderKey) == 1)
+                    throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (shader key).");
+
                 var materialInfo = MemoizedMaterial.FromMaterial(material);
 
                 Shader shader;
@@ -48,10 +57,10 @@ namespace Acidbubbles.ImprovedPoV
 
                 materialInfo.ApplyReplacementShader(shader);
 
-                memoized.Add(materialInfo);
+                _memoized.Add(materialInfo);
             }
 
-            State.Register(_memoized = memoized);
+            _watcher.Start();
 
             // This is a hack to force a refresh of the shaders cache
             skin.BroadcastMessage("OnApplicationFocus", true);
@@ -59,10 +68,14 @@ namespace Acidbubbles.ImprovedPoV
 
         public void Restore(DAZSkinV2 skin)
         {
+            SuperController.LogMessage("Restore " + skin.name);
             var memoized = _memoized;
+            var watcher = _watcher;
 
-            State.Unregister(memoized);
+            _watcher.Stop();
+
             _memoized = null;
+            _watcher = null;
 
             // Already restored (abnormal)
             if (memoized == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
@@ -71,8 +84,6 @@ namespace Acidbubbles.ImprovedPoV
             {
                 material.RestoreOriginalShader();
             }
-
-            State.Unregister(memoized);
 
             // This is a hack to force a refresh of the shaders cache
             skin.BroadcastMessage("OnApplicationFocus", true);

@@ -1,4 +1,4 @@
-using System;
+#define POV_DIAGNOSTICS
 using System.Collections.Generic;
 using System.Linq;
 
