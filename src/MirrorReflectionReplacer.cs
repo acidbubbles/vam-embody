@@ -61,25 +61,32 @@ namespace Acidbubbles.ImprovedPoV
 
         private static void ReplaceMirrorScriptAndCreatedObjects(MirrorReflection originalBehavior)
         {
-            var childMirrorGameObject = originalBehavior.gameObject;
-            var childMirrorInstanceId = originalBehavior.GetInstanceID();
-
+            // Extract data from the original script
+            var container = originalBehavior.gameObject;
+            var originalInstanceId = originalBehavior.GetInstanceID();
             var name = originalBehavior.name;
             var atom = originalBehavior.containingAtom;
+
+            // Detach storables
             if (atom != null)
                 atom.UnregisterAdditionalStorable(originalBehavior);
-            var newBehavior = childMirrorGameObject.AddComponent<MirrorReflectionDecorator>();
+
+            // Create the new behavior
+            var newBehavior = originalBehavior.gameObject.AddComponent<MirrorReflectionDecorator>();
             if (newBehavior == null) throw new NullReferenceException("newBehavior");
+            newBehavior.name = name;
             newBehavior.CopyFrom(originalBehavior);
+
+            // Destroy the original behavior
             // TODO: Validate whether this executes OnDisable immediately, otherwise make sure to clean up the textures created by MirrorReflection
             originalBehavior.enabled = false;
             UnityEngine.Object.DestroyImmediate(originalBehavior);
-            newBehavior.name = name;
             if (atom != null)
                 atom.RegisterAdditionalStorable(newBehavior);
 
+            // Destroy gameobjects created by the original behavior
             // TODO: Also validate whether we need to actually destroy the child mirrors if OnDisable is called
-            var reflectionCameraGameObjectPrefix = "Mirror Refl Camera id" + childMirrorInstanceId + " for ";
+            var reflectionCameraGameObjectPrefix = "Mirror Refl Camera id" + originalInstanceId + " for ";
             var rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
             foreach (var childMirrorObject in rootObjects.Where(x => x.name.StartsWith(reflectionCameraGameObjectPrefix)))
             {

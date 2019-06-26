@@ -37,8 +37,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="ImprovedPoV_Person.cs" />
-    <Compile Include="ImprovedPoV_Mirror.cs" />
+    <Compile Include="src/Diagnostics.cs" />
+    <Compile Include="src/MaterialsHelper.cs" />
+    <Compile Include="src/MemoizedPerson.cs" />
+    <Compile Include="src/MemoizedMaterial.cs" />
+    <Compile Include="src/State.cs" />
+    <Compile Include="src/IStrategy.cs" />
+    <Compile Include="src/NoStrategy.cs" />
+    <Compile Include="src/MaterialsEnabledStrategy.cs" />
+    <Compile Include="src/ShaderStrategy.cs" />
+    <Compile Include="src/StrategyFactory.cs" />
+    <Compile Include="src/MirrorReflectionDecorator.cs" />
+    <Compile Include="src/MirrorReflectionReplacer.cs" />
+    <Compile Include="src/Person.cs" />
   </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
