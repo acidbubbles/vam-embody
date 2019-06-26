@@ -158,7 +158,12 @@ namespace Acidbubbles.ImprovedPoV
                     ApplyCameraPosition();
                 });
 
-                _possessedOnly = new JSONStorableBool("Possessed Only", true);
+                var possessedOnlyDefaultValue = true;
+#if (POV_DIAGNOSTICS)
+                // NOTE: Easier to test when it's always on
+                possessedOnlyDefaultValue = false;
+#endif
+                _possessedOnly = new JSONStorableBool("Possessed Only", possessedOnlyDefaultValue);
                 RegisterBool(_possessedOnly);
                 var possessedOnlyCheckbox = CreateToggle(_possessedOnly, true);
                 possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
@@ -190,21 +195,14 @@ namespace Acidbubbles.ImprovedPoV
             ApplyPossessorMeshVisibility();
         }
 
-        private DAZSkinV2 GetSkin()
-        {
-            if (_skin != null) return _skin;
-            var skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
-            _skin = skin;
-            return skin;
-        }
-
         private void ApplyFaceStrategy()
         {
             DAZSkinV2 skin;
 
             try
             {
-                skin = GetSkin();
+                skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
+
                 if (skin == null)
                 {
                     _dirty = true;
@@ -221,10 +219,11 @@ namespace Acidbubbles.ImprovedPoV
                     return;
                 }
 
-                if (_strategyImpl.Name != _strategy.val)
+                if (_strategyImpl.Name != _strategy.val || skin != _skin)
                 {
                     _strategyImpl.Restore(skin);
                     _strategyImpl = StrategyFactory.CreateStrategy(_strategy.val);
+                    _skin = skin;
                 }
             }
             catch (Exception e)

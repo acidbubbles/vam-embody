@@ -1,4 +1,5 @@
 #define POV_DIAGNOSTICS
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,7 +38,7 @@ namespace Acidbubbles.ImprovedPoV
             // TODO: After loading a new skin, only reloading the plugin will work and hide the face. Why?
 
             if (_memoized != null) return;
-                // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (memoized).");
+            // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (memoized).");
 
             SuperController.LogMessage("Apply " + skin.name);
             _memoized = new MemoizedPerson();
@@ -45,9 +46,13 @@ namespace Acidbubbles.ImprovedPoV
 
             foreach (var material in MaterialsHelper.GetMaterialsToHide(skin))
             {
-                #if(IMPROVED_POV)
+#if (IMPROVED_POV)
+                if(material == null)
+                    throw new InvalidOperationException("Attempts to apply the shader strategy on a destroyed material.");
+
                 if (material.GetInt(MemoizedMaterial.ImprovedPovEnabledShaderKey) == 1)
                     throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (shader key).");
+#endif
 
                 var materialInfo = MemoizedMaterial.FromMaterial(material);
 
