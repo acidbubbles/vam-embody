@@ -6,131 +6,14 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Improved PoV Version 0.0.0
-/// Possession that actually feels right.
-/// Assign this script to a mirror so person's faces with ImprovedPoV_Person are visible in that mirror
-/// Source: https://github.com/acidbubbles/vam-improved-pov
-/// </summary>
-public class ImprovedPoV_Mirror : MVRScript
+namespace Acidbubbles.ImprovedPoV
 {
-    private GameObject _mirror;
-    private bool _active;
-
-    public override void Init()
-    {
-        try
-        {
-            if (containingAtom == null) throw new NullReferenceException("No containing atom");
-            _mirror = containingAtom.gameObject;
-            ReplaceMirrorScriptAndCreatedObjects();
-            OnEnable();
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to initialize Improved PoV Mirror" + e);
-        }
-    }
-
-    public void OnEnable()
-    {
-        try
-        {
-            if (_mirror == null || _active) return;
-
-            foreach (var behavior in _mirror.GetComponentsInChildren<ImprovedPoVMirrorReflectionDecorator>())
-            {
-                behavior.active = true;
-                behavior.ImprovedPoVPersonChanged();
-            }
-
-            _active = true;
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to enable Improved PoV Mirror: " + e);
-        }
-    }
-
-    public void OnDisable()
-    {
-        try
-        {
-            if (!_active) return;
-
-            foreach (var behavior in _mirror.GetComponentsInChildren<ImprovedPoVMirrorReflectionDecorator>())
-                behavior.active = false;
-
-            _active = false;
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to disable Improved PoV Mirror: " + e);
-        }
-    }
-
-    public void OnDestroy()
-    {
-        OnDisable();
-    }
-
-    private voidReplaceMirrorScriptAndCreatedObjects()
-    {
-        foreach (var childMirror in _mirror.GetComponentsInChildren<MirrorReflection>())
-        {
-            if (childMirror is ImprovedPoVMirrorReflectionDecorator) continue;
-
-            var childMirrorGameObject = childMirror.gameObject;
-
-            var childMirrorInstanceId = childMirror.GetInstanceID();
-
-            var name = childMirror.name;
-            var atom = childMirror.containingAtom;
-            if (atom != null)
-                atom.UnregisterAdditionalStorable(childMirror);
-            var newBehavior = childMirrorGameObject.AddComponent<ImprovedPoVMirrorReflectionDecorator>();
-            if (newBehavior == null) throw new NullReferenceException("newBehavior");
-            newBehavior.CopyFrom(childMirror);
-            DestroyImmediate(childMirror);
-            newBehavior.name = name;
-            if (atom != null)
-                atom.RegisterAdditionalStorable(newBehavior);
-
-            var reflectionCameraGameObjectPrefix = "Mirror Refl Camera id" + childMirrorInstanceId + " for ";
-            foreach (var childMirrorObject in SceneManager.GetActiveScene().GetRootGameObjects().Where(x => x.name.StartsWith(reflectionCameraGameObjectPrefix)))
-            {
-                DestroyImmediate(childMirrorObject);
-            }
-
-        }
-    }
-
-#if (POV_DIAGNOSTICS)
-    public class Utils
-    {
-        public static void PrintDebugStatus()
-        {
-            SuperController.LogMessage("Root objects: " + string.Join("; ", SceneManager.GetActiveScene().GetRootGameObjects().Select(x => x.name).ToArray()));
-            SuperController.LogMessage("Original mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<MirrorReflection>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
-            SuperController.LogMessage("PoV mirrors: " + string.Join("; ", GameObject.FindObjectsOfType<ImprovedPoVMirrorReflectionDecorator>().Select(x => GetDebugHierarchy(x.gameObject)).ToArray()));
-        }
-
-        public static string GetDebugHierarchy(GameObject o)
-        {
-            var items = new List<string>(new[] { o.name });
-            GameObject parent = o;
-            for (int i = 0; i < 100; i++)
-            {
-                parent = parent.transform.parent?.gameObject;
-                if (parent == null || parent == o) break;
-                items.Insert(0, parent.gameObject.name);
-            }
-            return string.Join(" -> ", items.ToArray());
-        }
-    }
-#endif
-
-    public class ImprovedPoVMirrorReflectionDecorator : MirrorReflection
+    /// <summary>
+    /// Improved PoV Version 0.0.0
+    /// Possession that actually feels right.
+    /// Source: https://github.com/acidbubbles/vam-improved-pov
+    /// </summary>
+    public class MirrorReflectionDecorator : MirrorReflection
     {
         // Attempts before stopping trying to find a character. Approximating 90 frames per second, for 20 seconds.
         public const int MAX_ATTEMPTS = 90 * 10;
