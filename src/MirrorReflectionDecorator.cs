@@ -1,10 +1,7 @@
 #define POV_DIAGNOSTICS
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Acidbubbles.ImprovedPoV
 {
@@ -15,11 +12,8 @@ namespace Acidbubbles.ImprovedPoV
     /// </summary>
     public class MirrorReflectionDecorator : MirrorReflection
     {
-        // Attempts before stopping trying to find a character. Approximating 90 frames per second, for 20 seconds.
-        public const int MAX_ATTEMPTS = 90 * 10;
+        private MemoizedPerson _person;
 
-        private bool _isWaitingForMaterials;
-        public bool active;
         public void CopyFrom(MirrorReflection original)
         {
             // Copy all public fields
@@ -35,6 +29,7 @@ namespace Acidbubbles.ImprovedPoV
             onlyStoreIfActive = original.onlyStoreIfActive;
             overrideId = original.overrideId;
             renderBackside = original.renderBackside;
+            // TODO: Check what this is, we might keep a reference to a deleted gameobject
             slaveReflection = original.slaveReflection;
             useSameMaterialWhenMirrorDisabled = original.useSameMaterialWhenMirrorDisabled;
 
@@ -89,10 +84,9 @@ namespace Acidbubbles.ImprovedPoV
 
         private bool _failedOnce;
 
-        public struct MaterialReference
+        public void ImprovedPoVSkinUpdated(List<List<object>> value)
         {
-            public Material Current;
-            public Material Previous;
+            _person = MemoizedPerson.FromBroadcastable(value);
         }
 
         protected override void Awake()
@@ -113,13 +107,13 @@ namespace Acidbubbles.ImprovedPoV
 
         private void ShowPoVMaterials()
         {
-            if (!active) return;
+            if (_person == null) return;
 
             try
             {
-                foreach (var reference in State.current.GetAllMaterials())
+                foreach (var material in _person)
                 {
-                    reference.MakeVisible();
+                    material.MakeVisible();
                 }
             }
             catch (Exception e)
@@ -132,13 +126,13 @@ namespace Acidbubbles.ImprovedPoV
 
         private void HidePoVMaterials()
         {
-            if (!active) return;
+            if (_person == null) return;
 
             try
             {
-                foreach (var reference in State.current.GetAllMaterials())
+                foreach (var material in _person)
                 {
-                    reference.MakeInvisible();
+                    material.MakeInvisible();
                 }
             }
             catch (Exception e)

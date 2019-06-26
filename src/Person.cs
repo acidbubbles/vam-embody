@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 namespace Acidbubbles.ImprovedPoV
@@ -14,25 +13,6 @@ namespace Acidbubbles.ImprovedPoV
     /// </summary>
     public class Person : MVRScript
     {
-        private static readonly string[] MaterialsToHide = new[]
-        {
-            "Lacrimals",
-            "Pupils",
-            "Lips",
-            "Gums",
-            "Irises",
-            "Teeth",
-            "Face",
-            "InnerMouth",
-            "Tongue",
-            "EyeReflection",
-            "Nostrils",
-            "Cornea",
-            "Eyelashes",
-            "Sclera",
-            "Ears",
-            "Tear"
-        };
 
         private Atom _person;
         private Camera _mainCamera;
@@ -244,7 +224,7 @@ namespace Acidbubbles.ImprovedPoV
                 if (_strategyImpl.Name != _strategy.val)
                 {
                     _strategyImpl.Restore(skin);
-                    _strategyImpl = CreateStrategy(_strategy.val);
+                    _strategyImpl = StrategyFactory.CreateStrategy(_strategy.val);
                 }
             }
             catch (Exception e)
@@ -297,167 +277,5 @@ namespace Acidbubbles.ImprovedPoV
             }
         }
 
-        private static IStrategy CreateStrategy(string val)
-        {
-            switch (val)
-            {
-                case MaterialsEnabledStrategy.Name:
-                    return new MaterialsEnabledStrategy();
-                case ShaderStrategy.Name:
-                    return new ShaderStrategy();
-                case NoStrategy.Name:
-                    return new NoStrategy();
-                default:
-                    throw new InvalidOperationException("Invalid strategy: '" + val + "'");
-            }
-        }
-
-        public interface IStrategy
-        {
-            string Name { get; }
-            void Apply(DAZSkinV2 skin);
-            void Restore(DAZSkinV2 skin);
-        }
-
-        public class ShaderStrategy : IStrategy
-        {
-            public const string Name = "Shaders (allows mirrors)";
-
-            private static Dictionary<string, Shader> ReplacementShaders = new Dictionary<string, Shader>
-            {
-                // Opaque materials
-                { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
-                { "Custom/Subsurface/GlossNMCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff") },
-                { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
-
-                // Transparent materials
-                { "Custom/Subsurface/TransparentGlossNoCullSeparateAlphaComputeBuff", null },
-                { "Custom/Subsurface/TransparentGlossComputeBuff", null },
-                { "Custom/Subsurface/TransparentComputeBuff", null },
-                { "Custom/Subsurface/AlphaMaskComputeBuff", null },
-                { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
-            };
-
-            string IStrategy.Name
-            {
-                get { return Name; }
-            }
-
-            private MemoizedPerson _memoized;
-
-            public void Apply(DAZSkinV2 skin)
-            {
-                // Check if already applied
-                if (_memoized != null)
-                    return;
-
-                var memoized = new MemoizedPerson();
-
-                foreach (var material in GetMaterialsToHide(skin))
-                {
-                    var materialInfo = MemoizedMaterial.FromMaterial(material);
-
-                    Shader shader;
-                    if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
-                        SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
-
-                    materialInfo.ApplyReplacementShader(shader, -1f, new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0f));
-
-                    memoized.materials.Add(materialInfo);
-                }
-
-                State.current.Register(_memoized = memoized);
-
-                // This is a hack to force a refresh of the shaders cache
-                skin.BroadcastMessage("OnApplicationFocus", true);
-            }
-
-            public void Restore(DAZSkinV2 skin)
-            {
-                var memoized = _memoized;
-                State.current.Unregister(memoized);
-                _memoized = null;
-
-                // Already restored (abnormal)
-                if (memoized == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
-
-                var materials = memoized.materials;
-                if (materials == null) throw new NullReferenceException("previousMaterials");
-
-                foreach (var material in memoized.materials)
-                {
-                    material.RestoreOriginalShader();
-                }
-
-                // This is a hack to force a refresh of the shaders cache
-                skin.BroadcastMessage("OnApplicationFocus", true);
-            }
-
-            private IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
-            {
-                var materials = new List<Material>(MaterialsToHide.Length);
-
-                foreach (var material in skin.GPUmaterials)
-                {
-                    if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
-                        continue;
-
-                    materials.Add(material);
-                }
-
-                return materials;
-            }
-        }
-
-        public class MaterialsEnabledStrategy : IStrategy
-        {
-            public const string Name = "Materials Enabled (performance)";
-
-            string IStrategy.Name
-            {
-                get { return Name; }
-            }
-
-            public void Apply(DAZSkinV2 skin)
-            {
-                UpdateMaterialsEnabled(skin, false);
-            }
-
-            public void Restore(DAZSkinV2 skin)
-            {
-                UpdateMaterialsEnabled(skin, true);
-            }
-
-            public void UpdateMaterialsEnabled(DAZSkinV2 skin, bool enabled)
-            {
-
-                for (int i = 0; i < skin.GPUmaterials.Length; i++)
-                {
-                    Material mat = skin.GPUmaterials[i];
-                    if (MaterialsToHide.Any(materialToHide => mat.name.StartsWith(materialToHide)))
-                    {
-                        skin.materialsEnabled[i] = enabled;
-                    }
-                }
-            }
-        }
-
-        public class NoStrategy : IStrategy
-        {
-            public const string Name = "None (face mesh visible)";
-
-            string IStrategy.Name
-            {
-                get { return Name; }
-            }
-
-            public void Apply(DAZSkinV2 skin)
-            {
-            }
-
-            public void Restore(DAZSkinV2 skin)
-            {
-            }
-        }
     }
 }

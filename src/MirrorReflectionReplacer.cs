@@ -71,11 +71,14 @@ namespace Acidbubbles.ImprovedPoV
             var newBehavior = childMirrorGameObject.AddComponent<MirrorReflectionDecorator>();
             if (newBehavior == null) throw new NullReferenceException("newBehavior");
             newBehavior.CopyFrom(originalBehavior);
+            // TODO: Validate whether this executes OnDisable immediately, otherwise make sure to clean up the textures created by MirrorReflection
+            originalBehavior.enabled = false;
             UnityEngine.Object.DestroyImmediate(originalBehavior);
             newBehavior.name = name;
             if (atom != null)
                 atom.RegisterAdditionalStorable(newBehavior);
 
+            // TODO: Also validate whether we need to actually destroy the child mirrors if OnDisable is called
             var reflectionCameraGameObjectPrefix = "Mirror Refl Camera id" + childMirrorInstanceId + " for ";
             var rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
             foreach (var childMirrorObject in rootObjects.Where(x => x.name.StartsWith(reflectionCameraGameObjectPrefix)))
