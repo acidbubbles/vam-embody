@@ -6,8 +6,8 @@ New-Item -ItemType Directory -Force -Path ./publish | Out-Null
 New-Item -ItemType Directory -Force -Path ./publish/src | Out-Null
 
 $Code = Get-Content -Path .\ADD_THIS.cslist -Raw
-$Code = $Code -Replace "Diagnostics.cs\r\n", ""
-$Code | Set-Content -Path publish/ADD_THIS.cslist
+$Code = $Code -Replace "src/Diagnostics.cs\r\n", ""
+$Code.Trim() | Set-Content -Path publish/ADD_THIS.cslist
 
 Get-Content ADD_THIS.cslist | ForEach-Object {
     $Code = Get-Content -Path $_ -Raw
