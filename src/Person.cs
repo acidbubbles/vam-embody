@@ -192,8 +192,8 @@ namespace Acidbubbles.ImprovedPoV
                 var strategyPopup = CreatePopup(_strategy, true);
                 strategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
                 {
-                // TODO: Why is this necessary?
-                _strategy.val = val;
+                    // TODO: Why is this necessary?
+                    _strategy.val = val;
                     _dirty = true;
                 });
             }
@@ -338,73 +338,59 @@ namespace Acidbubbles.ImprovedPoV
                 { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
             };
 
-            private GameObject _previousMaterialsContainer;
-
             string IStrategy.Name
             {
                 get { return Name; }
             }
 
+            private MemoizedPerson _memoized;
+
             public void Apply(DAZSkinV2 skin)
             {
                 // Check if already applied
-                if (_previousMaterialsContainer != null)
+                if (_memoized != null)
                     return;
 
-                _previousMaterialsContainer = new GameObject("ImprovedPoV container for skin " + skin.GetInstanceID());
-                var previousMaterialsRenderer = _previousMaterialsContainer.AddComponent<MeshRenderer>();
-                if (previousMaterialsRenderer == null) throw new NullReferenceException("Failed to add the MeshRenderer component");
-                var previousMaterials = new List<Material>();
+                var memoized = new MemoizedPerson();
 
                 foreach (var material in GetMaterialsToHide(skin))
                 {
-                    var materialClone = new Material(material);
-                    previousMaterials.Add(materialClone);
+                    var materialInfo = MemoizedMaterial.FromMaterial(material);
 
                     Shader shader;
                     if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
                         SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
-                    if (shader != null)
-                        material.shader = shader;
-                    material.SetFloat("_AlphaAdjust", -1f);
-                    material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
-                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
+
+                    materialInfo.ApplyReplacementShader(shader, -1f, new Color(0f, 0f, 0f, 0f), new Color(0f, 0f, 0f, 0f));
+
+                    memoized.materials.Add(materialInfo);
                 }
 
-                previousMaterialsRenderer.materials = previousMaterials.ToArray();
+                State.current.Register(_memoized = memoized);
 
                 // This is a hack to force a refresh of the shaders cache
                 skin.BroadcastMessage("OnApplicationFocus", true);
-                // Notify mirrors
-                BroadcastUpdate();
             }
 
             public void Restore(DAZSkinV2 skin)
             {
+                var memoized = _memoized;
+                State.current.Unregister(memoized);
+                _memoized = null;
+
                 // Already restored (abnormal)
-                if (_previousMaterialsContainer == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
+                if (memoized == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
 
-                var previousMaterials = _previousMaterialsContainer.GetComponent<MeshRenderer>().materials;
-                if (previousMaterials == null) throw new NullReferenceException("previousMaterials");
-                Destroy(_previousMaterialsContainer);
+                var materials = memoized.materials;
+                if (materials == null) throw new NullReferenceException("previousMaterials");
 
-                foreach (var material in GetMaterialsToHide(skin))
+                foreach (var material in memoized.materials)
                 {
-                    // NOTE: The new material would be called "Eyes (Instance)"
-                    var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
-                    if (previousMaterial == null) throw new NullReferenceException("Failed to find material " + material.name + " in previous materials list: " + string.Join(", ", previousMaterials.Select(m => m.name).ToArray()));
-                    // NOTE: Setting renderQueue to 5000 is used to detect discarded materials in the mirrors
-                    previousMaterial.renderQueue = 5000;
-                    material.shader = previousMaterial.shader;
-                    material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
-                    material.SetColor("_Color", previousMaterial.GetColor("_Color"));
-                    material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
+                    material.RestoreOriginalShader();
                 }
 
                 // This is a hack to force a refresh of the shaders cache
                 skin.BroadcastMessage("OnApplicationFocus", true);
-                // Notify mirrors
-                BroadcastUpdate();
             }
 
             private IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
@@ -420,12 +406,6 @@ namespace Acidbubbles.ImprovedPoV
                 }
 
                 return materials;
-            }
-
-            private void BroadcastUpdate()
-            {
-                var atoms = SceneManager.GetActiveScene().GetRootGameObjects().FirstOrDefault(o => o.name == "SceneAtoms");
-                atoms.BroadcastMessage("ImprovedPoVPersonChanged");
             }
         }
 

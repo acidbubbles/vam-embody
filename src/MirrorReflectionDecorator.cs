@@ -87,8 +87,6 @@ namespace Acidbubbles.ImprovedPoV
             }
         }
 
-        // NOTE: 16 is the amount of materials we need to hide in ImprovedPoV. Usually, one character only will have the PoV active
-        private List<MaterialReference> _materials = new List<MaterialReference>(16);
         private bool _failedOnce;
 
         public struct MaterialReference
@@ -106,91 +104,6 @@ namespace Acidbubbles.ImprovedPoV
             InitJSONStorable();
         }
 
-        public void ImprovedPoVPersonChanged()
-        {
-            if (!active || _isWaitingForMaterials) return;
-
-            _isWaitingForMaterials = true;
-            StartCoroutine(BuildMaterialsListCoroutine());
-        }
-
-        public IEnumerator BuildMaterialsListCoroutine()
-        {
-            _materials.Clear();
-
-            var attempts = 0;
-
-            yield return new WaitUntil(() =>
-            {
-                try
-                {
-                    if (attempts++ > MAX_ATTEMPTS) return true;
-
-                    return BuildMaterialsList();
-                }
-                catch (Exception exc)
-                {
-                    SuperController.LogError("Failed waiting for materials for ImprovedPoV mirror: " + exc);
-                    return true;
-                }
-            });
-
-            _isWaitingForMaterials = false;
-
-            // Allow crashing again now that we have fresh data to work with
-            _failedOnce = false;
-        }
-
-        private bool BuildMaterialsList()
-        {
-            var activeScene = SceneManager.GetActiveScene();
-            var rootGameObjects = activeScene.GetRootGameObjects();
-
-            var atoms = rootGameObjects.FirstOrDefault(o => !(o == null) && o.name == "SceneAtoms");
-            if (atoms == null) return false;
-
-            var selectors = atoms.GetComponentsInChildren<DAZCharacterSelector>();
-            if (selectors == null || selectors.Length == 0) return false;
-
-            var skins = selectors.Select(s => s.selectedCharacter?.skin).Where(s => !(s == null)).ToArray();
-            if (skins.Length != selectors.Length) return false;
-
-            foreach (var skin in skins)
-            {
-                if (skin == null || skin.GPUmaterials == null) continue;
-
-                var previousMaterialsContainerName = "ImprovedPoV container for skin " + skin.GetInstanceID();
-
-                var previousMaterialsContainer = rootGameObjects.FirstOrDefault(o => !(o == null) && o.name == previousMaterialsContainerName);
-
-                // This character face is not hidden, skip
-                if (previousMaterialsContainer == null)
-                {
-                    // The shader was destroyed, or not yet initialized
-                    if (!ReferenceEquals(gameObject, null))
-                        return false;
-
-                    continue;
-                }
-
-                var previousMaterials = previousMaterialsContainer.GetComponent<MeshRenderer>()?.materials;
-                if (previousMaterials == null) throw new NullReferenceException("Unable to get materials for skin");
-
-                foreach (var material in skin.GPUmaterials)
-                {
-                    if (material == null) continue;
-
-                    // NOTE: The new material would be called "Eyes (Instance)"
-                    var previousMaterial = previousMaterials.FirstOrDefault(m => m.name.StartsWith(material.name));
-                    if (previousMaterial == null) continue;
-
-                    _materials.Add(new MaterialReference { Previous = previousMaterial, Current = material });
-                }
-            }
-
-            return true;
-        }
-
         public new void OnWillRenderObject()
         {
             ShowPoVMaterials();
@@ -204,19 +117,9 @@ namespace Acidbubbles.ImprovedPoV
 
             try
             {
-                foreach (var reference in _materials)
+                foreach (var reference in State.current.GetAllMaterials())
                 {
-                    var material = reference.Current;
-                    var previousMaterial = reference.Previous;
-                    // NOTE: We cannot rely on Broadcast for some reason, so we must always make sure not to overwrite the shader restore
-                    if (previousMaterial.renderQueue == 5000)
-                    {
-                        _materials.Clear();
-                        return;
-                    }
-                    material.SetFloat("_AlphaAdjust", previousMaterial.GetFloat("_AlphaAdjust"));
-                    material.SetColor("_Color", previousMaterial.GetColor("_Color"));
-                    material.SetColor("_SpecColor", previousMaterial.GetColor("_SpecColor"));
+                    reference.MakeVisible();
                 }
             }
             catch (Exception e)
@@ -233,19 +136,9 @@ namespace Acidbubbles.ImprovedPoV
 
             try
             {
-                foreach (var reference in _materials)
+                foreach (var reference in State.current.GetAllMaterials())
                 {
-                    var material = reference.Current;
-                    var previousMaterial = reference.Previous;
-                    // NOTE: We cannot rely on Broadcast for some reason, so we must always make sure not to overwrite the shader restore
-                    if (previousMaterial.renderQueue == 5000)
-                    {
-                        _materials.Clear();
-                        return;
-                    }
-                    material.SetFloat("_AlphaAdjust", -1f);
-                    material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
-                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
+                    reference.MakeInvisible();
                 }
             }
             catch (Exception e)

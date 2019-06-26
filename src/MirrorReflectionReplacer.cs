@@ -36,9 +36,9 @@ namespace Acidbubbles.ImprovedPoV
             try
             {
                 // TODO: Optimize this by only browsing objects we know are mirrors
-                foreach (var mirror in SuperController.singleton.GetAtoms().Select(a => a.gameObject))
+                foreach (var mirror in SuperController.singleton.GetAtoms())
                 {
-                    ReplaceMirrorScriptAndCreatedObjects(mirror);
+                    ReplaceMirrorScriptAndCreatedObjects(mirror.gameObject);
                 }
             }
             catch (Exception e)
@@ -52,7 +52,8 @@ namespace Acidbubbles.ImprovedPoV
             foreach (var behavior in mirror.GetComponentsInChildren<MirrorReflection>())
             {
                 // Already replaced
-                if (behavior is MirrorReflectionDecorator) continue;
+                if (behavior.GetType() != typeof(MirrorReflection))
+                    continue;
 
                 ReplaceMirrorScriptAndCreatedObjects(behavior);
             }
@@ -70,15 +71,16 @@ namespace Acidbubbles.ImprovedPoV
             var newBehavior = childMirrorGameObject.AddComponent<MirrorReflectionDecorator>();
             if (newBehavior == null) throw new NullReferenceException("newBehavior");
             newBehavior.CopyFrom(originalBehavior);
-            GameObject.DestroyImmediate(originalBehavior);
+            UnityEngine.Object.DestroyImmediate(originalBehavior);
             newBehavior.name = name;
             if (atom != null)
                 atom.RegisterAdditionalStorable(newBehavior);
 
             var reflectionCameraGameObjectPrefix = "Mirror Refl Camera id" + childMirrorInstanceId + " for ";
-            foreach (var childMirrorObject in SceneManager.GetActiveScene().GetRootGameObjects().Where(x => x.name.StartsWith(reflectionCameraGameObjectPrefix)))
+            var rootObjects = SceneManager.GetActiveScene().GetRootGameObjects();
+            foreach (var childMirrorObject in rootObjects.Where(x => x.name.StartsWith(reflectionCameraGameObjectPrefix)))
             {
-                GameObject.DestroyImmediate(childMirrorObject);
+                UnityEngine.GameObject.DestroyImmediate(childMirrorObject);
             }
         }
     }
