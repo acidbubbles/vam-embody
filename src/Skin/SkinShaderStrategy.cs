@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Acidbubbles.ImprovedPoV
+namespace Acidbubbles.ImprovedPoV.Skin
 {
-    public class ShaderStrategy : IStrategy
+    public class SkinShaderStrategy : IStrategy
     {
         public const string Name = "Shaders (allows mirrors)";
 
@@ -30,21 +30,17 @@ namespace Acidbubbles.ImprovedPoV
             get { return Name; }
         }
 
-        private MemoizedPerson _memoized;
+        private MemoizedPerson _person;
         private SceneWatcher _watcher;
 
-        public void Apply(DAZSkinV2 skin)
+        public void Apply(MemoizedPerson person)
         {
-            // TODO: After loading a new skin, only reloading the plugin will work and hide the face. Why?
-
-            if (_memoized != null) return;
+            if (_person != null) return;
             // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (memoized).");
 
-            SuperController.LogMessage("Apply " + skin.name);
-            _memoized = new MemoizedPerson();
-            _watcher = new SceneWatcher(_memoized);
+            var materials = new List<MemoizedMaterial>();
 
-            foreach (var material in MaterialsHelper.GetMaterialsToHide(skin))
+            foreach (var material in SkinMaterialsHelper.GetMaterialsToHide(person.skin))
             {
 #if (IMPROVED_POV)
                 if(material == null)
@@ -62,36 +58,41 @@ namespace Acidbubbles.ImprovedPoV
 
                 materialInfo.ApplyReplacementShader(shader);
 
-                _memoized.Add(materialInfo);
+                materials.Add(materialInfo);
             }
+
+            person.materials = materials;
+            _person = person;
+            // TODO: Move this out of the Shader strategy, so the hair strategy can also make use of it
+            _watcher = new SceneWatcher(_person);
 
             _watcher.Start();
 
             // This is a hack to force a refresh of the shaders cache
-            skin.BroadcastMessage("OnApplicationFocus", true);
+            person.skin.BroadcastMessage("OnApplicationFocus", true);
         }
 
-        public void Restore(DAZSkinV2 skin)
+        public void Restore()
         {
-            SuperController.LogMessage("Restore " + skin.name);
-            var memoized = _memoized;
+            var memoized = _person;
             var watcher = _watcher;
 
             _watcher.Stop();
 
-            _memoized = null;
+            _person = null;
             _watcher = null;
 
             // Already restored (abnormal)
             if (memoized == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
 
-            foreach (var material in memoized)
+            foreach (var material in memoized.materials)
             {
                 material.RestoreOriginalShader();
             }
 
             // This is a hack to force a refresh of the shaders cache
-            skin.BroadcastMessage("OnApplicationFocus", true);
+            if (memoized != null)
+                memoized.skin.BroadcastMessage("OnApplicationFocus", true);
         }
     }
 }

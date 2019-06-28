@@ -79,5 +79,10 @@ namespace Acidbubbles.ImprovedPoV
                 }
             }
         }
+
+        internal static IEnumerable<GameObject> AllChildren(GameObject gameObject)
+        {
+            return gameObject.GetComponentsInChildren<MonoBehaviour>().GroupBy(b => b.gameObject).Select(x => x.Key).Where(o => o != gameObject);
+        }
     }
 }

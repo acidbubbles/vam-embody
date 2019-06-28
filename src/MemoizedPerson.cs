@@ -4,33 +4,47 @@ using System.Linq;
 
 namespace Acidbubbles.ImprovedPoV
 {
-    public class MemoizedPerson : List<MemoizedMaterial>
+    public class MemoizedPerson
     {
+        public DAZSkinV2 skin;
+        public DAZHairGroup hair;
+        public List<MemoizedMaterial> materials;
+
         public MemoizedPerson()
         {
         }
 
-        public MemoizedPerson(IEnumerable<MemoizedMaterial> materials)
-        : base(materials)
+        public MemoizedPerson(DAZSkinV2 skin, DAZHairGroup hair)
+        : this()
         {
+            this.skin = skin;
+            this.hair = hair;
         }
 
-        public static MemoizedPerson FromBroadcastable(List<List<object>> value)
+        public static MemoizedPerson FromBroadcastable(Dictionary<string, object> value)
         {
             if (value == null) return null;
-            if (value.Count == 0) return null;
-            return new MemoizedPerson(value.Select(m => MemoizedMaterial.FromBroadcastable(m)));
+            if (!value.ContainsKey("skin")) return null;
+            var deserialized = new MemoizedPerson();
+            deserialized.skin = (DAZSkinV2)value["skin"];
+            deserialized.hair = (DAZHairGroup)value["hair"];
+            deserialized.materials = ((List<List<object>>)value["materials"])?.Select(m => MemoizedMaterial.FromBroadcastable(m)).ToList();
+            return deserialized;
         }
 
-        public List<List<object>> ToBroadcastable()
+        public Dictionary<string, object> ToBroadcastable()
         {
-            return this.Select(m => m.ToBroadcastable()).ToList();
+            var serialized = new Dictionary<string, object>();
+            serialized["skin"] = skin;
+            serialized["hair"] = hair;
+            serialized["materials"] = materials?.Select(m => m.ToBroadcastable()).ToList();
+            return serialized;
         }
 
-        internal static List<List<object>> EmptyBroadcastable()
+        internal static Dictionary<string, object> EmptyBroadcastable()
         {
             // NOTE: Unity does not allow broadcasting null
-            return new List<List<object>>();
+            return new Dictionary<string, object>();
         }
     }
 }

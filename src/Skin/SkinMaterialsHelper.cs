@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace Acidbubbles.ImprovedPoV
+namespace Acidbubbles.ImprovedPoV.Skin
 {
-    public class MaterialsHelper
+    public class SkinMaterialsHelper
     {
         public static readonly string[] MaterialsToHide = new[]
         {
@@ -40,8 +40,11 @@ namespace Acidbubbles.ImprovedPoV
                 materials.Add(material);
             }
 
-            if(materials.Count < 13)
+#if(POV_DIAGNOSTICS)
+            // NOTE: Tear is not on all models
+            if (materials.Count < MaterialsToHide.Length - 1)
                 throw new Exception("Not enough materials found to hide. List: " + string.Join(", ", skin.GPUmaterials.Select(m => m.name).ToArray()));
+#endif
 
             return materials;
         }

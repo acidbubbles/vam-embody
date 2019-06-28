@@ -83,7 +83,7 @@ namespace Acidbubbles.ImprovedPoV
 
         private bool _failedOnce;
 
-        public void ImprovedPoVSkinUpdated(List<List<object>> value)
+        public void ImprovedPoVSkinUpdated(Dictionary<string, object> value)
         {
             _person = MemoizedPerson.FromBroadcastable(value);
         }
@@ -106,11 +106,11 @@ namespace Acidbubbles.ImprovedPoV
 
         private void ShowPoVMaterials()
         {
-            if (_person == null) return;
+            if (_person == null || _person.materials == null) return;
 
             try
             {
-                foreach (var material in _person)
+                foreach (var material in _person.materials)
                 {
                     material.MakeVisible();
                 }
@@ -125,11 +125,11 @@ namespace Acidbubbles.ImprovedPoV
 
         private void HidePoVMaterials()
         {
-            if (_person == null) return;
+            if (_person == null || _person.materials == null) return;
 
             try
             {
-                foreach (var material in _person)
+                foreach (var material in _person.materials)
                 {
                     material.MakeInvisible();
                 }

@@ -1,8 +1,8 @@
 #define POV_DIAGNOSTICS
 
-namespace Acidbubbles.ImprovedPoV
+namespace Acidbubbles.ImprovedPoV.Skin
 {
-    public class NoStrategy : IStrategy
+    public class NoSkinStrategy : IStrategy
     {
         public const string Name = "None (face mesh visible)";
 
@@ -11,11 +11,11 @@ namespace Acidbubbles.ImprovedPoV
             get { return Name; }
         }
 
-        public void Apply(DAZSkinV2 skin)
+        public void Apply(MemoizedPerson person)
         {
         }
 
-        public void Restore(DAZSkinV2 skin)
+        public void Restore()
         {
         }
     }

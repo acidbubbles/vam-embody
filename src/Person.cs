@@ -2,7 +2,8 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using System.Collections.Generic;
+using Acidbubbles.ImprovedPoV.Skin;
+using Acidbubbles.ImprovedPoV.Hair;
 
 namespace Acidbubbles.ImprovedPoV
 {
@@ -17,15 +18,18 @@ namespace Acidbubbles.ImprovedPoV
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
-        private IStrategy _strategyImpl;
-        private DAZSkinV2 _skin;
-
         private FreeControllerV3 _headControl;
-        private JSONStorableFloat _cameraRecess;
-        private JSONStorableFloat _cameraUpDown;
-        private JSONStorableFloat _clipDistance;
-        private JSONStorableBool _possessedOnly;
-        private JSONStorableStringChooser _strategy;
+
+        private JSONStorableFloat _cameraRecessJSON;
+        private JSONStorableFloat _cameraUpDownJSON;
+        private JSONStorableFloat _clipDistanceJSON;
+        private JSONStorableBool _possessedOnlyJSON;
+        private JSONStorableStringChooser _skinStrategyJSON;
+        private JSONStorableStringChooser _hairStrategyJSON;
+
+        private MemoizedPerson _memoized;
+        private IStrategy _skinStrategy;
+        private IStrategy _hairStrategy;
 
         // Whether the current configuration is valid, which otherwise prevents enabling and using the plugin
         private bool _valid;
@@ -55,7 +59,8 @@ namespace Acidbubbles.ImprovedPoV
                     .Select(p => p as Possessor)
                     .FirstOrDefault();
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
-                _strategyImpl = new NoStrategy();
+                _skinStrategy = new SkinStrategyFactory().None();
+                _hairStrategy = new HairStrategyFactory().None();
 
                 InitControls();
                 _valid = true;
@@ -111,7 +116,7 @@ namespace Acidbubbles.ImprovedPoV
         {
             if (!_enabled) return;
 
-            var possessed = _headControl.possessed || !_possessedOnly.val;
+            var possessed = _headControl.possessed || !_possessedOnlyJSON.val;
 
             if (!_active && possessed)
             {
@@ -134,53 +139,74 @@ namespace Acidbubbles.ImprovedPoV
         {
             try
             {
-                _cameraRecess = new JSONStorableFloat("Camera Recess", 0.06f, 0f, .2f, false);
-                RegisterFloat(_cameraRecess);
-                var recessSlider = CreateSlider(_cameraRecess, false);
-                recessSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    ApplyCameraPosition();
-                });
+                    _cameraRecessJSON = new JSONStorableFloat("Camera Recess", 0.06f, 0f, .2f, false);
+                    RegisterFloat(_cameraRecessJSON);
+                    var recessSlider = CreateSlider(_cameraRecessJSON, false);
+                    recessSlider.slider.onValueChanged.AddListener(delegate (float val)
+                    {
+                        ApplyCameraPosition();
+                    });
+                }
 
-                _cameraUpDown = new JSONStorableFloat("Camera UpDown", 0f, -0.2f, 0.2f, false);
-                RegisterFloat(_cameraUpDown);
-                var upDownSlider = CreateSlider(_cameraUpDown, false);
-                upDownSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    ApplyCameraPosition();
-                });
+                    _cameraUpDownJSON = new JSONStorableFloat("Camera UpDown", 0f, -0.2f, 0.2f, false);
+                    RegisterFloat(_cameraUpDownJSON);
+                    var upDownSlider = CreateSlider(_cameraUpDownJSON, false);
+                    upDownSlider.slider.onValueChanged.AddListener(delegate (float val)
+                    {
+                        ApplyCameraPosition();
+                    });
+                }
 
-                _clipDistance = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
-                RegisterFloat(_clipDistance);
-                var clipSlider = CreateSlider(_clipDistance, false);
-                clipSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
-                    ApplyCameraPosition();
-                });
+                    _clipDistanceJSON = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
+                    RegisterFloat(_clipDistanceJSON);
+                    var clipSlider = CreateSlider(_clipDistanceJSON, false);
+                    clipSlider.slider.onValueChanged.AddListener(delegate (float val)
+                    {
+                        ApplyCameraPosition();
+                    });
+                }
 
-                var possessedOnlyDefaultValue = true;
+                {
+                    var possessedOnlyDefaultValue = true;
 #if (POV_DIAGNOSTICS)
-                // NOTE: Easier to test when it's always on
-                possessedOnlyDefaultValue = false;
+                    // NOTE: Easier to test when it's always on
+                    possessedOnlyDefaultValue = false;
 #endif
-                _possessedOnly = new JSONStorableBool("Possessed Only", possessedOnlyDefaultValue);
-                RegisterBool(_possessedOnly);
-                var possessedOnlyCheckbox = CreateToggle(_possessedOnly, true);
-                possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    _dirty = true;
-                });
+                    _possessedOnlyJSON = new JSONStorableBool("Possessed Only", possessedOnlyDefaultValue);
+                    RegisterBool(_possessedOnlyJSON);
+                    var possessedOnlyCheckbox = CreateToggle(_possessedOnlyJSON, true);
+                    possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
+                    {
+                        _dirty = true;
+                    });
+                }
 
-                var strategies = new List<string> { NoStrategy.Name, MaterialsEnabledStrategy.Name, ShaderStrategy.Name };
-                _strategy = new JSONStorableStringChooser("Strategy", strategies, ShaderStrategy.Name, "Strategy");
-                RegisterStringChooser(_strategy);
-                var strategyPopup = CreatePopup(_strategy, true);
-                strategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
                 {
-                    // TODO: Why is this necessary?
-                    _strategy.val = val;
-                    _dirty = true;
-                });
+                    _skinStrategyJSON = new JSONStorableStringChooser("Skin Strategy", SkinStrategyFactory.Names, SkinStrategyFactory.Default, "Skin Strategy");
+                    RegisterStringChooser(_skinStrategyJSON);
+                    var skinStrategyPopup = CreatePopup(_skinStrategyJSON, true);
+                    skinStrategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
+                    {
+                        // TODO: Why is this necessary?
+                        _skinStrategyJSON.val = val;
+                        _dirty = true;
+                    });
+                }
+
+                {
+                    _hairStrategyJSON = new JSONStorableStringChooser("Hair Strategy", HairStrategyFactory.Names, HairStrategyFactory.Default, "Hair Strategy");
+                    RegisterStringChooser(_hairStrategyJSON);
+                    var hairStrategyPopup = CreatePopup(_hairStrategyJSON, true);
+                    hairStrategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
+                    {
+                        // TODO: Why is this necessary?
+                        _hairStrategyJSON.val = val;
+                        _dirty = true;
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -190,66 +216,64 @@ namespace Acidbubbles.ImprovedPoV
 
         private void ApplyAll()
         {
+            var selector = _person.GetComponentInChildren<DAZCharacterSelector>();
+
+            // Try again next frame
+            if (selector == null || selector.selectedCharacter == null)
+            {
+                _dirty = true;
+                return;
+            }
+
+            // NOTE: We always regenerate from scratch here. There may not be any gain from caching this in practice.
+            var skin = selector.selectedCharacter.skin;
+            var hair = selector.selectedHairGroup;
+            _memoized = new MemoizedPerson(skin, hair);
+
             ApplyCameraPosition();
-            ApplyFaceStrategy();
             ApplyPossessorMeshVisibility();
+            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), _memoized);
+            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), _memoized);
         }
 
-        private void ApplyFaceStrategy()
+        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, MemoizedPerson memoized)
         {
-            DAZSkinV2 skin;
-
             try
             {
-                skin = _person.GetComponentInChildren<DAZCharacterSelector>()?.selectedCharacter?.skin;
-
-                if (skin == null)
-                {
-                    _dirty = true;
-                    return;
-                }
+                strategy?.Restore();
 
                 if (!_active)
-                {
-                    if (_strategyImpl.Name != NoStrategy.Name)
-                    {
-                        _strategyImpl.Restore(skin);
-                        _strategyImpl = new NoStrategy();
-                    }
-                    return;
-                }
+                    return strategyFactory.None();
 
-                if (_strategyImpl.Name != _strategy.val || skin != _skin)
-                {
-                    _strategyImpl.Restore(skin);
-                    _strategyImpl = StrategyFactory.CreateStrategy(_strategy.val);
-                    _skin = skin;
-                }
+                if (strategy?.Name != selected)
+                    strategy = strategyFactory.Create(selected);
             }
             catch (Exception e)
             {
                 SuperController.LogError("Failed to initialize and/or restore strategy: " + e);
-                return;
+                return strategyFactory.None();
             }
 
             try
             {
-                _strategyImpl.Apply(skin);
+                strategy.Apply(memoized);
             }
             catch (Exception e)
             {
-                SuperController.LogError("Failed to execute strategy " + _strategyImpl.Name + ": " + e);
+                SuperController.LogError("Failed to execute strategy " + _skinStrategy.Name + ": " + e);
             }
+
+            return strategy;
         }
 
         private void ApplyCameraPosition()
         {
             try
             {
-                _mainCamera.nearClipPlane = _active ? _clipDistance.val : 0.01f;
+                _mainCamera.nearClipPlane = _active ? _clipDistanceJSON.val : 0.01f;
 
-                var cameraRecess = _active ? _cameraRecess.val : 0;
-                var cameraUpDown = _active ? _cameraUpDown.val : 0;
+                var cameraRecess = _active ? _cameraRecessJSON.val : 0;
+                var cameraUpDown = _active ? _cameraUpDownJSON.val : 0;
                 var pos = _possessor.transform.position;
                 _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraRecess - _mainCamera.transform.rotation * Vector3.down * cameraUpDown;
                 _possessor.transform.position = pos;
