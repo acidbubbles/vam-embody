@@ -1,6 +1,3 @@
-#define POV_DIAGNOSTICS
-using System;
-
 namespace Acidbubbles.ImprovedPoV
 {
     public interface IStrategyFactory

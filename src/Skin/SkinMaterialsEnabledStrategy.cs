@@ -13,9 +13,9 @@ namespace Acidbubbles.ImprovedPoV.Skin
             get { return Name; }
         }
 
-        private MemoizedPerson _person;
+        private PersonReference _person;
 
-        public void Apply(MemoizedPerson person)
+        public void Apply(PersonReference person)
         {
             _person = person;
             UpdateMaterialsEnabled(person.skin, false);
@@ -37,6 +37,12 @@ namespace Acidbubbles.ImprovedPoV.Skin
                     skin.materialsEnabled[i] = enabled;
                 }
             }
+        }
+
+        public IMirrorStrategy GetMirrorStrategy(object data)
+        {
+            // NOTE: Enabling and disabling materials during mirror render doesn't work
+            return null;
         }
     }
 }

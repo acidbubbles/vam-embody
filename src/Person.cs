@@ -26,8 +26,7 @@ namespace Acidbubbles.ImprovedPoV
         private JSONStorableBool _possessedOnlyJSON;
         private JSONStorableStringChooser _skinStrategyJSON;
         private JSONStorableStringChooser _hairStrategyJSON;
-
-        private MemoizedPerson _memoized;
+        private SceneWatcher _watcher;
         private IStrategy _skinStrategy;
         private IStrategy _hairStrategy;
 
@@ -228,15 +227,21 @@ namespace Acidbubbles.ImprovedPoV
             // NOTE: We always regenerate from scratch here. There may not be any gain from caching this in practice.
             var skin = selector.selectedCharacter.skin;
             var hair = selector.selectedHairGroup;
-            _memoized = new MemoizedPerson(skin, hair);
+            var reference = new PersonReference(skin, hair);
 
             ApplyCameraPosition();
             ApplyPossessorMeshVisibility();
-            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), _memoized);
-            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), _memoized);
+            if (_watcher != null) _watcher.Stop();
+            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), reference);
+            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), reference);
+            if (_active)
+            {
+                _watcher = new SceneWatcher(reference);
+                _watcher.Start();
+            }
         }
 
-        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, MemoizedPerson memoized)
+        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, PersonReference reference)
         {
             try
             {
@@ -256,7 +261,7 @@ namespace Acidbubbles.ImprovedPoV
 
             try
             {
-                strategy.Apply(memoized);
+                strategy.Apply(reference);
             }
             catch (Exception e)
             {

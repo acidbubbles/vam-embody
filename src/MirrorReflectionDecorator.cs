@@ -11,7 +11,7 @@ namespace Acidbubbles.ImprovedPoV
     /// </summary>
     public class MirrorReflectionDecorator : MirrorReflection
     {
-        private MemoizedPerson _person;
+        private PersonReference _person;
 
         public void CopyFrom(MirrorReflection original)
         {
@@ -83,7 +83,14 @@ namespace Acidbubbles.ImprovedPoV
 
         public void ImprovedPoVSkinUpdated(Dictionary<string, object> value)
         {
-            _person = MemoizedPerson.FromBroadcastable(value);
+            try
+            {
+                _person = PersonReference.FromBroadcastable(value);
+            }
+            catch (Exception exc)
+            {
+                SuperController.LogError("Failed to deserialize skin update: " + exc);
+            }
         }
 
         protected override void Awake()
@@ -97,9 +104,9 @@ namespace Acidbubbles.ImprovedPoV
 
         public new void OnWillRenderObject()
         {
-            _person?.BeforeMirrorRender();
+            var active = _person?.BeforeMirrorRender() ?? false;
             base.OnWillRenderObject();
-            _person?.AfterMirrorRender();
+            if (active) _person?.AfterMirrorRender();
         }
     }
 }

@@ -51,8 +51,13 @@ namespace Acidbubbles.ImprovedPoV
         {
             foreach (var behavior in mirror.GetComponentsInChildren<MirrorReflection>())
             {
+                var replaceAgain = false;
+#if (POV_DIAGNOSTICS)
+                replaceAgain = true;
+#endif
+
                 // Already replaced
-                if (behavior.GetType() != typeof(MirrorReflection))
+                if (replaceAgain && behavior.GetType() != typeof(MirrorReflection))
                     continue;
 
                 ReplaceMirrorScriptAndCreatedObjects(behavior);

@@ -13,9 +13,9 @@ namespace Acidbubbles.ImprovedPoV.Hair
             get { return Name; }
         }
 
-        private MemoizedPerson _person;
+        private PersonReference _person;
 
-        public void Apply(MemoizedPerson person)
+        public void Apply(PersonReference person)
         {
             _person = person;
             UpdateHairWidth(person.hair, false);
@@ -32,13 +32,18 @@ namespace Acidbubbles.ImprovedPoV.Hair
             // NOTE: In progress
             // NOTE: Only applies to SimV2 hair
             // TODO: Publish that to mirrors
-            // TODO: Push the original settings in the memoized person for eventual restore
+            // TODO: Push the original settings in the person reference for eventual restore
             foreach (var x in hair.gameObject.GetComponentsInChildren<HairSettings>())
             {
                 // TODO: Restore completely
                 x.LODSettings.UseFixedSettings = !enabled;
                 x.LODSettings.FixedWidth = 0f;
             }
+        }
+
+        public IMirrorStrategy GetMirrorStrategy(object data)
+        {
+            return null;
         }
     }
 }

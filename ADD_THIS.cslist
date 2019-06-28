@@ -1,12 +1,14 @@
 src/Diagnostics.cs
-src/MemoizedPerson.cs
-src/MemoizedMaterial.cs
+src/PersonReference.cs
+src/IMirrorStrategy.cs
 src/IStrategy.cs
 src/IStrategyFactory.cs
 src/SceneWatcher.cs
 src/Skin/SkinMaterialsHelper.cs
 src/Skin/NoSkinStrategy.cs
 src/Skin/SkinMaterialsEnabledStrategy.cs
+src/Skin/SkinShaderMaterialReference.cs
+src/Skin/SkinShaderMirrorStrategy.cs
 src/Skin/SkinShaderStrategy.cs
 src/Skin/SkinStrategyFactory.cs
 src/Hair/NoHairStrategy.cs

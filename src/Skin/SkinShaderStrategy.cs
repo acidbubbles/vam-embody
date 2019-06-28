@@ -30,15 +30,15 @@ namespace Acidbubbles.ImprovedPoV.Skin
             get { return Name; }
         }
 
-        private MemoizedPerson _person;
-        private SceneWatcher _watcher;
+        private DAZSkinV2 _skin;
+        private SkinShaderMirrorStrategy _mirrorStrategy;
 
-        public void Apply(MemoizedPerson person)
+        public void Apply(PersonReference person)
         {
-            if (_person != null) return;
-            // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (memoized).");
+            if (_mirrorStrategy != null) return;
+            // throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (reference).");
 
-            var materials = new List<MemoizedMaterial>();
+            var materials = new List<SkinShaderMaterialReference>();
 
             foreach (var material in SkinMaterialsHelper.GetMaterialsToHide(person.skin))
             {
@@ -46,11 +46,11 @@ namespace Acidbubbles.ImprovedPoV.Skin
                 if(material == null)
                     throw new InvalidOperationException("Attempts to apply the shader strategy on a destroyed material.");
 
-                if (material.GetInt(MemoizedMaterial.ImprovedPovEnabledShaderKey) == 1)
+                if (material.GetInt(SkinShaderMaterialReference.ImprovedPovEnabledShaderKey) == 1)
                     throw new InvalidOperationException("Attempts to apply the shader strategy on a skin that already has the plugin enabled (shader key).");
 #endif
 
-                var materialInfo = MemoizedMaterial.FromMaterial(material);
+                var materialInfo = SkinShaderMaterialReference.FromMaterial(material);
 
                 Shader shader;
                 if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
@@ -61,12 +61,8 @@ namespace Acidbubbles.ImprovedPoV.Skin
                 materials.Add(materialInfo);
             }
 
-            person.materials = materials;
-            _person = person;
-            // TODO: Move this out of the Shader strategy, so the hair strategy can also make use of it
-            _watcher = new SceneWatcher(_person);
-
-            _watcher.Start();
+            _skin = person.skin;
+            person.skinStrategy = _mirrorStrategy = new SkinShaderMirrorStrategy(Name, materials);
 
             // This is a hack to force a refresh of the shaders cache
             person.skin.BroadcastMessage("OnApplicationFocus", true);
@@ -74,25 +70,26 @@ namespace Acidbubbles.ImprovedPoV.Skin
 
         public void Restore()
         {
-            var memoized = _person;
-            var watcher = _watcher;
+            var mirrorStrategy = _mirrorStrategy;
 
-            _watcher.Stop();
-
-            _person = null;
-            _watcher = null;
+            _mirrorStrategy = null;
 
             // Already restored (abnormal)
-            if (memoized == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
+            if (mirrorStrategy == null) throw new InvalidOperationException("Attempt to Restore but the previous material container does not exist");
 
-            foreach (var material in memoized.materials)
+            foreach (var material in mirrorStrategy.materials)
             {
                 material.RestoreOriginalShader();
             }
 
             // This is a hack to force a refresh of the shaders cache
-            if (memoized != null)
-                memoized.skin.BroadcastMessage("OnApplicationFocus", true);
+            if (_skin != null)
+                _skin.BroadcastMessage("OnApplicationFocus", true);
+        }
+
+        public IMirrorStrategy GetMirrorStrategy(object data)
+        {
+            return SkinShaderMirrorStrategy.FromBroadcastable(Name, data);
         }
     }
 }

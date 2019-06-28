@@ -11,12 +11,17 @@ namespace Acidbubbles.ImprovedPoV.Skin
             get { return Name; }
         }
 
-        public void Apply(MemoizedPerson person)
+        public void Apply(PersonReference person)
         {
         }
 
         public void Restore()
         {
+        }
+
+        public IMirrorStrategy GetMirrorStrategy(object data)
+        {
+            return null;
         }
     }
 }

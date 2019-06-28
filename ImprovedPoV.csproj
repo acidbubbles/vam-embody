@@ -39,14 +39,16 @@
 
   <ItemGroup>
     <Compile Include="src/Diagnostics.cs" />
-    <Compile Include="src/MemoizedPerson.cs" />
-    <Compile Include="src/MemoizedMaterial.cs" />
+    <Compile Include="src/PersonReference.cs" />
+    <Compile Include="src/IMirrorStrategy.cs" />
     <Compile Include="src/IStrategy.cs" />
     <Compile Include="src/IStrategyFactory.cs" />
     <Compile Include="src/SceneWatcher.cs" />
     <Compile Include="src/Skin/SkinMaterialsHelper.cs" />
     <Compile Include="src/Skin/NoSkinStrategy.cs" />
     <Compile Include="src/Skin/SkinMaterialsEnabledStrategy.cs" />
+    <Compile Include="src/Skin/SkinShaderMaterialReference.cs" />
+    <Compile Include="src/Skin/SkinShaderMirrorStrategy.cs" />
     <Compile Include="src/Skin/SkinShaderStrategy.cs" />
     <Compile Include="src/Skin/SkinStrategyFactory.cs" />
     <Compile Include="src/Hair/NoHairStrategy.cs" />

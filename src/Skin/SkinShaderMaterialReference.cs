@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Acidbubbles.ImprovedPoV
+namespace Acidbubbles.ImprovedPoV.Skin
 {
-    public class MemoizedMaterial
+    public class SkinShaderMaterialReference
     {
         public const string ImprovedPovEnabledShaderKey = "_ImprovedPovEnabled";
 
@@ -16,16 +16,16 @@ namespace Acidbubbles.ImprovedPoV
         public int originalRenderQueue;
         private bool _tainted;
 
-        public static MemoizedMaterial FromMaterial(Material material)
+        public static SkinShaderMaterialReference FromMaterial(Material material)
         {
-            var memoized = new MemoizedMaterial();
-            memoized.material = material;
-            memoized.originalShader = material.shader;
-            memoized.originalAlphaAdjust = material.GetFloat("_AlphaAdjust");
-            memoized.originalColor = material.GetColor("_Color");
-            memoized.originalSpecColor = material.GetColor("_SpecColor");
-            memoized.originalRenderQueue = material.renderQueue;
-            return memoized;
+            var materialRef = new SkinShaderMaterialReference();
+            materialRef.material = material;
+            materialRef.originalShader = material.shader;
+            materialRef.originalAlphaAdjust = material.GetFloat("_AlphaAdjust");
+            materialRef.originalColor = material.GetColor("_Color");
+            materialRef.originalSpecColor = material.GetColor("_SpecColor");
+            materialRef.originalRenderQueue = material.renderQueue;
+            return materialRef;
         }
 
         public void ApplyReplacementShader(Shader shader)
@@ -60,18 +60,19 @@ namespace Acidbubbles.ImprovedPoV
             material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
         }
 
-        public static MemoizedMaterial FromBroadcastable(List<object> value)
+        public static SkinShaderMaterialReference FromBroadcastable(object value)
         {
-            return new MemoizedMaterial
+            var list = (List<object>)value;
+            return new SkinShaderMaterialReference
             {
-                material = (Material)value[0],
-                originalAlphaAdjust = (float)value[1],
-                originalColor = (Color)value[2],
-                originalSpecColor = (Color)value[3]
+                material = (Material)list[0],
+                originalAlphaAdjust = (float)list[1],
+                originalColor = (Color)list[2],
+                originalSpecColor = (Color)list[3]
             };
         }
 
-        public List<object> ToBroadcastable()
+        public object ToBroadcastable()
         {
             return new List<object>{
                 material,
