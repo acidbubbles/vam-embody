@@ -81,8 +81,6 @@ namespace Acidbubbles.ImprovedPoV
             }
         }
 
-        private bool _failedOnce;
-
         public void ImprovedPoVSkinUpdated(Dictionary<string, object> value)
         {
             _person = MemoizedPerson.FromBroadcastable(value);
@@ -99,47 +97,9 @@ namespace Acidbubbles.ImprovedPoV
 
         public new void OnWillRenderObject()
         {
-            ShowPoVMaterials();
+            _person?.BeforeMirrorRender();
             base.OnWillRenderObject();
-            HidePoVMaterials();
-        }
-
-        private void ShowPoVMaterials()
-        {
-            if (_person == null || _person.materials == null) return;
-
-            try
-            {
-                foreach (var material in _person.materials)
-                {
-                    material.MakeVisible();
-                }
-            }
-            catch (Exception e)
-            {
-                if (_failedOnce) return;
-                _failedOnce = true;
-                SuperController.LogError("Failed to show PoV materials: " + e);
-            }
-        }
-
-        private void HidePoVMaterials()
-        {
-            if (_person == null || _person.materials == null) return;
-
-            try
-            {
-                foreach (var material in _person.materials)
-                {
-                    material.MakeInvisible();
-                }
-            }
-            catch (Exception e)
-            {
-                if (_failedOnce) return;
-                _failedOnce = true;
-                SuperController.LogError("Failed to hide PoV materials: " + e);
-            }
+            _person?.AfterMirrorRender();
         }
     }
 }

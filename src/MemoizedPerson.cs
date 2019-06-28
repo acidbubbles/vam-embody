@@ -1,4 +1,5 @@
 #define POV_DIAGNOSTICS
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +10,7 @@ namespace Acidbubbles.ImprovedPoV
         public DAZSkinV2 skin;
         public DAZHairGroup hair;
         public List<MemoizedMaterial> materials;
+        private bool _failedOnce;
 
         public MemoizedPerson()
         {
@@ -45,6 +47,46 @@ namespace Acidbubbles.ImprovedPoV
         {
             // NOTE: Unity does not allow broadcasting null
             return new Dictionary<string, object>();
+        }
+
+        internal void BeforeMirrorRender()
+        {
+            try
+            {
+                if (materials != null)
+                {
+                    foreach (var material in materials)
+                    {
+                        material.MakeVisible();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (_failedOnce) return;
+                _failedOnce = true;
+                SuperController.LogError("Failed to show PoV materials: " + e);
+            }
+        }
+
+        internal void AfterMirrorRender()
+        {
+            try
+            {
+                if (materials != null)
+                {
+                    foreach (var material in materials)
+                    {
+                        material.MakeInvisible();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                if (_failedOnce) return;
+                _failedOnce = true;
+                SuperController.LogError("Failed to hide PoV materials: " + e);
+            }
         }
     }
 }
