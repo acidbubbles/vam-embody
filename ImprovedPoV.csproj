@@ -52,7 +52,8 @@
     <Compile Include="src/Skin/SkinShaderStrategy.cs" />
     <Compile Include="src/Skin/SkinStrategyFactory.cs" />
     <Compile Include="src/Hair/NoHairStrategy.cs" />
-    <Compile Include="src/Hair/HairWidthStrategy.cs" />
+    <Compile Include="src/Hair/HairMaterialMirrorStrategy.cs" />
+    <Compile Include="src/Hair/HairMaterialStrategy.cs" />
     <Compile Include="src/Hair/HairStrategyFactory.cs" />
     <Compile Include="src/MirrorReflectionDecorator.cs" />
     <Compile Include="src/MirrorReflectionReplacer.cs" />

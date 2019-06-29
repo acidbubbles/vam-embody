@@ -6,15 +6,15 @@ namespace Acidbubbles.ImprovedPoV.Hair
 {
     public class HairStrategyFactory : IStrategyFactory
     {
-        internal static readonly List<string> Names = new List<string> { NoHairStrategy.Name, HairWidthStrategy.Name };
-        internal static readonly string Default = NoHairStrategy.Name;
+        internal static readonly List<string> Names = new List<string> { NoHairStrategy.Name, HairMaterialStrategy.Name };
+        internal static readonly string Default = HairMaterialStrategy.Name;
 
         public IStrategy Create(string name)
         {
             switch (name)
             {
-                case HairWidthStrategy.Name:
-                    return new HairWidthStrategy();
+                case HairMaterialStrategy.Name:
+                    return new HairMaterialStrategy();
                 case NoHairStrategy.Name:
                     return new NoHairStrategy();
                 default:

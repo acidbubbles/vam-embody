@@ -57,7 +57,7 @@ namespace Acidbubbles.ImprovedPoV
 #endif
 
                 // Already replaced
-                if (replaceAgain && behavior.GetType() != typeof(MirrorReflection))
+                if (!replaceAgain && behavior.GetType() != typeof(MirrorReflection))
                     continue;
 
                 ReplaceMirrorScriptAndCreatedObjects(behavior);

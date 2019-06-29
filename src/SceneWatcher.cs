@@ -18,29 +18,18 @@ namespace Acidbubbles.ImprovedPoV
         public void Start()
         {
             SuperController.singleton.onAtomUIDsChangedHandlers += OnAtomUIDsChanged;
-            SuperController.singleton.onAtomUIDRenameHandlers += OnAtomUIDRename;
             UpdateMirrors(_reference, true);
         }
 
         public void Stop()
         {
             SuperController.singleton.onAtomUIDsChangedHandlers -= OnAtomUIDsChanged;
-            SuperController.singleton.onAtomUIDRenameHandlers -= OnAtomUIDRename;
             UpdateMirrors(null, true);
         }
 
         private void OnAtomUIDsChanged(List<string> atomUIDs)
         {
-            SuperController.LogMessage("Changed " + atomUIDs.Count);
             // This may mean a new mirror was added; we usually don't care about other atoms.
-            UpdateMirrors(_reference, false);
-        }
-
-        private void OnAtomUIDRename(string oldName, string newName)
-        {
-            // TODO: This doesn't seem to work for load look / skin
-            SuperController.LogMessage("Rename " + oldName + " " + newName);
-            // This may mean a new look was applied
             UpdateMirrors(_reference, false);
         }
 

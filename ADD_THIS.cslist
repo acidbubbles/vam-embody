@@ -12,7 +12,8 @@ src/Skin/SkinShaderMirrorStrategy.cs
 src/Skin/SkinShaderStrategy.cs
 src/Skin/SkinStrategyFactory.cs
 src/Hair/NoHairStrategy.cs
-src/Hair/HairWidthStrategy.cs
+src/Hair/HairMaterialMirrorStrategy.cs
+src/Hair/HairMaterialStrategy.cs
 src/Hair/HairStrategyFactory.cs
 src/MirrorReflectionDecorator.cs
 src/MirrorReflectionReplacer.cs

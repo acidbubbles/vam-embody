@@ -14,7 +14,6 @@ namespace Acidbubbles.ImprovedPoV
     /// </summary>
     public class Person : MVRScript
     {
-
         private Atom _person;
         private Camera _mainCamera;
         private Possessor _possessor;
@@ -224,7 +223,6 @@ namespace Acidbubbles.ImprovedPoV
                 return;
             }
 
-            // NOTE: We always regenerate from scratch here. There may not be any gain from caching this in practice.
             var skin = selector.selectedCharacter.skin;
             var hair = selector.selectedHairGroup;
             var reference = new PersonReference(skin, hair);
@@ -232,8 +230,8 @@ namespace Acidbubbles.ImprovedPoV
             ApplyCameraPosition();
             ApplyPossessorMeshVisibility();
             if (_watcher != null) _watcher.Stop();
-            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), reference);
-            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), reference);
+            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), reference, skin != null);
+            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), reference, hair != null);
             if (_active)
             {
                 _watcher = new SceneWatcher(reference);
@@ -241,13 +239,13 @@ namespace Acidbubbles.ImprovedPoV
             }
         }
 
-        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, PersonReference reference)
+        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, PersonReference reference, bool exists)
         {
             try
             {
                 strategy?.Restore();
 
-                if (!_active)
+                if (!_active || !exists)
                     return strategyFactory.None();
 
                 if (strategy?.Name != selected)
