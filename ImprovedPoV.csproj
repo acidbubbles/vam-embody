@@ -38,26 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="src/Diagnostics.cs" />
-    <Compile Include="src/PersonReference.cs" />
-    <Compile Include="src/IMirrorStrategy.cs" />
-    <Compile Include="src/IStrategy.cs" />
-    <Compile Include="src/IStrategyFactory.cs" />
-    <Compile Include="src/SceneWatcher.cs" />
-    <Compile Include="src/Skin/SkinMaterialsHelper.cs" />
-    <Compile Include="src/Skin/NoSkinStrategy.cs" />
-    <Compile Include="src/Skin/SkinMaterialsEnabledStrategy.cs" />
-    <Compile Include="src/Skin/SkinShaderMaterialReference.cs" />
-    <Compile Include="src/Skin/SkinShaderMirrorStrategy.cs" />
-    <Compile Include="src/Skin/SkinShaderStrategy.cs" />
-    <Compile Include="src/Skin/SkinStrategyFactory.cs" />
-    <Compile Include="src/Hair/NoHairStrategy.cs" />
-    <Compile Include="src/Hair/HairMaterialMirrorStrategy.cs" />
-    <Compile Include="src/Hair/HairMaterialStrategy.cs" />
-    <Compile Include="src/Hair/HairStrategyFactory.cs" />
-    <Compile Include="src/MirrorReflectionDecorator.cs" />
-    <Compile Include="src/MirrorReflectionReplacer.cs" />
-    <Compile Include="src/Person.cs" />
+    <Compile Include="tools/Diagnostics.cs" />
+    <Compile Include="tools/ForwardUnityLogsToSceneLogs.cs" />
+    <Compile Include="tools/ForceEditMode.cs" />
+    <Compile Include="src/ImprovedPoV.cs" />
   </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

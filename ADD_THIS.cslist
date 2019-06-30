@@ -1,4 +1,2 @@
-src/Diagnostics.cs
-src/Person.cs
-src/HairStrategy.cs
-src/SkinStrategy.cs
+tools/Diagnostics.cs
+src/ImprovedPoV.cs
