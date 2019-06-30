@@ -7,7 +7,12 @@ $ErrorActionPreference = "Stop"
 
 New-Item -ItemType Directory -Force -Path ./publish | Out-Null
 New-Item -ItemType Directory -Force -Path ./publish/src | Out-Null
-Remove-Item ImprovedPoV-$Version.zip -Force | Out-Null
+New-Item -ItemType Directory -Force -Path ./publish/src/Hair | Out-Null
+New-Item -ItemType Directory -Force -Path ./publish/src/Skin | Out-Null
+
+If(Test ImprovedPoV-$Version.zip) {
+    Remove-Item ImprovedPoV-$Version.zip -Force | Out-Null
+}
 
 $Code = Get-Content -Path .\ADD_THIS.cslist -Raw
 $Code = $Code -Replace "src/Diagnostics.cs\r\n", ""
