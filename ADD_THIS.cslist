@@ -1,2 +1,3 @@
+tools/ForwardUnityLogsToSceneLogs.cs
 tools/Diagnostics.cs
 src/ImprovedPoV.cs

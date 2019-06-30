@@ -15,7 +15,7 @@ public class Person : MVRScript
     private Camera _mainCamera;
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
-
+    private DAZCharacterSelector _selector;
     private JSONStorableFloat _cameraRecessJSON;
     private JSONStorableFloat _cameraUpDownJSON;
     private JSONStorableFloat _clipDistanceJSON;
@@ -25,6 +25,10 @@ public class Person : MVRScript
 
     private SkinBehavior _skinBehavior;
     private HairBehavior _hairBehavior;
+    // For change detection purposes
+    private DAZCharacter _character;
+    private DAZHairGroup _hair;
+
 
     // Whether the PoV effects are currently active, i.e. in possession mode
     private bool _lastActive;
@@ -50,6 +54,7 @@ public class Person : MVRScript
                 .Select(p => p as Possessor)
                 .FirstOrDefault();
             _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
+            _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
 
             InitControls();
         }
@@ -173,24 +178,23 @@ public class Person : MVRScript
             _dirty = false;
             ApplyAll(_lastActive);
         }
-        else
+        else if (_lastActive && _selector.selectedCharacter != _character && _skinBehavior != null)
         {
-            // TODO: Check if the skin changed
-            /*
-            if(_skinStrategy != null)
-                _skinStrategy.Update();
-            if(_hairStrategy != null)
-                _hairStrategy.Update();
-            */
+            DestroyImmediate(_skinBehavior);
+            ApplyAll(true);
+        }
+        else if (_lastActive && _selector.selectedHairGroup != _hair)
+        {
+            SuperController.LogMessage("Hair changed");
+            DestroyImmediate(_hairBehavior);
+            ApplyAll(true);
         }
     }
 
     private void ApplyAll(bool active)
     {
-        var selector = _person.GetComponentInChildren<DAZCharacterSelector>();
-
         // Try again next frame
-        if (active && selector == null || selector.selectedCharacter == null)
+        if (_selector.selectedCharacter?.skin == null)
         {
             _dirty = true;
             return;
@@ -199,24 +203,29 @@ public class Person : MVRScript
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
 
-        var renderers = _person.GetComponentsInChildren<Renderer>();
+        var renderer = _person.GetComponentsInChildren<Renderer>().FirstOrDefault();
+        if (renderer == null) throw new NullReferenceException("Did not find a renderer component to hook into");
 
-        if (UpdateBehavior(ref _skinBehavior, active && _hideSkinJSON.val, renderers))
-            _skinBehavior.Configure(selector.selectedCharacter.skin);
+        if (UpdateBehavior(ref _skinBehavior, active && _hideSkinJSON.val, renderer.gameObject))
+        {
+            _character = _selector.selectedCharacter;
+            _skinBehavior.Configure(_selector.selectedCharacter.skin);
+        }
 
-        if (UpdateBehavior(ref _hairBehavior, active && _hideHair.val, renderers))
-            _hairBehavior.Configure(selector.selectedHairGroup);
+        if (UpdateBehavior(ref _hairBehavior, active && _hideHair.val, renderer.gameObject))
+        {
+            _hairBehavior.Configure(_selector.selectedHairGroup);
+            _hair = _selector.selectedHairGroup;
+        }
     }
 
-    private bool UpdateBehavior<T>(ref T behavior, bool active, Renderer[] renderers)
+    private bool UpdateBehavior<T>(ref T behavior, bool active, GameObject host)
      where T : MonoBehaviour
     {
         if (behavior == null && active)
         {
-            var hairRenderer = renderers.FirstOrDefault(r => r.gameObject.name == "Render");
-            if (hairRenderer == null) throw new NullReferenceException("Did not find the hair Render");
-            behavior = hairRenderer.gameObject.AddComponent<T>();
-            if (behavior == null) throw new NullReferenceException("Could not add the hair strategy");
+            behavior = host.AddComponent<T>();
+            if (behavior == null) throw new NullReferenceException("Could not add the behavior");
             return true;
         }
 
@@ -309,6 +318,11 @@ public class Person : MVRScript
 
         public static IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
         {
+#if (POV_DIAGNOSTICS)
+            if (skin == null) throw new NullReferenceException("skin is null");
+            if (skin.GPUmaterials == null) throw new NullReferenceException("skin materials are null");
+#endif
+
             var materials = new List<Material>(MaterialsToHide.Length);
 
             foreach (var material in skin.GPUmaterials)
@@ -425,9 +439,12 @@ public class Person : MVRScript
         public void Configure(DAZHairGroup hair)
         {
             // NOTE: Only applies to SimV2 hair
-            // TODO: Test without hair
-            var hairRender = hair.GetComponentInChildren<MeshRenderer>();
-            _material = hairRender.material;
+            _material = hair.GetComponentInChildren<MeshRenderer>()?.material;
+            if (_material == null)
+            {
+                DestroyImmediate(this);
+                return;
+            }
             _standWidth = _material.GetFloat("_StandWidth");
         }
 
