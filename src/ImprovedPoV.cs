@@ -57,12 +57,32 @@ public class Person : MVRScript
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
 
             InitControls();
+            Camera.onPreRender += OnPreRender;
+            Camera.onPostRender += OnPostRender;
         }
         catch (Exception e)
         {
             SuperController.LogError("Failed to initialize Improved PoV: " + e);
             DestroyImmediate(this);
         }
+    }
+
+    private void OnPostRender(Camera cam)
+    {
+        if (cam.name != "MonitorRig") return;
+        if (_skinBehavior != null)
+            _skinBehavior.OnRenderObject2();
+        if (_hairBehavior != null)
+            _hairBehavior.OnWillRenderObject2();
+    }
+
+    private void OnPreRender(Camera cam)
+    {
+        if (cam.name != "MonitorRig") return;
+        if (_skinBehavior != null)
+            _skinBehavior.OnWillRenderObject2();
+        if (_hairBehavior != null)
+            _hairBehavior.OnWillRenderObject2();
     }
 
     private void InitControls()
@@ -156,6 +176,8 @@ public class Person : MVRScript
 
     public void OnDestroy()
     {
+        Camera.onPreRender -= OnPreRender;
+        Camera.onPostRender -= OnPostRender;
         OnDisable();
     }
 
@@ -180,17 +202,20 @@ public class Person : MVRScript
         }
         else if (_lastActive && _selector.selectedCharacter != _character && _skinBehavior != null)
         {
-            DestroyImmediate(_skinBehavior);
+            _skinBehavior.OnDestroy();
+            _skinBehavior = null;
             ApplyAll(true);
         }
         else if (_lastActive && _selector.selectedHairGroup != _hair)
         {
             SuperController.LogMessage("Hair changed");
-            DestroyImmediate(_hairBehavior);
+            _hairBehavior.OnDestroy();
+            _hairBehavior = null;
             ApplyAll(true);
         }
     }
 
+    bool once;
     private void ApplyAll(bool active)
     {
         // Try again next frame
@@ -203,36 +228,34 @@ public class Person : MVRScript
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
 
-        var renderer = _person.GetComponentsInChildren<Renderer>().FirstOrDefault();
-        if (renderer == null) throw new NullReferenceException("Did not find a renderer component to hook into");
-
-        if (UpdateBehavior(ref _skinBehavior, active && _hideSkinJSON.val, renderer.gameObject))
+        if (UpdateBehavior(ref _skinBehavior, active && _hideSkinJSON.val))
         {
+            if (!_skinBehavior.Configure(_selector.selectedCharacter.skin))
+                _skinBehavior = null;
             _character = _selector.selectedCharacter;
-            _skinBehavior.Configure(_selector.selectedCharacter.skin);
         }
 
-        if (UpdateBehavior(ref _hairBehavior, active && _hideHair.val, renderer.gameObject))
+        if (UpdateBehavior(ref _hairBehavior, active && _hideHair.val))
         {
-            _hairBehavior.Configure(_selector.selectedHairGroup);
+            if (!_hairBehavior.Configure(_selector.selectedHairGroup))
+                _hairBehavior = null;
             _hair = _selector.selectedHairGroup;
         }
     }
 
-    private bool UpdateBehavior<T>(ref T behavior, bool active, GameObject host)
-     where T : MonoBehaviour
+    private bool UpdateBehavior<T>(ref T behavior, bool active)
+     where T : IBehavior, new()
     {
         if (behavior == null && active)
         {
-            behavior = host.AddComponent<T>();
-            if (behavior == null) throw new NullReferenceException("Could not add the behavior");
+            behavior = new T();
             return true;
         }
 
         if (behavior != null && !active)
         {
-            Destroy(behavior);
-            behavior = null;
+            behavior.OnDestroy();
+            behavior = default(T);
         }
 
         return false;
@@ -272,7 +295,14 @@ public class Person : MVRScript
         }
     }
 
-    public class SkinBehavior : MonoBehaviour
+    public interface IBehavior
+    {
+        void OnDestroy();
+        void OnWillRenderObject2();
+        void OnRenderObject2();
+    }
+
+    public class SkinBehavior : IBehavior
     {
         public class SkinShaderMaterialReference
         {
@@ -361,7 +391,7 @@ public class Person : MVRScript
         private DAZSkinV2 _skin;
         private List<SkinShaderMaterialReference> _materialRefs;
 
-        public void Configure(DAZSkinV2 skin)
+        public bool Configure(DAZSkinV2 skin)
         {
             _skin = skin;
             _materialRefs = new List<SkinShaderMaterialReference>();
@@ -389,6 +419,7 @@ public class Person : MVRScript
 
             // This is a hack to force a refresh of the shaders cache
             skin.BroadcastMessage("OnApplicationFocus", true);
+            return true;
         }
 
         public void OnDestroy()
@@ -402,7 +433,7 @@ public class Person : MVRScript
             _skin.BroadcastMessage("OnApplicationFocus", true);
         }
 
-        public void OnWillRenderObject()
+        public void OnWillRenderObject2()
         {
             if (Camera.current.name == "MonitorRig")
             {
@@ -414,9 +445,18 @@ public class Person : MVRScript
                     material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
                 }
             }
+            /*else{
+                                foreach (var materialRef in _materialRefs)
+                {
+                    var material = materialRef.material;
+                    material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+                    material.SetColor("_Color", materialRef.originalColor);
+                    material.SetColor("_SpecColor", materialRef.originalSpecColor);
+                }
+            }*/
         }
 
-        public void OnRenderObject()
+        public void OnRenderObject2()
         {
             if (Camera.current.name == "MonitorRig")
             {
@@ -428,24 +468,31 @@ public class Person : MVRScript
                     material.SetColor("_SpecColor", materialRef.originalSpecColor);
                 }
             }
+            //  else{
+            //                     foreach (var materialRef in _materialRefs)
+            //     {
+            //         var material = materialRef.material;
+            //         material.SetFloat("_AlphaAdjust", -1f);
+            //         material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
+            //         material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
+            //     }
+            // }
         }
     }
 
-    public class HairBehavior : MonoBehaviour
+    public class HairBehavior : IBehavior
     {
         private Material _material;
         private float _standWidth;
 
-        public void Configure(DAZHairGroup hair)
+        public bool Configure(DAZHairGroup hair)
         {
             // NOTE: Only applies to SimV2 hair
             _material = hair.GetComponentInChildren<MeshRenderer>()?.material;
             if (_material == null)
-            {
-                DestroyImmediate(this);
-                return;
-            }
+                return false;
             _standWidth = _material.GetFloat("_StandWidth");
+            return true;
         }
 
         public void OnDestroy()
@@ -453,16 +500,21 @@ public class Person : MVRScript
             _material = null;
         }
 
-        public void OnWillRenderObject()
+        int ctr;
+        public void OnWillRenderObject2()
         {
             if (Camera.current.name == "MonitorRig")
                 _material.SetFloat("_StandWidth", 0f);
+            // else
+            //                 _material.SetFloat("_StandWidth", _standWidth);
         }
 
-        public void OnRenderObject()
+        public void OnRenderObject2()
         {
             if (Camera.current.name == "MonitorRig")
                 _material.SetFloat("_StandWidth", _standWidth);
+            // else
+            //                 _material.SetFloat("_StandWidth", 0f);
         }
     }
 }
