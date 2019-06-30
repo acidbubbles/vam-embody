@@ -16,15 +16,15 @@ public class Person : MVRScript
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
     private DAZCharacterSelector _selector;
-    private JSONStorableFloat _cameraRecessJSON;
-    private JSONStorableFloat _cameraUpDownJSON;
+    private JSONStorableFloat _cameraDepthJSON;
+    private JSONStorableFloat _cameraHeightJSON;
     private JSONStorableFloat _clipDistanceJSON;
     private JSONStorableBool _possessedOnlyJSON;
-    private JSONStorableBool _hideSkinJSON;
-    private JSONStorableBool _hideHair;
+    private JSONStorableBool _hideFaceJSON;
+    private JSONStorableBool _hideHairJSON;
 
-    private SkinBehavior _skinBehavior;
-    private HairBehavior _hairBehavior;
+    private SkinHandler _skinHandler;
+    private HairHandler _hairHandler;
     // For change detection purposes
     private DAZCharacter _character;
     private DAZHairGroup _hair;
@@ -32,8 +32,10 @@ public class Person : MVRScript
 
     // Whether the PoV effects are currently active, i.e. in possession mode
     private bool _lastActive;
-    // Whether operations could not be completed because some items were not yet ready
+    // Requires re-generating all shaders and materials, either because last frame was not ready or because something changed
     private bool _dirty;
+    // To avoid spamming errors when something failed
+    private bool _failedOnce;
 
     public override void Init()
     {
@@ -67,22 +69,42 @@ public class Person : MVRScript
         }
     }
 
-    private void OnPostRender(Camera cam)
-    {
-        if (cam.name != "MonitorRig") return;
-        if (_skinBehavior != null)
-            _skinBehavior.OnRenderObject2();
-        if (_hairBehavior != null)
-            _hairBehavior.OnWillRenderObject2();
-    }
-
     private void OnPreRender(Camera cam)
     {
         if (cam.name != "MonitorRig") return;
-        if (_skinBehavior != null)
-            _skinBehavior.OnWillRenderObject2();
-        if (_hairBehavior != null)
-            _hairBehavior.OnWillRenderObject2();
+
+        try
+        {
+            if (_skinHandler != null)
+                _skinHandler.BeforeRender();
+            if (_hairHandler != null)
+                _hairHandler.BeforeRender();
+        }
+        catch (Exception e)
+        {
+            if (_failedOnce) return;
+            _failedOnce = true;
+            SuperController.LogError("Failed to execute pre render Improved PoV: " + e);
+        }
+    }
+
+    private void OnPostRender(Camera cam)
+    {
+        if (cam.name != "MonitorRig") return;
+
+        try
+        {
+            if (_skinHandler != null)
+                _skinHandler.AfterRender();
+            if (_hairHandler != null)
+                _hairHandler.BeforeRender();
+        }
+        catch (Exception e)
+        {
+            if (_failedOnce) return;
+            _failedOnce = true;
+            SuperController.LogError("Failed to execute post render Improved PoV: " + e);
+        }
     }
 
     private void InitControls()
@@ -90,30 +112,30 @@ public class Person : MVRScript
         try
         {
             {
-                _cameraRecessJSON = new JSONStorableFloat("Camera Recess", 0.054f, 0f, .2f, false);
-                RegisterFloat(_cameraRecessJSON);
-                var recessSlider = CreateSlider(_cameraRecessJSON, false);
-                recessSlider.slider.onValueChanged.AddListener(delegate (float val)
+                _cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, .2f, false);
+                RegisterFloat(_cameraDepthJSON);
+                var cameraDepthSlider = CreateSlider(_cameraDepthJSON, false);
+                cameraDepthSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
                 });
             }
 
             {
-                _cameraUpDownJSON = new JSONStorableFloat("Camera UpDown", 0f, -0.2f, 0.2f, false);
-                RegisterFloat(_cameraUpDownJSON);
-                var upDownSlider = CreateSlider(_cameraUpDownJSON, false);
-                upDownSlider.slider.onValueChanged.AddListener(delegate (float val)
+                _cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.2f, 0.2f, false);
+                RegisterFloat(_cameraHeightJSON);
+                var cameraHeightSlider = CreateSlider(_cameraHeightJSON, false);
+                cameraHeightSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
                 });
             }
 
             {
-                _clipDistanceJSON = new JSONStorableFloat("Clip Distance", 0.01f, 0.01f, .2f, false);
+                _clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, false);
                 RegisterFloat(_clipDistanceJSON);
-                var clipSlider = CreateSlider(_clipDistanceJSON, false);
-                clipSlider.slider.onValueChanged.AddListener(delegate (float val)
+                var clipDistanceSlider = CreateSlider(_clipDistanceJSON, false);
+                clipDistanceSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
                 });
@@ -135,20 +157,20 @@ public class Person : MVRScript
             }
 
             {
-                _hideSkinJSON = new JSONStorableBool("Hide face", true);
-                RegisterBool(_hideSkinJSON);
-                var skinStrategyPopup = CreateToggle(_hideSkinJSON, true);
-                skinStrategyPopup.toggle.onValueChanged.AddListener(delegate (bool val)
+                _hideFaceJSON = new JSONStorableBool("Hide face", true);
+                RegisterBool(_hideFaceJSON);
+                var hideFaceToggle = CreateToggle(_hideFaceJSON, true);
+                hideFaceToggle.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
                 });
             }
 
             {
-                _hideHair = new JSONStorableBool("Hide hair", true);
-                RegisterBool(_hideHair);
-                var hairStrategyPopup = CreateToggle(_hideHair, true);
-                hairStrategyPopup.toggle.onValueChanged.AddListener(delegate (bool val)
+                _hideHairJSON = new JSONStorableBool("Hide hair", true);
+                RegisterBool(_hideHairJSON);
+                var hideHairToggle = CreateToggle(_hideHairJSON, true);
+                hideHairToggle.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
                 });
@@ -176,42 +198,50 @@ public class Person : MVRScript
 
     public void OnDestroy()
     {
+        OnDisable();
         Camera.onPreRender -= OnPreRender;
         Camera.onPostRender -= OnPostRender;
-        OnDisable();
     }
 
     public void Update()
     {
-        var active = _headControl.possessed || !_possessedOnlyJSON.val;
+        try
+        {
+            var active = _headControl.possessed || !_possessedOnlyJSON.val;
 
-        if (!_lastActive && active)
-        {
-            ApplyAll(true);
-            _lastActive = true;
+            if (!_lastActive && active)
+            {
+                ApplyAll(true);
+                _lastActive = true;
+            }
+            else if (_lastActive && !active)
+            {
+                ApplyAll(false);
+                _lastActive = false;
+            }
+            else if (_dirty)
+            {
+                _dirty = false;
+                ApplyAll(_lastActive);
+            }
+            else if (_lastActive && _selector.selectedCharacter != _character && _skinHandler != null)
+            {
+                _skinHandler.Restore();
+                _skinHandler = null;
+                ApplyAll(true);
+            }
+            else if (_lastActive && _selector.selectedHairGroup != _hair && _hairHandler != null)
+            {
+                _hairHandler.Restore();
+                _hairHandler = null;
+                ApplyAll(true);
+            }
         }
-        else if (_lastActive && !active)
+        catch (Exception e)
         {
-            ApplyAll(false);
-            _lastActive = false;
-        }
-        else if (_dirty)
-        {
-            _dirty = false;
-            ApplyAll(_lastActive);
-        }
-        else if (_lastActive && _selector.selectedCharacter != _character && _skinBehavior != null)
-        {
-            _skinBehavior.OnDestroy();
-            _skinBehavior = null;
-            ApplyAll(true);
-        }
-        else if (_lastActive && _selector.selectedHairGroup != _hair)
-        {
-            SuperController.LogMessage("Hair changed");
-            _hairBehavior.OnDestroy();
-            _hairBehavior = null;
-            ApplyAll(true);
+            if (_failedOnce) return;
+            _failedOnce = true;
+            SuperController.LogError("Failed to update Improved PoV: " + e);
         }
     }
 
@@ -228,34 +258,36 @@ public class Person : MVRScript
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
 
-        if (UpdateBehavior(ref _skinBehavior, active && _hideSkinJSON.val))
+        if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
         {
-            if (!_skinBehavior.Configure(_selector.selectedCharacter.skin))
-                _skinBehavior = null;
-            _character = _selector.selectedCharacter;
+            if (_skinHandler.Configure(_selector.selectedCharacter.skin))
+                _character = _selector.selectedCharacter;
+            else
+                _skinHandler = null;
         }
 
-        if (UpdateBehavior(ref _hairBehavior, active && _hideHair.val))
+        if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
         {
-            if (!_hairBehavior.Configure(_selector.selectedHairGroup))
-                _hairBehavior = null;
-            _hair = _selector.selectedHairGroup;
+            if (_hairHandler.Configure(_selector.selectedHairGroup))
+                _hair = _selector.selectedHairGroup;
+            else
+                _hairHandler = null;
         }
     }
 
-    private bool UpdateBehavior<T>(ref T behavior, bool active)
-     where T : IBehavior, new()
+    private bool UpdateHandler<T>(ref T handler, bool active)
+     where T : IHandler, new()
     {
-        if (behavior == null && active)
+        if (handler == null && active)
         {
-            behavior = new T();
+            handler = new T();
             return true;
         }
 
-        if (behavior != null && !active)
+        if (handler != null && !active)
         {
-            behavior.OnDestroy();
-            behavior = default(T);
+            handler.Restore();
+            handler = default(T);
         }
 
         return false;
@@ -267,8 +299,8 @@ public class Person : MVRScript
         {
             _mainCamera.nearClipPlane = active ? _clipDistanceJSON.val : 0.01f;
 
-            var cameraRecess = active ? _cameraRecessJSON.val : 0;
-            var cameraUpDown = active ? _cameraUpDownJSON.val : 0;
+            var cameraRecess = active ? _cameraDepthJSON.val : 0;
+            var cameraUpDown = active ? _cameraHeightJSON.val : 0;
             var pos = _possessor.transform.position;
             _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraRecess - _mainCamera.transform.rotation * Vector3.down * cameraUpDown;
             _possessor.transform.position = pos;
@@ -295,14 +327,14 @@ public class Person : MVRScript
         }
     }
 
-    public interface IBehavior
+    public interface IHandler
     {
-        void OnDestroy();
-        void OnWillRenderObject2();
-        void OnRenderObject2();
+        void Restore();
+        void BeforeRender();
+        void AfterRender();
     }
 
-    public class SkinBehavior : IBehavior
+    public class SkinHandler : IHandler
     {
         public class SkinShaderMaterialReference
         {
@@ -422,7 +454,7 @@ public class Person : MVRScript
             return true;
         }
 
-        public void OnDestroy()
+        public void Restore()
         {
             foreach (var material in _materialRefs)
                 material.material.shader = material.originalShader;
@@ -433,54 +465,30 @@ public class Person : MVRScript
             _skin.BroadcastMessage("OnApplicationFocus", true);
         }
 
-        public void OnWillRenderObject2()
+        public void BeforeRender()
         {
-            if (Camera.current.name == "MonitorRig")
+            foreach (var materialRef in _materialRefs)
             {
-                foreach (var materialRef in _materialRefs)
-                {
-                    var material = materialRef.material;
-                    material.SetFloat("_AlphaAdjust", -1f);
-                    material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
-                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
-                }
+                var material = materialRef.material;
+                material.SetFloat("_AlphaAdjust", -1f);
+                material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
+                material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
             }
-            /*else{
-                                foreach (var materialRef in _materialRefs)
-                {
-                    var material = materialRef.material;
-                    material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
-                    material.SetColor("_Color", materialRef.originalColor);
-                    material.SetColor("_SpecColor", materialRef.originalSpecColor);
-                }
-            }*/
         }
 
-        public void OnRenderObject2()
+        public void AfterRender()
         {
-            if (Camera.current.name == "MonitorRig")
+            foreach (var materialRef in _materialRefs)
             {
-                foreach (var materialRef in _materialRefs)
-                {
-                    var material = materialRef.material;
-                    material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
-                    material.SetColor("_Color", materialRef.originalColor);
-                    material.SetColor("_SpecColor", materialRef.originalSpecColor);
-                }
+                var material = materialRef.material;
+                material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+                material.SetColor("_Color", materialRef.originalColor);
+                material.SetColor("_SpecColor", materialRef.originalSpecColor);
             }
-            //  else{
-            //                     foreach (var materialRef in _materialRefs)
-            //     {
-            //         var material = materialRef.material;
-            //         material.SetFloat("_AlphaAdjust", -1f);
-            //         material.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
-            //         material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
-            //     }
-            // }
         }
     }
 
-    public class HairBehavior : IBehavior
+    public class HairHandler : IHandler
     {
         private Material _material;
         private float _standWidth;
@@ -495,26 +503,20 @@ public class Person : MVRScript
             return true;
         }
 
-        public void OnDestroy()
+        public void Restore()
         {
             _material = null;
         }
 
         int ctr;
-        public void OnWillRenderObject2()
+        public void BeforeRender()
         {
-            if (Camera.current.name == "MonitorRig")
-                _material.SetFloat("_StandWidth", 0f);
-            // else
-            //                 _material.SetFloat("_StandWidth", _standWidth);
+            _material.SetFloat("_StandWidth", 0f);
         }
 
-        public void OnRenderObject2()
+        public void AfterRender()
         {
-            if (Camera.current.name == "MonitorRig")
-                _material.SetFloat("_StandWidth", _standWidth);
-            // else
-            //                 _material.SetFloat("_StandWidth", 0f);
+            _material.SetFloat("_StandWidth", _standWidth);
         }
     }
 }
