@@ -9,7 +9,7 @@ using UnityEngine;
 /// Possession that actually feels right.
 /// Source: https://github.com/acidbubbles/vam-improved-pov
 /// </summary>
-public class Person : MVRScript
+public class ImprovedPoV : MVRScript
 {
     private Atom _person;
     private Camera _mainCamera;
