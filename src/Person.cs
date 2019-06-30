@@ -2,8 +2,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using Acidbubbles.ImprovedPoV.Skin;
-using Acidbubbles.ImprovedPoV.Hair;
 
 namespace Acidbubbles.ImprovedPoV
 {
@@ -23,11 +21,11 @@ namespace Acidbubbles.ImprovedPoV
         private JSONStorableFloat _cameraUpDownJSON;
         private JSONStorableFloat _clipDistanceJSON;
         private JSONStorableBool _possessedOnlyJSON;
-        private JSONStorableStringChooser _skinStrategyJSON;
-        private JSONStorableStringChooser _hairStrategyJSON;
-        private SceneWatcher _watcher;
-        private IStrategy _skinStrategy;
-        private IStrategy _hairStrategy;
+        private JSONStorableBool _skinStrategyJSON;
+        private JSONStorableBool _hairStrategyJSON;
+
+        private SkinStrategy _skinStrategy;
+        private HairStrategy _hairStrategy;
 
         // Whether the current configuration is valid, which otherwise prevents enabling and using the plugin
         private bool _valid;
@@ -57,16 +55,10 @@ namespace Acidbubbles.ImprovedPoV
                     .Select(p => p as Possessor)
                     .FirstOrDefault();
                 _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
-                _skinStrategy = new SkinStrategyFactory().None();
-                _hairStrategy = new HairStrategyFactory().None();
 
                 InitControls();
                 _valid = true;
                 _enabled = true;
-
-                // TODO: Figure out when's the best time to actually run this script
-                // TODO: Can we detect whenever an atom is added?
-                MirrorReflectionReplacer.Attach();
             }
             catch (Exception e)
             {
@@ -131,6 +123,16 @@ namespace Acidbubbles.ImprovedPoV
                 _dirty = false;
                 ApplyAll();
             }
+            else
+            {
+                // TODO: Check if the skin changed
+                /*
+                if(_skinStrategy != null)
+                    _skinStrategy.Update();
+                if(_hairStrategy != null)
+                    _hairStrategy.Update();
+                */
+            }
         }
 
         private void InitControls()
@@ -183,25 +185,21 @@ namespace Acidbubbles.ImprovedPoV
                 }
 
                 {
-                    _skinStrategyJSON = new JSONStorableStringChooser("Skin Strategy", SkinStrategyFactory.Names, SkinStrategyFactory.Default, "Skin Strategy");
-                    RegisterStringChooser(_skinStrategyJSON);
-                    var skinStrategyPopup = CreatePopup(_skinStrategyJSON, true);
-                    skinStrategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
+                    _skinStrategyJSON = new JSONStorableBool("Hide Face", true);
+                    RegisterBool(_skinStrategyJSON);
+                    var skinStrategyPopup = CreateToggle(_skinStrategyJSON, true);
+                    skinStrategyPopup.toggle.onValueChanged.AddListener(delegate (bool val)
                     {
-                        // TODO: Why is this necessary?
-                        _skinStrategyJSON.val = val;
                         _dirty = true;
                     });
                 }
 
                 {
-                    _hairStrategyJSON = new JSONStorableStringChooser("Hair Strategy", HairStrategyFactory.Names, HairStrategyFactory.Default, "Hair Strategy");
-                    RegisterStringChooser(_hairStrategyJSON);
-                    var hairStrategyPopup = CreatePopup(_hairStrategyJSON, true);
-                    hairStrategyPopup.popup.onValueChangeHandlers = new UIPopup.OnValueChange(delegate (string val)
+                    _hairStrategyJSON = new JSONStorableBool("Hide Hair", true);
+                    RegisterBool(_hairStrategyJSON);
+                    var hairStrategyPopup = CreateToggle(_hairStrategyJSON, true);
+                    hairStrategyPopup.toggle.onValueChanged.AddListener(delegate (bool val)
                     {
-                        // TODO: Why is this necessary?
-                        _hairStrategyJSON.val = val;
                         _dirty = true;
                     });
                 }
@@ -223,50 +221,37 @@ namespace Acidbubbles.ImprovedPoV
                 return;
             }
 
-            var skin = selector.selectedCharacter.skin;
-            var hair = selector.selectedHairGroup;
-            var reference = new PersonReference(skin, hair);
-
             ApplyCameraPosition();
             ApplyPossessorMeshVisibility();
-            if (_watcher != null) _watcher.Stop();
-            _skinStrategy = ApplyStrategy(_skinStrategy, _skinStrategyJSON.val, new SkinStrategyFactory(), reference, skin != null);
-            _hairStrategy = ApplyStrategy(_hairStrategy, _hairStrategyJSON.val, new HairStrategyFactory(), reference, hair != null);
-            if (_active)
-            {
-                _watcher = new SceneWatcher(reference);
-                _watcher.Start();
-            }
+
+            var renderers = _person.GetComponentsInChildren<Renderer>();
+
+            if (UpdateBehavior(ref _skinStrategy, _active && _skinStrategyJSON.val, renderers))
+                _skinStrategy.Configure(selector.selectedCharacter.skin);
+
+            if (UpdateBehavior(ref _hairStrategy, _active && _hairStrategyJSON.val, renderers))
+                _hairStrategy.Configure(selector.selectedHairGroup);
         }
 
-        private IStrategy ApplyStrategy(IStrategy strategy, string selected, IStrategyFactory strategyFactory, PersonReference reference, bool exists)
+        private bool UpdateBehavior<T>(ref T behavior, bool active, Renderer[] renderers)
+         where T : MonoBehaviour
         {
-            try
+            if (behavior == null && active)
             {
-                strategy?.Restore();
-
-                if (!_active || !exists)
-                    return strategyFactory.None();
-
-                if (strategy?.Name != selected)
-                    strategy = strategyFactory.Create(selected);
-            }
-            catch (Exception e)
-            {
-                SuperController.LogError("Failed to initialize and/or restore strategy: " + e);
-                return strategyFactory.None();
+                var hairRenderer = renderers.FirstOrDefault(r => r.gameObject.name == "Render");
+                if (hairRenderer == null) throw new NullReferenceException("Did not find the hair Render");
+                behavior = hairRenderer.gameObject.AddComponent<T>();
+                if (behavior == null) throw new NullReferenceException("Could not add the hair strategy");
+                return true;
             }
 
-            try
+            if (behavior != null && !active)
             {
-                strategy.Apply(reference);
-            }
-            catch (Exception e)
-            {
-                SuperController.LogError("Failed to execute strategy " + _skinStrategy.Name + ": " + e);
+                Destroy(behavior);
+                behavior = null;
             }
 
-            return strategy;
+            return false;
         }
 
         private void ApplyCameraPosition()
