@@ -291,7 +291,7 @@ public class ImprovedPoV : MVRScript
 
         if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
         {
-            if (_hairHandler.Configure(_selector.selectedHairGroup))
+            if (_hairHandler.Configure(_selector.selectedCharacter, _selector.selectedHairGroup))
                 _hair = _selector.selectedHairGroup;
             else
                 _hairHandler = null;
@@ -427,6 +427,7 @@ public class ImprovedPoV : MVRScript
             "Irises",
             "Teeth",
             "Face",
+            "Head",
             "InnerMouth",
             "Tongue",
             "EyeReflection",
@@ -552,33 +553,42 @@ public class ImprovedPoV : MVRScript
 
     public class HairHandler : IHandler
     {
-        private Material _material;
+        private Material _hairMaterial;
         private float _standWidth;
+        private Material _scalpMaterial;
+        private float _originalAlpha;
 
-        public bool Configure(DAZHairGroup hair)
+        public bool Configure(DAZCharacter character, DAZHairGroup hair)
         {
             // NOTE: Only applies to SimV2 hair
-            _material = hair.GetComponentInChildren<MeshRenderer>()?.material;
-            if (_material == null)
+            _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
+            var scalp = character.containingAtom.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("HairScalp"));
+            if (scalp != null)
+                _scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
+            if (_hairMaterial == null && _scalpMaterial == null)
                 return false;
-            _standWidth = _material.GetFloat("_StandWidth");
+            _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
+            _originalAlpha = _scalpMaterial?.GetFloat("_AlphaAdjust") ?? 0;
             return true;
         }
 
         public void Restore()
         {
-            _material = null;
+            _hairMaterial = null;
+            _scalpMaterial = null;
         }
 
-        int ctr;
+
         public void BeforeRender()
         {
-            _material.SetFloat("_StandWidth", 0f);
+            _hairMaterial?.SetFloat("_StandWidth", 0f);
+            _scalpMaterial?.SetFloat("_AlphaAdjust", -1f);
         }
 
         public void AfterRender()
         {
-            _material.SetFloat("_StandWidth", _standWidth);
+            _hairMaterial.SetFloat("_StandWidth", _standWidth);
+            _scalpMaterial?.SetFloat("_AlphaAdjust", _originalAlpha);
         }
     }
 }
