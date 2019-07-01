@@ -18,6 +18,7 @@ public class ImprovedPoV : MVRScript
     private DAZCharacterSelector _selector;
     private JSONStorableFloat _cameraDepthJSON;
     private JSONStorableFloat _cameraHeightJSON;
+    private JSONStorableFloat _cameraPitchJSON;
     private JSONStorableFloat _clipDistanceJSON;
     private JSONStorableBool _possessedOnlyJSON;
     private JSONStorableBool _hideFaceJSON;
@@ -112,7 +113,7 @@ public class ImprovedPoV : MVRScript
         try
         {
             {
-                _cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, .2f, false);
+                _cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, 0.2f, false);
                 RegisterFloat(_cameraDepthJSON);
                 var cameraDepthSlider = CreateSlider(_cameraDepthJSON, false);
                 cameraDepthSlider.slider.onValueChanged.AddListener(delegate (float val)
@@ -122,10 +123,20 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.2f, 0.2f, false);
+                _cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.05f, 0.05f, false);
                 RegisterFloat(_cameraHeightJSON);
                 var cameraHeightSlider = CreateSlider(_cameraHeightJSON, false);
                 cameraHeightSlider.slider.onValueChanged.AddListener(delegate (float val)
+                {
+                    ApplyCameraPosition(_lastActive);
+                });
+            }
+
+            {
+                _cameraPitchJSON = new JSONStorableFloat("Camera pitch", 0f, -135f, 45f, true);
+                RegisterFloat(_cameraPitchJSON);
+                var cameraPitchSlider = CreateSlider(_cameraPitchJSON, false);
+                cameraPitchSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
                 });
@@ -299,10 +310,12 @@ public class ImprovedPoV : MVRScript
         {
             _mainCamera.nearClipPlane = active ? _clipDistanceJSON.val : 0.01f;
 
-            var cameraRecess = active ? _cameraDepthJSON.val : 0;
-            var cameraUpDown = active ? _cameraHeightJSON.val : 0;
+            var cameraDepth = active ? _cameraDepthJSON.val : 0;
+            var cameraHeight = active ? _cameraHeightJSON.val : 0;
+            var cameraPitch = active ? _cameraPitchJSON.val : 0;
             var pos = _possessor.transform.position;
-            _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraRecess - _mainCamera.transform.rotation * Vector3.down * cameraUpDown;
+            _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraDepth - _mainCamera.transform.rotation * Vector3.down * cameraHeight;
+            _possessor.transform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
             _possessor.transform.position = pos;
         }
         catch (Exception e)
