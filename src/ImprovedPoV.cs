@@ -73,7 +73,7 @@ public class ImprovedPoV : MVRScript
 
     private void OnPreRender(Camera cam)
     {
-        if (cam.name != "MonitorRig") return;
+        if (cam.name != "CenterEyeAnchor" && cam.name != "MonitorRig") return;
 
         try
         {
@@ -92,7 +92,7 @@ public class ImprovedPoV : MVRScript
 
     private void OnPostRender(Camera cam)
     {
-        if (cam.name != "MonitorRig") return;
+        if (cam.name != "CenterEyeAnchor" && cam.name != "MonitorRig") return;
 
         try
         {
