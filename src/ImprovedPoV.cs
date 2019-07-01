@@ -277,9 +277,9 @@ public class ImprovedPoV : MVRScript
             return;
         }
 
+        ApplyAutoWorldScale(active);
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
-        ApplyAutoWorldScale(active);
 
         if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
         {
@@ -365,23 +365,28 @@ public class ImprovedPoV : MVRScript
 
         if (!active)
         {
-            SuperController.singleton.worldScale = 1f;
+            if (SuperController.singleton.worldScale != 1f)
+                SuperController.singleton.worldScale = 1f;
             return;
         }
 
-        var bones = _person.GetComponentsInChildren<DAZBone>();
-        var lEye = bones.FirstOrDefault(b => b.name == "lEye");
-        var rEye = bones.FirstOrDefault(b => b.name == "rEye");
-        var eyesDistance = Vector3.Distance(lEye.worldPosition, rEye.worldPosition);
-        SuperController.LogMessage("Eyes distance: " + eyesDistance);
+        var eyes = _person.GetComponentsInChildren<LookAtWithLimits>();
+        var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
+        var rEye = eyes.FirstOrDefault(eye => eye.name == "rEye");
+        if (lEye == null || rEye == null)
+            return;
+        var atomEyeDistance = Vector3.Distance(lEye.transform.position, rEye.transform.position);
 
-        var possessorDistance = Vector3.Distance(_possessor.gameObject.transform.Find("Sphere1").transform.position, _possessor.gameObject.transform.Find("Sphere2").transform.position);
-        SuperController.LogMessage("Possessor distance: " + eyesDistance);
+        var rig = GameObject.FindObjectOfType<OVRCameraRig>();
+        if (rig == null)
+            return;
+        var rigEyesDistance = Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
 
-        var scale = eyesDistance / possessorDistance;
-        SuperController.LogMessage("Scale: " + scale);
+        var scale = atomEyeDistance / rigEyesDistance;
+        var worldScale = SuperController.singleton.worldScale * scale;
 
-        SuperController.singleton.worldScale = SuperController.singleton.worldScale * scale;
+        if (SuperController.singleton.worldScale != worldScale)
+            SuperController.singleton.worldScale = worldScale;
     }
 
     public interface IHandler
