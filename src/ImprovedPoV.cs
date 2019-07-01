@@ -20,6 +20,7 @@ public class ImprovedPoV : MVRScript
     private JSONStorableFloat _cameraHeightJSON;
     private JSONStorableFloat _cameraPitchJSON;
     private JSONStorableFloat _clipDistanceJSON;
+    private JSONStorableBool _autoWorldScaleJSON;
     private JSONStorableBool _possessedOnlyJSON;
     private JSONStorableBool _hideFaceJSON;
     private JSONStorableBool _hideHairJSON;
@@ -153,6 +154,16 @@ public class ImprovedPoV : MVRScript
             }
 
             {
+                _autoWorldScaleJSON = new JSONStorableBool("Auto world scale", false);
+                RegisterBool(_autoWorldScaleJSON);
+                var autoWorldScaleToggle = CreateToggle(_autoWorldScaleJSON, true);
+                autoWorldScaleToggle.toggle.onValueChanged.AddListener(delegate (bool val)
+                {
+                    _dirty = true;
+                });
+            }
+
+            {
                 var possessedOnlyDefaultValue = true;
 #if (POV_DIAGNOSTICS)
                 // NOTE: Easier to test when it's always on
@@ -268,6 +279,7 @@ public class ImprovedPoV : MVRScript
 
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
+        ApplyAutoWorldScale(active);
 
         if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
         {
@@ -345,6 +357,31 @@ public class ImprovedPoV : MVRScript
         {
             SuperController.LogError("Failed to update possessor mesh visibility: " + e);
         }
+    }
+
+    private void ApplyAutoWorldScale(bool active)
+    {
+        if (!_autoWorldScaleJSON.val) return;
+
+        if (!active)
+        {
+            SuperController.singleton.worldScale = 1f;
+            return;
+        }
+
+        var bones = _person.GetComponentsInChildren<DAZBone>();
+        var lEye = bones.FirstOrDefault(b => b.name == "lEye");
+        var rEye = bones.FirstOrDefault(b => b.name == "rEye");
+        var eyesDistance = Vector3.Distance(lEye.worldPosition, rEye.worldPosition);
+        SuperController.LogMessage("Eyes distance: " + eyesDistance);
+
+        var possessorDistance = Vector3.Distance(_possessor.gameObject.transform.Find("Sphere1").transform.position, _possessor.gameObject.transform.Find("Sphere2").transform.position);
+        SuperController.LogMessage("Possessor distance: " + eyesDistance);
+
+        var scale = eyesDistance / possessorDistance;
+        SuperController.LogMessage("Scale: " + scale);
+
+        SuperController.singleton.worldScale = SuperController.singleton.worldScale * scale;
     }
 
     public interface IHandler
