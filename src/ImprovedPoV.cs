@@ -295,6 +295,13 @@ public class ImprovedPoV : MVRScript
             return true;
         }
 
+        if (handler != null && active)
+        {
+            handler.Restore();
+            handler = new T();
+            return true;
+        }
+
         if (handler != null && !active)
         {
             handler.Restore();
@@ -355,7 +362,7 @@ public class ImprovedPoV : MVRScript
             public Shader originalShader;
             public float originalAlphaAdjust;
             public float originalColorAlpha;
-            public float originalSpecColorAlpha;
+            public Color originalSpecColor;
 
             public static SkinShaderMaterialReference FromMaterial(Material material)
             {
@@ -364,7 +371,7 @@ public class ImprovedPoV : MVRScript
                 materialRef.originalShader = material.shader;
                 materialRef.originalAlphaAdjust = material.GetFloat("_AlphaAdjust");
                 materialRef.originalColorAlpha = material.GetColor("_Color").a;
-                materialRef.originalSpecColorAlpha = material.GetColor("_SpecColor").a;
+                materialRef.originalSpecColor = material.GetColor("_SpecColor");
                 return materialRef;
             }
         }
@@ -484,8 +491,7 @@ public class ImprovedPoV : MVRScript
                 material.SetFloat("_AlphaAdjust", -1f);
                 var color = material.GetColor("_Color");
                 material.SetColor("_Color", new Color(color.r, color.g, color.b, 0f));
-                var specColor = material.GetColor("_SpecColor");
-                material.SetColor("_SpecColor", new Color(specColor.r, specColor.g, specColor.b, 0f));
+                material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
             }
         }
 
@@ -497,8 +503,7 @@ public class ImprovedPoV : MVRScript
                 material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
                 var color = material.GetColor("_Color");
                 material.SetColor("_Color", new Color(color.r, color.g, color.b, materialRef.originalColorAlpha));
-                var specColor = material.GetColor("_SpecColor");
-                material.SetColor("_SpecColor", new Color(specColor.r, specColor.g, specColor.b, materialRef.originalSpecColorAlpha));
+                material.SetColor("_SpecColor", materialRef.originalSpecColor);
             }
         }
     }
