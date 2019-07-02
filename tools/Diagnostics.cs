@@ -103,4 +103,14 @@ public static class Diagnostics
     {
         return gameObject.GetComponentsInChildren<MonoBehaviour>().GroupBy(b => b.gameObject).Select(x => x.Key).Where(o => o != gameObject);
     }
+
+    internal static string GetInfo(GameObject o)
+    {
+        if (o == null)
+            return "{null}";
+
+        var behaviors = o.GetComponents<MonoBehaviour>();
+        var behaviorNames = behaviors.Select(b => b.ToString()).ToArray();
+        return o.name + ": " + string.Join(", ", behaviorNames);
+    }
 }

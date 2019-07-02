@@ -578,14 +578,33 @@ public class ImprovedPoV : MVRScript
             if (hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
 
-            _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
-            var scalp = character.containingAtom.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("HairScalp"));
-            if (scalp != null)
-                _scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
-            if (_hairMaterial == null && _scalpMaterial == null)
-                return HandlerConfigurationResult.CannotApply; // TODO: This should be TryAgainLater
-            _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
-            _originalAlpha = _scalpMaterial?.GetFloat("_AlphaAdjust") ?? 0;
+            if (hair.name == "Sim2Hair")
+            {
+                var choosers = hair.GetComponentsInChildren<ObjectChooser>();
+                var scalpChooser = choosers.FirstOrDefault(x => x.name == "Scalps");
+                if (scalpChooser == null)
+                    throw new NullReferenceException("No scalp");
+
+                if (scalpChooser.CurrentChoice.name != "NoScalp")
+                {
+                    var scalp = hair.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("Scalp"));
+                    if (scalp == null)
+                        return HandlerConfigurationResult.TryAgainLater;
+                    _scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
+                }
+
+                _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
+                if (_hairMaterial == null && _scalpMaterial == null)
+                    return HandlerConfigurationResult.CannotApply; // TODO: This should be TryAgainLater
+
+                _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
+                _originalAlpha = _scalpMaterial?.GetFloat("_AlphaAdjust") ?? 0;
+            }
+            else
+            {
+                SuperController.LogError("Hair not supported: " + hair.name);
+            }
+
             return HandlerConfigurationResult.Success;
         }
 
