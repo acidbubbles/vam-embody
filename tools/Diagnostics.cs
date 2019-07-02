@@ -10,19 +10,37 @@ public static class Diagnostics
     {
         foreach (var o in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
         {
-            PrintTree(1, o.gameObject);
+            PrintTree(o.gameObject, "UI");
         }
     }
 
-    public static void PrintTree(int indent, GameObject o)
+    public static void PrintTree(GameObject o, params string[] exclude)
     {
-        var exclude = new[] { "Morph", "Cloth", "Hair" };
-        if (exclude.Any(x => o.gameObject.name.Contains(x))) { return; }
+        PrintTree(0, o, exclude, new HashSet<GameObject>());
+    }
+
+    public static void PrintTree(int indent, GameObject o, string[] exclude, HashSet<GameObject> found)
+    {
+        if (found.Contains(o))
+        {
+            SuperController.LogMessage("|" + new String(' ', indent) + " [" + o.tag + "] " + o.name + " {RECURSIVE}");
+            return;
+        }
+        if (o == null)
+        {
+            SuperController.LogMessage("|" + new String(' ', indent) + "{null}");
+            return;
+        }
+        if (exclude.Any(x => o.gameObject.name.Contains(x)))
+        {
+            return;
+        }
+        found.Add(o);
         SuperController.LogMessage("|" + new String(' ', indent) + " [" + o.tag + "] " + o.name);
         for (int i = 0; i < o.transform.childCount; i++)
         {
             var under = o.transform.GetChild(i).gameObject;
-            PrintTree(indent + 4, under);
+            PrintTree(indent + 4, under, exclude, found);
         }
     }
 
