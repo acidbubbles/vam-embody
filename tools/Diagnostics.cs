@@ -10,16 +10,16 @@ public static class Diagnostics
     {
         foreach (var o in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
         {
-            PrintTree(o.gameObject, "UI");
+            PrintTree(o.gameObject, false, "UI");
         }
     }
 
-    public static void PrintTree(GameObject o, params string[] exclude)
+    public static void PrintTree(GameObject o, bool showScripts, params string[] exclude)
     {
-        PrintTree(0, o, exclude, new HashSet<GameObject>());
+        PrintTree(0, o, showScripts, exclude, new HashSet<GameObject>());
     }
 
-    public static void PrintTree(int indent, GameObject o, string[] exclude, HashSet<GameObject> found)
+    public static void PrintTree(int indent, GameObject o, bool showScripts, string[] exclude, HashSet<GameObject> found)
     {
         if (found.Contains(o))
         {
@@ -36,11 +36,17 @@ public static class Diagnostics
             return;
         }
         found.Add(o);
-        SuperController.LogMessage("|" + new String(' ', indent) + " [" + o.tag + "] " + o.name);
+        SuperController.LogMessage(
+            "|" +
+             new String(' ', indent) +
+              " [" + o.tag + "] " +
+               o.name +
+                (showScripts ? string.Join(", ", o.GetComponents<MonoBehaviour>().Select(b => b.ToString()).ToArray()) : "")
+                );
         for (int i = 0; i < o.transform.childCount; i++)
         {
             var under = o.transform.GetChild(i).gameObject;
-            PrintTree(indent + 4, under, exclude, found);
+            PrintTree(indent + 4, under, showScripts, exclude, found);
         }
     }
 
@@ -112,5 +118,10 @@ public static class Diagnostics
         var behaviors = o.GetComponents<MonoBehaviour>();
         var behaviorNames = behaviors.Select(b => b.ToString()).ToArray();
         return o.name + ": " + string.Join(", ", behaviorNames);
+    }
+
+    internal static string GetList(IEnumerable<string> values)
+    {
+        return string.Join(", ", values.ToArray());
     }
 }
