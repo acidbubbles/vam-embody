@@ -591,7 +591,6 @@ public class ImprovedPoV : MVRScript
 
         private Material _hairMaterial;
         private float _standWidth;
-        private MaterialReference _scalpReference;
         private List<MaterialReference> _materialRefs;
 
         public int Configure(DAZCharacter character, DAZHairGroup hair)
@@ -613,11 +612,7 @@ public class ImprovedPoV : MVRScript
                 throw new NullReferenceException("No scalp chooser could be found");
 
             if (scalpChooser.CurrentChoice.name != "NoScalp")
-            {
-                var result = ConfigureScalp(hair);
-                if (result != HandlerConfigurationResult.Success)
-                    return result;
-            }
+                _materialRefs = new List<MaterialReference>(GetScalpMaterialReferences(hair));
 
             _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
             if (_hairMaterial == null)
@@ -629,10 +624,6 @@ public class ImprovedPoV : MVRScript
 
         private int ConfigureSimpleHair(DAZHairGroup hair)
         {
-            var result = ConfigureScalp(hair);
-            if (result != HandlerConfigurationResult.Success)
-                return result;
-
             _materialRefs = hair.GetComponentsInChildren<DAZMesh>()
                 .SelectMany(m => m.materials)
                 .Distinct()
@@ -643,33 +634,36 @@ public class ImprovedPoV : MVRScript
                 })
                 .ToList();
 
+            _materialRefs.AddRange(GetScalpMaterialReferences(hair));
+
+            if (_materialRefs.Count == 0)
+                return HandlerConfigurationResult.TryAgainLater;
+
             return HandlerConfigurationResult.Success;
         }
 
-        private int ConfigureScalp(DAZHairGroup hair)
+        private IEnumerable<MaterialReference> GetScalpMaterialReferences(DAZHairGroup hair)
         {
-            var scalp = hair.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("Scalp"));
-            if (scalp == null)
-                return HandlerConfigurationResult.TryAgainLater;
-
-            var scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
-            if (scalpMaterial == null) return HandlerConfigurationResult.TryAgainLater;
-            var originalAlphaAdjust = scalpMaterial.GetFloat("_AlphaAdjust");
-            _scalpReference = new MaterialReference { material = scalpMaterial, originalAlphaAdjust = originalAlphaAdjust };
-            return HandlerConfigurationResult.Success;
+            return hair.GetComponentsInChildren<DAZSkinWrap>()
+                .SelectMany(m => m.GPUmaterials)
+                .Distinct()
+                .Select(m => new MaterialReference
+                {
+                    material = m,
+                    originalAlphaAdjust = m.GetFloat("_AlphaAdjust")
+                });
         }
 
         public void Restore()
         {
             _hairMaterial = null;
-            _scalpReference = null;
             _materialRefs = null;
         }
 
         public void BeforeRender()
         {
-            _hairMaterial?.SetFloat("_StandWidth", 0f);
-            _scalpReference?.material.SetFloat("_AlphaAdjust", -1f);
+            if (_hairMaterial != null)
+                _hairMaterial.SetFloat("_StandWidth", 0f);
             if (_materialRefs != null)
                 foreach (var materialRef in _materialRefs)
                     materialRef.material.SetFloat("_AlphaAdjust", -1f);
@@ -677,8 +671,8 @@ public class ImprovedPoV : MVRScript
 
         public void AfterRender()
         {
-            _hairMaterial?.SetFloat("_StandWidth", _standWidth);
-            _scalpReference?.material.SetFloat("_AlphaAdjust", _scalpReference.originalAlphaAdjust);
+            if (_hairMaterial != null)
+                _hairMaterial.SetFloat("_StandWidth", _standWidth);
             if (_materialRefs != null)
                 foreach (var materialRef in _materialRefs)
                     materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
