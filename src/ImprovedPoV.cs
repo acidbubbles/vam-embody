@@ -277,24 +277,32 @@ public class ImprovedPoV : MVRScript
             return;
         }
 
+        _character = _selector.selectedCharacter;
+        _hair = _selector.selectedHairGroup;
+
         ApplyAutoWorldScale(active);
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
-
         if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
-        {
-            if (_skinHandler.Configure(_selector.selectedCharacter.skin))
-                _character = _selector.selectedCharacter;
-            else
-                _skinHandler = null;
-        }
-
+            ConfigureHandler(ref _skinHandler, _skinHandler.Configure(_character.skin));
         if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
+            ConfigureHandler(ref _hairHandler, _hairHandler.Configure(_character, _hair));
+    }
+
+    private void ConfigureHandler<T>(ref T handler, int result)
+     where T : IHandler, new()
+    {
+        switch (result)
         {
-            if (_hairHandler.Configure(_selector.selectedCharacter, _selector.selectedHairGroup))
-                _hair = _selector.selectedHairGroup;
-            else
-                _hairHandler = null;
+            case HandlerConfigurationResult.Success:
+                break;
+            case HandlerConfigurationResult.CannotApply:
+                handler = default(T);
+                break;
+            case HandlerConfigurationResult.TryAgainLater:
+                handler = default(T);
+                _dirty = true;
+                break;
         }
     }
 
@@ -387,6 +395,13 @@ public class ImprovedPoV : MVRScript
 
         if (SuperController.singleton.worldScale != worldScale)
             SuperController.singleton.worldScale = worldScale;
+    }
+
+    public static class HandlerConfigurationResult
+    {
+        public const int Success = 0;
+        public const int CannotApply = 1;
+        public const int TryAgainLater = 2;
     }
 
     public interface IHandler
@@ -484,7 +499,7 @@ public class ImprovedPoV : MVRScript
         private DAZSkinV2 _skin;
         private List<SkinShaderMaterialReference> _materialRefs;
 
-        public bool Configure(DAZSkinV2 skin)
+        public int Configure(DAZSkinV2 skin)
         {
             _skin = skin;
             _materialRefs = new List<SkinShaderMaterialReference>();
@@ -512,7 +527,7 @@ public class ImprovedPoV : MVRScript
 
             // This is a hack to force a refresh of the shaders cache
             skin.BroadcastMessage("OnApplicationFocus", true);
-            return true;
+            return HandlerConfigurationResult.Success;
         }
 
         public void Restore()
@@ -558,18 +573,20 @@ public class ImprovedPoV : MVRScript
         private Material _scalpMaterial;
         private float _originalAlpha;
 
-        public bool Configure(DAZCharacter character, DAZHairGroup hair)
+        public int Configure(DAZCharacter character, DAZHairGroup hair)
         {
-            // NOTE: Only applies to SimV2 hair
+            if (hair.name == "NoHair")
+                return HandlerConfigurationResult.CannotApply;
+
             _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
             var scalp = character.containingAtom.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("HairScalp"));
             if (scalp != null)
                 _scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
             if (_hairMaterial == null && _scalpMaterial == null)
-                return false;
+                return HandlerConfigurationResult.CannotApply; // TODO: This should be TryAgainLater
             _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
             _originalAlpha = _scalpMaterial?.GetFloat("_AlphaAdjust") ?? 0;
-            return true;
+            return HandlerConfigurationResult.Success;
         }
 
         public void Restore()
