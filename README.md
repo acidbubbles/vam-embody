@@ -17,17 +17,22 @@ We want the camera to be exactly where the eyes are, with the same eye distance.
 
 ## How to use
 
-1. Add the `ImprovedPoV.cs` plugin to the Person you want to possess
-2. Possess the model
-3. Configure the plugin (camera depth, show or hide hair, etc.) to adjust for your specific morphs and body size
-4. Adjust the world scale until your hand in relationship to your body matches. Close your eyes, put your index finger horizontally at the level of your mouth, and look at where it shows up. Increase or decrease the scale so that your "proportions" fit!
+1. Download the `ImprovedPoV.cs` file from the [latest release's Assets](https://github.com/acidbubbles/vam-improved-pov/releases), and save it somewhere (e.g. `(VaM Install)/Saves/Scripts/Acidbubbles/ImprovedPoV.cs`)
+2. Select the Person you want to possess, and in Plugins, add the `ImprovedPoV.cs` file
+3. Possess the model
+4. Optionally Configure the plugin (camera depth, show or hide hair, etc.) to adjust to your taste
+5. Adjust the world scale until your hand in relationship to your body matches. Close your eyes, put your index finger horizontally at the level of your mouth, and look at where it shows up. Increase or decrease the scale so that your "proportions" fit! Or you can activate the auto-scale option.
 
 ## How does it work
 
 - The possessor model is moved so the head is offset in relationship to the camera (gives the same result as moving the camera itself)
 - The face shaders are replaced with one that supports transparency
 - The script attaches to `onPreRender` and `onPostRender` events to dynamically change the alpha channel of all materials
-- For hair, the hair width (`_StandWidth`) of the shader is set to zero, which achieves the same result
+- For Sim V2 hair, the hair width in the shader is set to zero, which achieves the same result as hiding it. Older hairs simply reduces the alpha adjust)
+
+## Known issues
+
+- This script won't work with Sim and Sim2 hair.
 
 ## Credits
 
