@@ -38,6 +38,8 @@ public class ImprovedPoV : MVRScript
     private bool _dirty;
     // To avoid spamming errors when something failed
     private bool _failedOnce;
+    // When waiting for a model to load, how long before we abandon
+    private int _tryAgainAttempts;
 
     public override void Init()
     {
@@ -273,7 +275,7 @@ public class ImprovedPoV : MVRScript
         // Try again next frame
         if (_selector.selectedCharacter?.skin == null)
         {
-            _dirty = true;
+            MakeDirty();
             return;
         }
 
@@ -287,6 +289,19 @@ public class ImprovedPoV : MVRScript
             ConfigureHandler(ref _skinHandler, _skinHandler.Configure(_character.skin));
         if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
             ConfigureHandler(ref _hairHandler, _hairHandler.Configure(_character, _hair));
+
+        if (!_dirty) _tryAgainAttempts = 0;
+    }
+
+    private void MakeDirty()
+    {
+        _dirty = true;
+        _tryAgainAttempts++;
+        if (_tryAgainAttempts > 90 * 5) // Approximately 5 to 10 seconds
+        {
+            SuperController.LogError("Failed to apply ImprovedPoV");
+            enabled = false;
+        }
     }
 
     private void ConfigureHandler<T>(ref T handler, int result)
@@ -301,7 +316,7 @@ public class ImprovedPoV : MVRScript
                 break;
             case HandlerConfigurationResult.TryAgainLater:
                 handler = default(T);
-                _dirty = true;
+                MakeDirty();
                 break;
         }
     }
