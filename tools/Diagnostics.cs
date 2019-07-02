@@ -44,8 +44,11 @@ public static class Diagnostics
         }
     }
 
-    public static string GetDebugHierarchy(GameObject o)
+    public static string GetHierarchy(GameObject o)
     {
+        if (o == null)
+            return "{null}";
+
         var items = new List<string>(new[] { o.name });
         GameObject parent = o;
         for (int i = 0; i < 100; i++)
@@ -91,7 +94,7 @@ public static class Diagnostics
             }
             catch (Exception je)
             {
-                SuperController.LogMessage("Error with " + GetDebugHierarchy(atom.gameObject) + " " + atom + ": " + je);
+                SuperController.LogMessage("Error with " + GetHierarchy(atom.gameObject) + " " + atom + ": " + je);
             }
         }
     }
