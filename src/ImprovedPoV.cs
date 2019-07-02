@@ -101,7 +101,7 @@ public class ImprovedPoV : MVRScript
             if (_skinHandler != null)
                 _skinHandler.AfterRender();
             if (_hairHandler != null)
-                _hairHandler.BeforeRender();
+                _hairHandler.AfterRender();
         }
         catch (Exception e)
         {
