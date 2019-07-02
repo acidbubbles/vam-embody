@@ -590,7 +590,9 @@ public class ImprovedPoV : MVRScript
         }
 
         private Material _hairMaterial;
-        private float _standWidth;
+        private string _hairShaderProperty;
+        private float _hairShaderHiddenValue;
+        private float _hairShaderOriginalValue;
         private List<MaterialReference> _materialRefs;
 
         public int Configure(DAZCharacter character, DAZHairGroup hair)
@@ -599,32 +601,38 @@ public class ImprovedPoV : MVRScript
                 return HandlerConfigurationResult.CannotApply;
 
             if (hair.name == "Sim2Hair")
-                return ConfigureSim2Hair(hair);
+                return ConfigureSimV2Hair(hair);
+            else if (hair.name == "SimHairGroup" || hair.name == "SimHairGroup2")
+                return ConfigureSimHair(hair);
             else
                 return ConfigureSimpleHair(hair);
         }
 
-        private int ConfigureSim2Hair(DAZHairGroup hair)
+        private int ConfigureSimV2Hair(DAZHairGroup hair)
         {
-            var choosers = hair.GetComponentsInChildren<ObjectChooser>();
-            var scalpChooser = choosers.FirstOrDefault(x => x.name == "Scalps");
-            if (scalpChooser == null)
-                throw new NullReferenceException("No scalp chooser could be found");
+            var materialRefs = new List<MaterialReference>(GetScalpMaterialReferences(hair));
+            if (materialRefs.Count != 0) _materialRefs = materialRefs;
 
-            if (scalpChooser.CurrentChoice.name != "NoScalp")
-                _materialRefs = new List<MaterialReference>(GetScalpMaterialReferences(hair));
-
-            _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
-            if (_hairMaterial == null)
+            var hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
+            if (hairMaterial == null)
                 return HandlerConfigurationResult.TryAgainLater;
 
-            _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
+            _hairMaterial = hairMaterial;
+            _hairShaderProperty = "_StandWidth";
+            _hairShaderHiddenValue = 0f;
+            _hairShaderOriginalValue = _hairMaterial.GetFloat(_hairShaderProperty);
             return HandlerConfigurationResult.Success;
+        }
+
+        private int ConfigureSimHair(DAZHairGroup hair)
+        {
+            SuperController.LogError("Hair " + hair.name + " is not supported!");
+            return HandlerConfigurationResult.CannotApply;
         }
 
         private int ConfigureSimpleHair(DAZHairGroup hair)
         {
-            _materialRefs = hair.GetComponentsInChildren<DAZMesh>()
+            var materialRefs = hair.GetComponentsInChildren<DAZMesh>()
                 .SelectMany(m => m.materials)
                 .Distinct()
                 .Select(m => new MaterialReference
@@ -634,10 +642,12 @@ public class ImprovedPoV : MVRScript
                 })
                 .ToList();
 
-            _materialRefs.AddRange(GetScalpMaterialReferences(hair));
-
-            if (_materialRefs.Count == 0)
+            if (materialRefs.Count == 0)
                 return HandlerConfigurationResult.TryAgainLater;
+
+            materialRefs.AddRange(GetScalpMaterialReferences(hair));
+
+            _materialRefs = materialRefs;
 
             return HandlerConfigurationResult.Success;
         }
@@ -663,7 +673,7 @@ public class ImprovedPoV : MVRScript
         public void BeforeRender()
         {
             if (_hairMaterial != null)
-                _hairMaterial.SetFloat("_StandWidth", 0f);
+                _hairMaterial.SetFloat(_hairShaderProperty, _hairShaderHiddenValue);
             if (_materialRefs != null)
                 foreach (var materialRef in _materialRefs)
                     materialRef.material.SetFloat("_AlphaAdjust", -1f);
@@ -672,7 +682,7 @@ public class ImprovedPoV : MVRScript
         public void AfterRender()
         {
             if (_hairMaterial != null)
-                _hairMaterial.SetFloat("_StandWidth", _standWidth);
+                _hairMaterial.SetFloat(_hairShaderProperty, _hairShaderOriginalValue);
             if (_materialRefs != null)
                 foreach (var materialRef in _materialRefs)
                     materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);

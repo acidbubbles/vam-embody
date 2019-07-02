@@ -38,11 +38,12 @@ public static class Diagnostics
         found.Add(o);
         SuperController.LogMessage(
             "|" +
-             new String(' ', indent) +
-              " [" + o.tag + "] " +
-               o.name +
-                (showScripts ? string.Join(", ", o.GetComponents<MonoBehaviour>().Select(b => b.ToString()).ToArray()) : "")
-                );
+            new String(' ', indent) +
+            " [" + o.tag + "] " +
+            o.name +
+            " -> " +
+            (showScripts ? string.Join(", ", o.GetComponents<MonoBehaviour>().Select(b => b.ToString()).ToArray()) : "")
+            );
         for (int i = 0; i < o.transform.childCount; i++)
         {
             var under = o.transform.GetChild(i).gameObject;
