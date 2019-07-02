@@ -248,15 +248,15 @@ public class ImprovedPoV : MVRScript
                 _dirty = false;
                 ApplyAll(_lastActive);
             }
-            else if (_lastActive && _selector.selectedCharacter != _character && _skinHandler != null)
+            else if (_lastActive && _selector.selectedCharacter != _character)
             {
-                _skinHandler.Restore();
+                _skinHandler?.Restore();
                 _skinHandler = null;
                 ApplyAll(true);
             }
-            else if (_lastActive && _selector.selectedHairGroup != _hair && _hairHandler != null)
+            else if (_lastActive && _selector.selectedHairGroup != _hair)
             {
-                _hairHandler.Restore();
+                _hairHandler?.Restore();
                 _hairHandler = null;
                 ApplyAll(true);
             }
