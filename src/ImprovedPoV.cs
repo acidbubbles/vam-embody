@@ -583,10 +583,16 @@ public class ImprovedPoV : MVRScript
 
     public class HairHandler : IHandler
     {
+        public class MaterialReference
+        {
+            public Material material;
+            public float originalAlphaAdjust;
+        }
+
         private Material _hairMaterial;
         private float _standWidth;
-        private Material _scalpMaterial;
-        private float _originalAlpha;
+        private MaterialReference _scalpReference;
+        private List<MaterialReference> _materialRefs;
 
         public int Configure(DAZCharacter character, DAZHairGroup hair)
         {
@@ -594,52 +600,88 @@ public class ImprovedPoV : MVRScript
                 return HandlerConfigurationResult.CannotApply;
 
             if (hair.name == "Sim2Hair")
-            {
-                var choosers = hair.GetComponentsInChildren<ObjectChooser>();
-                var scalpChooser = choosers.FirstOrDefault(x => x.name == "Scalps");
-                if (scalpChooser == null)
-                    throw new NullReferenceException("No scalp");
-
-                if (scalpChooser.CurrentChoice.name != "NoScalp")
-                {
-                    var scalp = hair.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("Scalp"));
-                    if (scalp == null)
-                        return HandlerConfigurationResult.TryAgainLater;
-                    _scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
-                }
-
-                _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
-                if (_hairMaterial == null && _scalpMaterial == null)
-                    return HandlerConfigurationResult.CannotApply; // TODO: This should be TryAgainLater
-
-                _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
-                _originalAlpha = _scalpMaterial?.GetFloat("_AlphaAdjust") ?? 0;
-            }
+                return ConfigureSim2Hair(hair);
             else
+                return ConfigureSimpleHair(hair);
+        }
+
+        private int ConfigureSim2Hair(DAZHairGroup hair)
+        {
+            var choosers = hair.GetComponentsInChildren<ObjectChooser>();
+            var scalpChooser = choosers.FirstOrDefault(x => x.name == "Scalps");
+            if (scalpChooser == null)
+                throw new NullReferenceException("No scalp chooser could be found");
+
+            if (scalpChooser.CurrentChoice.name != "NoScalp")
             {
-                SuperController.LogError("Hair not supported: " + hair.name);
+                var result = ConfigureScalp(hair);
+                if (result != HandlerConfigurationResult.Success)
+                    return result;
             }
 
+            _hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
+            if (_hairMaterial == null)
+                return HandlerConfigurationResult.TryAgainLater;
+
+            _standWidth = _hairMaterial?.GetFloat("_StandWidth") ?? 0;
+            return HandlerConfigurationResult.Success;
+        }
+
+        private int ConfigureSimpleHair(DAZHairGroup hair)
+        {
+            var result = ConfigureScalp(hair);
+            if (result != HandlerConfigurationResult.Success)
+                return result;
+
+            _materialRefs = hair.GetComponentsInChildren<DAZMesh>()
+                .SelectMany(m => m.materials)
+                .Distinct()
+                .Select(m => new MaterialReference
+                {
+                    material = m,
+                    originalAlphaAdjust = m.GetFloat("_AlphaAdjust")
+                })
+                .ToList();
+
+            return HandlerConfigurationResult.Success;
+        }
+
+        private int ConfigureScalp(DAZHairGroup hair)
+        {
+            var scalp = hair.GetComponentsInChildren<DAZSkinWrap>().FirstOrDefault(x => x.gameObject.name.EndsWith("Scalp"));
+            if (scalp == null)
+                return HandlerConfigurationResult.TryAgainLater;
+
+            var scalpMaterial = scalp.GPUmaterials.FirstOrDefault();
+            if (scalpMaterial == null) return HandlerConfigurationResult.TryAgainLater;
+            var originalAlphaAdjust = scalpMaterial.GetFloat("_AlphaAdjust");
+            _scalpReference = new MaterialReference { material = scalpMaterial, originalAlphaAdjust = originalAlphaAdjust };
             return HandlerConfigurationResult.Success;
         }
 
         public void Restore()
         {
             _hairMaterial = null;
-            _scalpMaterial = null;
+            _scalpReference = null;
+            _materialRefs = null;
         }
-
 
         public void BeforeRender()
         {
             _hairMaterial?.SetFloat("_StandWidth", 0f);
-            _scalpMaterial?.SetFloat("_AlphaAdjust", -1f);
+            _scalpReference?.material.SetFloat("_AlphaAdjust", -1f);
+            if (_materialRefs != null)
+                foreach (var materialRef in _materialRefs)
+                    materialRef.material.SetFloat("_AlphaAdjust", -1f);
         }
 
         public void AfterRender()
         {
-            _hairMaterial.SetFloat("_StandWidth", _standWidth);
-            _scalpMaterial?.SetFloat("_AlphaAdjust", _originalAlpha);
+            _hairMaterial?.SetFloat("_StandWidth", _standWidth);
+            _scalpReference?.material.SetFloat("_AlphaAdjust", _scalpReference.originalAlphaAdjust);
+            if (_materialRefs != null)
+                foreach (var materialRef in _materialRefs)
+                    materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
         }
     }
 }
