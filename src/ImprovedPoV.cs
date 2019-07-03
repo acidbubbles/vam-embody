@@ -75,7 +75,7 @@ public class ImprovedPoV : MVRScript
 
     private void OnPreRender(Camera cam)
     {
-        if (cam.name != "CenterEyeAnchor" && cam.name != "MonitorRig") return;
+        if (!IsPovCamera(cam)) return;
 
         try
         {
@@ -94,7 +94,7 @@ public class ImprovedPoV : MVRScript
 
     private void OnPostRender(Camera cam)
     {
-        if (cam.name != "CenterEyeAnchor" && cam.name != "MonitorRig") return;
+        if (!IsPovCamera(cam)) return;
 
         try
         {
@@ -109,6 +109,17 @@ public class ImprovedPoV : MVRScript
             _failedOnce = true;
             SuperController.LogError("Failed to execute post render Improved PoV: " + e);
         }
+    }
+
+    private bool IsPovCamera(Camera cam)
+    {
+        return
+            // Oculus Rift
+            cam.name == "CenterEyeAnchor" ||
+            // Steam VR
+            cam.name == "Camera (eye)" ||
+            // Desktop
+            cam.name == "MonitorRig";
     }
 
     private void InitControls()
