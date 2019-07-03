@@ -38,6 +38,6 @@ We want the camera to be exactly where the eyes are, with the same eye distance.
 
 [ShortRecognition](https://www.reddit.com/user/ShortRecognition/) for the [original HeadPossessDepthFix](https://www.reddit.com/r/VAMscenes/comments/9z9b71/script_headpossessdepthfix/) from which this plugin took heavy inspiration.
 
-Thanks for Marko, VAMDeluxe, LFE and MeshedVR for your previous help on Discord.
+Thanks to Marko, VeeRifter, VAMDeluxe, LFE, Spacedog and MeshedVR for your help on Discord.
 
 And, obviously, MeshedVR for [Virt-A-Mate](https://www.patreon.com/meshedvr/posts), which is a technological wonder worth exploring.
