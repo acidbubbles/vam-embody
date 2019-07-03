@@ -40,6 +40,7 @@ public class ImprovedPoV : MVRScript
     private bool _failedOnce;
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
+    private float _originalWorldScale;
 
     public override void Init()
     {
@@ -221,9 +222,9 @@ public class ImprovedPoV : MVRScript
     {
         try
         {
-            _lastActive = false;
             _dirty = false;
             ApplyAll(false);
+            _lastActive = false;
         }
         catch (Exception e)
         {
@@ -395,14 +396,20 @@ public class ImprovedPoV : MVRScript
 
     private void ApplyAutoWorldScale(bool active)
     {
-        if (!_autoWorldScaleJSON.val) return;
-
         if (!active)
         {
-            if (SuperController.singleton.worldScale != 1f)
-                SuperController.singleton.worldScale = 1f;
+            if (_originalWorldScale != 0f && SuperController.singleton.worldScale != _originalWorldScale)
+            {
+                SuperController.singleton.worldScale = _originalWorldScale;
+                _originalWorldScale = 0f;
+            }
             return;
         }
+
+        if (!_autoWorldScaleJSON.val) return;
+
+        if (_originalWorldScale == 0f)
+            _originalWorldScale = SuperController.singleton.worldScale;
 
         var eyes = _person.GetComponentsInChildren<LookAtWithLimits>();
         var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
