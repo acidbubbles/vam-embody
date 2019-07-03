@@ -611,7 +611,7 @@ public class ImprovedPoV : MVRScript
             if (hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
 
-            if (hair.name == "Sim2Hair")
+            if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale")
                 return ConfigureSimV2Hair(hair);
             else if (hair.name == "SimHairGroup" || hair.name == "SimHairGroup2")
                 return ConfigureSimHair(hair);
