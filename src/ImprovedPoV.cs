@@ -286,7 +286,7 @@ public class ImprovedPoV : MVRScript
         // Try again next frame
         if (_selector.selectedCharacter?.skin == null)
         {
-            MakeDirty();
+            MakeDirty("Skin not yet loaded.");
             return;
         }
 
@@ -297,25 +297,25 @@ public class ImprovedPoV : MVRScript
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
         if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
-            ConfigureHandler(ref _skinHandler, _skinHandler.Configure(_character.skin));
+            ConfigureHandler("Skin", ref _skinHandler, _skinHandler.Configure(_character.skin));
         if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
-            ConfigureHandler(ref _hairHandler, _hairHandler.Configure(_character, _hair));
+            ConfigureHandler("Hair", ref _hairHandler, _hairHandler.Configure(_character, _hair));
 
         if (!_dirty) _tryAgainAttempts = 0;
     }
 
-    private void MakeDirty()
+    private void MakeDirty(string reason)
     {
         _dirty = true;
         _tryAgainAttempts++;
-        if (_tryAgainAttempts > 90 * 5) // Approximately 5 to 10 seconds
+        if (_tryAgainAttempts > 90 * 20) // Approximately 20 to 40 seconds
         {
-            SuperController.LogError("Failed to apply ImprovedPoV");
+            SuperController.LogError("Failed to apply ImprovedPoV. Reason: " + reason + ". Try reloading the plugin, or report the issue to @Acidbubbles.");
             enabled = false;
         }
     }
 
-    private void ConfigureHandler<T>(ref T handler, int result)
+    private void ConfigureHandler<T>(string what, ref T handler, int result)
      where T : IHandler, new()
     {
         switch (result)
@@ -327,7 +327,7 @@ public class ImprovedPoV : MVRScript
                 break;
             case HandlerConfigurationResult.TryAgainLater:
                 handler = default(T);
-                MakeDirty();
+                MakeDirty(what + " is still waiting for assets to be ready.");
                 break;
         }
     }
