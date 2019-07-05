@@ -41,3 +41,7 @@ We want the camera to be exactly where the eyes are, with the same eye distance.
 Thanks to Marko, VeeRifter, VAMDeluxe, LFE, Spacedog and MeshedVR for your help on Discord.
 
 And, obviously, MeshedVR for [Virt-A-Mate](https://www.patreon.com/meshedvr/posts), which is a technological wonder worth exploring.
+
+## License
+
+[MIT](LICENSE.md)
