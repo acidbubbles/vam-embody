@@ -9,19 +9,22 @@ using UnityEngine;
 /// </summary>
 public class Passenger : MVRScript
 {
-    private FreeControllerV3 _headControl;
+    private FreeControllerV3 _selectedControl;
     private Possessor _possessor;
+    private JSONStorableStringChooser _targetControllerJSON;
+    private JSONStorableBool _activeJSON;
 
     public override void Init()
     {
         try
         {
-            _headControl = (FreeControllerV3)containingAtom.GetStorableByID("headControl");
             _possessor = SuperController
                 .FindObjectsOfType(typeof(Possessor))
                 .Where(p => p.name == "CenterEye")
                 .Select(p => p as Possessor)
                 .FirstOrDefault();
+
+            InitControls();
         }
         catch (Exception e)
         {
@@ -29,9 +32,45 @@ public class Passenger : MVRScript
         }
     }
 
+    private void InitControls()
+    {
+        var targetControllers = containingAtom.freeControllers.Select(c => c.storeId).ToList();
+
+        var defaultController = containingAtom.type == "Person" ? "headControl" : "control";
+        _targetControllerJSON = new JSONStorableStringChooser("Target Controller", targetControllers, "headControl", "Target Controller: ", OnTargetControllerChanged);
+        _targetControllerJSON.storeType = JSONStorableParam.StoreType.Physical;
+        RegisterStringChooser(_targetControllerJSON);
+
+        var targetControllerPopup = CreateScrollablePopup(_targetControllerJSON, false);
+        targetControllerPopup.popupPanelHeight = 300f;
+
+        if (!string.IsNullOrEmpty(_targetControllerJSON.val))
+            OnTargetControllerChanged(_targetControllerJSON.val);
+
+        _activeJSON = new JSONStorableBool("Active", false);
+        RegisterBool(_activeJSON);
+
+        var activeToggle = CreateToggle(_activeJSON, true);
+    }
+
+    private void OnTargetControllerChanged(string targetControllerStoreId)
+    {
+        if (containingAtom == null) throw new NullReferenceException("containingAtom");
+
+        _selectedControl = containingAtom.freeControllers.FirstOrDefault(c => c.storeId == targetControllerStoreId);
+        if (_selectedControl == null)
+        {
+            SuperController.LogError("Controller does not exist: " + targetControllerStoreId);
+            return;
+        }
+        SuperController.LogMessage("Changed: " + _selectedControl.storeId);
+    }
+
     public void LateUpdate()
     {
-        var controller = _headControl;
+        if (!_activeJSON.val || _selectedControl == null) return;
+
+        var controller = _selectedControl;
 
         Possessor component = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         Vector3 forwardPossessAxis = controller.GetForwardPossessAxis();
