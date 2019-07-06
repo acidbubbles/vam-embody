@@ -9,7 +9,7 @@ using UnityEngine;
 /// </summary>
 public class Passenger : MVRScript
 {
-    private FreeControllerV3 _selectedControl;
+    private FreeControllerV3 _selectedController;
     private Possessor _possessor;
     private JSONStorableStringChooser _targetControllerJSON;
     private JSONStorableBool _activeJSON;
@@ -18,11 +18,7 @@ public class Passenger : MVRScript
     {
         try
         {
-            _possessor = SuperController
-                .FindObjectsOfType(typeof(Possessor))
-                .Where(p => p.name == "CenterEye")
-                .Select(p => p as Possessor)
-                .FirstOrDefault();
+            _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
             InitControls();
         }
@@ -37,7 +33,7 @@ public class Passenger : MVRScript
         var targetControllers = containingAtom.freeControllers.Select(c => c.storeId).ToList();
 
         var defaultController = containingAtom.type == "Person" ? "headControl" : "control";
-        _targetControllerJSON = new JSONStorableStringChooser("Target Controller", targetControllers, "headControl", "Target Controller: ", OnTargetControllerChanged);
+        _targetControllerJSON = new JSONStorableStringChooser("Target Controller", targetControllers, defaultController, "Target Controller: ", OnTargetControllerChanged);
         _targetControllerJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_targetControllerJSON);
 
@@ -49,7 +45,6 @@ public class Passenger : MVRScript
 
         _activeJSON = new JSONStorableBool("Active", false);
         RegisterBool(_activeJSON);
-
         var activeToggle = CreateToggle(_activeJSON, true);
     }
 
@@ -57,44 +52,51 @@ public class Passenger : MVRScript
     {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
 
-        _selectedControl = containingAtom.freeControllers.FirstOrDefault(c => c.storeId == targetControllerStoreId);
-        if (_selectedControl == null)
-        {
+        _selectedController = containingAtom.freeControllers.FirstOrDefault(c => c.storeId == targetControllerStoreId);
+        if (_selectedController == null)
+
             SuperController.LogError("Controller does not exist: " + targetControllerStoreId);
-            return;
-        }
-        SuperController.LogMessage("Changed: " + _selectedControl.storeId);
     }
 
     public void LateUpdate()
     {
-        if (!_activeJSON.val || _selectedControl == null) return;
+        if (!_activeJSON.val || _selectedController == null) return;
 
-        var controller = _selectedControl;
+        var controller = _selectedController;
+        var superController = SuperController.singleton;
+        var navigationRig = superController.navigationRig;
+        var centerCameraTarget = superController.centerCameraTarget;
+        var monitorCenterCamera = superController.MonitorCenterCamera;
 
-        Possessor component = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
-        Vector3 forwardPossessAxis = controller.GetForwardPossessAxis();
-        Vector3 upPossessAxis = controller.GetUpPossessAxis();
-        Vector3 up = SuperController.singleton.navigationRig.up;
-        Vector3 fromDirection = Vector3.ProjectOnPlane(SuperController.singleton.centerCameraTarget.transform.forward, up);
-        Vector3 toDirection = Vector3.ProjectOnPlane(forwardPossessAxis, SuperController.singleton.navigationRig.up);
-        if ((double)Vector3.Dot(upPossessAxis, up) < 0.0 && (double)Vector3.Dot(SuperController.singleton.centerCameraTarget.transform.up, up) > 0.0)
+        var forwardPossessAxis = controller.GetForwardPossessAxis();
+        var upPossessAxis = controller.GetUpPossessAxis();
+
+        var up = navigationRig.up;
+
+        var fromDirection = Vector3.ProjectOnPlane(centerCameraTarget.transform.forward, up);
+        var toDirection = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRig.up);
+        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(centerCameraTarget.transform.up, up) > 0f)
             toDirection = -toDirection;
-        SuperController.singleton.navigationRig.rotation = Quaternion.FromToRotation(fromDirection, toDirection) * SuperController.singleton.navigationRig.rotation;
+
+        navigationRig.rotation = Quaternion.FromToRotation(fromDirection, toDirection) * navigationRig.rotation;
+
         if (controller.canGrabRotation)
-            controller.AlignTo(component.autoSnapPoint, true);
-        Vector3 vector3 = SuperController.singleton.navigationRig.position + ((!((UnityEngine.Object)controller.possessPoint != (UnityEngine.Object)null) ? controller.control.position : controller.possessPoint.position) - component.autoSnapPoint.position);
-        float num = Vector3.Dot(vector3 - SuperController.singleton.navigationRig.position, up);
-        SuperController.singleton.navigationRig.position = vector3 + up * -num;
-        SuperController.singleton.playerHeightAdjust += num;
-        if ((UnityEngine.Object)SuperController.singleton.MonitorCenterCamera != (UnityEngine.Object)null)
+            controller.AlignTo(_possessor.autoSnapPoint, true);
+
+        var positionOffset = navigationRig.position + ((controller.possessPoint == null ? controller.control.position : controller.possessPoint.position) - _possessor.autoSnapPoint.position);
+        var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
+        navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
+        superController.playerHeightAdjust += playerHeightAdjustOffset;
+
+        if (monitorCenterCamera != null)
         {
-            SuperController.singleton.MonitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
-            Vector3 localEulerAngles = SuperController.singleton.MonitorCenterCamera.transform.localEulerAngles;
+            monitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
+            var localEulerAngles = monitorCenterCamera.transform.localEulerAngles;
             localEulerAngles.y = 0.0f;
             localEulerAngles.z = 0.0f;
-            SuperController.singleton.MonitorCenterCamera.transform.localEulerAngles = localEulerAngles;
+            monitorCenterCamera.transform.localEulerAngles = localEulerAngles;
         }
-        controller.PossessMoveAndAlignTo(component.autoSnapPoint);
+
+        controller.PossessMoveAndAlignTo(_possessor.autoSnapPoint);
     }
 }
