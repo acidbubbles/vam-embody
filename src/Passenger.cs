@@ -11,9 +11,9 @@ using UnityEngine.UI;
 /// </summary>
 public class Passenger : MVRScript
 {
-    private FreeControllerV3 _selectedController;
+    private Rigidbody _link;
     private Possessor _possessor;
-    private JSONStorableStringChooser _targetControllerJSON;
+    private JSONStorableStringChooser _linkJSON;
     private JSONStorableBool _activeJSON;
     private JSONStorableVector3 _rotationOffsetJSON;
     private JSONStorableVector3 _positionOffsetJSON;
@@ -36,18 +36,18 @@ public class Passenger : MVRScript
 
     private void InitControls()
     {
-        var targetControllers = containingAtom.freeControllers.Select(c => c.storeId).ToList();
+        var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
 
-        var defaultController = containingAtom.type == "Person" ? "headControl" : "control";
-        _targetControllerJSON = new JSONStorableStringChooser("Target Controller", targetControllers, defaultController, "Target Controller: ", OnTargetControllerChanged);
-        _targetControllerJSON.storeType = JSONStorableParam.StoreType.Physical;
-        RegisterStringChooser(_targetControllerJSON);
+        var defaultLink = containingAtom.type == "Person" ? "head" : "object";
+        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Target Controller: ", OnLinkChanged);
+        _linkJSON.storeType = JSONStorableParam.StoreType.Physical;
+        RegisterStringChooser(_linkJSON);
 
-        var targetControllerPopup = CreateScrollablePopup(_targetControllerJSON, false);
-        targetControllerPopup.popupPanelHeight = 300f;
+        var linkPopup = CreateScrollablePopup(_linkJSON, false);
+        linkPopup.popupPanelHeight = 600f;
 
-        if (!string.IsNullOrEmpty(_targetControllerJSON.val))
-            OnTargetControllerChanged(_targetControllerJSON.val);
+        if (!string.IsNullOrEmpty(_linkJSON.val))
+            OnLinkChanged(_linkJSON.val);
 
         _activeJSON = new JSONStorableBool("Active", false);
         RegisterBool(_activeJSON);
@@ -107,13 +107,13 @@ public class Passenger : MVRScript
         SuperController.LogMessage("New value: " + debugValue);
     }
 
-    private void OnTargetControllerChanged(string targetControllerStoreId)
+    private void OnLinkChanged(string linkName)
     {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
 
-        _selectedController = containingAtom.freeControllers.FirstOrDefault(c => c.storeId == targetControllerStoreId);
-        if (_selectedController == null)
-            SuperController.LogError("Controller does not exist: " + targetControllerStoreId);
+        _link = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
+        if (_link == null)
+            SuperController.LogError("Controller does not exist: " + linkName);
     }
 
     public void Update()
@@ -123,7 +123,7 @@ public class Passenger : MVRScript
             var superController = SuperController.singleton;
             var navigationRig = superController.navigationRig;
 
-            if (!_activeJSON.val || _selectedController == null){
+            if (!_activeJSON.val || _link == null){
                 // TODO: Reset angle to a sane value
                 /*
                 Vector3 rigAngles = navigationRig.localEulerAngles;
@@ -134,7 +134,6 @@ public class Passenger : MVRScript
                 return;
             }
 
-            var controller = _selectedController;
             var centerCameraTarget = superController.centerCameraTarget;
             var monitorCenterCamera = superController.MonitorCenterCamera;
 
@@ -142,19 +141,16 @@ public class Passenger : MVRScript
             var forward = navigationRig.forward;
             var right = navigationRig.right;
 
-            var forwardPossessAxis = controller.GetForwardPossessAxis();
-            var upPossessAxis = controller.GetUpPossessAxis();
-
             if (_rotationLockJSON.val)
             {
-                var navigationRigRotation = controller.transform.rotation;
+                var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
                 navigationRig.rotation = navigationRigRotation;
             }
 
             if (_positionLockJSON.val)
             {
-                var positionOffset = navigationRig.position + ((controller.possessPoint == null ? controller.control.position : controller.possessPoint.position) - _possessor.autoSnapPoint.position);
+                var positionOffset = navigationRig.position + _link.position - _possessor.autoSnapPoint.position;
                 positionOffset += forward * _positionOffsetJSON.val.z + right * _positionOffsetJSON.val.x;
                 var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
                 navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
