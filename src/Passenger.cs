@@ -13,12 +13,13 @@ public class Passenger : MVRScript
 {
     private Rigidbody _link;
     private Possessor _possessor;
-    private JSONStorableStringChooser _linkJSON;
     private JSONStorableBool _activeJSON;
-    private JSONStorableVector3 _rotationOffsetJSON;
-    private JSONStorableVector3 _positionOffsetJSON;
     private JSONStorableBool _rotationLockJSON;
+    private JSONStorableVector3 _rotationOffsetJSON;
     private JSONStorableBool _positionLockJSON;
+    private JSONStorableVector3 _positionOffsetJSON;
+    private JSONStorableStringChooser _linkJSON;
+    private bool _rotationDirty;
 
     public override void Init()
     {
@@ -123,26 +124,18 @@ public class Passenger : MVRScript
             var superController = SuperController.singleton;
             var navigationRig = superController.navigationRig;
 
-            if (!_activeJSON.val || _link == null){
-                // TODO: Reset angle to a sane value
-                /*
-                Vector3 rigAngles = navigationRig.localEulerAngles;
-                if (rigAngles.z != 0f){
-                navigationRig.localEulerAngles = new Vector3(rigAngles.x, rigAngles.y, 0f);
-                }
-                */
+            if (!_activeJSON.val || _link == null)
+            {
+                RestoreRotation();
                 return;
             }
 
             var centerCameraTarget = superController.centerCameraTarget;
             var monitorCenterCamera = superController.MonitorCenterCamera;
 
-            var up = navigationRig.up;
-            var forward = navigationRig.forward;
-            var right = navigationRig.right;
-
             if (_rotationLockJSON.val)
             {
+                if (!_rotationDirty) _rotationDirty = true;
                 var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
                 navigationRig.rotation = navigationRigRotation;
@@ -150,8 +143,9 @@ public class Passenger : MVRScript
 
             if (_positionLockJSON.val)
             {
+                var up = navigationRig.up;
                 var positionOffset = navigationRig.position + _link.position - _possessor.autoSnapPoint.position;
-                positionOffset += forward * _positionOffsetJSON.val.z + right * _positionOffsetJSON.val.x;
+                positionOffset += _link.transform.forward * _positionOffsetJSON.val.z + _link.transform.right * _positionOffsetJSON.val.x;
                 var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
                 navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
                 superController.playerHeightAdjust += playerHeightAdjustOffset + _positionOffsetJSON.val.y;
@@ -160,6 +154,20 @@ public class Passenger : MVRScript
         catch (Exception e)
         {
             SuperController.LogError("Failed to update: " + e);
+        }
+    }
+
+    public void OnDisable()
+    {
+        RestoreRotation();
+    }
+
+    private void RestoreRotation()
+    {
+        if (_rotationDirty)
+        {
+            SuperController.singleton.navigationRig.localEulerAngles = Vector3.forward;
+            _rotationDirty = false;
         }
     }
 }
