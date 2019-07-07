@@ -2,6 +2,8 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 /// <summary>
 /// Passenger Version 0.0.0
@@ -13,6 +15,10 @@ public class Passenger : MVRScript
     private Possessor _possessor;
     private JSONStorableStringChooser _targetControllerJSON;
     private JSONStorableBool _activeJSON;
+    private JSONStorableVector3 _rotationOffsetJSON;
+    private JSONStorableVector3 _positionOffsetJSON;
+    private JSONStorableBool _rotationLockJSON;
+    private JSONStorableBool _positionLockJSON;
 
     public override void Init()
     {
@@ -45,7 +51,60 @@ public class Passenger : MVRScript
 
         _activeJSON = new JSONStorableBool("Active", false);
         RegisterBool(_activeJSON);
-        var activeToggle = CreateToggle(_activeJSON, true);
+        var activeToggle = CreateToggle(_activeJSON, false);
+
+        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false);
+        RegisterBool(_rotationLockJSON);
+        var rotationLockToggle = CreateToggle(_rotationLockJSON, true);
+
+        _rotationOffsetJSON = new JSONStorableVector3("Rotate", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
+        RegisterVector3(_rotationOffsetJSON);
+        CreateSlider("Rotation Offset X", _rotationOffsetJSON.val.x, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
+        {
+            _rotationOffsetJSON.val = new Vector3(x, _rotationOffsetJSON.val.y, _rotationOffsetJSON.val.z);
+        }));
+        CreateSlider("Rotation Offset Y", _rotationOffsetJSON.val.y, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
+        {
+            _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, y, _rotationOffsetJSON.val.z);
+        }));
+        CreateSlider("Rotation Offset Z", _rotationOffsetJSON.val.z, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
+        {
+            _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, _rotationOffsetJSON.val.y, z);
+        }));
+
+        _positionLockJSON = new JSONStorableBool("Position Lock", true);
+        RegisterBool(_positionLockJSON);
+        var positionLockToggle = CreateToggle(_positionLockJSON, true);
+
+        _positionOffsetJSON = new JSONStorableVector3("Position", Vector3.zero, new Vector3(-2f, -2f, -2f), new Vector3(2f, 2f, 2f), false, true);
+        RegisterVector3(_positionOffsetJSON);
+        CreateSlider("Position Offset X", _positionOffsetJSON.val.x, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
+        {
+            _positionOffsetJSON.val = new Vector3(x, _positionOffsetJSON.val.y, _positionOffsetJSON.val.z);
+        }));
+        CreateSlider("Position Offset Y", _positionOffsetJSON.val.y, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
+        {
+            _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, y, _positionOffsetJSON.val.z);
+        }));
+        CreateSlider("Position Offset Z", _positionOffsetJSON.val.z, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
+        {
+            _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
+        }));
+
+    }
+
+    private Slider CreateSlider(string label, float val, float max, bool constrained)
+    {
+        var uiElement = CreateUIElement(manager.configurableSliderPrefab.transform, true);
+        var dynamicSlider = uiElement.GetComponent<UIDynamicSlider>();
+        dynamicSlider.Configure(label, -max, max, val, constrained, "F2", true, !constrained);
+        return dynamicSlider.slider;
+    }
+
+    private void DebugValue(float debugValue)
+    {
+        SuperController.singleton.ClearMessages();
+        SuperController.LogMessage("New value: " + debugValue);
     }
 
     private void OnTargetControllerChanged(string targetControllerStoreId)
@@ -54,49 +113,57 @@ public class Passenger : MVRScript
 
         _selectedController = containingAtom.freeControllers.FirstOrDefault(c => c.storeId == targetControllerStoreId);
         if (_selectedController == null)
-
             SuperController.LogError("Controller does not exist: " + targetControllerStoreId);
     }
 
-    public void LateUpdate()
+    public void Update()
     {
-        if (!_activeJSON.val || _selectedController == null) return;
-
-        var controller = _selectedController;
-        var superController = SuperController.singleton;
-        var navigationRig = superController.navigationRig;
-        var centerCameraTarget = superController.centerCameraTarget;
-        var monitorCenterCamera = superController.MonitorCenterCamera;
-
-        var forwardPossessAxis = controller.GetForwardPossessAxis();
-        var upPossessAxis = controller.GetUpPossessAxis();
-
-        var up = navigationRig.up;
-
-        var fromDirection = Vector3.ProjectOnPlane(centerCameraTarget.transform.forward, up);
-        var toDirection = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRig.up);
-        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(centerCameraTarget.transform.up, up) > 0f)
-            toDirection = -toDirection;
-
-        navigationRig.rotation = Quaternion.FromToRotation(fromDirection, toDirection) * navigationRig.rotation;
-
-        if (controller.canGrabRotation)
-            controller.AlignTo(_possessor.autoSnapPoint, true);
-
-        var positionOffset = navigationRig.position + ((controller.possessPoint == null ? controller.control.position : controller.possessPoint.position) - _possessor.autoSnapPoint.position);
-        var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
-        navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
-        superController.playerHeightAdjust += playerHeightAdjustOffset;
-
-        if (monitorCenterCamera != null)
+        try
         {
-            monitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
-            var localEulerAngles = monitorCenterCamera.transform.localEulerAngles;
-            localEulerAngles.y = 0.0f;
-            localEulerAngles.z = 0.0f;
-            monitorCenterCamera.transform.localEulerAngles = localEulerAngles;
-        }
+            var superController = SuperController.singleton;
+            var navigationRig = superController.navigationRig;
 
-        controller.PossessMoveAndAlignTo(_possessor.autoSnapPoint);
+            if (!_activeJSON.val || _selectedController == null){
+                // TODO: Reset angle to a sane value
+                /*
+                Vector3 rigAngles = navigationRig.localEulerAngles;
+                if (rigAngles.z != 0f){
+                navigationRig.localEulerAngles = new Vector3(rigAngles.x, rigAngles.y, 0f);
+                }
+                */
+                return;
+            }
+
+            var controller = _selectedController;
+            var centerCameraTarget = superController.centerCameraTarget;
+            var monitorCenterCamera = superController.MonitorCenterCamera;
+
+            var up = navigationRig.up;
+            var forward = navigationRig.forward;
+            var right = navigationRig.right;
+
+            var forwardPossessAxis = controller.GetForwardPossessAxis();
+            var upPossessAxis = controller.GetUpPossessAxis();
+
+            if (_rotationLockJSON.val)
+            {
+                var navigationRigRotation = controller.transform.rotation;
+                navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
+                navigationRig.rotation = navigationRigRotation;
+            }
+
+            if (_positionLockJSON.val)
+            {
+                var positionOffset = navigationRig.position + ((controller.possessPoint == null ? controller.control.position : controller.possessPoint.position) - _possessor.autoSnapPoint.position);
+                positionOffset += forward * _positionOffsetJSON.val.z + right * _positionOffsetJSON.val.x;
+                var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
+                navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
+                superController.playerHeightAdjust += playerHeightAdjustOffset + _positionOffsetJSON.val.y;
+            }
+        }
+        catch (Exception e)
+        {
+            SuperController.LogError("Failed to update: " + e);
+        }
     }
 }
