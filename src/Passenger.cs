@@ -21,9 +21,8 @@ public class Passenger : MVRScript
     private JSONStorableStringChooser _linkJSON;
     private Vector3 _previousPosition;
     private float _previousPlayerHeight;
-    private bool _positionDirty;
     private Quaternion _previousRotation;
-    private bool _rotationDirty;
+    private bool _active;
 
     public override void Init()
     {
@@ -139,29 +138,28 @@ public class Passenger : MVRScript
                 return;
             }
 
+            var activeThisTurn = false;
+            if (!_active)
+            {
+                _previousRotation = navigationRig.rotation;
+                _previousPosition = navigationRig.position;
+                _previousPlayerHeight = superController.playerHeightAdjust;
+                _active = true;
+                activeThisTurn = true;
+            }
+
             var centerCameraTarget = superController.centerCameraTarget;
             var monitorCenterCamera = superController.MonitorCenterCamera;
 
-            if (_rotationLockJSON.val)
+            if (_rotationLockJSON.val || activeThisTurn)
             {
-                if (!_rotationDirty)
-                {
-                    _previousRotation = navigationRig.rotation;
-                    _rotationDirty = true;
-                }
                 var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
                 navigationRig.rotation = navigationRigRotation;
             }
 
-            if (_positionLockJSON.val)
+            if (_positionLockJSON.val || activeThisTurn)
             {
-                if (!_positionDirty)
-                {
-                    _previousPosition = navigationRig.position;
-                    _previousPlayerHeight = superController.playerHeightAdjust;
-                    _positionDirty = true;
-                }
                 var up = navigationRig.up;
                 var targetPosition = _link.position + _link.transform.forward * _positionOffsetJSON.val.z + _link.transform.right * _positionOffsetJSON.val.x + _link.transform.up * _positionOffsetJSON.val.y;
                 var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
@@ -183,16 +181,12 @@ public class Passenger : MVRScript
 
     private void Restore()
     {
-        if (_rotationDirty)
+        if (_active)
         {
             SuperController.singleton.navigationRig.rotation = _previousRotation;
-            _rotationDirty = false;
-        }
-        if (_positionDirty)
-        {
             SuperController.singleton.navigationRig.position = _previousPosition;
             SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
-            _positionDirty = false;
+            _active = false;
         }
     }
 }
