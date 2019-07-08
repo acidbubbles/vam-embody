@@ -64,18 +64,21 @@ public class Passenger : MVRScript
 
         _rotationOffsetJSON = new JSONStorableVector3("Rotate", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
         RegisterVector3(_rotationOffsetJSON);
-        CreateSlider("Rotation Offset X", _rotationOffsetJSON.val.x, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
-        {
-            _rotationOffsetJSON.val = new Vector3(x, _rotationOffsetJSON.val.y, _rotationOffsetJSON.val.z);
-        }));
-        CreateSlider("Rotation Offset Y", _rotationOffsetJSON.val.y, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
-        {
-            _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, y, _rotationOffsetJSON.val.z);
-        }));
-        CreateSlider("Rotation Offset Z", _rotationOffsetJSON.val.z, 180f, true).onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
-        {
-            _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, _rotationOffsetJSON.val.y, z);
-        }));
+        CreateSlider("Rotation Offset X", _rotationOffsetJSON.val.x, 180f, true, "F2")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
+            {
+                _rotationOffsetJSON.val = new Vector3(x, _rotationOffsetJSON.val.y, _rotationOffsetJSON.val.z);
+            }));
+        CreateSlider("Rotation Offset Y", _rotationOffsetJSON.val.y, 180f, true, "F2")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
+            {
+                _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, y, _rotationOffsetJSON.val.z);
+            }));
+        CreateSlider("Rotation Offset Z", _rotationOffsetJSON.val.z, 180f, true, "F2")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
+            {
+                _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, _rotationOffsetJSON.val.y, z);
+            }));
 
         _positionLockJSON = new JSONStorableBool("Position Lock", true);
         RegisterBool(_positionLockJSON);
@@ -83,26 +86,28 @@ public class Passenger : MVRScript
 
         _positionOffsetJSON = new JSONStorableVector3("Position", Vector3.zero, new Vector3(-2f, -2f, -2f), new Vector3(2f, 2f, 2f), false, true);
         RegisterVector3(_positionOffsetJSON);
-        CreateSlider("Position Offset X", _positionOffsetJSON.val.x, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
-        {
-            _positionOffsetJSON.val = new Vector3(x, _positionOffsetJSON.val.y, _positionOffsetJSON.val.z);
-        }));
-        CreateSlider("Position Offset Y", _positionOffsetJSON.val.y, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
-        {
-            _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, y, _positionOffsetJSON.val.z);
-        }));
-        CreateSlider("Position Offset Z", _positionOffsetJSON.val.z, 2f, false).onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
-        {
-            _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
-        }));
-
+        CreateSlider("Position Offset X", _positionOffsetJSON.val.x, 1f, false, "F4")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
+            {
+                _positionOffsetJSON.val = new Vector3(x, _positionOffsetJSON.val.y, _positionOffsetJSON.val.z);
+            }));
+        CreateSlider("Position Offset Y", _positionOffsetJSON.val.y, 1f, false, "F4")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
+            {
+                _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, y, _positionOffsetJSON.val.z);
+            }));
+        CreateSlider("Position Offset Z", _positionOffsetJSON.val.z, 1f, false, "F4")
+            .onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
+            {
+                _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
+            }));
     }
 
-    private Slider CreateSlider(string label, float val, float max, bool constrained)
+    private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
     {
         var uiElement = CreateUIElement(manager.configurableSliderPrefab.transform, true);
         var dynamicSlider = uiElement.GetComponent<UIDynamicSlider>();
-        dynamicSlider.Configure(label, -max, max, val, constrained, "F2", true, !constrained);
+        dynamicSlider.Configure(label, -max, max, val, constrained, format, true, !constrained);
         return dynamicSlider.slider;
     }
 
