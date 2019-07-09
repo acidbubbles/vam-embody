@@ -41,6 +41,7 @@ public class ImprovedPoV : MVRScript
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
     private float _originalWorldScale;
+    private float _originalPlayerHeightAdjust;
 
     public override void Init()
     {
@@ -408,8 +409,10 @@ public class ImprovedPoV : MVRScript
 
         if (!_autoWorldScaleJSON.val) return;
 
-        if (_originalWorldScale == 0f)
+        if (_originalWorldScale == 0f){
             _originalWorldScale = SuperController.singleton.worldScale;
+            _originalPlayerHeightAdjust = SuperController.singleton.playerHeightAdjust;
+        }
 
         var eyes = _person.GetComponentsInChildren<LookAtWithLimits>();
         var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
@@ -425,9 +428,13 @@ public class ImprovedPoV : MVRScript
 
         var scale = atomEyeDistance / rigEyesDistance;
         var worldScale = SuperController.singleton.worldScale * scale;
+        var yAdjust = _possessor.autoSnapPoint.position.y - _headControl.possessPoint.position.y;
 
         if (SuperController.singleton.worldScale != worldScale)
             SuperController.singleton.worldScale = worldScale;
+
+        if (yAdjust != 0)
+            SuperController.singleton.playerHeightAdjust = SuperController.singleton.playerHeightAdjust - yAdjust;
     }
 
     public static class HandlerConfigurationResult
