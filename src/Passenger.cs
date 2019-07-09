@@ -172,9 +172,18 @@ public class Passenger : MVRScript
                 var up = navigationRig.up;
                 var targetPosition = _link.position + _link.transform.forward * _positionOffsetJSON.val.z + _link.transform.right * _positionOffsetJSON.val.x + _link.transform.up * _positionOffsetJSON.val.y;
                 var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
-                var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
-                navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
-                superController.playerHeightAdjust += playerHeightAdjustOffset;
+                if (activeThisTurn)
+                {
+                    // Adjust the player height so the user can adjust as needed
+                    var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
+                    navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
+                    superController.playerHeightAdjust += playerHeightAdjustOffset;
+                }
+                else
+                {
+                    // Lock down the position
+                    navigationRig.position = positionOffset;
+                }
             }
         }
         catch (Exception e)
