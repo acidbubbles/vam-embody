@@ -428,10 +428,11 @@ public class ImprovedPoV : MVRScript
 
         var scale = atomEyeDistance / rigEyesDistance;
         var worldScale = SuperController.singleton.worldScale * scale;
-        var yAdjust = _possessor.autoSnapPoint.position.y - _headControl.possessPoint.position.y;
 
         if (SuperController.singleton.worldScale != worldScale)
             SuperController.singleton.worldScale = worldScale;
+
+        var yAdjust = _possessor.autoSnapPoint.position.y - _headControl.possessPoint.position.y;
 
         if (yAdjust != 0)
             SuperController.singleton.playerHeightAdjust = SuperController.singleton.playerHeightAdjust - yAdjust;
