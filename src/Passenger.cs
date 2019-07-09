@@ -15,6 +15,7 @@ public class Passenger : MVRScript
     private Possessor _possessor;
     private JSONStorableBool _activeJSON;
     private JSONStorableBool _rotationLockJSON;
+    private JSONStorableBool _rotationLockNoRollJSON;
     private JSONStorableVector3 _rotationOffsetJSON;
     private JSONStorableBool _positionLockJSON;
     private JSONStorableVector3 _positionOffsetJSON;
@@ -60,6 +61,10 @@ public class Passenger : MVRScript
         _rotationLockJSON = new JSONStorableBool("Rotation Lock", false);
         RegisterBool(_rotationLockJSON);
         var rotationLockToggle = CreateToggle(_rotationLockJSON, true);
+
+        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false);
+        RegisterBool(_rotationLockNoRollJSON);
+        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, true);
 
         _rotationOffsetJSON = new JSONStorableVector3("Rotate", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
         RegisterVector3(_rotationOffsetJSON);
@@ -155,6 +160,10 @@ public class Passenger : MVRScript
             {
                 var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
+                if (_rotationLockNoRollJSON.val)
+                {
+                    navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
+                }
                 navigationRig.rotation = navigationRigRotation;
             }
 
