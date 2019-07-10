@@ -14,6 +14,8 @@ public class Passenger : MVRScript
     private Rigidbody _link;
     private Possessor _possessor;
     private JSONStorableBool _activeJSON;
+    private JSONStorableBool _smoothJSON;
+    private JSONStorableFloat _smoothTimeJSON;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
     private JSONStorableVector3 _rotationOffsetJSON;
@@ -24,6 +26,8 @@ public class Passenger : MVRScript
     private float _previousPlayerHeight;
     private Quaternion _previousRotation;
     private bool _active;
+    private Quaternion _currentRotationVelocity;
+    private Vector3 _currentPositionVelocity;
 
     public override void Init()
     {
@@ -105,6 +109,14 @@ public class Passenger : MVRScript
             {
                 _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
             }));
+
+        _smoothJSON = new JSONStorableBool("Smoothing", false);
+        RegisterBool(_smoothJSON);
+        var smoothToggle = CreateToggle(_smoothJSON, true);
+
+        _smoothTimeJSON = new JSONStorableFloat("Smooth Time", 0.04f, 0f, 1f, true);
+        RegisterFloat(_smoothTimeJSON);
+        CreateSlider(_smoothTimeJSON, true);
     }
 
     private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
@@ -164,6 +176,10 @@ public class Passenger : MVRScript
                 {
                     navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
                 }
+                if (_smoothJSON.val)
+                {
+                    navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _smoothTimeJSON.val);
+                }
                 navigationRig.rotation = navigationRigRotation;
             }
 
@@ -182,6 +198,10 @@ public class Passenger : MVRScript
                 else
                 {
                     // Lock down the position
+                    if (_smoothJSON.val)
+                    {
+                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _smoothTimeJSON.val);
+                    }
                     navigationRig.position = positionOffset;
                 }
             }
@@ -204,7 +224,34 @@ public class Passenger : MVRScript
             SuperController.singleton.navigationRig.rotation = _previousRotation;
             SuperController.singleton.navigationRig.position = _previousPosition;
             SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
+            _currentPositionVelocity = Vector3.zero;
             _active = false;
         }
+    }
+
+    // Source: https://gist.github.com/maxattack/4c7b4de00f5c1b95a33b
+    public static Quaternion SmoothDamp(Quaternion current, Quaternion target, ref Quaternion currentVelocity, float smoothTime)
+    {
+        // account for double-cover
+        var Dot = Quaternion.Dot(current, target);
+        var Multi = Dot > 0f ? 1f : -1f;
+        target.x *= Multi;
+        target.y *= Multi;
+        target.z *= Multi;
+        target.w *= Multi;
+        // smooth damp (nlerp approx)
+        var Result = new Vector4(
+            Mathf.SmoothDamp(current.x, target.x, ref currentVelocity.x, smoothTime),
+            Mathf.SmoothDamp(current.y, target.y, ref currentVelocity.y, smoothTime),
+            Mathf.SmoothDamp(current.z, target.z, ref currentVelocity.z, smoothTime),
+            Mathf.SmoothDamp(current.w, target.w, ref currentVelocity.w, smoothTime)
+        ).normalized;
+        // compute deriv
+        var dtInv = 1f / Time.deltaTime;
+        currentVelocity.x = (Result.x - current.x) * dtInv;
+        currentVelocity.y = (Result.y - current.y) * dtInv;
+        currentVelocity.z = (Result.z - current.z) * dtInv;
+        currentVelocity.w = (Result.w - current.w) * dtInv;
+        return new Quaternion(Result.x, Result.y, Result.z, Result.w);
     }
 }
