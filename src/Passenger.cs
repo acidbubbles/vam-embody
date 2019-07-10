@@ -134,12 +134,6 @@ public class Passenger : MVRScript
         return dynamicSlider.slider;
     }
 
-    private void DebugValue(float debugValue)
-    {
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage("New value: " + debugValue);
-    }
-
     private void OnLinkChanged(string linkName)
     {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
