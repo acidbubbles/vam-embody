@@ -66,7 +66,7 @@ public class Passenger : MVRScript
         RegisterBool(_rotationLockNoRollJSON);
         var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, true);
 
-        _rotationOffsetJSON = new JSONStorableVector3("Rotate", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
+        _rotationOffsetJSON = new JSONStorableVector3("Rotation", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
         RegisterVector3(_rotationOffsetJSON);
         CreateSlider("Rotation Offset X", _rotationOffsetJSON.val.x, 180f, true, "F2")
             .onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
