@@ -17,10 +17,14 @@ public class Passenger : MVRScript
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
     private JSONStorableFloat _rotationSmoothingJSON;
-    private JSONStorableVector3 _rotationOffsetJSON;
+    private JSONStorableFloat _rotationOffsetXJSON;
+    private JSONStorableFloat _rotationOffsetYJSON;
+    private JSONStorableFloat _rotationOffsetZJSON;
     private JSONStorableBool _positionLockJSON;
     private JSONStorableFloat _positionSmoothingJSON;
-    private JSONStorableVector3 _positionOffsetJSON;
+    private JSONStorableFloat _positionOffsetXJSON;
+    private JSONStorableFloat _positionOffsetYJSON;
+    private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
     private Vector3 _previousPosition;
     private float _previousPlayerHeight;
@@ -85,45 +89,33 @@ public class Passenger : MVRScript
         RegisterFloat(_rotationSmoothingJSON);
         CreateSlider(_rotationSmoothingJSON, RightSide);
 
-        _rotationOffsetJSON = new JSONStorableVector3("Rotation", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
-        RegisterVector3(_rotationOffsetJSON);
-        CreateSlider("Rotation Offset X", _rotationOffsetJSON.val.x, 180f, true, "F2")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
-            {
-                _rotationOffsetJSON.val = new Vector3(x, _rotationOffsetJSON.val.y, _rotationOffsetJSON.val.z);
-            }));
-        CreateSlider("Rotation Offset Y", _rotationOffsetJSON.val.y, 180f, true, "F2")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
-            {
-                _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, y, _rotationOffsetJSON.val.z);
-            }));
-        CreateSlider("Rotation Offset Z", _rotationOffsetJSON.val.z, 180f, true, "F2")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
-            {
-                _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, _rotationOffsetJSON.val.y, z);
-            }));
+        _rotationOffsetXJSON = new JSONStorableFloat("Rotation X", 0f, -180, 180, true, true);
+        RegisterFloat(_rotationOffsetXJSON);
+        CreateSlider(_rotationOffsetXJSON, RightSide);
+
+        _rotationOffsetYJSON = new JSONStorableFloat("Rotation Y", 0f, -180, 180, true, true);
+        RegisterFloat(_rotationOffsetYJSON);
+        CreateSlider(_rotationOffsetYJSON, RightSide);
+
+        _rotationOffsetZJSON = new JSONStorableFloat("Rotation Z", 0f, -180, 180, true, true);
+        RegisterFloat(_rotationOffsetZJSON);
+        CreateSlider(_rotationOffsetZJSON, RightSide);
 
         _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0.01f, 0f, 1f, true);
         RegisterFloat(_positionSmoothingJSON);
         CreateSlider(_positionSmoothingJSON, RightSide);
 
-        _positionOffsetJSON = new JSONStorableVector3("Position", Vector3.zero, new Vector3(-2f, -2f, -2f), new Vector3(2f, 2f, 2f), false, true);
-        RegisterVector3(_positionOffsetJSON);
-        CreateSlider("Position Offset X", _positionOffsetJSON.val.x, 1f, false, "F4")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float x)
-            {
-                _positionOffsetJSON.val = new Vector3(x, _positionOffsetJSON.val.y, _positionOffsetJSON.val.z);
-            }));
-        CreateSlider("Position Offset Y", _positionOffsetJSON.val.y, 1f, false, "F4")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float y)
-            {
-                _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, y, _positionOffsetJSON.val.z);
-            }));
-        CreateSlider("Position Offset Z", _positionOffsetJSON.val.z, 1f, false, "F4")
-            .onValueChanged.AddListener(new UnityAction<float>(delegate (float z)
-            {
-                _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
-            }));
+        _positionOffsetXJSON = new JSONStorableFloat("Position X", 0f, -2f, 2f, false, true);
+        RegisterFloat(_positionOffsetXJSON);
+        CreateSlider(_positionOffsetXJSON, RightSide).valueFormat = "F4";
+
+        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0f, -2f, 2f, false, true);
+        RegisterFloat(_positionOffsetYJSON);
+        CreateSlider(_positionOffsetYJSON, RightSide).valueFormat = "F4";
+
+        _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, -2f, 2f, false, true);
+        RegisterFloat(_positionOffsetZJSON);
+        CreateSlider(_positionOffsetZJSON, RightSide).valueFormat = "F4";
     }
 
     private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
@@ -172,7 +164,7 @@ public class Passenger : MVRScript
             if (_rotationLockJSON.val || activeThisTurn)
             {
                 var navigationRigRotation = _link.transform.rotation;
-                navigationRigRotation *= Quaternion.Euler(_rotationOffsetJSON.val);
+                navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
                 if (_rotationLockNoRollJSON.val)
                 {
                     navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
@@ -187,7 +179,7 @@ public class Passenger : MVRScript
             if (_positionLockJSON.val || activeThisTurn)
             {
                 var up = navigationRig.up;
-                var targetPosition = _link.position + _link.transform.forward * _positionOffsetJSON.val.z + _link.transform.right * _positionOffsetJSON.val.x + _link.transform.up * _positionOffsetJSON.val.y;
+                var targetPosition = _link.position + _link.transform.forward * _positionOffsetZJSON.val + _link.transform.right * _positionOffsetXJSON.val + _link.transform.up * _positionOffsetYJSON.val;
                 var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
                 if (activeThisTurn)
                 {
