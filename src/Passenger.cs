@@ -14,12 +14,12 @@ public class Passenger : MVRScript
     private Rigidbody _link;
     private Possessor _possessor;
     private JSONStorableBool _activeJSON;
-    private JSONStorableBool _smoothJSON;
-    private JSONStorableFloat _smoothTimeJSON;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
+    private JSONStorableFloat _rotationSmoothingJSON;
     private JSONStorableVector3 _rotationOffsetJSON;
     private JSONStorableBool _positionLockJSON;
+    private JSONStorableFloat _positionSmoothingJSON;
     private JSONStorableVector3 _positionOffsetJSON;
     private JSONStorableStringChooser _linkJSON;
     private Vector3 _previousPosition;
@@ -45,6 +45,11 @@ public class Passenger : MVRScript
 
     private void InitControls()
     {
+        const bool LeftSide = false;
+        const bool RightSide = true;
+
+        // Left Side
+
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
 
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
@@ -52,7 +57,7 @@ public class Passenger : MVRScript
         _linkJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_linkJSON);
 
-        var linkPopup = CreateScrollablePopup(_linkJSON, false);
+        var linkPopup = CreateScrollablePopup(_linkJSON, LeftSide);
         linkPopup.popupPanelHeight = 600f;
 
         if (!string.IsNullOrEmpty(_linkJSON.val))
@@ -60,15 +65,25 @@ public class Passenger : MVRScript
 
         _activeJSON = new JSONStorableBool("Active", false);
         RegisterBool(_activeJSON);
-        var activeToggle = CreateToggle(_activeJSON, false);
+        var activeToggle = CreateToggle(_activeJSON, LeftSide);
 
         _rotationLockJSON = new JSONStorableBool("Rotation Lock", false);
         RegisterBool(_rotationLockJSON);
-        var rotationLockToggle = CreateToggle(_rotationLockJSON, true);
+        var rotationLockToggle = CreateToggle(_rotationLockJSON, LeftSide);
 
         _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false);
         RegisterBool(_rotationLockNoRollJSON);
-        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, true);
+        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, LeftSide);
+
+        _positionLockJSON = new JSONStorableBool("Position Lock", true);
+        RegisterBool(_positionLockJSON);
+        var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
+
+        // Right Side
+
+        _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0.02f, 0f, 1f, true);
+        RegisterFloat(_rotationSmoothingJSON);
+        CreateSlider(_rotationSmoothingJSON, RightSide);
 
         _rotationOffsetJSON = new JSONStorableVector3("Rotation", Vector3.zero, new Vector3(-180, -180, -180), new Vector3(180, 180, 180), true, true);
         RegisterVector3(_rotationOffsetJSON);
@@ -88,9 +103,9 @@ public class Passenger : MVRScript
                 _rotationOffsetJSON.val = new Vector3(_rotationOffsetJSON.val.x, _rotationOffsetJSON.val.y, z);
             }));
 
-        _positionLockJSON = new JSONStorableBool("Position Lock", true);
-        RegisterBool(_positionLockJSON);
-        var positionLockToggle = CreateToggle(_positionLockJSON, true);
+        _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0.01f, 0f, 1f, true);
+        RegisterFloat(_positionSmoothingJSON);
+        CreateSlider(_positionSmoothingJSON, RightSide);
 
         _positionOffsetJSON = new JSONStorableVector3("Position", Vector3.zero, new Vector3(-2f, -2f, -2f), new Vector3(2f, 2f, 2f), false, true);
         RegisterVector3(_positionOffsetJSON);
@@ -109,14 +124,6 @@ public class Passenger : MVRScript
             {
                 _positionOffsetJSON.val = new Vector3(_positionOffsetJSON.val.x, _positionOffsetJSON.val.y, z);
             }));
-
-        _smoothJSON = new JSONStorableBool("Smoothing", false);
-        RegisterBool(_smoothJSON);
-        var smoothToggle = CreateToggle(_smoothJSON, true);
-
-        _smoothTimeJSON = new JSONStorableFloat("Smooth Time", 0.04f, 0f, 1f, true);
-        RegisterFloat(_smoothTimeJSON);
-        CreateSlider(_smoothTimeJSON, true);
     }
 
     private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
@@ -176,9 +183,9 @@ public class Passenger : MVRScript
                 {
                     navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
                 }
-                if (_smoothJSON.val)
+                if (_rotationSmoothingJSON.val > 0)
                 {
-                    navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _smoothTimeJSON.val);
+                    navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _rotationSmoothingJSON.val);
                 }
                 navigationRig.rotation = navigationRigRotation;
             }
@@ -198,9 +205,9 @@ public class Passenger : MVRScript
                 else
                 {
                     // Lock down the position
-                    if (_smoothJSON.val)
+                    if (_positionSmoothingJSON.val > 0)
                     {
-                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _smoothTimeJSON.val);
+                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _positionSmoothingJSON.val);
                     }
                     navigationRig.position = positionOffset;
                 }
