@@ -148,20 +148,20 @@ public class Passenger : MVRScript
                 return;
             }
 
-            var activeThisTurn = false;
+            var activatedThisFrame = false;
             if (!_active)
             {
                 _previousRotation = navigationRig.rotation;
                 _previousPosition = navigationRig.position;
                 _previousPlayerHeight = superController.playerHeightAdjust;
                 _active = true;
-                activeThisTurn = true;
+                activatedThisFrame = true;
             }
 
             var centerCameraTarget = superController.centerCameraTarget;
             var monitorCenterCamera = superController.MonitorCenterCamera;
 
-            if (_rotationLockJSON.val || activeThisTurn)
+            if (_rotationLockJSON.val || activatedThisFrame)
             {
                 var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
@@ -169,19 +169,19 @@ public class Passenger : MVRScript
                 {
                     navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
                 }
-                if (_rotationSmoothingJSON.val > 0)
+                if (_rotationSmoothingJSON.val > 0 && !activatedThisFrame)
                 {
                     navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _rotationSmoothingJSON.val);
                 }
                 navigationRig.rotation = navigationRigRotation;
             }
 
-            if (_positionLockJSON.val || activeThisTurn)
+            if (_positionLockJSON.val || activatedThisFrame)
             {
                 var up = navigationRig.up;
                 var targetPosition = _link.position + _link.transform.forward * _positionOffsetZJSON.val + _link.transform.right * _positionOffsetXJSON.val + _link.transform.up * _positionOffsetYJSON.val;
                 var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
-                if (activeThisTurn)
+                if (activatedThisFrame)
                 {
                     // Adjust the player height so the user can adjust as needed
                     var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
@@ -191,7 +191,7 @@ public class Passenger : MVRScript
                 else
                 {
                     // Lock down the position
-                    if (_positionSmoothingJSON.val > 0)
+                    if (_positionSmoothingJSON.val > 0 && !activatedThisFrame)
                     {
                         positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _positionSmoothingJSON.val);
                     }
