@@ -1,8 +1,8 @@
 #define VAM_DIAGNOSTICS
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
@@ -33,11 +33,13 @@ public class Passenger : MVRScript
     private bool _active;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
+    private UserPreferences _preferences;
 
     public override void Init()
     {
         try
         {
+            _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _headControl = (FreeControllerV3)containingAtom.GetStorableByID("headControl");
 
@@ -162,12 +164,13 @@ public class Passenger : MVRScript
 
             if (_headControl != null && _headControl.possessed)
             {
-                SuperController.LogError("Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
-                _activeJSON.val = false;
-                if (activatedThisFrame)
-                    _active = false;
-                else
-                    Restore();
+                AbortActivation(activatedThisFrame, "Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
+                return;
+            }
+
+            if (_preferences.useHeadCollider)
+            {
+                AbortActivation(activatedThisFrame, "Do not enable the head collider with Passenger, they do not work together!");
                 return;
             }
 
@@ -215,6 +218,20 @@ public class Passenger : MVRScript
         catch (Exception e)
         {
             SuperController.LogError("Failed to update: " + e);
+        }
+    }
+
+    private void AbortActivation(bool activatedThisFrame, string message)
+    {
+        SuperController.LogError(message);
+        _activeJSON.val = false;
+        if (activatedThisFrame)
+        {
+            _active = false;
+        }
+        else
+        {
+            Restore();
         }
     }
 
