@@ -13,6 +13,7 @@ public class Passenger : MVRScript
 {
     private Rigidbody _link;
     private Possessor _possessor;
+    private FreeControllerV3 _headControl;
     private JSONStorableBool _activeJSON;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
@@ -38,6 +39,7 @@ public class Passenger : MVRScript
         try
         {
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
+            _headControl = (FreeControllerV3)containingAtom.GetStorableByID("headControl");
 
             InitControls();
         }
@@ -139,14 +141,14 @@ public class Passenger : MVRScript
     {
         try
         {
-            var superController = SuperController.singleton;
-            var navigationRig = superController.navigationRig;
-
             if (!_activeJSON.val || _link == null)
             {
                 Restore();
                 return;
             }
+
+            var superController = SuperController.singleton;
+            var navigationRig = superController.navigationRig;
 
             var activatedThisFrame = false;
             if (!_active)
@@ -156,6 +158,17 @@ public class Passenger : MVRScript
                 _previousPlayerHeight = superController.playerHeightAdjust;
                 _active = true;
                 activatedThisFrame = true;
+            }
+
+            if (_headControl != null && _headControl.possessed)
+            {
+                SuperController.LogError("Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
+                _activeJSON.val = false;
+                if (activatedThisFrame)
+                    _active = false;
+                else
+                    Restore();
+                return;
             }
 
             var centerCameraTarget = superController.centerCameraTarget;
@@ -218,6 +231,7 @@ public class Passenger : MVRScript
             SuperController.singleton.navigationRig.position = _previousPosition;
             SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
             _currentPositionVelocity = Vector3.zero;
+            _currentRotationVelocity = Quaternion.identity;
             _active = false;
         }
     }
