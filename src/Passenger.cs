@@ -34,6 +34,7 @@ public class Passenger : MVRScript
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
     private UserPreferences _preferences;
+    private Quaternion _startRotationOffset;
 
     public override void Init()
     {
@@ -179,8 +180,13 @@ public class Passenger : MVRScript
 
             if (_rotationLockJSON.val || activatedThisFrame)
             {
+                if (activatedThisFrame && !superController.MonitorRig.gameObject.activeSelf)
+                {
+                    _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
+                }
                 var navigationRigRotation = _link.transform.rotation;
                 navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+                navigationRigRotation *= _startRotationOffset;
                 if (_rotationLockNoRollJSON.val)
                 {
                     navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
