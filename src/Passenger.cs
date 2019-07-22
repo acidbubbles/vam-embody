@@ -209,7 +209,7 @@ public class Passenger : MVRScript
                     // Lock down the position
                     if (_positionSmoothingJSON.val > 0 && !activatedThisFrame)
                     {
-                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _positionSmoothingJSON.val);
+                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _positionSmoothingJSON.val, Mathf.Infinity, Time.smoothDeltaTime);
                     }
                     navigationRig.position = positionOffset;
                 }
@@ -242,15 +242,16 @@ public class Passenger : MVRScript
 
     private void Restore()
     {
-        if (_active)
-        {
-            SuperController.singleton.navigationRig.rotation = _previousRotation;
-            SuperController.singleton.navigationRig.position = _previousPosition;
-            SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
-            _currentPositionVelocity = Vector3.zero;
-            _currentRotationVelocity = Quaternion.identity;
-            _active = false;
-        }
+        if (!_active)
+            return;
+
+        SuperController.singleton.navigationRig.rotation = _previousRotation;
+        SuperController.singleton.navigationRig.position = _previousPosition;
+        SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
+        _currentPositionVelocity = Vector3.zero;
+        _currentRotationVelocity = Quaternion.identity;
+        _startRotationOffset = Quaternion.identity;
+        _active = false;
     }
 
     // Source: https://gist.github.com/maxattack/4c7b4de00f5c1b95a33b
@@ -271,7 +272,7 @@ public class Passenger : MVRScript
             Mathf.SmoothDamp(current.w, target.w, ref currentVelocity.w, smoothTime)
         ).normalized;
         // compute deriv
-        var dtInv = 1f / Time.deltaTime;
+        var dtInv = 1f / Time.smoothDeltaTime;
         currentVelocity.x = (Result.x - current.x) * dtInv;
         currentVelocity.y = (Result.y - current.y) * dtInv;
         currentVelocity.z = (Result.z - current.z) * dtInv;
