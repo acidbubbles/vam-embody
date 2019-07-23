@@ -35,6 +35,7 @@ public class Passenger : MVRScript
     private Vector3 _currentPositionVelocity;
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
+    private RigidbodyInterpolation _previousInterpolation;
 
     public override void Init()
     {
@@ -90,7 +91,7 @@ public class Passenger : MVRScript
 
         // Right Side
 
-        _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0.02f, 0f, 1f, true);
+        _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
         RegisterFloat(_rotationSmoothingJSON);
         CreateSlider(_rotationSmoothingJSON, RightSide);
 
@@ -106,7 +107,7 @@ public class Passenger : MVRScript
         RegisterFloat(_rotationOffsetZJSON);
         CreateSlider(_rotationOffsetZJSON, RightSide);
 
-        _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0.01f, 0f, 1f, true);
+        _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
         RegisterFloat(_positionSmoothingJSON);
         CreateSlider(_positionSmoothingJSON, RightSide);
 
@@ -135,6 +136,8 @@ public class Passenger : MVRScript
     {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
 
+        Restore();
+
         _link = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
         if (_link == null)
             SuperController.LogError("Controller does not exist: " + linkName);
@@ -159,6 +162,9 @@ public class Passenger : MVRScript
                 _previousRotation = navigationRig.rotation;
                 _previousPosition = navigationRig.position;
                 _previousPlayerHeight = superController.playerHeightAdjust;
+                var rigidBody = _link.GetComponent<Rigidbody>();
+                _previousInterpolation = rigidBody.interpolation;
+                rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
                 _active = true;
                 activatedThisFrame = true;
             }
@@ -252,12 +258,14 @@ public class Passenger : MVRScript
 
     private void Restore()
     {
-        if (!_active)
+        if (!_active || _link == null)
             return;
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;
         SuperController.singleton.navigationRig.position = _previousPosition;
         SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
+        var rigidBody = _link.GetComponent<Rigidbody>();
+        rigidBody.interpolation = _previousInterpolation;
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
