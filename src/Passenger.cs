@@ -76,15 +76,15 @@ public class Passenger : MVRScript
         RegisterBool(_activeJSON);
         var activeToggle = CreateToggle(_activeJSON, LeftSide);
 
-        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false);
+        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false, new JSONStorableBool.SetBoolCallback(v => Restore()));
         RegisterBool(_rotationLockJSON);
         var rotationLockToggle = CreateToggle(_rotationLockJSON, LeftSide);
 
-        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false);
+        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false, new JSONStorableBool.SetBoolCallback(v => Restore()));
         RegisterBool(_rotationLockNoRollJSON);
         var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, LeftSide);
 
-        _positionLockJSON = new JSONStorableBool("Position Lock", true);
+        _positionLockJSON = new JSONStorableBool("Position Lock", true, new JSONStorableBool.SetBoolCallback(v => Restore()));
         RegisterBool(_positionLockJSON);
         var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
 
@@ -180,17 +180,21 @@ public class Passenger : MVRScript
 
             if (_rotationLockJSON.val || activatedThisFrame)
             {
-                if (activatedThisFrame && !superController.MonitorRig.gameObject.activeSelf)
+                var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
+                if (activatedThisFrame && offsetStartRotation)
                 {
                     _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
                 }
                 var navigationRigRotation = _link.transform.rotation;
-                navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
-                navigationRigRotation *= _startRotationOffset;
                 if (_rotationLockNoRollJSON.val)
                 {
-                    navigationRigRotation.eulerAngles = new Vector3(navigationRigRotation.eulerAngles.x, navigationRigRotation.eulerAngles.y, 0f);
+                    navigationRigRotation.SetLookRotation(navigationRigRotation * Vector3.forward, Vector3.up);
                 }
+                if (offsetStartRotation)
+                {
+                    navigationRigRotation *= _startRotationOffset;
+                }
+                navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
                 if (_rotationSmoothingJSON.val > 0 && !activatedThisFrame)
                 {
                     navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _rotationSmoothingJSON.val);
