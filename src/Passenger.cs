@@ -160,6 +160,8 @@ public class Passenger : MVRScript
         if (_active) return;
         if (!HealthCheck()) return;
 
+        GetImprovedPoVActiveJSON()?.SetVal(false);
+
         var superController = SuperController.singleton;
         var navigationRig = superController.navigationRig;
 
@@ -198,6 +200,8 @@ public class Passenger : MVRScript
         _startRotationOffset = Quaternion.identity;
 
         _active = false;
+
+        GetImprovedPoVActiveJSON()?.SetVal(true);
     }
 
     private void Reapply()
@@ -332,5 +336,12 @@ public class Passenger : MVRScript
         currentVelocity.z = (Result.z - current.z) * dtInv;
         currentVelocity.w = (Result.w - current.w) * dtInv;
         return new Quaternion(Result.x, Result.y, Result.z, Result.w);
+    }
+
+    private JSONStorableBool GetImprovedPoVActiveJSON()
+    {
+        var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
+        var improvedPoVStorable = containingAtom?.GetStorableByID(improvedPoVStorableID);
+        return improvedPoVStorable?.GetBoolJSONParam("Activate only when possessed");
     }
 }
