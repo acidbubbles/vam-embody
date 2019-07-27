@@ -1,6 +1,5 @@
 #define VAM_DIAGNOSTICS
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,6 +45,9 @@ public class Passenger : MVRScript
             _headControl = (FreeControllerV3)containingAtom.GetStorableByID("headControl");
 
             InitControls();
+
+            if (_activeJSON.val)
+                Activate();
         }
         catch (Exception e)
         {
@@ -73,19 +75,25 @@ public class Passenger : MVRScript
         if (!string.IsNullOrEmpty(_linkJSON.val))
             OnLinkChanged(_linkJSON.val);
 
-        _activeJSON = new JSONStorableBool("Active", false);
+        _activeJSON = new JSONStorableBool("Active", false, val =>
+        {
+            if (val)
+                Activate();
+            else
+                Deactivate();
+        });
         RegisterBool(_activeJSON);
         var activeToggle = CreateToggle(_activeJSON, LeftSide);
 
-        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false, new JSONStorableBool.SetBoolCallback(v => Restore()));
+        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_rotationLockJSON);
         var rotationLockToggle = CreateToggle(_rotationLockJSON, LeftSide);
 
-        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false, new JSONStorableBool.SetBoolCallback(v => Restore()));
+        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_rotationLockNoRollJSON);
         var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, LeftSide);
 
-        _positionLockJSON = new JSONStorableBool("Position Lock", true, new JSONStorableBool.SetBoolCallback(v => Restore()));
+        _positionLockJSON = new JSONStorableBool("Position Lock", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_positionLockJSON);
         var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
 
@@ -136,100 +144,84 @@ public class Passenger : MVRScript
     {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
 
-        Restore();
+        if (_activeJSON != null)
+        {
+            Deactivate();
+            _activeJSON.val = false;
+        }
 
         _link = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
         if (_link == null)
             SuperController.LogError("Controller does not exist: " + linkName);
     }
 
+    private void Activate()
+    {
+        if (_active) return;
+        if (!HealthCheck()) return;
+
+        var superController = SuperController.singleton;
+        var navigationRig = superController.navigationRig;
+
+        _previousRotation = navigationRig.rotation;
+        _previousPosition = navigationRig.position;
+        _previousPlayerHeight = superController.playerHeightAdjust;
+
+        var rigidBody = _link.GetComponent<Rigidbody>();
+        _previousInterpolation = rigidBody.interpolation;
+        rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
+
+        var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
+        if (offsetStartRotation)
+            _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
+
+        ApplyRotation(navigationRig, 0);
+        MoveToStartingPosition(navigationRig, GetTargetPosition(navigationRig));
+
+        _active = true;
+    }
+
+    private void Deactivate()
+    {
+        if (!_active) return;
+
+        SuperController.singleton.navigationRig.rotation = _previousRotation;
+        SuperController.singleton.navigationRig.position = _previousPosition;
+        SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
+        if (_link != null)
+        {
+            var rigidBody = _link.GetComponent<Rigidbody>();
+            rigidBody.interpolation = _previousInterpolation;
+        }
+        _currentPositionVelocity = Vector3.zero;
+        _currentRotationVelocity = Quaternion.identity;
+        _startRotationOffset = Quaternion.identity;
+
+        _active = false;
+    }
+
+    private void Reapply()
+    {
+        if (!_active) return;
+
+        Deactivate();
+        Activate();
+    }
+
     public void Update()
     {
         try
         {
-            if (!_activeJSON.val || _link == null)
-            {
-                Restore();
-                return;
-            }
+            if (!_active) return;
+            if (!HealthCheck()) return;
 
-            var superController = SuperController.singleton;
-            var navigationRig = superController.navigationRig;
+            var navigationRig = SuperController.singleton.navigationRig;
 
-            var activatedThisFrame = false;
-            if (!_active)
-            {
-                _previousRotation = navigationRig.rotation;
-                _previousPosition = navigationRig.position;
-                _previousPlayerHeight = superController.playerHeightAdjust;
-                var rigidBody = _link.GetComponent<Rigidbody>();
-                _previousInterpolation = rigidBody.interpolation;
-                rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
-                _active = true;
-                activatedThisFrame = true;
-            }
+            if (_rotationLockJSON.val)
+                ApplyRotation(navigationRig, _rotationSmoothingJSON.val);
 
-            if (_headControl != null && _headControl.possessed)
-            {
-                AbortActivation(activatedThisFrame, "Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
-                return;
-            }
-
-            if (_preferences.useHeadCollider)
-            {
-                AbortActivation(activatedThisFrame, "Do not enable the head collider with Passenger, they do not work together!");
-                return;
-            }
-
-            var centerCameraTarget = superController.centerCameraTarget;
-            var monitorCenterCamera = superController.MonitorCenterCamera;
-
-            if (_rotationLockJSON.val || activatedThisFrame)
-            {
-                var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
-                if (activatedThisFrame && offsetStartRotation)
-                {
-                    _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
-                }
-                var navigationRigRotation = _link.transform.rotation;
-                if (_rotationLockNoRollJSON.val)
-                {
-                    navigationRigRotation.SetLookRotation(navigationRigRotation * Vector3.forward, Vector3.up);
-                }
-                if (offsetStartRotation)
-                {
-                    navigationRigRotation *= _startRotationOffset;
-                }
-                navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
-                if (_rotationSmoothingJSON.val > 0 && !activatedThisFrame)
-                {
-                    navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, _rotationSmoothingJSON.val);
-                }
-                navigationRig.rotation = navigationRigRotation;
-            }
-
-            if (_positionLockJSON.val || activatedThisFrame)
-            {
-                var up = navigationRig.up;
-                var targetPosition = _link.position + _link.transform.forward * _positionOffsetZJSON.val + _link.transform.right * _positionOffsetXJSON.val + _link.transform.up * _positionOffsetYJSON.val;
-                var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
-                if (activatedThisFrame)
-                {
-                    // Adjust the player height so the user can adjust as needed
-                    var playerHeightAdjustOffset = Vector3.Dot(positionOffset - navigationRig.position, up);
-                    navigationRig.position = positionOffset + up * -playerHeightAdjustOffset;
-                    superController.playerHeightAdjust += playerHeightAdjustOffset;
-                }
-                else
-                {
-                    // Lock down the position
-                    if (_positionSmoothingJSON.val > 0 && !activatedThisFrame)
-                    {
-                        positionOffset = Vector3.SmoothDamp(navigationRig.position, positionOffset, ref _currentPositionVelocity, _positionSmoothingJSON.val, Mathf.Infinity, Time.smoothDeltaTime);
-                    }
-                    navigationRig.position = positionOffset;
-                }
-            }
+            if (_positionLockJSON.val)
+                ApplyPosition(navigationRig, GetTargetPosition(navigationRig));
         }
         catch (Exception e)
         {
@@ -237,39 +229,83 @@ public class Passenger : MVRScript
         }
     }
 
-    private void AbortActivation(bool activatedThisFrame, string message)
+    private void AbortActivation(string message)
     {
         SuperController.LogError(message);
         _activeJSON.val = false;
-        if (activatedThisFrame)
+        Deactivate();
+    }
+
+    private Vector3 GetTargetPosition(Transform navigationRig)
+    {
+        var targetPosition = _link.position + _link.transform.forward * _positionOffsetZJSON.val + _link.transform.right * _positionOffsetXJSON.val + _link.transform.up * _positionOffsetYJSON.val;
+        var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
+        return positionOffset;
+    }
+
+    private void ApplyPosition(Transform navigationRig, Vector3 targetPosition)
+    {
+        if (_positionSmoothingJSON.val > 0)
+            targetPosition = Vector3.SmoothDamp(navigationRig.position, targetPosition, ref _currentPositionVelocity, _positionSmoothingJSON.val, Mathf.Infinity, Time.smoothDeltaTime);
+
+        navigationRig.position = targetPosition;
+    }
+
+    private static void MoveToStartingPosition(Transform navigationRig, Vector3 targetPosition)
+    {
+        // Adjust the player height so the user can adjust as needed
+        var up = navigationRig.up;
+        var playerHeightAdjustOffset = Vector3.Dot(targetPosition - navigationRig.position, up);
+        navigationRig.position = targetPosition + up * -playerHeightAdjustOffset;
+        SuperController.singleton.playerHeightAdjust += playerHeightAdjustOffset;
+    }
+
+    private void ApplyRotation(Transform navigationRig, float rotationSmoothing)
+    {
+        var navigationRigRotation = _link.transform.rotation;
+
+        if (_rotationLockNoRollJSON.val)
+            navigationRigRotation.SetLookRotation(navigationRigRotation * Vector3.forward, Vector3.up);
+
+        // TODO? Necessary?
+        if (_startRotationOffset == Quaternion.identity)
+            navigationRigRotation *= _startRotationOffset;
+
+        navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+
+        if (rotationSmoothing > 0)
+            navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
+
+        navigationRig.rotation = navigationRigRotation;
+    }
+
+    private bool HealthCheck()
+    {
+        if (_headControl != null && _headControl.possessed)
         {
-            _active = false;
+            AbortActivation("Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
+            return false;
         }
-        else
+
+        if (_preferences.useHeadCollider)
         {
-            Restore();
+            AbortActivation("Do not enable the head collider with Passenger, they do not work together!");
+            return false;
         }
+
+        return true;
     }
 
     public void OnDisable()
     {
-        Restore();
-    }
-
-    private void Restore()
-    {
-        if (!_active || _link == null)
-            return;
-
-        SuperController.singleton.navigationRig.rotation = _previousRotation;
-        SuperController.singleton.navigationRig.position = _previousPosition;
-        SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
-        var rigidBody = _link.GetComponent<Rigidbody>();
-        rigidBody.interpolation = _previousInterpolation;
-        _currentPositionVelocity = Vector3.zero;
-        _currentRotationVelocity = Quaternion.identity;
-        _startRotationOffset = Quaternion.identity;
-        _active = false;
+        try
+        {
+            Deactivate();
+        }
+        catch (Exception e)
+        {
+            SuperController.LogError("Failed to disable: " + e);
+        }
     }
 
     // Source: https://gist.github.com/maxattack/4c7b4de00f5c1b95a33b
