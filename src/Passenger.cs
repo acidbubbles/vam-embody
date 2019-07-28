@@ -160,7 +160,8 @@ public class Passenger : MVRScript
         if (_active) return;
         if (!HealthCheck()) return;
 
-        GetImprovedPoVActiveJSON()?.SetVal(false);
+        if (_link.name == "head")
+            GetImprovedPoOnlyWhenPossessedJSON()?.SetVal(false);
 
         var superController = SuperController.singleton;
         var navigationRig = superController.navigationRig;
@@ -194,14 +195,15 @@ public class Passenger : MVRScript
         {
             var rigidBody = _link.GetComponent<Rigidbody>();
             rigidBody.interpolation = _previousInterpolation;
+
+            if (_link.name == "head")
+                GetImprovedPoOnlyWhenPossessedJSON()?.SetVal(true);
         }
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
 
         _active = false;
-
-        GetImprovedPoVActiveJSON()?.SetVal(true);
     }
 
     private void Reapply()
@@ -285,6 +287,12 @@ public class Passenger : MVRScript
 
     private bool HealthCheck()
     {
+        if (_link == null)
+        {
+            AbortActivation("There is no link or the current link does not exist");
+            return false;
+        }
+
         if (_headControl != null && _headControl.possessed)
         {
             AbortActivation("Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
@@ -338,7 +346,7 @@ public class Passenger : MVRScript
         return new Quaternion(Result.x, Result.y, Result.z, Result.w);
     }
 
-    private JSONStorableBool GetImprovedPoVActiveJSON()
+    private JSONStorableBool GetImprovedPoOnlyWhenPossessedJSON()
     {
         var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
         if (improvedPoVStorableID == null) return null;
