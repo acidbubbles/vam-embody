@@ -39,8 +39,6 @@
 
   <ItemGroup>
     <Compile Include="tools/Diagnostics.cs" />
-    <Compile Include="tools/ForwardUnityLogsToSceneLogs.cs" />
-    <Compile Include="tools/ForceEditMode.cs" />
     <Compile Include="src/ImprovedPoV.cs" />
   </ItemGroup>
 
