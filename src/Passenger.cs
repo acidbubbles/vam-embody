@@ -341,6 +341,7 @@ public class Passenger : MVRScript
     private JSONStorableBool GetImprovedPoVActiveJSON()
     {
         var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
+        if (improvedPoVStorableID == null) return null;
         var improvedPoVStorable = containingAtom?.GetStorableByID(improvedPoVStorableID);
         return improvedPoVStorable?.GetBoolJSONParam("Activate only when possessed");
     }
