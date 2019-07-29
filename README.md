@@ -11,3 +11,7 @@ There is a slight jitter; this is because VaM does all updates in Update, includ
 ## License
 
 [MIT](LICENSE.md)
+
+## TODO
+
+- Set the world scale on possess to a specific value (make sure it's not in the ImprovedPoV plugin first!)

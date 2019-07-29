@@ -26,6 +26,8 @@ public class Passenger : MVRScript
     private JSONStorableFloat _positionOffsetYJSON;
     private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
+    private JSONStorableBool _worldScaleEnabled;
+    private JSONStorableFloat _worldScale;
     private Vector3 _previousPosition;
     private float _previousPlayerHeight;
     private Quaternion _previousRotation;
@@ -35,6 +37,7 @@ public class Passenger : MVRScript
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
+    private float _previousWorldScale;
 
     public override void Init()
     {
@@ -97,6 +100,10 @@ public class Passenger : MVRScript
         RegisterBool(_positionLockJSON);
         var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
 
+        _worldScaleEnabled = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        RegisterBool(_worldScaleEnabled);
+        CreateToggle(_worldScaleEnabled, LeftSide);
+
         // Right Side
 
         _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
@@ -130,6 +137,10 @@ public class Passenger : MVRScript
         _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetZJSON);
         CreateSlider(_positionOffsetZJSON, RightSide).valueFormat = "F4";
+
+        _worldScale = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
+        RegisterFloat(_worldScale);
+        CreateSlider(_worldScale, RightSide);
     }
 
     private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
@@ -161,7 +172,7 @@ public class Passenger : MVRScript
         if (!HealthCheck()) return;
 
         if (_link.name == "head")
-            GetImprovedPoOnlyWhenPossessedJSON()?.SetVal(false);
+            GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()?.SetVal(false);
 
         var superController = SuperController.singleton;
         var navigationRig = superController.navigationRig;
@@ -178,27 +189,45 @@ public class Passenger : MVRScript
         if (offsetStartRotation)
             _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
+        ApplyWorldScale();
         ApplyRotation(navigationRig, 0);
         MoveToStartingPosition(navigationRig, GetTargetPosition(navigationRig));
 
         _active = true;
     }
 
+    private void ApplyWorldScale()
+    {
+        if (!_worldScaleEnabled.val) return;
+
+        _previousWorldScale = SuperController.singleton.worldScale;
+        SuperController.singleton.worldScale = _worldScale.val;
+
+    }
+
     private void Deactivate()
     {
         if (!_active) return;
 
+        if (_previousWorldScale > 0f)
+        {
+            SuperController.singleton.worldScale = _previousWorldScale;
+            _previousWorldScale = 0f;
+        }
+
         SuperController.singleton.navigationRig.rotation = _previousRotation;
         SuperController.singleton.navigationRig.position = _previousPosition;
         SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
+
         if (_link != null)
         {
             var rigidBody = _link.GetComponent<Rigidbody>();
             rigidBody.interpolation = _previousInterpolation;
 
             if (_link.name == "head")
-                GetImprovedPoOnlyWhenPossessedJSON()?.SetVal(true);
+                GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()?.SetVal(true);
         }
+
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
@@ -346,11 +375,12 @@ public class Passenger : MVRScript
         return new Quaternion(Result.x, Result.y, Result.z, Result.w);
     }
 
-    private JSONStorableBool GetImprovedPoOnlyWhenPossessedJSON()
+    private JSONStorableBool GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()
     {
+        if(containingAtom == null) return null;
         var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
         if (improvedPoVStorableID == null) return null;
-        var improvedPoVStorable = containingAtom?.GetStorableByID(improvedPoVStorableID);
+        var improvedPoVStorable = containingAtom.GetStorableByID(improvedPoVStorableID);
         return improvedPoVStorable?.GetBoolJSONParam("Activate only when possessed");
     }
 }
