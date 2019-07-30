@@ -202,7 +202,7 @@ public class Passenger : MVRScript
 
         _previousWorldScale = SuperController.singleton.worldScale;
         SuperController.singleton.worldScale = _worldScale.val;
-
+        SuperController.singleton.navigationHologrid.gameObject.GetComponent<MeshRenderer>().enabled = false;
     }
 
     private void Deactivate()
@@ -213,6 +213,7 @@ public class Passenger : MVRScript
         {
             SuperController.singleton.worldScale = _previousWorldScale;
             _previousWorldScale = 0f;
+            SuperController.singleton.navigationHologrid.gameObject.GetComponent<MeshRenderer>().enabled = true;
         }
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;
@@ -377,7 +378,7 @@ public class Passenger : MVRScript
 
     private JSONStorableBool GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()
     {
-        if(containingAtom == null) return null;
+        if (containingAtom == null) return null;
         var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
         if (improvedPoVStorableID == null) return null;
         var improvedPoVStorable = containingAtom.GetStorableByID(improvedPoVStorableID);
