@@ -159,7 +159,7 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, false);
+                _clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, true);
                 RegisterFloat(_clipDistanceJSON);
                 var clipDistanceSlider = CreateSlider(_clipDistanceJSON, false);
                 clipDistanceSlider.slider.onValueChanged.AddListener(delegate (float val)
