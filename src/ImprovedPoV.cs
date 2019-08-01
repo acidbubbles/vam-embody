@@ -6,6 +6,7 @@ using UnityEngine;
 
 /// <summary>
 /// Improved PoV Version 0.0.0
+/// By Acidbubbles
 /// Possession that actually feels right.
 /// Source: https://github.com/acidbubbles/vam-improved-pov
 /// </summary>
