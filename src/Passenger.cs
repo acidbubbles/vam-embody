@@ -319,7 +319,7 @@ public class Passenger : MVRScript
 
     private void PossessRotation(Transform navigationRig)
     {
-        _link.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
+        _follower.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
          * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
     }
 
