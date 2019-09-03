@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Passenger Version 0.0.0
+/// By Acidbubbles
 /// Your eyes follow the model's eyes, not the other way around
+/// Source: https://github.com/acidbubbles/vam-passenger
 /// </summary>
 public class Passenger : MVRScript
 {
