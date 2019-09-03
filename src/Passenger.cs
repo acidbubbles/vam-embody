@@ -32,6 +32,8 @@ public class Passenger : MVRScript
     private JSONStorableStringChooser _followerJSON;
     private JSONStorableBool _worldScaleEnabled;
     private JSONStorableFloat _worldScale;
+    private JSONStorableStringChooser _toggleKeyJSON;
+    private KeyCode _toggleKey = KeyCode.None;
     private Vector3 _previousPosition;
     private float _previousPlayerHeight;
     private Quaternion _previousRotation;
@@ -114,6 +116,12 @@ public class Passenger : MVRScript
         if (!string.IsNullOrEmpty(_followerJSON.val))
             OnLinkChanged(_followerJSON.val);
 
+        var keys = Enum.GetNames(typeof(KeyCode)).ToList();
+        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, "None", "Toggle Key", new JSONStorableStringChooser.SetStringCallback(v => ApplyToggleKey(v)));
+        RegisterStringChooser(_toggleKeyJSON);
+        var toggleKeyPopup = CreateScrollablePopup(_toggleKeyJSON, LeftSide);
+        toggleKeyPopup.popupPanelHeight = 600f;
+        ApplyToggleKey(_toggleKeyJSON.val);
 
         // Right Side
 
@@ -152,6 +160,10 @@ public class Passenger : MVRScript
         _worldScale = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
         RegisterFloat(_worldScale);
         CreateSlider(_worldScale, RightSide);
+
+    private void ApplyToggleKey(string val)
+    {
+        _toggleKey = (KeyCode)Enum.Parse(typeof(KeyCode), val);
     }
 
     private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
@@ -267,8 +279,25 @@ public class Passenger : MVRScript
     {
         try
         {
-            if (!_active) return;
+            if (!_active)
+            {
+                if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+                {
+                    _activeJSON.val = true;
+                    return;
+                }
+
+                return;
+            }
+
             if (!HealthCheck()) return;
+
+            if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+            {
+
+                _activeJSON.val = false;
+                return;
+            }
 
             var navigationRig = SuperController.singleton.navigationRig;
 
