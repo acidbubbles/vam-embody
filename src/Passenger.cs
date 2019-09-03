@@ -12,6 +12,7 @@ using UnityEngine.UI;
 /// </summary>
 public class Passenger : MVRScript
 {
+    private const string TargetNone = "none";
     private Rigidbody _link;
     private Rigidbody _follower;
     private Possessor _possessor;
@@ -30,8 +31,8 @@ public class Passenger : MVRScript
     private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
     private JSONStorableStringChooser _followerJSON;
-    private JSONStorableBool _worldScaleEnabled;
-    private JSONStorableFloat _worldScale;
+    private JSONStorableBool _worldScaleEnabledJSON;
+    private JSONStorableFloat _worldScaleJSON;
     private JSONStorableStringChooser _toggleKeyJSON;
     private KeyCode _toggleKey = KeyCode.None;
     private Vector3 _previousPosition;
@@ -72,9 +73,9 @@ public class Passenger : MVRScript
         // Left Side
 
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
-
+        links.Insert(0, "none");
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
-        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Target Controller: ", OnLinkChanged);
+        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", OnLinkChanged);
         _linkJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_linkJSON);
         var linkPopup = CreateScrollablePopup(_linkJSON, LeftSide);
@@ -104,11 +105,13 @@ public class Passenger : MVRScript
         RegisterBool(_positionLockJSON);
         var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
 
-        _worldScaleEnabled = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_worldScaleEnabled);
-        CreateToggle(_worldScaleEnabled, LeftSide);
+        _worldScaleEnabledJSON = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        RegisterBool(_worldScaleEnabledJSON);
+        CreateToggle(_worldScaleEnabledJSON, LeftSide);
 
-        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Follow Controller: ", OnFollowChanged);
+        var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
+        controllers.Insert(0, TargetNone);
+        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", OnFollowChanged);
         _followerJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_followerJSON);
         var followerPopup = CreateScrollablePopup(_followerJSON, LeftSide);
@@ -157,9 +160,10 @@ public class Passenger : MVRScript
         RegisterFloat(_positionOffsetZJSON);
         CreateSlider(_positionOffsetZJSON, RightSide).valueFormat = "F4";
 
-        _worldScale = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
-        RegisterFloat(_worldScale);
-        CreateSlider(_worldScale, RightSide);
+        _worldScaleJSON = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
+        RegisterFloat(_worldScaleJSON);
+        CreateSlider(_worldScaleJSON, RightSide);
+    }
 
     private void ApplyToggleKey(string val)
     {
@@ -194,6 +198,12 @@ public class Passenger : MVRScript
             _activeJSON.val = false;
         }
 
+        if (linkName == TargetNone)
+        {
+            target = null;
+            return;
+        }
+
         target = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
         if (target == null)
             SuperController.LogError("Controller does not exist: " + linkName);
@@ -223,7 +233,7 @@ public class Passenger : MVRScript
             _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
         ApplyWorldScale();
-        ApplyRotation(navigationRig, 0);
+        UpdateRotation(navigationRig, 0);
         MoveToStartingPosition(navigationRig, GetTargetPosition(navigationRig));
 
         _active = true;
@@ -231,10 +241,10 @@ public class Passenger : MVRScript
 
     private void ApplyWorldScale()
     {
-        if (!_worldScaleEnabled.val) return;
+        if (!_worldScaleEnabledJSON.val) return;
 
         _previousWorldScale = SuperController.singleton.worldScale;
-        SuperController.singleton.worldScale = _worldScale.val;
+        SuperController.singleton.worldScale = _worldScaleJSON.val;
     }
 
     private void Deactivate()
@@ -304,10 +314,10 @@ public class Passenger : MVRScript
             if (_follower != null)
                 PossessRotation(navigationRig);
             else if (_rotationLockJSON.val)
-                ApplyRotation(navigationRig, _rotationSmoothingJSON.val);
+                UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
 
             if (_positionLockJSON.val)
-                ApplyPosition(navigationRig, GetTargetPosition(navigationRig));
+                UpdatePosition(navigationRig, GetTargetPosition(navigationRig));
         }
         catch (Exception e)
         {
@@ -329,7 +339,7 @@ public class Passenger : MVRScript
         return positionOffset;
     }
 
-    private void ApplyPosition(Transform navigationRig, Vector3 targetPosition)
+    private void UpdatePosition(Transform navigationRig, Vector3 targetPosition)
     {
         if (_positionSmoothingJSON.val > 0)
             targetPosition = Vector3.SmoothDamp(navigationRig.position, targetPosition, ref _currentPositionVelocity, _positionSmoothingJSON.val, Mathf.Infinity, Time.smoothDeltaTime);
@@ -352,7 +362,7 @@ public class Passenger : MVRScript
          * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
     }
 
-    private void ApplyRotation(Transform navigationRig, float rotationSmoothing)
+    private void UpdateRotation(Transform navigationRig, float rotationSmoothing)
     {
         var navigationRigRotation = _link.transform.rotation;
 
