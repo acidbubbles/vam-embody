@@ -13,6 +13,7 @@ using UnityEngine.UI;
 public class Passenger : MVRScript
 {
     private Rigidbody _link;
+    private Rigidbody _follower;
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
     private JSONStorableBool _activeJSON;
@@ -28,6 +29,7 @@ public class Passenger : MVRScript
     private JSONStorableFloat _positionOffsetYJSON;
     private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
+    private JSONStorableStringChooser _followerJSON;
     private JSONStorableBool _worldScaleEnabled;
     private JSONStorableFloat _worldScale;
     private Vector3 _previousPosition;
@@ -73,10 +75,8 @@ public class Passenger : MVRScript
         _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Target Controller: ", OnLinkChanged);
         _linkJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_linkJSON);
-
         var linkPopup = CreateScrollablePopup(_linkJSON, LeftSide);
         linkPopup.popupPanelHeight = 600f;
-
         if (!string.IsNullOrEmpty(_linkJSON.val))
             OnLinkChanged(_linkJSON.val);
 
@@ -105,6 +105,15 @@ public class Passenger : MVRScript
         _worldScaleEnabled = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_worldScaleEnabled);
         CreateToggle(_worldScaleEnabled, LeftSide);
+
+        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Follow Controller: ", OnFollowChanged);
+        _followerJSON.storeType = JSONStorableParam.StoreType.Physical;
+        RegisterStringChooser(_followerJSON);
+        var followerPopup = CreateScrollablePopup(_followerJSON, LeftSide);
+        followerPopup.popupPanelHeight = 600f;
+        if (!string.IsNullOrEmpty(_followerJSON.val))
+            OnLinkChanged(_followerJSON.val);
+
 
         // Right Side
 
@@ -155,6 +164,16 @@ public class Passenger : MVRScript
 
     private void OnLinkChanged(string linkName)
     {
+        OnTargetControllerChanged(ref _link, linkName);
+    }
+
+    private void OnFollowChanged(string linkName)
+    {
+        OnTargetControllerChanged(ref _follower, linkName);
+    }
+
+    private void OnTargetControllerChanged(ref Rigidbody target, string linkName)
+    {
         if (containingAtom == null) throw new NullReferenceException("containingAtom");
 
         if (_activeJSON != null)
@@ -163,8 +182,8 @@ public class Passenger : MVRScript
             _activeJSON.val = false;
         }
 
-        _link = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
-        if (_link == null)
+        target = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
+        if (target == null)
             SuperController.LogError("Controller does not exist: " + linkName);
     }
 
@@ -253,7 +272,9 @@ public class Passenger : MVRScript
 
             var navigationRig = SuperController.singleton.navigationRig;
 
-            if (_rotationLockJSON.val)
+            if (_follower != null)
+                PossessRotation(navigationRig);
+            else if (_rotationLockJSON.val)
                 ApplyRotation(navigationRig, _rotationSmoothingJSON.val);
 
             if (_positionLockJSON.val)
@@ -294,6 +315,12 @@ public class Passenger : MVRScript
         var playerHeightAdjustOffset = Vector3.Dot(targetPosition - navigationRig.position, up);
         navigationRig.position = targetPosition + up * -playerHeightAdjustOffset;
         SuperController.singleton.playerHeightAdjust += playerHeightAdjustOffset;
+    }
+
+    private void PossessRotation(Transform navigationRig)
+    {
+        _link.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
+         * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
     }
 
     private void ApplyRotation(Transform navigationRig, float rotationSmoothing)
