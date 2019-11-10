@@ -268,7 +268,7 @@ public class ImprovedPoV : MVRScript
                 _skinHandler = null;
                 ApplyAll(true);
             }
-            else if (_lastActive && _selector.selectedHairGroup != _hair)
+            else if (_lastActive && _selector.hairItems.FirstOrDefault(h => h.active) != _hair)
             {
                 _hairHandler?.Restore();
                 _hairHandler = null;
@@ -294,7 +294,7 @@ public class ImprovedPoV : MVRScript
         }
 
         _character = _selector.selectedCharacter;
-        _hair = _selector.selectedHairGroup;
+        _hair = _selector.hairItems.FirstOrDefault(h => h.active);
 
         ApplyAutoWorldScale(active);
         ApplyCameraPosition(active);
@@ -624,7 +624,7 @@ public class ImprovedPoV : MVRScript
 
         public int Configure(DAZCharacter character, DAZHairGroup hair)
         {
-            if (hair.name == "NoHair")
+            if (hair == null || hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
 
             if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale")
