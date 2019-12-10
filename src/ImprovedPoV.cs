@@ -27,10 +27,10 @@ public class ImprovedPoV : MVRScript
     private JSONStorableBool _hideHairJSON;
 
     private SkinHandler _skinHandler;
-    private HairHandler _hairHandler;
+    private List<HairHandler> _hairHandlers;
     // For change detection purposes
     private DAZCharacter _character;
-    private DAZHairGroup _hair;
+    private DAZHairGroup[] _hair;
 
 
     // Whether the PoV effects are currently active, i.e. in possession mode
@@ -84,8 +84,12 @@ public class ImprovedPoV : MVRScript
         {
             if (_skinHandler != null)
                 _skinHandler.BeforeRender();
-            if (_hairHandler != null)
-                _hairHandler.BeforeRender();
+            if (_hairHandlers != null)
+                _hairHandlers.ForEach(x =>
+                {
+                    if (x != null)
+                        x.BeforeRender();
+                });
         }
         catch (Exception e)
         {
@@ -103,8 +107,12 @@ public class ImprovedPoV : MVRScript
         {
             if (_skinHandler != null)
                 _skinHandler.AfterRender();
-            if (_hairHandler != null)
-                _hairHandler.AfterRender();
+            if (_hairHandlers != null)
+                _hairHandlers.ForEach(x =>
+                {
+                    if (x != null)
+                        x.AfterRender();
+                });
         }
         catch (Exception e)
         {
@@ -268,10 +276,19 @@ public class ImprovedPoV : MVRScript
                 _skinHandler = null;
                 ApplyAll(true);
             }
-            else if (_lastActive && _selector.hairItems.FirstOrDefault(h => h.active) != _hair)
+            else if (_lastActive && !_selector.hairItems.Where(h => h.active).SequenceEqual(_hair))
             {
-                _hairHandler?.Restore();
-                _hairHandler = null;
+                SuperController.LogMessage("Different! " + string.Join(", ", _selector.hairItems.Where(h => h.active).Select(h => h.GetInstanceID().ToString()).ToArray()) + " vs " + string.Join(", ", _hair.Select(h => h.GetInstanceID().ToString()).ToArray()));
+                // Note: This only checks if the first hair changed. It'll be good enough for most purposes, but imperfect.
+                if (_hairHandlers != null)
+                {
+                    _hairHandlers.ForEach(x =>
+                    {
+                        if (x != null)
+                            x.Restore();
+                    });
+                    _hairHandlers = null;
+                }
                 ApplyAll(true);
             }
         }
@@ -294,15 +311,22 @@ public class ImprovedPoV : MVRScript
         }
 
         _character = _selector.selectedCharacter;
-        _hair = _selector.hairItems.FirstOrDefault(h => h.active);
+        _hair = _selector.hairItems.Where(h => h.active).ToArray();
 
         ApplyAutoWorldScale(active);
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
         if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
             ConfigureHandler("Skin", ref _skinHandler, _skinHandler.Configure(_character.skin));
-        if (UpdateHandler(ref _hairHandler, active && _hideHairJSON.val))
-            ConfigureHandler("Hair", ref _hairHandler, _hairHandler.Configure(_character, _hair));
+        if (_hairHandlers == null)
+            _hairHandlers = new List<HairHandler>(new HairHandler[_hair.Length]);
+        for (var i = 0; i < _hairHandlers.Count; i++)
+        {
+            var hairHandler = _hairHandlers[i];
+            if (UpdateHandler(ref hairHandler, active && _hideHairJSON.val))
+                ConfigureHandler("Hair", ref hairHandler, hairHandler.Configure(_character, _hair[i]));
+            _hairHandlers[i] = hairHandler;
+        }
 
         if (!_dirty) _tryAgainAttempts = 0;
     }
@@ -410,7 +434,8 @@ public class ImprovedPoV : MVRScript
 
         if (!_autoWorldScaleJSON.val) return;
 
-        if (_originalWorldScale == 0f){
+        if (_originalWorldScale == 0f)
+        {
             _originalWorldScale = SuperController.singleton.worldScale;
             _originalPlayerHeightAdjust = SuperController.singleton.playerHeightAdjust;
         }
@@ -626,8 +651,9 @@ public class ImprovedPoV : MVRScript
         {
             if (hair == null || hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
+            SuperController.LogMessage("name: " + hair.name);
 
-            if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale")
+            if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale" || hair.name == "CustomHairItem")
                 return ConfigureSimV2Hair(hair);
             else if (hair.name == "SimHairGroup" || hair.name == "SimHairGroup2")
                 return ConfigureSimHair(hair);
