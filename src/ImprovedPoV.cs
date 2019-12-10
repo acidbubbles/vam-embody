@@ -278,7 +278,6 @@ public class ImprovedPoV : MVRScript
             }
             else if (_lastActive && !_selector.hairItems.Where(h => h.active).SequenceEqual(_hair))
             {
-                SuperController.LogMessage("Different! " + string.Join(", ", _selector.hairItems.Where(h => h.active).Select(h => h.GetInstanceID().ToString()).ToArray()) + " vs " + string.Join(", ", _hair.Select(h => h.GetInstanceID().ToString()).ToArray()));
                 // Note: This only checks if the first hair changed. It'll be good enough for most purposes, but imperfect.
                 if (_hairHandlers != null)
                 {
@@ -651,7 +650,6 @@ public class ImprovedPoV : MVRScript
         {
             if (hair == null || hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
-            SuperController.LogMessage("name: " + hair.name);
 
             if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale" || hair.name == "CustomHairItem")
                 return ConfigureSimV2Hair(hair);
