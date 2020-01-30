@@ -11,6 +11,7 @@ using UnityEngine;
 /// </summary>
 public class Wrist : MVRScript
 {
+    private GameObject _rightHandTarget;
     private JSONStorableBool _possessRightHandJSON;
     public JSONStorableFloat _wristOffsetXJSON;
     private JSONStorableFloat _wristOffsetYJSON;
@@ -22,7 +23,11 @@ public class Wrist : MVRScript
     private GameObject _rightWristDebugger;
     private GameObject _rightHandControllerDebugger;
     private FreeControllerV3 _rightHandController;
+    private Transform _rightAutoSnapPoint;
     private bool _ready;
+    private Vector3 _offset;
+    private Quaternion _rotate;
+    private JSONStorableBool _debugJSON;
 
     public override void Init()
     {
@@ -34,36 +39,80 @@ public class Wrist : MVRScript
                 return;
             }
 
+            var s = SuperController.singleton;
+            Transform touchObjectRight;
+            if (s.isOVR)
+                touchObjectRight = s.touchObjectRight;
+            else if (s.isOpenVR)
+                touchObjectRight = s.viveObjectRight;
+            else
+            {
+                SuperController.LogError("Wrist can only be applied in VR");
+                return;
+            }
+            _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
+
             _rightHandController = containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
             if (_rightHandController == null) throw new NullReferenceException("Could not find the rHandControl controller");
 
-            _possessRightHandJSON = new JSONStorableBool("Possess Right Hand", false);
+            _rightHandTarget = new GameObject($"{containingAtom.gameObject.name}.lHandController.vamWristTarget");
+            var rb = _rightHandTarget.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.detectCollisions = false;
+
+            _possessRightHandJSON = new JSONStorableBool("Possess Right Hand", false, (bool val) =>
+            {
+                if (_rightHandController.possessed)
+                {
+                    _possessRightHandJSON.valNoCallback = false;
+                    SuperController.LogError("Wrist: Cannot activate while possessing");
+                    return;
+                }
+                if (val)
+                {
+                    _rightHandController.PossessMoveAndAlignTo(_rightHandTarget.transform);
+                    _rightHandController.SelectLinkToRigidbody(_rightHandTarget.GetComponent<Rigidbody>());
+                }
+                else
+                {
+                    _rightHandController.RestorePreLinkState();
+                }
+            });
             RegisterBool(_possessRightHandJSON);
             CreateToggle(_possessRightHandJSON);
 
-            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdatePossessPoint, -0.2f, 0.2f, true);
+            _debugJSON = new JSONStorableBool("Debug", false, (bool val) =>
+            {
+                if (val)
+                {
+                    CreateDebuggers();
+                }
+                else
+                {
+                    DestroyDebuggers();
+                }
+            });
+            CreateToggle(_debugJSON);
+
+            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetXJSON);
             CreateSlider(_wristOffsetXJSON);
-            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdatePossessPoint, -0.2f, 0.2f, true);
+            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetYJSON);
             CreateSlider(_wristOffsetYJSON);
-            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.1f, UpdatePossessPoint, -0.2f, 0f, true);
+            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetZJSON);
             CreateSlider(_wristOffsetZJSON);
 
-            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 0f, UpdatePossessPoint, -10f, 10f, true);
+            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateXJSON);
             CreateSlider(_wristRotateXJSON);
-            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdatePossessPoint, -10f, 10f, true);
+            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateYJSON);
             CreateSlider(_wristRotateYJSON);
-            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdatePossessPoint, -10f, 10f, true);
+            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateZJSON);
             CreateSlider(_wristRotateZJSON);
-
-            if (_rightHandController.possessPoint != null) SuperController.LogError("Seems like Virt-A-Mate now provides a custom possess point for hands! This plugin is probably obsolete, and will overwrite the native possess point.");
-            _rightHandController.possessPoint = new GameObject($"{containingAtom.gameObject.name}.wristPlugin.rHandControlPossessPoint").transform;
-            _rightHandController.possessPoint.parent = _rightHandController.control;
         }
         catch (Exception exc)
         {
@@ -78,7 +127,7 @@ public class Wrist : MVRScript
         yield return new WaitForEndOfFrame();
         try
         {
-            UpdatePossessPoint(0);
+            UpdateRightHandOffset(0);
             OnEnable();
         }
         catch (Exception exc)
@@ -87,37 +136,13 @@ public class Wrist : MVRScript
         }
     }
 
-    private void UpdatePossessPoint(float _)
+    private void UpdateRightHandOffset(float _)
     {
-        if (_rightHandController?.possessPoint == null) return;
-        _rightHandController.possessPoint.transform.SetPositionAndRotation(
-            _rightHandController.control.position + new Vector3(_wristOffsetXJSON.val, _wristOffsetYJSON.val, _wristOffsetZJSON.val),
-            _rightHandController.control.rotation * Quaternion.Euler(_wristRotateXJSON.val, _wristRotateYJSON.val, _wristRotateZJSON.val)
-        );
-
-        // Refresh
-        // TODO: Check what the controller allows
-        _rightHandController.PossessMoveAndAlignTo(motionControllerRight.GetComponent<Possessor>().autoSnapPoint);
-        _rightHandController.SelectLinkToRigidbody(motionControllerRight.GetComponent<Rigidbody>(), FreeControllerV3.SelectLinkState.PositionAndRotation);
+        _offset = new Vector3(_wristOffsetXJSON.val, _wristOffsetYJSON.val, _wristOffsetZJSON.val);
+        _rotate = Quaternion.Euler(_wristRotateXJSON.val, _wristRotateYJSON.val, _wristRotateZJSON.val);
     }
 
-    // NOTE: This is coming directly from VaM (don't know why this is private)
-    private Transform motionControllerRight
-    {
-        get
-        {
-            var s = SuperController.singleton;
-            if (s.isOVR)
-            {
-                return s.touchObjectRight;
-            }
-            if (s.isOpenVR)
-            {
-                return s.viveObjectRight;
-            }
-            return null;
-        }
-    }
+    #region Update
 
     public void Update()
     {
@@ -143,12 +168,11 @@ public class Wrist : MVRScript
                 _rightHandControllerDebugger.transform.Rotate(Vector3.right, 90);
             }
 
-            if (_rightWristDebugger != null && _rightHandController?.possessPoint != null)
+            if (_rightWristDebugger != null)
             {
-                var possessPoint = _rightHandController.possessPoint;
                 _rightWristDebugger.transform.SetPositionAndRotation(
-                    possessPoint.position,
-                    possessPoint.rotation
+                    _rightHandTarget.transform.position,
+                    _rightHandTarget.transform.rotation
                 );
                 _rightWristDebugger.transform.Rotate(Vector3.right, 90);
             }
@@ -156,16 +180,36 @@ public class Wrist : MVRScript
         catch (Exception exc)
         {
             SuperController.LogError("Wrist.Update: " + exc);
+            OnDisable();
         }
     }
+
+    public void FixedUpdate()
+    {
+        if (!_ready) return;
+        try
+        {
+            _rightHandTarget.transform.SetPositionAndRotation(
+                _rightAutoSnapPoint.position + _offset,
+                _rightAutoSnapPoint.rotation * _rotate
+            );
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError("Wrist.FixedUpdate: " + exc);
+            OnDisable();
+        }
+    }
+
+    #endregion
+
+    #region Lifecycle
 
     public void OnEnable()
     {
         try
         {
-            _rightHandDebugger = CreateDebugger(Color.red);
-            _rightWristDebugger = CreateDebugger(Color.green);
-            _rightHandControllerDebugger = CreateDebugger(Color.blue);
+            CreateDebuggers();
             _ready = true;
         }
         catch (Exception exc)
@@ -174,26 +218,13 @@ public class Wrist : MVRScript
         }
     }
 
-    private GameObject CreateDebugger(Color color)
-    {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        go.transform.localScale = new Vector3(0.05f, 0.05f, 0.05f);
-        go.GetComponent<Renderer>().material.color = color;
-        foreach (var c in go.GetComponentsInChildren<Collider>())
-            Destroy(c);
-        SuperController.LogMessage(string.Join(", ", go.GetComponentsInChildren<MonoBehaviour>().Select(c => c.name + ":" + c.ToString()).ToArray()));
-        return go;
-    }
-
     public void OnDisable()
     {
         try
         {
-            Destroy(_rightHandDebugger);
-            Destroy(_rightWristDebugger);
-            Destroy(_rightHandControllerDebugger);
-            Destroy(_rightHandController.possessPoint);
-            _rightHandController.possessPoint = null;
+            _ready = false;
+            DestroyDebuggers();
+            Destroy(_rightHandTarget);
         }
         catch (Exception exc)
         {
@@ -205,4 +236,35 @@ public class Wrist : MVRScript
     {
         OnDisable();
     }
+
+    #endregion
+
+    #region Debuggers
+
+    private void CreateDebuggers()
+    {
+        DestroyDebuggers();
+        _rightHandDebugger = CreateDebugger(Color.red);
+        _rightWristDebugger = CreateDebugger(Color.green);
+        _rightHandControllerDebugger = CreateDebugger(Color.blue);
+    }
+
+    private GameObject CreateDebugger(Color color)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.transform.localScale = new Vector3(0.03f, 0.03f, 0.05f);
+        go.GetComponent<Renderer>().material.color = color;
+        foreach (var c in go.GetComponentsInChildren<Collider>())
+            Destroy(c);
+        return go;
+    }
+
+    private void DestroyDebuggers()
+    {
+        Destroy(_rightHandDebugger);
+        Destroy(_rightWristDebugger);
+        Destroy(_rightHandControllerDebugger);
+    }
+
+    #endregion
 }

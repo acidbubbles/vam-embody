@@ -4,7 +4,6 @@
 
   <PropertyGroup>
     <TargetFramework>net45</TargetFramework>
-    <RootNamespace>VamTimeline</RootNamespace>
     <OutputType>Library</OutputType>
     <LangVersion>6</LangVersion>
   </PropertyGroup>
