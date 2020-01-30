@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -184,13 +185,46 @@ public class Wrist : MVRScript
         }
     }
 
+    private struct WeightedVector3
+    {
+        public Vector3 vector;
+        public float weight;
+    }
+
     public void FixedUpdate()
     {
         if (!_ready) return;
         try
         {
+            var snapOffset = _rightAutoSnapPoint.position - SuperController.singleton.rightHand.position;
+            var originalPosition = SuperController.singleton.rightHand.position;
+
+            var snapDistance = 0.3f;
+            // TODO: Create a fixed and reused array instead (predetermined controllers)
+            var forces = new List<WeightedVector3>();
+            foreach (var fc in containingAtom.freeControllers)
+            {
+                if (!fc.interactableInPlayMode) continue;
+                if (fc == _rightHandController) continue;
+                var distance = Vector3.Distance(originalPosition, fc.transform.position);
+                if (distance < snapDistance)
+                {
+                    forces.Add(new WeightedVector3
+                    {
+                        weight = 1f - (distance / snapDistance),
+                        vector = fc.transform.position - originalPosition
+                    });
+                }
+            }
+            var weightRatio = forces.Sum(force => force.weight);
+            weightRatio = forces.Count <= 1 ? 1f : (1f / weightRatio) * forces.Max(force => force.weight);
+            var resultForce = forces.Aggregate(Vector3.zero, (Vector3 result, WeightedVector3 force) => result + Vector3.Lerp(Vector3.zero, force.vector, force.weight * weightRatio));
+            SuperController.singleton.ClearMessages();
+            SuperController.LogMessage(string.Join(", ", forces.Select(f => $"{f.vector} x {f.weight}")));
+            SuperController.LogMessage($"Magnets: {forces.Count}, Weight: {weightRatio}, result: {resultForce}");
+
             _rightHandTarget.transform.SetPositionAndRotation(
-                _rightAutoSnapPoint.position + _offset,
+                originalPosition + snapOffset + _offset + resultForce,
                 _rightAutoSnapPoint.rotation * _rotate
             );
         }
@@ -209,7 +243,6 @@ public class Wrist : MVRScript
     {
         try
         {
-            CreateDebuggers();
             _ready = true;
         }
         catch (Exception exc)
