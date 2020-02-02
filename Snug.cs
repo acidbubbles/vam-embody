@@ -5,12 +5,12 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Wrist
+/// Snug
 /// By Acidbubbles
 /// Better controller alignement when possessing
 /// Source: https://github.com/acidbubbles/vam-wrist
 /// </summary>
-public class Wrist : MVRScript
+public class Snug : MVRScript
 {
     private readonly List<GameObject> _debuggers = new List<GameObject>();
     private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
@@ -35,7 +35,7 @@ public class Wrist : MVRScript
         {
             if (containingAtom.type != "Person")
             {
-                SuperController.LogError("Wrist can only be applied on Person atoms.");
+                SuperController.LogError("Snug can only be applied on Person atoms.");
                 return;
             }
 
@@ -47,7 +47,7 @@ public class Wrist : MVRScript
                 touchObjectRight = s.viveObjectRight;
             else
             {
-                SuperController.LogError("Wrist can only be applied in VR");
+                SuperController.LogError("Snug can only be applied in VR");
                 return;
             }
             _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
@@ -65,7 +65,7 @@ public class Wrist : MVRScript
                 if (_rightHandController.possessed)
                 {
                     _possessRightHandJSON.valNoCallback = false;
-                    SuperController.LogError("Wrist: Cannot activate while possessing");
+                    SuperController.LogError("Snug: Cannot activate while possessing");
                     return;
                 }
                 if (val)
@@ -153,29 +153,29 @@ public class Wrist : MVRScript
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
-            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetXJSON = new JSONStorableFloat("Right Snug Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetXJSON);
             CreateSlider(_wristOffsetXJSON, true);
-            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetYJSON = new JSONStorableFloat("Right Snug Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetYJSON);
             CreateSlider(_wristOffsetYJSON, true);
-            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetZJSON = new JSONStorableFloat("Right Snug Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetZJSON);
             CreateSlider(_wristOffsetZJSON, true);
 
-            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateXJSON = new JSONStorableFloat("Right Snug Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateXJSON);
             CreateSlider(_wristRotateXJSON, true);
-            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateYJSON = new JSONStorableFloat("Right Snug Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateYJSON);
             CreateSlider(_wristRotateYJSON, true);
-            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateZJSON = new JSONStorableFloat("Right Snug Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true);
             RegisterFloat(_wristRotateZJSON);
             CreateSlider(_wristRotateZJSON, true);
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.Init: " + exc);
+            SuperController.LogError("Snug.Init: " + exc);
         }
 
         StartCoroutine(DeferredInit());
@@ -191,7 +191,7 @@ public class Wrist : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.DeferredInit: " + exc);
+            SuperController.LogError("Snug.DeferredInit: " + exc);
         }
     }
 
@@ -211,7 +211,7 @@ public class Wrist : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.Update: " + exc);
+            SuperController.LogError("Snug.Update: " + exc);
             OnDisable();
         }
     }
@@ -277,7 +277,7 @@ public class Wrist : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.FixedUpdate: " + exc);
+            SuperController.LogError("Snug.FixedUpdate: " + exc);
             OnDisable();
         }
     }
@@ -294,7 +294,7 @@ public class Wrist : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.OnEnable: " + exc);
+            SuperController.LogError("Snug.OnEnable: " + exc);
         }
     }
 
@@ -308,7 +308,7 @@ public class Wrist : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Wrist.OnDisable: " + exc);
+            SuperController.LogError("Snug.OnDisable: " + exc);
         }
     }
 

@@ -1,4 +1,4 @@
-# Virt-A-Mate Wrist
+# Virt-A-Mate Snug
 
 Better VR controller alignement in possession mode
 
