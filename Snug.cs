@@ -40,17 +40,15 @@ public class Snug : MVRScript
             }
 
             var s = SuperController.singleton;
-            Transform touchObjectRight;
+            Transform touchObjectRight = null;
             if (s.isOVR)
                 touchObjectRight = s.touchObjectRight;
             else if (s.isOpenVR)
                 touchObjectRight = s.viveObjectRight;
             else
-            {
-                SuperController.LogError("Snug can only be applied in VR");
-                return;
-            }
-            _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
+                SuperController.LogError("Snug hands will only work in VR");
+            if (touchObjectRight != null)
+                _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
 
             _rightHandController = containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
             if (_rightHandController == null) throw new NullReferenceException("Could not find the rHandControl controller");
@@ -136,19 +134,19 @@ public class Snug : MVRScript
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
                 Offset = new Vector3(0, 0.01f, -0.05f),
-                Scale = new Vector3(1, 0, 1)
+                Scale = new Vector2(1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
                 Offset = new Vector3(0, 0, 0.08f),
-                Scale = new Vector3(1, 0, 1)
+                Scale = new Vector2(1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
                 Offset = new Vector3(0, -0.05f, 0.1f),
-                Scale = new Vector3(1, 0, 1)
+                Scale = new Vector2(1, 1)
             });
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
@@ -224,7 +222,7 @@ public class Snug : MVRScript
 
     public void FixedUpdate()
     {
-        if (!_ready) return;
+        if (!_ready || _rightAutoSnapPoint == null) return;
         try
         {
             var snapOffset = _rightAutoSnapPoint.position - SuperController.singleton.rightHand.position;
@@ -380,6 +378,7 @@ public class Snug : MVRScript
         CreateDebuggerPrimitive(PrimitiveType.Cube, Color.green, new Vector3(0.005f, 0.200f, 0.005f)).transform.parent = go.transform;
         CreateDebuggerPrimitive(PrimitiveType.Cube, Color.blue, new Vector3(0.005f, 0.005f, 0.200f)).transform.parent = go.transform;
         CreateDebuggerPrimitive(PrimitiveType.Sphere, color, new Vector3(0.03f, 0.03f, 0.03f)).transform.parent = go.transform;
+        DrawDebuggerEllipse(go.AddComponent<LineRenderer>(), color, new Vector2(0.2f, 0.2f));
         return go;
     }
 
@@ -392,6 +391,34 @@ public class Snug : MVRScript
         foreach (var c in go.GetComponentsInChildren<Collider>())
             Destroy(c);
         return go;
+    }
+
+    public void DrawDebuggerEllipse(LineRenderer line, Color color, Vector2 radius, int resolution = 32, float width = 0.01f)
+    {
+        line.useWorldSpace = false;
+        line.material = new Material(Shader.Find("Sprites/Default"))
+        {
+            renderQueue = 4000 // To be visible when in front of a mirror
+        };
+        line.widthMultiplier = width;
+        line.colorGradient = new Gradient
+        {
+            colorKeys = new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }
+        };
+        line.loop = true;
+        line.positionCount = resolution;
+
+        for (int i = 0; i <= resolution; i++)
+        {
+            var angle = i / (float)resolution * 2.0f * Mathf.PI;
+            Quaternion pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
+            Vector3 pointPosition;
+
+            pointPosition = new Vector3(radius.x * Mathf.Cos(angle), radius.y * Mathf.Sin(angle), 0.0f);
+            pointPosition = pointQuaternion * pointPosition;
+
+            line.SetPosition(i, pointPosition);
+        }
     }
 
     private void DestroyDebuggers()
@@ -408,6 +435,6 @@ public class Snug : MVRScript
     {
         public Rigidbody RigidBody { get; set; }
         public Vector3 Offset { get; set; }
-        public Vector3 Scale { get; set; }
+        public Vector2 Scale { get; set; }
     }
 }
