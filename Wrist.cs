@@ -73,10 +73,17 @@ public class Wrist : MVRScript
                 {
                     _rightHandController.PossessMoveAndAlignTo(_rightHandTarget.transform);
                     _rightHandController.SelectLinkToRigidbody(_rightHandTarget.GetComponent<Rigidbody>());
+                    _rightHandController.canGrabPosition = false;
+                    _rightHandController.canGrabRotation = false;
+                    _rightHandController.possessable = false;
                 }
                 else
                 {
                     _rightHandController.RestorePreLinkState();
+                    // TODO: This should return to the previous state
+                    _rightHandController.canGrabPosition = true;
+                    _rightHandController.canGrabRotation = true;
+                    _rightHandController.possessable = true;
                 }
             });
             RegisterBool(_possessRightHandJSON);
