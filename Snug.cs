@@ -353,21 +353,15 @@ public class Snug : MVRScript
 
         foreach (var anchorPoint in _anchorPoints)
         {
-            var anchorPointDebugger = VisualCuesHelper.Ring(Color.yellow);
-            anchorPointDebugger.transform.SetPositionAndRotation(
-                anchorPoint.RigidBody.transform.position,
-                anchorPoint.RigidBody.transform.rotation
-            );
-            anchorPointDebugger.transform.parent = anchorPoint.RigidBody.transform;
-            _debuggers.Add(anchorPointDebugger);
+            var anchorPointDebugger = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.magenta);
+            anchorPointDebugger.Update(Vector3.zero);
+            _debuggers.Add(anchorPointDebugger.gameObject);
+            anchorPoint.VirtualCue = anchorPointDebugger;
 
-            var anchorOffsetDebugger = VisualCuesHelper.Ring(Color.grey);
-            anchorOffsetDebugger.transform.SetPositionAndRotation(
-                anchorPoint.RigidBody.transform.position + (anchorPoint.RigidBody.transform.rotation * anchorPoint.Offset),
-                anchorPoint.RigidBody.transform.rotation
-            );
-            anchorOffsetDebugger.transform.parent = anchorPoint.RigidBody.transform;
-            _debuggers.Add(anchorOffsetDebugger);
+            var anchorOffsetDebugger = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.yellow);
+            anchorOffsetDebugger.Update(anchorPoint.Offset);
+            _debuggers.Add(anchorOffsetDebugger.gameObject);
+            anchorPoint.PhysicalCue = anchorOffsetDebugger;
         }
     }
 
@@ -386,6 +380,56 @@ public class Snug : MVRScript
         public Rigidbody RigidBody { get; set; }
         public Vector3 Offset { get; set; }
         public Vector2 Scale { get; set; }
+        public ControllerAnchorPointVisualCue VirtualCue { get; set; }
+        public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
+    }
+
+    private class ControllerAnchorPointVisualCue : IDisposable
+    {
+        private const float _width = 0.005f;
+        public readonly GameObject gameObject;
+        private readonly Transform _xAxis;
+        private readonly Transform _zAxis;
+        private readonly Transform _frontHandle;
+        private readonly Transform _leftHandle;
+        private readonly Transform _rightHandle;
+        private readonly LineRenderer _ellipse;
+
+        public ControllerAnchorPointVisualCue(Transform parent, Color color)
+        {
+            var go = new GameObject();
+            _xAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform;
+            _zAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform;
+            _frontHandle = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, color).transform;
+            _leftHandle = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, color).transform;
+            _rightHandle = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, color).transform;
+            _ellipse = VisualCuesHelper.CreateEllipse(go, color, _width);
+            gameObject = go;
+            gameObject.transform.parent = parent;
+            gameObject.transform.localPosition = Vector3.zero;
+            gameObject.transform.localRotation = Quaternion.identity;
+        }
+
+        public void Update(Vector3 offset)
+        {
+            gameObject.transform.localPosition = offset;
+
+            var size = new Vector2(0.35f, 0.25f);
+            _xAxis.localScale = new Vector3(size.x - _width * 2, _width, _width);
+            _zAxis.localScale = new Vector3(_width, _width, size.y - _width * 2);
+            _frontHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _frontHandle.transform.localPosition = Vector3.forward * size.y / 2;
+            _leftHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _leftHandle.transform.localPosition = Vector3.left * size.x / 2;
+            _rightHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _rightHandle.transform.localPosition = Vector3.right * size.x / 2;
+            VisualCuesHelper.DrawEllipse(_ellipse, new Vector2(size.x / 2f, size.y / 2f));
+        }
+
+        public void Dispose()
+        {
+            Destroy(gameObject);
+        }
     }
 
     private static class VisualCuesHelper
@@ -394,38 +438,25 @@ public class Snug : MVRScript
         {
             var go = new GameObject();
             var size = 0.2f; var width = 0.005f;
-            CreatePrimitive(PrimitiveType.Cube, Color.red, new Vector3(size, width, width), Vector3.zero).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, Color.green, new Vector3(width, size, width), Vector3.zero).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, Color.blue, new Vector3(width, width, size), Vector3.zero).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Sphere, color, new Vector3(size / 8f, size / 8f, size / 8f), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform.localScale = new Vector3(size, width, width);
+            CreatePrimitive(go.transform, PrimitiveType.Cube, Color.green).transform.localScale = new Vector3(width, size, width);
+            CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform.localScale = new Vector3(width, width, size);
+            CreatePrimitive(go.transform, PrimitiveType.Sphere, color).transform.localScale = new Vector3(size / 8f, size / 8f, size / 8f);
             return go;
         }
 
-        public static GameObject Ring(Color color)
-        {
-            var go = new GameObject();
-            var size = new Vector2(0.35f, 0.25f); var width = 0.005f;
-            CreatePrimitive(PrimitiveType.Cube, Color.red, new Vector3(size.x - width * 2, width, width), Vector3.zero).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, Color.blue, new Vector3(width, width, size.y - width * 2), Vector3.zero).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.forward * size.y / 2).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.left * size.x / 2).transform.parent = go.transform;
-            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.right * size.x / 2).transform.parent = go.transform;
-            CreateEllipse(go.AddComponent<LineRenderer>(), color, new Vector2(size.x / 2f, size.y / 2f), width);
-            return go;
-        }
-
-        private static GameObject CreatePrimitive(PrimitiveType type, Color color, Vector3 localScale, Vector3 offset)
+        public static GameObject CreatePrimitive(Transform parent, PrimitiveType type, Color color)
         {
             var go = GameObject.CreatePrimitive(type);
-            go.transform.localScale = localScale;
-            go.transform.Translate(offset);
+            go.transform.parent = parent;
             go.GetComponent<Renderer>().material = new Material(Shader.Find("Sprites/Default")) { color = color, renderQueue = 4000 };
             foreach (var c in go.GetComponentsInChildren<Collider>()) Destroy(c);
             return go;
         }
 
-        private static void CreateEllipse(LineRenderer line, Color color, Vector2 radius, float width, int resolution = 32)
+        public static LineRenderer CreateEllipse(GameObject go, Color color, float width, int resolution = 32)
         {
+            var line = go.AddComponent<LineRenderer>();
             line.useWorldSpace = false;
             line.material = new Material(Shader.Find("Sprites/Default")) { renderQueue = 4000 };
             line.widthMultiplier = width;
@@ -434,10 +465,14 @@ public class Snug : MVRScript
                 colorKeys = new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }
             };
             line.positionCount = resolution;
+            return line;
+        }
 
-            for (int i = 0; i <= resolution; i++)
+        public static void DrawEllipse(LineRenderer line, Vector2 radius)
+        {
+            for (int i = 0; i <= line.positionCount; i++)
             {
-                var angle = i / (float)resolution * 2.0f * Mathf.PI;
+                var angle = i / (float)line.positionCount * 2.0f * Mathf.PI;
                 Quaternion pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
                 Vector3 pointPosition;
 
@@ -446,7 +481,6 @@ public class Snug : MVRScript
 
                 line.SetPosition(i, pointPosition);
             }
-
             line.loop = true;
         }
     }
