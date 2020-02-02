@@ -114,7 +114,7 @@ public class Snug : MVRScript
 
                         var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
                         if (rigidbody == null) return;
-                        var debugger = CreateDebugger(Color.white);
+                        var debugger = VisualCuesHelper.Cross(Color.white);
                         debugger.transform.SetPositionAndRotation(
                             rigidbody.transform.position,
                             rigidbody.transform.rotation
@@ -323,7 +323,7 @@ public class Snug : MVRScript
     {
         DestroyDebuggers();
 
-        var rightHandDbg = CreateDebugger(Color.red);
+        var rightHandDbg = VisualCuesHelper.Cross(Color.red);
         var rightHand = SuperController.singleton.rightHand;
         rightHandDbg.transform.SetPositionAndRotation(
             rightHand.position,
@@ -334,7 +334,7 @@ public class Snug : MVRScript
 
         if (_rightHandController != null)
         {
-            var rightHandControllerDbg = CreateDebugger(Color.blue);
+            var rightHandControllerDbg = VisualCuesHelper.Cross(Color.blue);
             rightHandControllerDbg.transform.SetPositionAndRotation(
                 _rightHandController.control.position,
                 _rightHandController.control.rotation
@@ -343,7 +343,7 @@ public class Snug : MVRScript
             _debuggers.Add(rightHandControllerDbg);
         }
 
-        var rightWristDbg = CreateDebugger(Color.green);
+        var rightWristDbg = VisualCuesHelper.Cross(Color.green);
         rightWristDbg.transform.SetPositionAndRotation(
             _rightHandTarget.transform.position,
             _rightHandTarget.transform.rotation
@@ -353,7 +353,7 @@ public class Snug : MVRScript
 
         foreach (var anchorPoint in _anchorPoints)
         {
-            var anchorPointDebugger = CreateDebugger(Color.yellow);
+            var anchorPointDebugger = VisualCuesHelper.Ring(Color.yellow);
             anchorPointDebugger.transform.SetPositionAndRotation(
                 anchorPoint.RigidBody.transform.position,
                 anchorPoint.RigidBody.transform.rotation
@@ -361,63 +361,13 @@ public class Snug : MVRScript
             anchorPointDebugger.transform.parent = anchorPoint.RigidBody.transform;
             _debuggers.Add(anchorPointDebugger);
 
-            var anchorOffsetDebugger = CreateDebugger(Color.grey);
+            var anchorOffsetDebugger = VisualCuesHelper.Ring(Color.grey);
             anchorOffsetDebugger.transform.SetPositionAndRotation(
                 anchorPoint.RigidBody.transform.position + (anchorPoint.RigidBody.transform.rotation * anchorPoint.Offset),
                 anchorPoint.RigidBody.transform.rotation
             );
             anchorOffsetDebugger.transform.parent = anchorPoint.RigidBody.transform;
             _debuggers.Add(anchorOffsetDebugger);
-        }
-    }
-
-    private GameObject CreateDebugger(Color color)
-    {
-        var go = new GameObject($"{name}.debugger.{Guid.NewGuid()}");
-        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.red, new Vector3(0.200f, 0.005f, 0.005f)).transform.parent = go.transform;
-        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.green, new Vector3(0.005f, 0.200f, 0.005f)).transform.parent = go.transform;
-        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.blue, new Vector3(0.005f, 0.005f, 0.200f)).transform.parent = go.transform;
-        CreateDebuggerPrimitive(PrimitiveType.Sphere, color, new Vector3(0.03f, 0.03f, 0.03f)).transform.parent = go.transform;
-        DrawDebuggerEllipse(go.AddComponent<LineRenderer>(), color, new Vector2(0.2f, 0.2f));
-        return go;
-    }
-
-    private static GameObject CreateDebuggerPrimitive(PrimitiveType type, Color color, Vector3 localScale)
-    {
-        var go = GameObject.CreatePrimitive(type);
-        go.transform.localScale = localScale;
-        var material = go.GetComponent<Renderer>().material;
-        material.color = color;
-        foreach (var c in go.GetComponentsInChildren<Collider>())
-            Destroy(c);
-        return go;
-    }
-
-    public void DrawDebuggerEllipse(LineRenderer line, Color color, Vector2 radius, int resolution = 32, float width = 0.01f)
-    {
-        line.useWorldSpace = false;
-        line.material = new Material(Shader.Find("Sprites/Default"))
-        {
-            renderQueue = 4000 // To be visible when in front of a mirror
-        };
-        line.widthMultiplier = width;
-        line.colorGradient = new Gradient
-        {
-            colorKeys = new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }
-        };
-        line.loop = true;
-        line.positionCount = resolution;
-
-        for (int i = 0; i <= resolution; i++)
-        {
-            var angle = i / (float)resolution * 2.0f * Mathf.PI;
-            Quaternion pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
-            Vector3 pointPosition;
-
-            pointPosition = new Vector3(radius.x * Mathf.Cos(angle), radius.y * Mathf.Sin(angle), 0.0f);
-            pointPosition = pointQuaternion * pointPosition;
-
-            line.SetPosition(i, pointPosition);
         }
     }
 
@@ -436,5 +386,68 @@ public class Snug : MVRScript
         public Rigidbody RigidBody { get; set; }
         public Vector3 Offset { get; set; }
         public Vector2 Scale { get; set; }
+    }
+
+    private static class VisualCuesHelper
+    {
+        public static GameObject Cross(Color color)
+        {
+            var go = new GameObject();
+            var size = 0.2f; var width = 0.005f;
+            CreatePrimitive(PrimitiveType.Cube, Color.red, new Vector3(size, width, width), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, Color.green, new Vector3(width, size, width), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, Color.blue, new Vector3(width, width, size), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Sphere, color, new Vector3(size / 8f, size / 8f, size / 8f), Vector3.zero).transform.parent = go.transform;
+            return go;
+        }
+
+        public static GameObject Ring(Color color)
+        {
+            var go = new GameObject();
+            var size = new Vector2(0.35f, 0.25f); var width = 0.005f;
+            CreatePrimitive(PrimitiveType.Cube, Color.red, new Vector3(size.x - width * 2, width, width), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, Color.blue, new Vector3(width, width, size.y - width * 2), Vector3.zero).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.forward * size.y / 2).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.left * size.x / 2).transform.parent = go.transform;
+            CreatePrimitive(PrimitiveType.Cube, color, new Vector3(width * 2, width * 2, width * 2), Vector3.right * size.x / 2).transform.parent = go.transform;
+            CreateEllipse(go.AddComponent<LineRenderer>(), color, new Vector2(size.x / 2f, size.y / 2f), width);
+            return go;
+        }
+
+        private static GameObject CreatePrimitive(PrimitiveType type, Color color, Vector3 localScale, Vector3 offset)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.transform.localScale = localScale;
+            go.transform.Translate(offset);
+            go.GetComponent<Renderer>().material = new Material(Shader.Find("Sprites/Default")) { color = color, renderQueue = 4000 };
+            foreach (var c in go.GetComponentsInChildren<Collider>()) Destroy(c);
+            return go;
+        }
+
+        private static void CreateEllipse(LineRenderer line, Color color, Vector2 radius, float width, int resolution = 32)
+        {
+            line.useWorldSpace = false;
+            line.material = new Material(Shader.Find("Sprites/Default")) { renderQueue = 4000 };
+            line.widthMultiplier = width;
+            line.colorGradient = new Gradient
+            {
+                colorKeys = new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }
+            };
+            line.positionCount = resolution;
+
+            for (int i = 0; i <= resolution; i++)
+            {
+                var angle = i / (float)resolution * 2.0f * Mathf.PI;
+                Quaternion pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
+                Vector3 pointPosition;
+
+                pointPosition = new Vector3(radius.x * Mathf.Cos(angle), radius.y * Mathf.Sin(angle), 0.0f);
+                pointPosition = pointQuaternion * pointPosition;
+
+                line.SetPosition(i, pointPosition);
+            }
+
+            line.loop = true;
+        }
     }
 }
