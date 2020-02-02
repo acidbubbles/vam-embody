@@ -13,7 +13,7 @@ using UnityEngine;
 public class Wrist : MVRScript
 {
     private readonly List<GameObject> _debuggers = new List<GameObject>();
-    private readonly List<ControllerOffsetPoint> _offsetPoints = new List<ControllerOffsetPoint>();
+    private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
     private GameObject _rightHandTarget;
     private JSONStorableBool _possessRightHandJSON;
     public JSONStorableFloat _wristOffsetXJSON;
@@ -100,19 +100,19 @@ public class Wrist : MVRScript
             };
             CreateScrollablePopup(rigidBodiesJSON);
 
-            _offsetPoints.Add(new ControllerOffsetPoint
+            _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
                 Offset = new Vector3(0, 0, 0),
                 Scale = new Vector3(1, 0, 1)
             });
-            _offsetPoints.Add(new ControllerOffsetPoint
+            _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
                 Offset = new Vector3(0, 0, 0),
                 Scale = new Vector3(1, 0, 1)
             });
-            _offsetPoints.Add(new ControllerOffsetPoint
+            _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
                 Offset = new Vector3(0, 0, 0),
@@ -217,18 +217,18 @@ public class Wrist : MVRScript
             var snapOffset = _rightAutoSnapPoint.position - SuperController.singleton.rightHand.position;
             var position = SuperController.singleton.rightHand.position;
 
-            ControllerOffsetPoint lower = null;
-            ControllerOffsetPoint upper = null;
-            foreach (var offsetPoint in _offsetPoints)
+            ControllerAnchorPoint lower = null;
+            ControllerAnchorPoint upper = null;
+            foreach (var anchorPoint in _anchorPoints)
             {
-                var offsetPointY = offsetPoint.RigidBody.transform.position.y;
-                if (position.y > offsetPointY && (lower == null || offsetPointY > lower.RigidBody.transform.position.y))
+                var anchorPointY = anchorPoint.RigidBody.transform.position.y;
+                if (position.y > anchorPointY && (lower == null || anchorPointY > lower.RigidBody.transform.position.y))
                 {
-                    lower = offsetPoint;
+                    lower = anchorPoint;
                 }
-                else if (position.y < offsetPointY && (upper == null || offsetPointY < upper.RigidBody.transform.position.y))
+                else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.RigidBody.transform.position.y))
                 {
-                    upper = offsetPoint;
+                    upper = anchorPoint;
                 }
             }
 
@@ -318,15 +318,15 @@ public class Wrist : MVRScript
         rightWristDbg.transform.parent = _rightHandTarget.transform;
         _debuggers.Add(rightWristDbg);
 
-        foreach (var offsetPoint in _offsetPoints)
+        foreach (var anchorPoint in _anchorPoints)
         {
-            var offsetPointDebugger = CreateDebugger(Color.yellow);
-            offsetPointDebugger.transform.SetPositionAndRotation(
-                offsetPoint.RigidBody.transform.position,
-                offsetPoint.RigidBody.transform.rotation
+            var anchorPointDebugger = CreateDebugger(Color.yellow);
+            anchorPointDebugger.transform.SetPositionAndRotation(
+                anchorPoint.RigidBody.transform.position,
+                anchorPoint.RigidBody.transform.rotation
             );
-            offsetPointDebugger.transform.parent = offsetPoint.RigidBody.transform;
-            _debuggers.Add(offsetPointDebugger);
+            anchorPointDebugger.transform.parent = anchorPoint.RigidBody.transform;
+            _debuggers.Add(anchorPointDebugger);
         }
     }
 
@@ -359,7 +359,7 @@ public class Wrist : MVRScript
 
     #endregion
 
-    private class ControllerOffsetPoint
+    private class ControllerAnchorPoint
     {
         public Rigidbody RigidBody { get; set; }
         public Vector3 Offset { get; set; }
