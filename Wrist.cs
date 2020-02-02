@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 /// <summary>
 /// Wrist
@@ -102,11 +101,36 @@ public class Wrist : MVRScript
             });
             CreateToggle(_debugJSON);
 
-            var rigidBodiesJSON = new JSONStorableStringChooser("Target", containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target", (string val) => DisplayRigidBody(val))
             {
-                isStorable = false
-            };
-            CreateScrollablePopup(rigidBodiesJSON);
+                GameObject rbDebugger = null;
+                var rigidBodiesJSON = new JSONStorableStringChooser(
+                    "Target",
+                    containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target",
+                    (string val) =>
+                    {
+                        if (rbDebugger != null)
+                        {
+                            Destroy(rbDebugger);
+                            _debuggers.Remove(rbDebugger);
+                        }
+
+                        var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
+                        if (rigidbody == null) return;
+                        var debugger = CreateDebugger(Color.white);
+                        debugger.transform.SetPositionAndRotation(
+                            rigidbody.transform.position,
+                            rigidbody.transform.rotation
+                        );
+                        debugger.transform.parent = rigidbody.transform;
+                        _debuggers.Add(debugger);
+                        rbDebugger = debugger;
+                    }
+                )
+                {
+                    isStorable = false
+                };
+                CreateScrollablePopup(rigidBodiesJSON);
+            }
 
             _anchorPoints.Add(new ControllerAnchorPoint
             {
@@ -126,6 +150,8 @@ public class Wrist : MVRScript
                 Offset = new Vector3(0, -0.05f, 0.1f),
                 Scale = new Vector3(1, 0, 1)
             });
+
+            // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
             _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetXJSON);
@@ -153,27 +179,6 @@ public class Wrist : MVRScript
         }
 
         StartCoroutine(DeferredInit());
-    }
-
-    private GameObject _rbDebugger;
-    private void DisplayRigidBody(string val)
-    {
-        if (_rbDebugger != null)
-        {
-            Destroy(_rbDebugger);
-            _debuggers.Remove(_rbDebugger);
-        }
-
-        var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
-        if (rigidbody == null) return;
-        var debugger = CreateDebugger(Color.white);
-        debugger.transform.SetPositionAndRotation(
-            rigidbody.transform.position,
-            rigidbody.transform.rotation
-        );
-        debugger.transform.parent = rigidbody.transform;
-        _debuggers.Add(debugger);
-        _rbDebugger = debugger;
     }
 
     private IEnumerator DeferredInit()
