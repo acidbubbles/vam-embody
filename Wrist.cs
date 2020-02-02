@@ -12,6 +12,8 @@ using UnityEngine;
 /// </summary>
 public class Wrist : MVRScript
 {
+    private readonly List<GameObject> _debuggers = new List<GameObject>();
+    private readonly List<ControllerOffsetPoint> _offsetPoints = new List<ControllerOffsetPoint>();
     private GameObject _rightHandTarget;
     private JSONStorableBool _possessRightHandJSON;
     public JSONStorableFloat _wristOffsetXJSON;
@@ -20,17 +22,12 @@ public class Wrist : MVRScript
     public JSONStorableFloat _wristRotateXJSON;
     private JSONStorableFloat _wristRotateYJSON;
     private JSONStorableFloat _wristRotateZJSON;
-    private GameObject _rightHandDebugger;
-    private GameObject _rightWristDebugger;
-    private GameObject _rightHandControllerDebugger;
     private FreeControllerV3 _rightHandController;
     private Transform _rightAutoSnapPoint;
     private bool _ready;
     private Vector3 _palmToWristOffset;
     private Quaternion _rotateOffset;
     private JSONStorableBool _debugJSON;
-
-    private List<ControllerOffsetPoint> _offsetPoints;
 
     public override void Init()
     {
@@ -97,25 +94,30 @@ public class Wrist : MVRScript
             });
             CreateToggle(_debugJSON);
 
-            var rigidBodiesJSON = new JSONStorableStringChooser("Target", containingAtom.rigidbodies.Select(rb => rb.name).ToList(), "", "Target")
+            var rigidBodiesJSON = new JSONStorableStringChooser("Target", containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target", (string val) => DisplayRigidBody(val))
             {
                 isStorable = false
             };
             CreateScrollablePopup(rigidBodiesJSON);
 
-            _offsetPoints = new List<ControllerOffsetPoint>
+            _offsetPoints.Add(new ControllerOffsetPoint
             {
-                new ControllerOffsetPoint
-                {
-                    RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "lNipple"),
-                    Weight = 0.8f
-                },
-                new ControllerOffsetPoint
-                {
-                    RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "rNipple"),
-                    Weight = 0.8f
-                }
-            };
+                RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
+                Offset = new Vector3(0, 0, 0),
+                Scale = new Vector3(1, 0, 1)
+            });
+            _offsetPoints.Add(new ControllerOffsetPoint
+            {
+                RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
+                Offset = new Vector3(0, 0, 0),
+                Scale = new Vector3(1, 0, 1)
+            });
+            _offsetPoints.Add(new ControllerOffsetPoint
+            {
+                RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
+                Offset = new Vector3(0, 0, 0),
+                Scale = new Vector3(1, 0, 1)
+            });
 
             _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
             RegisterFloat(_wristOffsetXJSON);
@@ -143,6 +145,27 @@ public class Wrist : MVRScript
         }
 
         StartCoroutine(DeferredInit());
+    }
+
+    private GameObject _rbDebugger;
+    private void DisplayRigidBody(string val)
+    {
+        if (_rbDebugger != null)
+        {
+            Destroy(_rbDebugger);
+            _debuggers.Remove(_rbDebugger);
+        }
+
+        var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
+        if (rigidbody == null) return;
+        var debugger = CreateDebugger(Color.white);
+        debugger.transform.SetPositionAndRotation(
+            rigidbody.transform.position,
+            rigidbody.transform.rotation
+        );
+        debugger.transform.parent = rigidbody.transform;
+        _debuggers.Add(debugger);
+        _rbDebugger = debugger;
     }
 
     private IEnumerator DeferredInit()
@@ -194,32 +217,23 @@ public class Wrist : MVRScript
             var snapOffset = _rightAutoSnapPoint.position - SuperController.singleton.rightHand.position;
             var position = SuperController.singleton.rightHand.position;
 
-            var snapDistance = 0.3f;
-            var closePoints = new List<WeightedVector3>();
+            ControllerOffsetPoint lower = null;
+            ControllerOffsetPoint upper = null;
             foreach (var offsetPoint in _offsetPoints)
             {
-                var distance = Vector3.Distance(position, offsetPoint.RigidBody.transform.position);
-                if (distance > snapDistance) continue;
-                closePoints.Add(new WeightedVector3
+                var offsetPointY = offsetPoint.RigidBody.transform.position.y;
+                if (position.y > offsetPointY && (lower == null || offsetPointY > lower.RigidBody.transform.position.y))
                 {
-                    weight = (1f - (distance / snapDistance)) * offsetPoint.Weight,
-                    vector = offsetPoint.RigidBody.transform.position
-                });
+                    lower = offsetPoint;
+                }
+                else if (position.y < offsetPointY && (upper == null || offsetPointY < upper.RigidBody.transform.position.y))
+                {
+                    upper = offsetPoint;
+                }
             }
 
             SuperController.singleton.ClearMessages();
-            if (closePoints.Count > 0)
-            {
-                foreach (var v in closePoints)
-                {
-                    SuperController.LogMessage($"  - From {position} to {v.vector} weight {v.weight}");
-                    position += (v.vector - position) * v.weight;
-                }
-            }
-            else
-            {
-                SuperController.LogMessage("No close points");
-            }
+            SuperController.LogMessage($"Between {lower?.RigidBody.name ?? "(none)"} and {upper?.RigidBody.name ?? "(none)"}");
 
             _rightHandTarget.transform.SetPositionAndRotation(
                 position + snapOffset + _palmToWristOffset,
@@ -276,46 +290,59 @@ public class Wrist : MVRScript
     {
         DestroyDebuggers();
 
-        _rightHandDebugger = CreateDebugger(Color.red);
+        var rightHandDbg = CreateDebugger(Color.red);
         var rightHand = SuperController.singleton.rightHand;
-        _rightHandDebugger.transform.SetPositionAndRotation(
+        rightHandDbg.transform.SetPositionAndRotation(
             rightHand.position,
             SuperController.singleton.rightHand.rotation
         );
-        _rightHandDebugger.transform.Rotate(Vector3.right, 90);
-        _rightHandDebugger.transform.parent = rightHand;
+        rightHandDbg.transform.parent = rightHand;
+        _debuggers.Add(rightHandDbg);
 
         if (_rightHandController != null)
         {
-            _rightHandControllerDebugger = CreateDebugger(Color.blue);
-            _rightHandControllerDebugger.transform.SetPositionAndRotation(
+            var rightHandControllerDbg = CreateDebugger(Color.blue);
+            rightHandControllerDbg.transform.SetPositionAndRotation(
                 _rightHandController.control.position,
                 _rightHandController.control.rotation
             );
-            _rightHandControllerDebugger.transform.Rotate(Vector3.right, 90);
-            _rightHandControllerDebugger.transform.parent = _rightHandController.control;
+            rightHandControllerDbg.transform.parent = _rightHandController.control;
+            _debuggers.Add(rightHandControllerDbg);
         }
 
-        _rightWristDebugger = CreateDebugger(Color.green);
-        _rightWristDebugger.transform.SetPositionAndRotation(
+        var rightWristDbg = CreateDebugger(Color.green);
+        rightWristDbg.transform.SetPositionAndRotation(
             _rightHandTarget.transform.position,
             _rightHandTarget.transform.rotation
         );
-        _rightWristDebugger.transform.Rotate(Vector3.right, 90);
-        _rightWristDebugger.transform.parent = _rightHandTarget.transform;
+        rightWristDbg.transform.parent = _rightHandTarget.transform;
+        _debuggers.Add(rightWristDbg);
 
         foreach (var offsetPoint in _offsetPoints)
         {
-            offsetPoint.Debugger = CreateDebugger(Color.magenta);
-            offsetPoint.Debugger.transform.SetPositionAndRotation(offsetPoint.RigidBody.transform.position, offsetPoint.RigidBody.transform.rotation);
-            offsetPoint.Debugger.transform.parent = offsetPoint.RigidBody.transform;
+            var offsetPointDebugger = CreateDebugger(Color.yellow);
+            offsetPointDebugger.transform.SetPositionAndRotation(
+                offsetPoint.RigidBody.transform.position,
+                offsetPoint.RigidBody.transform.rotation
+            );
+            offsetPointDebugger.transform.parent = offsetPoint.RigidBody.transform;
+            _debuggers.Add(offsetPointDebugger);
         }
     }
 
     private GameObject CreateDebugger(Color color)
     {
+        var go = new GameObject($"{name}.debugger.{Guid.NewGuid()}");
+        CreateDebuggerLine(color, new Vector3(0.01f, 0.01f, 0.15f)).transform.parent = go.transform;
+        CreateDebuggerLine(color, new Vector3(0.01f, 0.15f, 0.01f)).transform.parent = go.transform;
+        CreateDebuggerLine(color, new Vector3(0.15f, 0.01f, 0.01f)).transform.parent = go.transform;
+        return go;
+    }
+
+    private static GameObject CreateDebuggerLine(Color color, Vector3 localScale)
+    {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        go.transform.localScale = new Vector3(0.03f, 0.03f, 0.05f);
+        go.transform.localScale = localScale;
         go.GetComponent<Renderer>().material.color = color;
         foreach (var c in go.GetComponentsInChildren<Collider>())
             Destroy(c);
@@ -324,13 +351,9 @@ public class Wrist : MVRScript
 
     private void DestroyDebuggers()
     {
-        Destroy(_rightHandDebugger);
-        Destroy(_rightWristDebugger);
-        Destroy(_rightHandControllerDebugger);
-        foreach (var offsetPoint in _offsetPoints)
+        foreach (var debugger in _debuggers)
         {
-            Destroy(offsetPoint.Debugger);
-            offsetPoint.Debugger = null;
+            Destroy(debugger);
         }
     }
 
@@ -339,7 +362,7 @@ public class Wrist : MVRScript
     private class ControllerOffsetPoint
     {
         public Rigidbody RigidBody { get; set; }
-        public float Weight { get; internal set; }
-        public GameObject Debugger { get; set; }
+        public Vector3 Offset { get; set; }
+        public Vector3 Scale { get; set; }
     }
 }
