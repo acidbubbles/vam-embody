@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Wrist
@@ -103,19 +104,19 @@ public class Wrist : MVRScript
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
-                Offset = new Vector3(0, 0, 0),
+                Offset = new Vector3(0, 0.01f, -0.05f),
                 Scale = new Vector3(1, 0, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
-                Offset = new Vector3(0, 0, 0),
+                Offset = new Vector3(0, 0, 0.08f),
                 Scale = new Vector3(1, 0, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
-                Offset = new Vector3(0, 0, 0),
+                Offset = new Vector3(0, -0.05f, 0.1f),
                 Scale = new Vector3(1, 0, 1)
             });
 
@@ -232,11 +233,33 @@ public class Wrist : MVRScript
                 }
             }
 
+            if (lower == null || upper == null)
+            {
+                // TODO: Add fake points with zero scale/offset
+                // TODO: Add a lower effect based on distance
+                SuperController.singleton.ClearMessages();
+                SuperController.LogMessage($"Between {lower?.RigidBody.name ?? "(none)"} and {upper?.RigidBody.name ?? "(none)"}");
+                _rightHandTarget.transform.SetPositionAndRotation(
+                    position + snapOffset + _palmToWristOffset,
+                    _rightAutoSnapPoint.rotation * _rotateOffset
+                );
+                return;
+            }
+
+            var yUpperDelta = upper.RigidBody.transform.position.y - position.y;
+            var yLowerDelta = position.y - lower.RigidBody.transform.position.y;
+            var totalDelta = yLowerDelta + yUpperDelta;
+            var upperWeight = yLowerDelta / totalDelta;
+            var lowerWeight = 1f - upperWeight;
+            var anchorOffset = (upper.Offset * upperWeight) + (lower.Offset * lowerWeight);
+            var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
+
             SuperController.singleton.ClearMessages();
-            SuperController.LogMessage($"Between {lower?.RigidBody.name ?? "(none)"} and {upper?.RigidBody.name ?? "(none)"}");
+            SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight})");
+            SuperController.LogMessage($"Offset {lower.Offset} and {upper.Offset} = {anchorOffset}");
 
             _rightHandTarget.transform.SetPositionAndRotation(
-                position + snapOffset + _palmToWristOffset,
+                position + snapOffset + _palmToWristOffset + (anchorRotation * anchorOffset),
                 _rightAutoSnapPoint.rotation * _rotateOffset
             );
         }
@@ -327,23 +350,33 @@ public class Wrist : MVRScript
             );
             anchorPointDebugger.transform.parent = anchorPoint.RigidBody.transform;
             _debuggers.Add(anchorPointDebugger);
+
+            var anchorOffsetDebugger = CreateDebugger(Color.grey);
+            anchorOffsetDebugger.transform.SetPositionAndRotation(
+                anchorPoint.RigidBody.transform.position + (anchorPoint.RigidBody.transform.rotation * anchorPoint.Offset),
+                anchorPoint.RigidBody.transform.rotation
+            );
+            anchorOffsetDebugger.transform.parent = anchorPoint.RigidBody.transform;
+            _debuggers.Add(anchorOffsetDebugger);
         }
     }
 
     private GameObject CreateDebugger(Color color)
     {
         var go = new GameObject($"{name}.debugger.{Guid.NewGuid()}");
-        CreateDebuggerLine(color, new Vector3(0.01f, 0.01f, 0.15f)).transform.parent = go.transform;
-        CreateDebuggerLine(color, new Vector3(0.01f, 0.15f, 0.01f)).transform.parent = go.transform;
-        CreateDebuggerLine(color, new Vector3(0.15f, 0.01f, 0.01f)).transform.parent = go.transform;
+        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.red, new Vector3(0.200f, 0.005f, 0.005f)).transform.parent = go.transform;
+        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.green, new Vector3(0.005f, 0.200f, 0.005f)).transform.parent = go.transform;
+        CreateDebuggerPrimitive(PrimitiveType.Cube, Color.blue, new Vector3(0.005f, 0.005f, 0.200f)).transform.parent = go.transform;
+        CreateDebuggerPrimitive(PrimitiveType.Sphere, color, new Vector3(0.03f, 0.03f, 0.03f)).transform.parent = go.transform;
         return go;
     }
 
-    private static GameObject CreateDebuggerLine(Color color, Vector3 localScale)
+    private static GameObject CreateDebuggerPrimitive(PrimitiveType type, Color color, Vector3 localScale)
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var go = GameObject.CreatePrimitive(type);
         go.transform.localScale = localScale;
-        go.GetComponent<Renderer>().material.color = color;
+        var material = go.GetComponent<Renderer>().material;
+        material.color = color;
         foreach (var c in go.GetComponentsInChildren<Collider>())
             Destroy(c);
         return go;
