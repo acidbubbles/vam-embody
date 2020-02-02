@@ -147,6 +147,7 @@ public class Snug : MVRScript
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
                 Offset = new Vector3(0, 0.01f, -0.05f),
                 Scale = new Vector2(1, 1),
+                CueOffset = new Vector3(0, 0, 0),
                 CueScale = new Vector2(1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
@@ -155,6 +156,7 @@ public class Snug : MVRScript
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
                 Offset = new Vector3(0, 0, 0.08f),
                 Scale = new Vector2(1, 1),
+                CueOffset = new Vector3(0, 0, 0),
                 CueScale = new Vector2(1, 1)
 
             });
@@ -164,6 +166,17 @@ public class Snug : MVRScript
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
                 Offset = new Vector3(0, -0.05f, 0.1f),
                 Scale = new Vector2(1, 1),
+                CueOffset = new Vector3(0, 0, 0),
+                CueScale = new Vector2(1, 1)
+
+            });
+            _anchorPoints.Add(new ControllerAnchorPoint
+            {
+                Label = "Ground (Control)",
+                RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
+                Offset = new Vector3(0, 0, 0),
+                Scale = new Vector2(1, 1),
+                CueOffset = new Vector3(0, 0, 0),
                 CueScale = new Vector2(1, 1)
 
             });
