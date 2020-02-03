@@ -450,17 +450,27 @@ public class Snug : MVRScript
             var upperWeight = yLowerDelta / totalDelta;
             var lowerWeight = 1f - upperWeight;
             // TODO: Use scale too
+            var anchorPosition = ((upper.RigidBody.transform.position + upper.CueOffset) * upperWeight) + ((lower.RigidBody.transform.position + lower.CueOffset) * lowerWeight);
             var anchorOffset = (upper.Offset * upperWeight) + (lower.Offset * lowerWeight);
             var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
+            var anchorScale = (upper.Scale * upperWeight) + (lower.Scale * lowerWeight);
 
             SuperController.singleton.ClearMessages();
             SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight})");
             SuperController.LogMessage($"Anchor {upper.CueOffset.y} and {lower.CueOffset.y} = {anchorOffset.y}");
 
-            _rightHandTarget.transform.SetPositionAndRotation(
-                position + snapOffset + _palmToWristOffset + (anchorRotation * anchorOffset),
-                _rightAutoSnapPoint.rotation * _rotateOffset
-            );
+            // TODO: Use this for falloff, based on distance - closest point on the ellipse
+            var distance = Mathf.Abs(Vector2.Distance(
+                new Vector2(anchorPosition.x, anchorPosition.z),
+                new Vector2(position.x, position.z)
+            ));
+
+            var resultPosition = position + snapOffset + _palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
+            resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
+            resultPosition.z = anchorPosition.z + (resultPosition.z - anchorPosition.z) * (1f / anchorScale.x);
+            var resultRotation = _rightAutoSnapPoint.rotation * _rotateOffset;
+
+            _rightHandTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
         }
         catch (Exception exc)
         {
