@@ -14,33 +14,23 @@ using UnityEngine;
 /// </summary>
 public class Snug : MVRScript
 {
-    private readonly List<GameObject> _debuggers = new List<GameObject>();
+    private readonly List<GameObject> _cues = new List<GameObject>();
     private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
     private bool _ready, _loaded;
-    private GameObject _rightHandTarget;
-    private JSONStorableBool _possessRightHandJSON;
-    public JSONStorableFloat _wristOffsetXJSON;
-    private JSONStorableFloat _wristOffsetYJSON;
-    private JSONStorableFloat _wristOffsetZJSON;
-    public JSONStorableFloat _wristRotateXJSON;
-    private JSONStorableFloat _wristRotateYJSON;
-    private JSONStorableFloat _wristRotateZJSON;
-    private FreeControllerV3 _rightHandController;
-    private Transform _rightAutoSnapPoint;
+    private GameObject _leftHandTarget, _rightHandTarget;
+    private JSONStorableBool _possessHandsJSON;
+    public JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
+    public JSONStorableFloat _handRotateXJSON, _handRotateYJSON, _handRotateZJSON;
+    private FreeControllerV3 _personLHandController, _personRHandController;
+    private Transform _leftAutoSnapPoint, _rightAutoSnapPoint;
     private Vector3 _palmToWristOffset;
-    private Quaternion _rotateOffset;
-    private JSONStorableBool _showAnchorsJSON;
+    private Quaternion _handRotateOffset = Quaternion.Euler(0, 0, 0);
+    private JSONStorableBool _showVisualCuesJSON;
     private JSONStorableStringChooser _selectedAnchorsJSON;
-    private JSONStorableFloat _anchorCueScaleXJSON;
-    private JSONStorableFloat _anchorCueScaleZJSON;
-    private JSONStorableFloat _anchorCueOffsetXJSON;
-    private JSONStorableFloat _anchorCueOffsetYJSON;
-    private JSONStorableFloat _anchorCueOffsetZJSON;
-    private JSONStorableFloat _anchorOffsetXJSON;
-    private JSONStorableFloat _anchorOffsetYJSON;
-    private JSONStorableFloat _anchorOffsetZJSON;
-    private JSONStorableFloat _anchorScaleXJSON;
-    private JSONStorableFloat _anchorScaleZJSON;
+    private JSONStorableFloat _anchorVirtScaleXJSON, _anchorVirtScaleZJSON;
+    private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
+    private JSONStorableFloat _anchorPhysOffsetXJSON, _anchorPhysOffsetYJSON, _anchorPhysOffsetZJSON;
+    private JSONStorableFloat _anchorPhysScaleXJSON, _anchorPhysScaleZJSON;
 
     public override void Init()
     {
@@ -53,97 +43,80 @@ public class Snug : MVRScript
             }
 
             var s = SuperController.singleton;
+
+            Transform touchObjectLeft = null;
+            if (s.isOVR)
+                touchObjectLeft = s.touchObjectLeft;
+            else if (s.isOpenVR)
+                touchObjectLeft = s.viveObjectLeft;
+            if (touchObjectLeft != null)
+                _leftAutoSnapPoint = touchObjectLeft.GetComponent<Possessor>().autoSnapPoint;
+            _personLHandController = containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
+            if (_personLHandController == null) throw new NullReferenceException("Could not find the lHandControl controller");
+            _leftHandTarget = new GameObject($"{containingAtom.gameObject.name}.lHandController.snugTarget");
+            var leftHandRigidBody = _leftHandTarget.AddComponent<Rigidbody>();
+            leftHandRigidBody.isKinematic = true;
+            leftHandRigidBody.detectCollisions = false;
+
             Transform touchObjectRight = null;
             if (s.isOVR)
                 touchObjectRight = s.touchObjectRight;
             else if (s.isOpenVR)
                 touchObjectRight = s.viveObjectRight;
-            else
-                SuperController.LogError("Snug hands will only work in VR");
             if (touchObjectRight != null)
                 _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
-
-            _rightHandController = containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
-            if (_rightHandController == null) throw new NullReferenceException("Could not find the rHandControl controller");
-
-            _rightHandTarget = new GameObject($"{containingAtom.gameObject.name}.lHandController.snugTarget");
+            _personRHandController = containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
+            if (_personRHandController == null) throw new NullReferenceException("Could not find the rHandControl controller");
+            _rightHandTarget = new GameObject($"{containingAtom.gameObject.name}.rHandController.snugTarget");
             var rightHandRigidBody = _rightHandTarget.AddComponent<Rigidbody>();
             rightHandRigidBody.isKinematic = true;
             rightHandRigidBody.detectCollisions = false;
 
-            _possessRightHandJSON = new JSONStorableBool("Possess Right Hand", false, (bool val) =>
+            _possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
             {
                 if (!_ready) return;
-                if (_rightHandController.possessed)
-                {
-                    _possessRightHandJSON.valNoCallback = false;
-                    SuperController.LogError("Snug: Cannot activate while possessing");
-                    return;
-                }
-                if (val)
-                {
-                    _rightHandController.PossessMoveAndAlignTo(_rightHandTarget.transform);
-                    _rightHandController.SelectLinkToRigidbody(_rightHandTarget.GetComponent<Rigidbody>());
-                    _rightHandController.canGrabPosition = false;
-                    _rightHandController.canGrabRotation = false;
-                    _rightHandController.possessable = false;
-                }
-                else
-                {
-                    _rightHandController.RestorePreLinkState();
-                    // TODO: This should return to the previous state
-                    _rightHandController.canGrabPosition = true;
-                    _rightHandController.canGrabRotation = true;
-                    _rightHandController.possessable = true;
-                }
+                CustomPossessHand(_personLHandController, _leftHandTarget, val);
+                CustomPossessHand(_personRHandController, _rightHandTarget, val);
             })
             { isStorable = false };
-            RegisterBool(_possessRightHandJSON);
-            CreateToggle(_possessRightHandJSON);
+            RegisterBool(_possessHandsJSON);
+            CreateToggle(_possessHandsJSON);
 
-            _showAnchorsJSON = new JSONStorableBool("Show Anchors", false, (bool val) =>
+            _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
             {
                 if (!_ready) return;
                 if (val)
-                {
-                    CreateDebuggers();
-                }
+                    CreateVisualCues();
                 else
-                {
-                    DestroyDebuggers();
-                }
+                    DestroyVisualCues();
             });
-            RegisterBool(_showAnchorsJSON);
-            CreateToggle(_showAnchorsJSON);
+            RegisterBool(_showVisualCuesJSON);
+            CreateToggle(_showVisualCuesJSON);
 
             {
-                GameObject rbDebugger = null;
+                GameObject lastRbCue = null;
                 var rigidBodiesJSON = new JSONStorableStringChooser(
                     "Target",
                     containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target",
                     (string val) =>
                     {
-                        if (rbDebugger != null)
+                        if (lastRbCue != null)
                         {
-                            Destroy(rbDebugger);
-                            _debuggers.Remove(rbDebugger);
+                            Destroy(lastRbCue);
+                            _cues.Remove(lastRbCue);
                         }
 
                         var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
                         if (rigidbody == null) return;
-                        var debugger = VisualCuesHelper.Cross(Color.white);
-                        debugger.transform.SetPositionAndRotation(
-                            rigidbody.transform.position,
-                            rigidbody.transform.rotation
-                        );
-                        debugger.transform.parent = rigidbody.transform;
-                        _debuggers.Add(debugger);
-                        rbDebugger = debugger;
+                        var rbCue = VisualCuesHelper.Cross(Color.white);
+                        rbCue.transform.parent = rigidbody.transform;
+                        rbCue.transform.localScale = new Vector3(2f, 2f, 2f);
+                        rbCue.transform.localPosition = Vector3.zero;
+                        _cues.Add(rbCue);
+                        lastRbCue = rbCue;
                     }
                 )
-                {
-                    isStorable = false
-                };
+                { isStorable = false };
                 CreateScrollablePopup(rigidBodiesJSON);
             }
 
@@ -151,93 +124,94 @@ public class Snug : MVRScript
             {
                 Label = "Lips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
-                Offset = new Vector3(0, 0, 0),
-                Scale = new Vector2(1, 1),
-                CueOffset = new Vector3(0, 0, 0),
-                CueScale = new Vector2(1, 1)
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 Label = "Chest",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
-                Offset = new Vector3(0, 0, 0),
-                Scale = new Vector2(1, 1),
-                CueOffset = new Vector3(0, 0, 0),
-                CueScale = new Vector2(1, 1)
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 Label = "Abdomen",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
-                Offset = new Vector3(0, 0, 0),
-                Scale = new Vector2(1, 1),
-                CueOffset = new Vector3(0, 0, 0),
-                CueScale = new Vector2(1, 1)
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 Label = "Hips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
-                Offset = new Vector3(0, 0, 0),
-                Scale = new Vector2(1, 1),
-                CueOffset = new Vector3(0, 0, 0),
-                CueScale = new Vector2(1, 1)
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 Label = "Ground (Control)",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
-                Offset = new Vector3(0, 0, 0),
-                Scale = new Vector2(1, 1),
-                CueOffset = new Vector3(0, 0, 0),
-                CueScale = new Vector2(1, 1)
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
 
             });
 
-            _selectedAnchorsJSON = new JSONStorableStringChooser("Anchor", _anchorPoints.Select(a => a.Label).ToList(), _anchorPoints[0].Label, "Anchor", SyncSelectedAnchorJSON) { isStorable = false };
+            _selectedAnchorsJSON = new JSONStorableStringChooser("Selected Anchor", _anchorPoints.Select(a => a.Label).ToList(), _anchorPoints[0].Label, "Anchor", SyncSelectedAnchorJSON) { isStorable = false };
             CreateScrollablePopup(_selectedAnchorsJSON, true);
 
-            _anchorCueScaleXJSON = new JSONStorableFloat("Anchor Cue Scale X", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
-            CreateSlider(_anchorCueScaleXJSON, true);
-            _anchorCueScaleZJSON = new JSONStorableFloat("Anchor Cue Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
-            CreateSlider(_anchorCueScaleZJSON, true);
-            _anchorCueOffsetXJSON = new JSONStorableFloat("Anchor Cue Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorCueOffsetXJSON, true);
-            _anchorCueOffsetYJSON = new JSONStorableFloat("Anchor Cue Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorCueOffsetYJSON, true);
-            _anchorCueOffsetZJSON = new JSONStorableFloat("Anchor Cue Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorCueOffsetZJSON, true);
+            _anchorVirtScaleXJSON = new JSONStorableFloat("Virtual Scale X", 1f, UpdateAnchor, 0.01f, 3f, true) { isStorable = false };
+            CreateSlider(_anchorVirtScaleXJSON, true);
+            _anchorVirtScaleZJSON = new JSONStorableFloat("Virtual Scale Z", 1f, UpdateAnchor, 0.01f, 3f, true) { isStorable = false };
 
-            _anchorOffsetXJSON = new JSONStorableFloat("Anchor Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorOffsetXJSON, true);
-            _anchorOffsetYJSON = new JSONStorableFloat("Anchor Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorOffsetYJSON, true);
-            _anchorOffsetZJSON = new JSONStorableFloat("Anchor Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_anchorOffsetZJSON, true);
+            CreateSlider(_anchorVirtScaleZJSON, true);
+            _anchorVirtOffsetXJSON = new JSONStorableFloat("Virtual Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorVirtOffsetXJSON, true);
+            _anchorVirtOffsetYJSON = new JSONStorableFloat("Virtual Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorVirtOffsetYJSON, true);
+            _anchorVirtOffsetZJSON = new JSONStorableFloat("Virtual Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorVirtOffsetZJSON, true);
 
-            _anchorScaleXJSON = new JSONStorableFloat("Anchor Scale X", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
-            CreateSlider(_anchorScaleXJSON, true);
-            _anchorScaleZJSON = new JSONStorableFloat("Anchor Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
-            CreateSlider(_anchorScaleZJSON, true);
+            _anchorPhysScaleXJSON = new JSONStorableFloat("Physical Scale X", 1f, UpdateAnchor, 0.01f, 3f, true) { isStorable = false };
+            CreateSlider(_anchorPhysScaleXJSON, true);
+            _anchorPhysScaleZJSON = new JSONStorableFloat("Physical Scale Z", 1f, UpdateAnchor, 0.01f, 3f, true) { isStorable = false };
+            CreateSlider(_anchorPhysScaleZJSON, true);
+
+            _anchorPhysOffsetXJSON = new JSONStorableFloat("Physical Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorPhysOffsetXJSON, true);
+            _anchorPhysOffsetYJSON = new JSONStorableFloat("Physical Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorPhysOffsetYJSON, true);
+            _anchorPhysOffsetZJSON = new JSONStorableFloat("Physical Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_anchorPhysOffsetZJSON, true);
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
-            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_wristOffsetXJSON, false);
-            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_wristOffsetYJSON, false);
-            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
-            CreateSlider(_wristOffsetZJSON, false);
+            _handOffsetXJSON = new JSONStorableFloat("Hand Offset X", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_handOffsetXJSON, false);
+            _handOffsetYJSON = new JSONStorableFloat("Hand Offset Y", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_handOffsetYJSON, false);
+            _handOffsetZJSON = new JSONStorableFloat("Hand Offset Z", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
+            CreateSlider(_handOffsetZJSON, false);
 
-            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
-            CreateSlider(_wristRotateXJSON, false);
-            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
-            CreateSlider(_wristRotateYJSON, false);
-            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
-            CreateSlider(_wristRotateZJSON, false);
+            _handRotateXJSON = new JSONStorableFloat("Hand Rotate X", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            CreateSlider(_handRotateXJSON, false);
+            _handRotateYJSON = new JSONStorableFloat("HandWrist Rotate Y", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            CreateSlider(_handRotateYJSON, false);
+            _handRotateZJSON = new JSONStorableFloat("HandWrist Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            CreateSlider(_handRotateZJSON, false);
         }
         catch (Exception exc)
         {
@@ -245,6 +219,27 @@ public class Snug : MVRScript
         }
 
         StartCoroutine(DeferredInit());
+    }
+
+    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target, bool active)
+    {
+        if (active)
+        {
+            controllerV3.PossessMoveAndAlignTo(target.transform);
+            controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
+            controllerV3.canGrabPosition = false;
+            controllerV3.canGrabRotation = false;
+            controllerV3.possessed = false;
+            controllerV3.possessable = false;
+        }
+        else
+        {
+            controllerV3.RestorePreLinkState();
+            // TODO: This should return to the previous state
+            controllerV3.canGrabPosition = true;
+            controllerV3.canGrabRotation = true;
+            controllerV3.possessable = true;
+        }
     }
 
     private IEnumerator DeferredInit()
@@ -255,8 +250,8 @@ public class Snug : MVRScript
             if (!_loaded) containingAtom.RestoreFromLast(this);
             OnEnable();
             SyncSelectedAnchorJSON("");
-            SyncRightHandOffset();
-            if (_showAnchorsJSON.val) CreateDebuggers();
+            SyncHandsOffset();
+            if (_showVisualCuesJSON.val) CreateVisualCues();
         }
         catch (Exception exc)
         {
@@ -272,19 +267,19 @@ public class Snug : MVRScript
 
         try
         {
-            json["wrist"] = new JSONClass{
+            json["hands"] = new JSONClass{
                 {"offset", SerializeVector3(_palmToWristOffset)},
-                {"rotation", SerializeQuaternion(_rotateOffset)}
+                {"rotation", SerializeQuaternion(_handRotateOffset)}
             };
             var anchors = new JSONClass();
             foreach (var anchor in _anchorPoints)
             {
                 anchors[anchor.Label] = new JSONClass
                 {
-                    {"offset", SerializeVector3(anchor.Offset)},
-                    {"scale", SerializeVector2(anchor.Scale)},
-                    {"cueOffset", SerializeVector3(anchor.CueOffset)},
-                    {"cueScale", SerializeVector2(anchor.CueScale)},
+                    {"offset", SerializeVector3(anchor.PhysicalOffset)},
+                    {"scale", SerializeVector2(anchor.PhysicalScale)},
+                    {"cueOffset", SerializeVector3(anchor.VirtualOffset)},
+                    {"cueScale", SerializeVector2(anchor.VirtualScale)},
                 };
             }
             json["anchors"] = anchors;
@@ -308,11 +303,11 @@ public class Snug : MVRScript
 
         try
         {
-            var wristJSON = jc["wrist"];
-            if (wristJSON != null)
+            var handsJSON = jc["hands"];
+            if (handsJSON != null)
             {
-                _palmToWristOffset = DeserializeVector3(wristJSON["offset"]);
-                _rotateOffset = DeserializeQuaternion(wristJSON["rotation"]);
+                _palmToWristOffset = DeserializeVector3(handsJSON["offset"]);
+                _handRotateOffset = DeserializeQuaternion(handsJSON["rotation"]);
             }
 
             var anchorsJSON = jc["anchors"];
@@ -322,10 +317,10 @@ public class Snug : MVRScript
                 {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
-                    anchor.Offset = DeserializeVector3(anchorJSON["offset"]);
-                    anchor.Scale = DeserializeVector2(anchorJSON["scale"]);
-                    anchor.CueOffset = DeserializeVector3(anchorJSON["cueOffset"]);
-                    anchor.CueScale = DeserializeVector2(anchorJSON["cueScale"]);
+                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["offset"]);
+                    anchor.PhysicalScale = DeserializeVector2(anchorJSON["scale"]);
+                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["cueOffset"]);
+                    anchor.VirtualScale = DeserializeVector2(anchorJSON["cueScale"]);
                 }
             }
 
@@ -348,16 +343,16 @@ public class Snug : MVRScript
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        _anchorCueScaleXJSON.valNoCallback = anchor.CueScale.x;
-        _anchorCueScaleZJSON.valNoCallback = anchor.CueScale.y;
-        _anchorCueOffsetXJSON.valNoCallback = anchor.CueOffset.x;
-        _anchorCueOffsetYJSON.valNoCallback = anchor.CueOffset.y;
-        _anchorCueOffsetZJSON.valNoCallback = anchor.CueOffset.z;
-        _anchorScaleXJSON.valNoCallback = anchor.Scale.x;
-        _anchorScaleZJSON.valNoCallback = anchor.Scale.y;
-        _anchorOffsetXJSON.valNoCallback = anchor.Offset.x;
-        _anchorOffsetYJSON.valNoCallback = anchor.Offset.y;
-        _anchorOffsetZJSON.valNoCallback = anchor.Offset.z;
+        _anchorVirtScaleXJSON.valNoCallback = anchor.VirtualScale.x;
+        _anchorVirtScaleZJSON.valNoCallback = anchor.VirtualScale.y;
+        _anchorVirtOffsetXJSON.valNoCallback = anchor.VirtualOffset.x;
+        _anchorVirtOffsetYJSON.valNoCallback = anchor.VirtualOffset.y;
+        _anchorVirtOffsetZJSON.valNoCallback = anchor.VirtualOffset.z;
+        _anchorPhysScaleXJSON.valNoCallback = anchor.PhysicalScale.x;
+        _anchorPhysScaleZJSON.valNoCallback = anchor.PhysicalScale.y;
+        _anchorPhysOffsetXJSON.valNoCallback = anchor.PhysicalOffset.x;
+        _anchorPhysOffsetYJSON.valNoCallback = anchor.PhysicalOffset.y;
+        _anchorPhysOffsetZJSON.valNoCallback = anchor.PhysicalOffset.z;
     }
 
     private void UpdateAnchor(float _)
@@ -365,118 +360,104 @@ public class Snug : MVRScript
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        anchor.CueScale = new Vector2(_anchorCueScaleXJSON.val, _anchorCueScaleZJSON.val);
-        anchor.CueOffset = new Vector3(_anchorCueOffsetXJSON.val, _anchorCueOffsetYJSON.val, _anchorCueOffsetZJSON.val);
-        anchor.Scale = new Vector2(_anchorScaleXJSON.val, _anchorScaleZJSON.val);
-        anchor.Offset = new Vector3(_anchorOffsetXJSON.val, _anchorOffsetYJSON.val, _anchorOffsetZJSON.val);
+        anchor.VirtualScale = new Vector2(_anchorVirtScaleXJSON.val, _anchorVirtScaleZJSON.val);
+        anchor.VirtualOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
+        anchor.PhysicalScale = new Vector2(_anchorPhysScaleXJSON.val, _anchorPhysScaleZJSON.val);
+        anchor.PhysicalOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
         anchor.Update();
     }
 
-    private void SyncRightHandOffset()
+    private void SyncHandsOffset()
     {
         if (!_ready) return;
-        _wristOffsetXJSON.valNoCallback = _palmToWristOffset.x;
-        _wristOffsetYJSON.valNoCallback = _palmToWristOffset.y;
-        _wristOffsetZJSON.valNoCallback = _palmToWristOffset.z;
-        var rotateOffset = _rotateOffset.eulerAngles;
-        _wristRotateXJSON.valNoCallback = rotateOffset.x;
-        _wristRotateYJSON.valNoCallback = rotateOffset.y;
-        _wristRotateZJSON.valNoCallback = rotateOffset.z;
+        _handOffsetXJSON.valNoCallback = _palmToWristOffset.x;
+        _handOffsetYJSON.valNoCallback = _palmToWristOffset.y;
+        _handOffsetZJSON.valNoCallback = _palmToWristOffset.z;
+        var rotateOffset = _handRotateOffset.eulerAngles;
+        _handRotateXJSON.valNoCallback = rotateOffset.x;
+        _handRotateYJSON.valNoCallback = rotateOffset.y;
+        _handRotateZJSON.valNoCallback = rotateOffset.z;
 
     }
 
-    private void UpdateRightHandOffset(float _)
+    private void UpdateHandsOffset(float _)
     {
         if (!_ready) return;
-        _palmToWristOffset = new Vector3(_wristOffsetXJSON.val, _wristOffsetYJSON.val, _wristOffsetZJSON.val);
-        _rotateOffset = Quaternion.Euler(_wristRotateXJSON.val, _wristRotateYJSON.val, _wristRotateZJSON.val);
+        _palmToWristOffset = new Vector3(_handOffsetXJSON.val, _handOffsetYJSON.val, _handOffsetZJSON.val);
+        _handRotateOffset = Quaternion.Euler(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
     }
 
     #region Update
-
-    public void Update()
-    {
-        if (!_ready) return;
-        try
-        {
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(Update)}: {exc}");
-            OnDisable();
-        }
-    }
 
     public void FixedUpdate()
     {
         if (!_ready || _rightAutoSnapPoint == null) return;
         try
         {
-            var position = SuperController.singleton.rightHand.position;
-
-            ControllerAnchorPoint lower = null;
-            ControllerAnchorPoint upper = null;
-            foreach (var anchorPoint in _anchorPoints)
-            {
-                var anchorPointY = anchorPoint.GetWorldY();
-                if (position.y > anchorPointY && (lower == null || anchorPointY > lower.GetWorldY()))
-                {
-                    lower = anchorPoint;
-                }
-                else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.GetWorldY()))
-                {
-                    upper = anchorPoint;
-                }
-            }
-
-            var snapOffset = _rightAutoSnapPoint.position - SuperController.singleton.rightHand.position;
-
-            if (lower == null || upper == null)
-            {
-                // TODO: Add fake points with zero scale/offset
-                // TODO: Add a lower effect based on distance
-                SuperController.singleton.ClearMessages();
-                SuperController.LogMessage($"Between {lower?.RigidBody.name ?? "(none)"} and {upper?.RigidBody.name ?? "(none)"}");
-                _rightHandTarget.transform.SetPositionAndRotation(
-                    position + snapOffset + _palmToWristOffset,
-                    _rightAutoSnapPoint.rotation * _rotateOffset
-                );
-                return;
-            }
-
-            var yUpperDelta = upper.GetWorldY() - position.y;
-            var yLowerDelta = position.y - lower.GetWorldY();
-            var totalDelta = yLowerDelta + yUpperDelta;
-            var upperWeight = yLowerDelta / totalDelta;
-            var lowerWeight = 1f - upperWeight;
-            // TODO: Use scale too
-            var anchorPosition = ((upper.RigidBody.transform.position + upper.CueOffset) * upperWeight) + ((lower.RigidBody.transform.position + lower.CueOffset) * lowerWeight);
-            var anchorOffset = (upper.Offset * upperWeight) + (lower.Offset * lowerWeight);
-            var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
-            var anchorScale = (upper.Scale * upperWeight) + (lower.Scale * lowerWeight);
-
-            SuperController.singleton.ClearMessages();
-            SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight})");
-            SuperController.LogMessage($"Anchor {upper.CueOffset.y} and {lower.CueOffset.y} = {anchorOffset.y}");
-
-            // TODO: Use this for falloff, based on distance - closest point on the ellipse
-            var distance = Mathf.Abs(Vector2.Distance(
-                new Vector2(anchorPosition.x, anchorPosition.z),
-                new Vector2(position.x, position.z)
-            ));
-
-            var resultPosition = position + snapOffset + _palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
-            resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
-            resultPosition.z = anchorPosition.z + (resultPosition.z - anchorPosition.z) * (1f / anchorScale.x);
-            var resultRotation = _rightAutoSnapPoint.rotation * _rotateOffset;
-
-            _rightHandTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
+            ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset);
+            ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Quaternion(_handRotateOffset.x * -1f, _handRotateOffset.y, _handRotateOffset.z, _handRotateOffset.z * -1f));
         }
         catch (Exception exc)
         {
             SuperController.LogError($"{nameof(Snug)}.{nameof(FixedUpdate)}: {exc}");
             OnDisable();
         }
+    }
+
+    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Quaternion handRotateOffset)
+    {
+        if (physicalHand == null || handTarget == null || autoSnapPoint == null) return;
+
+        var position = physicalHand.position;
+        var snapOffset = autoSnapPoint.position - position;
+
+        ControllerAnchorPoint lower = null;
+        ControllerAnchorPoint upper = null;
+        foreach (var anchorPoint in _anchorPoints)
+        {
+            var anchorPointY = anchorPoint.GetWorldY();
+            if (position.y > anchorPointY && (lower == null || anchorPointY > lower.GetWorldY()))
+            {
+                lower = anchorPoint;
+            }
+            else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.GetWorldY()))
+            {
+                upper = anchorPoint;
+            }
+        }
+
+        if (lower == null)
+            lower = upper;
+        else if (upper == null)
+            upper = lower;
+
+        var yUpperDelta = upper.GetWorldY() - position.y;
+        var yLowerDelta = position.y - lower.GetWorldY();
+        var totalDelta = yLowerDelta + yUpperDelta;
+        var upperWeight = yLowerDelta / totalDelta;
+        var lowerWeight = 1f - upperWeight;
+        // TODO: Use scale too
+        var anchorPosition = ((upper.RigidBody.transform.position + upper.VirtualOffset) * upperWeight) + ((lower.RigidBody.transform.position + lower.VirtualOffset) * lowerWeight);
+        var anchorOffset = (upper.PhysicalOffset * upperWeight) + (lower.PhysicalOffset * lowerWeight);
+        var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
+        var anchorScale = (upper.PhysicalScale * upperWeight) + (lower.PhysicalScale * lowerWeight);
+
+        SuperController.singleton.ClearMessages();
+        SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight})");
+        SuperController.LogMessage($"Anchor {upper.VirtualOffset.y} and {lower.VirtualOffset.y} = {anchorOffset.y}");
+
+        // TODO: Use this for falloff, based on distance - closest point on the ellipse
+        var distance = Mathf.Abs(Vector2.Distance(
+            new Vector2(anchorPosition.x, anchorPosition.z),
+            new Vector2(position.x, position.z)
+        ));
+
+        var resultPosition = position + snapOffset + palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
+        resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
+        resultPosition.z = anchorPosition.z + (resultPosition.z - anchorPosition.z) * (1f / anchorScale.x);
+        var resultRotation = autoSnapPoint.rotation * handRotateOffset;
+
+        handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
     }
 
     #endregion
@@ -500,7 +481,7 @@ public class Snug : MVRScript
         try
         {
             _ready = false;
-            DestroyDebuggers();
+            DestroyVisualCues();
             Destroy(_rightHandTarget);
         }
         catch (Exception exc)
@@ -518,54 +499,67 @@ public class Snug : MVRScript
 
     #region Debuggers
 
-    private void CreateDebuggers()
+    private void CreateVisualCues()
     {
-        DestroyDebuggers();
+        DestroyVisualCues();
 
-        var rightHandDbg = VisualCuesHelper.Cross(Color.red);
-        var rightHand = SuperController.singleton.rightHand;
-        rightHandDbg.transform.SetPositionAndRotation(
-            rightHand.position,
-            SuperController.singleton.rightHand.rotation
-        );
-        rightHandDbg.transform.parent = rightHand;
-        _debuggers.Add(rightHandDbg);
-
-        if (_rightHandController != null)
-        {
-            var rightHandControllerDbg = VisualCuesHelper.Cross(Color.blue);
-            rightHandControllerDbg.transform.SetPositionAndRotation(
-                _rightHandController.control.position,
-                _rightHandController.control.rotation
-            );
-            rightHandControllerDbg.transform.parent = _rightHandController.control;
-            _debuggers.Add(rightHandControllerDbg);
-        }
-
-        var rightWristDbg = VisualCuesHelper.Cross(Color.green);
-        rightWristDbg.transform.SetPositionAndRotation(
-            _rightHandTarget.transform.position,
-            _rightHandTarget.transform.rotation
-        );
-        rightWristDbg.transform.parent = _rightHandTarget.transform;
-        _debuggers.Add(rightWristDbg);
+        CreateHandVisualCue(SuperController.singleton.leftHand, _personLHandController, _leftHandTarget);
+        CreateHandVisualCue(SuperController.singleton.rightHand, _personRHandController, _rightHandTarget);
 
         foreach (var anchorPoint in _anchorPoints)
         {
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
-            _debuggers.Add(anchorPoint.VirtualCue.gameObject);
             anchorPoint.Update();
 
             anchorPoint.PhysicalCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.white);
-            _debuggers.Add(anchorPoint.PhysicalCue.gameObject);
             anchorPoint.Update();
         }
     }
 
-    private void DestroyDebuggers()
+    private void CreateHandVisualCue(Transform physicalHand, FreeControllerV3 controllerV3, GameObject target)
     {
-        foreach (var debugger in _debuggers)
+        var handCue = VisualCuesHelper.Cross(Color.red);
+        handCue.transform.SetPositionAndRotation(
+            physicalHand.position,
+            physicalHand.rotation
+        );
+        handCue.transform.parent = physicalHand;
+        _cues.Add(handCue);
+
+        if (controllerV3 != null)
+        {
+            var controllerCue = VisualCuesHelper.Cross(Color.blue);
+            controllerCue.transform.SetPositionAndRotation(
+                controllerV3.control.position,
+                controllerV3.control.rotation
+            );
+            controllerCue.transform.parent = controllerV3.control;
+            _cues.Add(controllerCue);
+        }
+
+        var wristCue = VisualCuesHelper.Cross(Color.green);
+        wristCue.transform.SetPositionAndRotation(
+            target.transform.position,
+            target.transform.rotation
+        );
+        wristCue.transform.parent = target.transform;
+        _cues.Add(wristCue);
+    }
+
+    private void DestroyVisualCues()
+    {
+        foreach (var debugger in _cues)
+        {
             Destroy(debugger);
+        }
+        _cues.Clear();
+        foreach (var anchor in _anchorPoints)
+        {
+            Destroy(anchor.VirtualCue?.gameObject);
+            anchor.VirtualCue = null;
+            Destroy(anchor.PhysicalCue?.gameObject);
+            anchor.PhysicalCue = null;
+        }
     }
 
     #endregion
@@ -574,24 +568,24 @@ public class Snug : MVRScript
     {
         public string Label { get; internal set; }
         public Rigidbody RigidBody { get; set; }
-        public Vector3 Offset { get; set; }
-        public Vector2 Scale { get; set; }
-        public Vector3 CueOffset { get; set; }
-        public Vector2 CueScale { get; set; }
+        public Vector3 PhysicalOffset { get; set; }
+        public Vector2 PhysicalScale { get; set; }
+        public Vector3 VirtualOffset { get; set; }
+        public Vector2 VirtualScale { get; set; }
         public ControllerAnchorPointVisualCue VirtualCue { get; set; }
         public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
 
         public float GetWorldY()
         {
-            return RigidBody.transform.position.y + CueOffset.y;
+            return RigidBody.transform.position.y + VirtualOffset.y;
         }
 
         internal void Update()
         {
             if (PhysicalCue != null)
             {
-                VirtualCue.Update(CueOffset, CueScale);
-                PhysicalCue.Update(CueOffset + Offset, CueScale * Scale);
+                VirtualCue.Update(VirtualOffset, VirtualScale);
+                PhysicalCue.Update(VirtualOffset + PhysicalOffset, VirtualScale * PhysicalScale);
             }
         }
     }
@@ -616,6 +610,7 @@ public class Snug : MVRScript
             _leftHandle = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, color).transform;
             _rightHandle = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, color).transform;
             _ellipse = VisualCuesHelper.CreateEllipse(go, color, _width);
+            if (_ellipse == null) throw new NullReferenceException("Boom");
             gameObject = go;
             gameObject.transform.parent = parent;
             gameObject.transform.localPosition = Vector3.zero;
@@ -629,12 +624,13 @@ public class Snug : MVRScript
             var size = new Vector2(0.35f * scale.x, 0.35f * scale.y);
             _xAxis.localScale = new Vector3(size.x - _width * 2, _width * 0.25f, _width * 0.25f);
             _zAxis.localScale = new Vector3(_width * 0.25f, _width * 0.25f, size.y - _width * 2);
-            _frontHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _frontHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
             _frontHandle.transform.localPosition = Vector3.forward * size.y / 2;
-            _leftHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _leftHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
             _leftHandle.transform.localPosition = Vector3.left * size.x / 2;
-            _rightHandle.localScale = new Vector3(_width * 2, _width * 2, _width * 2);
+            _rightHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
             _rightHandle.transform.localPosition = Vector3.right * size.x / 2;
+            if (_ellipse == null) throw new NullReferenceException("Bam");
             VisualCuesHelper.DrawEllipse(_ellipse, new Vector2(size.x / 2f, size.y / 2f));
         }
 
@@ -654,6 +650,7 @@ public class Snug : MVRScript
             CreatePrimitive(go.transform, PrimitiveType.Cube, Color.green).transform.localScale = new Vector3(width, size, width);
             CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform.localScale = new Vector3(width, width, size);
             CreatePrimitive(go.transform, PrimitiveType.Sphere, color).transform.localScale = new Vector3(size / 8f, size / 8f, size / 8f);
+            foreach (var c in go.GetComponentsInChildren<Collider>()) Destroy(c);
             return go;
         }
 
@@ -661,7 +658,7 @@ public class Snug : MVRScript
         {
             var go = GameObject.CreatePrimitive(type);
             go.GetComponent<Renderer>().material = new Material(Shader.Find("Sprites/Default")) { color = color, renderQueue = 4000 };
-            foreach (var c in go.GetComponentsInChildren<Collider>()) Destroy(c);
+            foreach (var c in go.GetComponents<Collider>()) { c.enabled = false; Destroy(c); }
             go.transform.parent = parent;
             return go;
         }
