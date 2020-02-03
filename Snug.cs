@@ -24,7 +24,7 @@ public class Snug : MVRScript
     private FreeControllerV3 _personLHandController, _personRHandController;
     private Transform _leftAutoSnapPoint, _rightAutoSnapPoint;
     private Vector3 _palmToWristOffset;
-    private Quaternion _handRotateOffset = Quaternion.Euler(0, 0, 0);
+    private Vector3 _handRotateOffset;
     private JSONStorableBool _showVisualCuesJSON;
     private JSONStorableStringChooser _selectedAnchorsJSON;
     private JSONStorableFloat _anchorVirtScaleXJSON, _anchorVirtScaleZJSON;
@@ -269,7 +269,7 @@ public class Snug : MVRScript
         {
             json["hands"] = new JSONClass{
                 {"offset", SerializeVector3(_palmToWristOffset)},
-                {"rotation", SerializeQuaternion(_handRotateOffset)}
+                {"rotation", SerializeVector3(_handRotateOffset)}
             };
             var anchors = new JSONClass();
             foreach (var anchor in _anchorPoints)
@@ -307,7 +307,7 @@ public class Snug : MVRScript
             if (handsJSON != null)
             {
                 _palmToWristOffset = DeserializeVector3(handsJSON["offset"]);
-                _handRotateOffset = DeserializeQuaternion(handsJSON["rotation"]);
+                _handRotateOffset = DeserializeVector3(handsJSON["rotation"]);
             }
 
             var anchorsJSON = jc["anchors"];
@@ -373,10 +373,9 @@ public class Snug : MVRScript
         _handOffsetXJSON.valNoCallback = _palmToWristOffset.x;
         _handOffsetYJSON.valNoCallback = _palmToWristOffset.y;
         _handOffsetZJSON.valNoCallback = _palmToWristOffset.z;
-        var rotateOffset = _handRotateOffset.eulerAngles;
-        _handRotateXJSON.valNoCallback = rotateOffset.x;
-        _handRotateYJSON.valNoCallback = rotateOffset.y;
-        _handRotateZJSON.valNoCallback = rotateOffset.z;
+        _handRotateXJSON.valNoCallback = _handRotateOffset.x;
+        _handRotateYJSON.valNoCallback = _handRotateOffset.y;
+        _handRotateZJSON.valNoCallback = _handRotateOffset.z;
 
     }
 
@@ -384,7 +383,7 @@ public class Snug : MVRScript
     {
         if (!_ready) return;
         _palmToWristOffset = new Vector3(_handOffsetXJSON.val, _handOffsetYJSON.val, _handOffsetZJSON.val);
-        _handRotateOffset = Quaternion.Euler(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
+        _handRotateOffset = new Vector3(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
     }
 
     #region Update
@@ -395,7 +394,7 @@ public class Snug : MVRScript
         try
         {
             ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset);
-            ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Quaternion(_handRotateOffset.x * -1f, _handRotateOffset.y, _handRotateOffset.z, _handRotateOffset.z * -1f));
+            ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset));
         }
         catch (Exception exc)
         {
@@ -404,7 +403,7 @@ public class Snug : MVRScript
         }
     }
 
-    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Quaternion handRotateOffset)
+    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset)
     {
         if (physicalHand == null || handTarget == null || autoSnapPoint == null) return;
 
@@ -455,7 +454,8 @@ public class Snug : MVRScript
         var resultPosition = position + snapOffset + palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
         resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
         resultPosition.z = anchorPosition.z + (resultPosition.z - anchorPosition.z) * (1f / anchorScale.x);
-        var resultRotation = autoSnapPoint.rotation * handRotateOffset;
+        var resultRotation = autoSnapPoint.rotation;
+        resultRotation.eulerAngles += handRotateOffset;
 
         handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
     }
