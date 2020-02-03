@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 
 /// <summary>
@@ -93,7 +95,8 @@ public class Snug : MVRScript
                     _rightHandController.canGrabRotation = true;
                     _rightHandController.possessable = true;
                 }
-            });
+            })
+            { isStorable = false };
             RegisterBool(_possessRightHandJSON);
             CreateToggle(_possessRightHandJSON);
 
@@ -108,8 +111,10 @@ public class Snug : MVRScript
                     DestroyDebuggers();
                 }
             });
+            RegisterBool(_showAnchorsJSON);
             CreateToggle(_showAnchorsJSON);
 
+            /*
             {
                 GameObject rbDebugger = null;
                 var rigidBodiesJSON = new JSONStorableStringChooser(
@@ -140,6 +145,7 @@ public class Snug : MVRScript
                 };
                 CreateScrollablePopup(rigidBodiesJSON);
             }
+            */
 
             _anchorPoints.Add(new ControllerAnchorPoint
             {
@@ -181,55 +187,53 @@ public class Snug : MVRScript
 
             });
 
-            _selectedAnchorsJSON = new JSONStorableStringChooser("Anchor", _anchorPoints.Select(a => a.Label).ToList(), _anchorPoints[0].Label, "Anchor", SyncSelectedAnchorJSON);
+            _selectedAnchorsJSON = new JSONStorableStringChooser("Anchor", _anchorPoints.Select(a => a.Label).ToList(), _anchorPoints[0].Label, "Anchor", SyncSelectedAnchorJSON) { isStorable = false };
             CreateScrollablePopup(_selectedAnchorsJSON, true);
 
-            _anchorCueScaleXJSON = new JSONStorableFloat("Anchor Cue Scale X", 1f, UpdateAnchor, 0.01f, 2f, true);
+            _anchorCueScaleXJSON = new JSONStorableFloat("Anchor Cue Scale X", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
             CreateSlider(_anchorCueScaleXJSON, true);
-            _anchorCueScaleZJSON = new JSONStorableFloat("Anchor Cue Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true);
+            _anchorCueScaleZJSON = new JSONStorableFloat("Anchor Cue Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
             CreateSlider(_anchorCueScaleZJSON, true);
-            _anchorCueOffsetXJSON = new JSONStorableFloat("Anchor Cue Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true);
+            _anchorCueOffsetXJSON = new JSONStorableFloat("Anchor Cue Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorCueOffsetXJSON, true);
-            _anchorCueOffsetYJSON = new JSONStorableFloat("Anchor Cue Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true);
+            _anchorCueOffsetYJSON = new JSONStorableFloat("Anchor Cue Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorCueOffsetYJSON, true);
-            _anchorCueOffsetZJSON = new JSONStorableFloat("Anchor Cue Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true);
-            RegisterFloat(_anchorCueOffsetZJSON);
+            _anchorCueOffsetZJSON = new JSONStorableFloat("Anchor Cue Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorCueOffsetZJSON, true);
 
-            _anchorOffsetXJSON = new JSONStorableFloat("Anchor Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true);
+            _anchorOffsetXJSON = new JSONStorableFloat("Anchor Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorOffsetXJSON, true);
-            _anchorOffsetYJSON = new JSONStorableFloat("Anchor Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true);
+            _anchorOffsetYJSON = new JSONStorableFloat("Anchor Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorOffsetYJSON, true);
-            _anchorOffsetZJSON = new JSONStorableFloat("Anchor Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true);
-            RegisterFloat(_anchorOffsetZJSON);
+            _anchorOffsetZJSON = new JSONStorableFloat("Anchor Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_anchorOffsetZJSON, true);
 
-            _anchorScaleXJSON = new JSONStorableFloat("Anchor Scale X", 1f, UpdateAnchor, 0.01f, 2f, true);
+            _anchorScaleXJSON = new JSONStorableFloat("Anchor Scale X", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
             CreateSlider(_anchorScaleXJSON, true);
-            _anchorScaleZJSON = new JSONStorableFloat("Anchor Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true);
+            _anchorScaleZJSON = new JSONStorableFloat("Anchor Scale Z", 1f, UpdateAnchor, 0.01f, 2f, true) { isStorable = false };
             CreateSlider(_anchorScaleZJSON, true);
 
             SyncSelectedAnchorJSON(_selectedAnchorsJSON.val);
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
-            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetXJSON = new JSONStorableFloat("Right Wrist Offset X", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_wristOffsetXJSON, false);
-            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetYJSON = new JSONStorableFloat("Right Wrist Offset Y", 0f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_wristOffsetYJSON, false);
-            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true);
+            _wristOffsetZJSON = new JSONStorableFloat("Right Wrist Offset Z", -0.01f, UpdateRightHandOffset, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_wristOffsetZJSON, false);
 
-            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateXJSON = new JSONStorableFloat("Right Wrist Rotate X", 8.33f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
             CreateSlider(_wristRotateXJSON, false);
-            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateYJSON = new JSONStorableFloat("Right Wrist Rotate Y", 0f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
             CreateSlider(_wristRotateYJSON, false);
-            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true);
+            _wristRotateZJSON = new JSONStorableFloat("Right Wrist Rotate Z", 0f, UpdateRightHandOffset, -25f, 25f, true) { isStorable = false };
             CreateSlider(_wristRotateZJSON, false);
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.Init: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(Init)}: {exc}");
         }
 
         StartCoroutine(DeferredInit());
@@ -240,14 +244,86 @@ public class Snug : MVRScript
         yield return new WaitForEndOfFrame();
         try
         {
+            containingAtom.RestoreFromLast(this);
             UpdateRightHandOffset(0);
             OnEnable();
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.DeferredInit: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(DeferredInit)}: {exc}");
         }
     }
+
+    #region Load / Save
+
+    public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
+    {
+        var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
+
+        try
+        {
+            json["wrist"] = new JSONClass{
+                {"offset", SerializeVector3(_palmToWristOffset)},
+                {"rotation", SerializeQuaternion(_rotateOffset)}
+            };
+            var anchors = new JSONClass();
+            foreach (var anchor in _anchorPoints)
+            {
+                anchors[anchor.Label] = new JSONClass
+                {
+                    {"offset", SerializeVector3(anchor.Offset)},
+                    {"scale", SerializeVector2(anchor.Scale)},
+                    {"cueOffset", SerializeVector3(anchor.CueOffset)},
+                    {"cueScale", SerializeVector2(anchor.CueScale)},
+                };
+            }
+            json["anchors"] = anchors;
+            needsStore = true;
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"{nameof(Snug)}.{nameof(GetJSON)}:  {exc}");
+        }
+
+        return json;
+    }
+
+    private static string SerializeQuaternion(Quaternion v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}"; }
+    private static string SerializeVector3(Vector3 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}"; }
+    private static string SerializeVector2(Vector2 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)}"; }
+
+    public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
+    {
+        base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+
+        try
+        {
+            var wristJSON = jc["wrist"];
+            _palmToWristOffset = DeserializeVector3(wristJSON["offset"]);
+            _rotateOffset = DeserializeQuaternion(wristJSON["rotation"]);
+
+            var anchorsJSON = jc["anchors"];
+            foreach (var anchor in _anchorPoints)
+            {
+                var anchorJSON = anchorsJSON[anchor.Label];
+                if (anchorJSON == null) continue;
+                anchor.Offset = DeserializeVector3(anchorJSON["offset"]);
+                anchor.Scale = DeserializeVector2(anchorJSON["scale"]);
+                anchor.CueOffset = DeserializeVector3(anchorJSON["cueOffset"]);
+                anchor.CueScale = DeserializeVector2(anchorJSON["cueScale"]);
+            }
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"{nameof(Snug)}.{nameof(RestoreFromJSON)}: {exc}");
+        }
+    }
+
+    private static Quaternion DeserializeQuaternion(string v) { var s = v.Split(','); return new Quaternion(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture), float.Parse(s[3], CultureInfo.InvariantCulture)); }
+    private static Vector3 DeserializeVector3(string v) { var s = v.Split(','); return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture)); }
+    private static Vector2 DeserializeVector2(string v) { var s = v.Split(','); return new Vector2(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture)); }
+
+    #endregion
 
     private void SyncSelectedAnchorJSON(string val)
     {
@@ -292,7 +368,7 @@ public class Snug : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.Update: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(Update)}: {exc}");
             OnDisable();
         }
     }
@@ -358,7 +434,7 @@ public class Snug : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.FixedUpdate: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(FixedUpdate)}: {exc}");
             OnDisable();
         }
     }
@@ -375,7 +451,7 @@ public class Snug : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.OnEnable: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(OnEnable)}: {exc}");
         }
     }
 
@@ -389,7 +465,7 @@ public class Snug : MVRScript
         }
         catch (Exception exc)
         {
-            SuperController.LogError("Snug.OnDisable: " + exc);
+            SuperController.LogError($"{nameof(Snug)}.{nameof(OnDisable)}: {exc}");
         }
     }
 
