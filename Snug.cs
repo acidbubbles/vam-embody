@@ -453,14 +453,24 @@ public class Snug : MVRScript
 
         var resultPosition = position + snapOffset + palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
         resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
+        resultPosition.y = anchorPosition.y + (resultPosition.y - anchorPosition.y);
         resultPosition.z = anchorPosition.z + (resultPosition.z - anchorPosition.z) * (1f / anchorScale.x);
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
+
+        // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
+
         var rb = handTarget.GetComponent<Rigidbody>();
         // handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
+        /*
         rb.MovePosition(resultPosition);
         rb.MoveRotation(resultRotation);
+        */
+        // Snap hand to upper ellipse (debug)
+        var tmp = ClosestPointOnEllipse(new Vector2(position.x - upper.RigidBody.transform.position.x, position.z - upper.RigidBody.transform.position.z), upper.VirtualScale.x, upper.VirtualScale.y);
+        rb.MovePosition(upper.RigidBody.transform.position + new Vector3(tmp.x, 0f, tmp.y));
+
     }
 
     #endregion
@@ -695,5 +705,52 @@ public class Snug : MVRScript
             }
             line.loop = true;
         }
+    }
+
+    // Reference: https://gist.github.com/JohannesMP/777bdc8e84df6ddfeaa4f0ddb1c7adb3
+    public static Vector2 ClosestPointOnEllipse(Vector2 point, float semiMajor, float semiMinor)
+    {
+        var px = Math.Abs(point.x);
+        var py = Math.Abs(point.y);
+
+        var a = semiMajor;
+        var b = semiMinor;
+
+        var tx = 0.70710678118f;
+        var ty = 0.70710678118f;
+
+        float x, y, ex, ey, rx, ry, qx, qy, r, q, t = 0f;
+
+        for (int i = 0; i < 3; ++i)
+        {
+            x = a * tx;
+            y = b * ty;
+
+            ex = (a * a - b * b) * (tx * tx * tx) / a;
+            ey = (b * b - a * a) * (ty * ty * ty) / b;
+
+            rx = x - ex;
+            ry = y - ey;
+
+            qx = px - ex;
+            qy = py - ey;
+
+            r = Mathf.Sqrt(rx * rx + ry * ry);
+            q = Mathf.Sqrt(qy * qy + qx * qx);
+
+            tx = Mathf.Min(1, Mathf.Max(0, (qx * r / q + ex) / a));
+            ty = Mathf.Min(1, Mathf.Max(0, (qy * r / q + ey) / b));
+
+            t = Mathf.Sqrt(tx * tx + ty * ty);
+
+            tx /= t;
+            ty /= t;
+        }
+
+        return new Vector2
+        {
+            x = a * (point.x < 0 ? -tx : tx),
+            y = b * (point.y < 0 ? -ty : ty)
+        };
     }
 }
