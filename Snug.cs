@@ -457,7 +457,10 @@ public class Snug : MVRScript
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
-        handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
+        var rb = handTarget.GetComponent<Rigidbody>();
+        // handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
+        rb.MovePosition(resultPosition);
+        rb.MoveRotation(resultRotation);
     }
 
     #endregion
