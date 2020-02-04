@@ -14,13 +14,17 @@ using UnityEngine;
 /// </summary>
 public class Snug : MVRScript
 {
+    private const float _baseCueSize = 0.35f;
+
     private readonly List<GameObject> _cues = new List<GameObject>();
     private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
     private bool _ready, _loaded;
+    private bool _leftHandActive, _rightHandActive;
     private GameObject _leftHandTarget, _rightHandTarget;
     private JSONStorableBool _possessHandsJSON;
-    public JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
-    public JSONStorableFloat _handRotateXJSON, _handRotateYJSON, _handRotateZJSON;
+    private JSONStorableFloat _falloffJSON;
+    private JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
+    private JSONStorableFloat _handRotateXJSON, _handRotateYJSON, _handRotateZJSON;
     private FreeControllerV3 _personLHandController, _personRHandController;
     private Transform _leftAutoSnapPoint, _rightAutoSnapPoint;
     private Vector3 _palmToWristOffset;
@@ -75,8 +79,27 @@ public class Snug : MVRScript
             _possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
             {
                 if (!_ready) return;
-                CustomPossessHand(_personLHandController, _leftHandTarget, val);
-                CustomPossessHand(_personRHandController, _rightHandTarget, val);
+                if (val)
+                {
+                    if (_leftAutoSnapPoint != null)
+                        _leftHandActive = true;
+                    if (_rightAutoSnapPoint != null)
+                        _rightHandActive = true;
+                    StartCoroutine(DeferredActivateHands());
+                }
+                else
+                {
+                    if (_leftHandActive)
+                    {
+                        CustomReleaseHand(_personLHandController);
+                        _leftHandActive = false;
+                    }
+                    if (_rightHandActive)
+                    {
+                        CustomReleaseHand(_personRHandController);
+                        _rightHandActive = false;
+                    }
+                }
             })
             { isStorable = false };
             RegisterBool(_possessHandsJSON);
@@ -120,6 +143,15 @@ public class Snug : MVRScript
                 CreateScrollablePopup(rigidBodiesJSON);
             }
 
+            _anchorPoints.Add(new ControllerAnchorPoint
+            {
+                Label = "Head",
+                RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector2(1, 1),
+                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualScale = new Vector2(1, 1)
+            });
             _anchorPoints.Add(new ControllerAnchorPoint
             {
                 Label = "Lips",
@@ -199,6 +231,9 @@ public class Snug : MVRScript
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
+            _falloffJSON = new JSONStorableFloat("Effect Falloff", 1f, UpdateHandsOffset, 0f, 5f, false) { isStorable = false };
+            CreateSlider(_falloffJSON, false);
+
             _handOffsetXJSON = new JSONStorableFloat("Hand Offset X", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_handOffsetXJSON, false);
             _handOffsetYJSON = new JSONStorableFloat("Hand Offset Y", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
@@ -206,11 +241,11 @@ public class Snug : MVRScript
             _handOffsetZJSON = new JSONStorableFloat("Hand Offset Z", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
             CreateSlider(_handOffsetZJSON, false);
 
-            _handRotateXJSON = new JSONStorableFloat("Hand Rotate X", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            _handRotateXJSON = new JSONStorableFloat("Hand Rotate X", 0f, UpdateHandsOffset, -25f, 25f, false) { isStorable = false };
             CreateSlider(_handRotateXJSON, false);
-            _handRotateYJSON = new JSONStorableFloat("HandWrist Rotate Y", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            _handRotateYJSON = new JSONStorableFloat("Hand Rotate Y", 0f, UpdateHandsOffset, -25f, 25f, false) { isStorable = false };
             CreateSlider(_handRotateYJSON, false);
-            _handRotateZJSON = new JSONStorableFloat("HandWrist Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, true) { isStorable = false };
+            _handRotateZJSON = new JSONStorableFloat("Hand Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, false) { isStorable = false };
             CreateSlider(_handRotateZJSON, false);
         }
         catch (Exception exc)
@@ -221,25 +256,32 @@ public class Snug : MVRScript
         StartCoroutine(DeferredInit());
     }
 
-    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target, bool active)
+    private IEnumerator DeferredActivateHands()
     {
-        if (active)
-        {
-            controllerV3.PossessMoveAndAlignTo(target.transform);
-            controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
-            controllerV3.canGrabPosition = false;
-            controllerV3.canGrabRotation = false;
-            controllerV3.possessed = false;
-            controllerV3.possessable = false;
-        }
-        else
-        {
-            controllerV3.RestorePreLinkState();
-            // TODO: This should return to the previous state
-            controllerV3.canGrabPosition = true;
-            controllerV3.canGrabRotation = true;
-            controllerV3.possessable = true;
-        }
+        yield return new WaitForSeconds(0f);
+        if (_leftHandActive)
+            CustomPossessHand(_personLHandController, _leftHandTarget);
+        if (_rightHandActive)
+            CustomPossessHand(_personRHandController, _rightHandTarget);
+    }
+
+    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target)
+    {
+        controllerV3.PossessMoveAndAlignTo(target.transform);
+        controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
+        controllerV3.canGrabPosition = false;
+        controllerV3.canGrabRotation = false;
+        controllerV3.possessed = false;
+        controllerV3.possessable = false;
+    }
+
+    private static void CustomReleaseHand(FreeControllerV3 controllerV3)
+    {
+        controllerV3.RestorePreLinkState();
+        // TODO: This should return to the previous state
+        controllerV3.canGrabPosition = true;
+        controllerV3.canGrabRotation = true;
+        controllerV3.possessable = true;
     }
 
     private IEnumerator DeferredInit()
@@ -393,8 +435,10 @@ public class Snug : MVRScript
         if (!_ready || _rightAutoSnapPoint == null) return;
         try
         {
-            ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset);
-            ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset));
+            if (_leftAutoSnapPoint != null && _leftHandTarget.transform.position != Vector3.zero)
+                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset));
+            if (_rightAutoSnapPoint != null && _rightHandTarget.transform.position != Vector3.zero)
+                ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset);
         }
         catch (Exception exc)
         {
@@ -435,21 +479,24 @@ public class Snug : MVRScript
         var totalDelta = yLowerDelta + yUpperDelta;
         var upperWeight = yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
-        // TODO: Use scale too
         var anchorPosition = ((upper.RigidBody.transform.position + upper.VirtualOffset) * upperWeight) + ((lower.RigidBody.transform.position + lower.VirtualOffset) * lowerWeight);
-        var anchorOffset = (upper.PhysicalOffset * upperWeight) + (lower.PhysicalOffset * lowerWeight);
-        var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
-        var anchorScale = (upper.PhysicalScale * upperWeight) + (lower.PhysicalScale * lowerWeight);
 
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight})");
-        SuperController.LogMessage($"Anchor {upper.VirtualOffset.y} and {lower.VirtualOffset.y} = {anchorOffset.y}");
-
-        // TODO: Use this for falloff, based on distance - closest point on the ellipse
+        // TODO: Even better to use closest point on ellipse, but not necessary.
         var distance = Mathf.Abs(Vector2.Distance(
             new Vector2(anchorPosition.x, anchorPosition.z),
             new Vector2(position.x, position.z)
         ));
+
+        var anchorScale = (upper.PhysicalScale * upperWeight) + (lower.PhysicalScale * lowerWeight);
+        var cueDistanceFromCenter = _baseCueSize * Mathf.Max(anchorScale.x, anchorScale.y);
+        // NOTE: This Clamp01 is only necessary because falloffJSON can be set to values lower than the cueDistanceFromCenter.
+        var falloff = Mathf.Clamp01((_falloffJSON.val - cueDistanceFromCenter) / Mathf.Clamp(distance - cueDistanceFromCenter, cueDistanceFromCenter, _falloffJSON.val));
+        var anchorOffset = ((upper.PhysicalOffset * upperWeight) + (lower.PhysicalOffset * lowerWeight)) * falloff;
+        var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight * falloff);
+
+        // SuperController.singleton.ClearMessages();
+        // SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight}) with distance {distance} (falloff {falloff})");
+        // SuperController.LogMessage($"Anchor {upper.VirtualOffset.y} and {lower.VirtualOffset.y} = {anchorOffset.y}");
 
         var resultPosition = position + snapOffset + palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
         resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
@@ -458,19 +505,12 @@ public class Snug : MVRScript
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
-
         // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
 
         var rb = handTarget.GetComponent<Rigidbody>();
         // handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
-        /*
         rb.MovePosition(resultPosition);
         rb.MoveRotation(resultRotation);
-        */
-        // Snap hand to upper ellipse (debug)
-        var tmp = ClosestPointOnEllipse(new Vector2(position.x - upper.RigidBody.transform.position.x, position.z - upper.RigidBody.transform.position.z), upper.VirtualScale.x, upper.VirtualScale.y);
-        rb.MovePosition(upper.RigidBody.transform.position + new Vector3(tmp.x, 0f, tmp.y));
-
     }
 
     #endregion
@@ -634,7 +674,7 @@ public class Snug : MVRScript
         {
             gameObject.transform.localPosition = offset;
 
-            var size = new Vector2(0.35f * scale.x, 0.35f * scale.y);
+            var size = new Vector2(_baseCueSize * scale.x, _baseCueSize * scale.y);
             _xAxis.localScale = new Vector3(size.x - _width * 2, _width * 0.25f, _width * 0.25f);
             _zAxis.localScale = new Vector3(_width * 0.25f, _width * 0.25f, size.y - _width * 2);
             _frontHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
@@ -705,52 +745,5 @@ public class Snug : MVRScript
             }
             line.loop = true;
         }
-    }
-
-    // Reference: https://gist.github.com/JohannesMP/777bdc8e84df6ddfeaa4f0ddb1c7adb3
-    public static Vector2 ClosestPointOnEllipse(Vector2 point, float semiMajor, float semiMinor)
-    {
-        var px = Math.Abs(point.x);
-        var py = Math.Abs(point.y);
-
-        var a = semiMajor;
-        var b = semiMinor;
-
-        var tx = 0.70710678118f;
-        var ty = 0.70710678118f;
-
-        float x, y, ex, ey, rx, ry, qx, qy, r, q, t = 0f;
-
-        for (int i = 0; i < 3; ++i)
-        {
-            x = a * tx;
-            y = b * ty;
-
-            ex = (a * a - b * b) * (tx * tx * tx) / a;
-            ey = (b * b - a * a) * (ty * ty * ty) / b;
-
-            rx = x - ex;
-            ry = y - ey;
-
-            qx = px - ex;
-            qy = py - ey;
-
-            r = Mathf.Sqrt(rx * rx + ry * ry);
-            q = Mathf.Sqrt(qy * qy + qx * qx);
-
-            tx = Mathf.Min(1, Mathf.Max(0, (qx * r / q + ex) / a));
-            ty = Mathf.Min(1, Mathf.Max(0, (qy * r / q + ey) / b));
-
-            t = Mathf.Sqrt(tx * tx + ty * ty);
-
-            tx /= t;
-            ty /= t;
-        }
-
-        return new Vector2
-        {
-            x = a * (point.x < 0 ? -tx : tx),
-            y = b * (point.y < 0 ? -ty : ty)
-        };
     }
 }
