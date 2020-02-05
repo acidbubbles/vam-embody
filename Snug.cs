@@ -12,8 +12,7 @@ using UnityEngine;
 /// Better controller alignement when possessing
 /// Source: https://github.com/acidbubbles/vam-wrist
 /// </summary>
-public class Snug : MVRScript
-{
+public class Snug : MVRScript {
     private const float _baseCueSize = 0.35f;
 
     private readonly List<GameObject> _cues = new List<GameObject>();
@@ -40,20 +39,16 @@ public class Snug : MVRScript
     private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
     private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
     private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
-    private static class VisualCueLineIndices
-    {
+    private static class VisualCueLineIndices {
         public static int Anchor = 0;
         public static int Hand = 1;
         public static int Controller = 2;
         public static int Count = 3;
     }
 
-    public override void Init()
-    {
-        try
-        {
-            if (containingAtom.type != "Person")
-            {
+    public override void Init() {
+        try {
+            if (containingAtom.type != "Person") {
                 SuperController.LogError("Snug can only be applied on Person atoms.");
                 return;
             }
@@ -88,37 +83,29 @@ public class Snug : MVRScript
             rightHandRigidBody.isKinematic = true;
             rightHandRigidBody.detectCollisions = false;
 
-            _possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
-            {
+            _possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) => {
                 if (!_ready) return;
-                if (val)
-                {
+                if (val) {
                     if (_leftAutoSnapPoint != null)
                         _leftHandActive = true;
                     if (_rightAutoSnapPoint != null)
                         _rightHandActive = true;
                     StartCoroutine(DeferredActivateHands());
-                }
-                else
-                {
-                    if (_leftHandActive)
-                    {
+                } else {
+                    if (_leftHandActive) {
                         CustomReleaseHand(_personLHandController);
                         _leftHandActive = false;
                     }
-                    if (_rightHandActive)
-                    {
+                    if (_rightHandActive) {
                         CustomReleaseHand(_personRHandController);
                         _rightHandActive = false;
                     }
                 }
-            })
-            { isStorable = false };
+            }) { isStorable = false };
             RegisterBool(_possessHandsJSON);
             CreateToggle(_possessHandsJSON);
 
-            _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
-            {
+            _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) => {
                 if (!_ready) return;
                 if (val)
                     CreateVisualCues();
@@ -155,8 +142,7 @@ public class Snug : MVRScript
             //     CreateScrollablePopup(rigidBodiesJSON);
             // }
 
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Head",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -164,8 +150,7 @@ public class Snug : MVRScript
                 VirtualOffset = new Vector3(0, 0, 0),
                 VirtualScale = new Vector2(1, 1)
             });
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Lips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -173,8 +158,7 @@ public class Snug : MVRScript
                 VirtualOffset = new Vector3(0, 0, 0),
                 VirtualScale = new Vector2(1, 1)
             });
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Chest",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -183,8 +167,7 @@ public class Snug : MVRScript
                 VirtualScale = new Vector2(1, 1)
 
             });
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Abdomen",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -193,8 +176,7 @@ public class Snug : MVRScript
                 VirtualScale = new Vector2(1, 1)
 
             });
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Hips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -203,8 +185,7 @@ public class Snug : MVRScript
                 VirtualScale = new Vector2(1, 1)
 
             });
-            _anchorPoints.Add(new ControllerAnchorPoint
-            {
+            _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Ground (Control)",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
                 PhysicalOffset = new Vector3(0, 0, 0),
@@ -259,17 +240,14 @@ public class Snug : MVRScript
             CreateSlider(_handRotateYJSON, false);
             _handRotateZJSON = new JSONStorableFloat("Hand Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, false) { isStorable = false };
             CreateSlider(_handRotateZJSON, false);
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(Init)}: {exc}");
         }
 
         StartCoroutine(DeferredInit());
     }
 
-    private IEnumerator DeferredActivateHands()
-    {
+    private IEnumerator DeferredActivateHands() {
         yield return new WaitForSeconds(0f);
         if (_leftHandActive)
             CustomPossessHand(_personLHandController, _leftHandTarget);
@@ -277,8 +255,7 @@ public class Snug : MVRScript
             CustomPossessHand(_personRHandController, _rightHandTarget);
     }
 
-    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target)
-    {
+    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target) {
         controllerV3.PossessMoveAndAlignTo(target.transform);
         controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
         controllerV3.canGrabPosition = false;
@@ -287,8 +264,7 @@ public class Snug : MVRScript
         controllerV3.possessable = false;
     }
 
-    private static void CustomReleaseHand(FreeControllerV3 controllerV3)
-    {
+    private static void CustomReleaseHand(FreeControllerV3 controllerV3) {
         controllerV3.RestorePreLinkState();
         // TODO: This should return to the previous state
         controllerV3.canGrabPosition = true;
@@ -296,38 +272,31 @@ public class Snug : MVRScript
         controllerV3.possessable = true;
     }
 
-    private IEnumerator DeferredInit()
-    {
+    private IEnumerator DeferredInit() {
         yield return new WaitForEndOfFrame();
-        try
-        {
+        try {
             if (!_loaded) containingAtom.RestoreFromLast(this);
             OnEnable();
             SyncSelectedAnchorJSON("");
             SyncHandsOffset();
             if (_showVisualCuesJSON.val) CreateVisualCues();
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(DeferredInit)}: {exc}");
         }
     }
 
     #region Load / Save
 
-    public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
-    {
+    public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false) {
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
 
-        try
-        {
+        try {
             json["hands"] = new JSONClass{
                 {"offset", SerializeVector3(_palmToWristOffset)},
                 {"rotation", SerializeVector3(_handRotateOffset)}
             };
             var anchors = new JSONClass();
-            foreach (var anchor in _anchorPoints)
-            {
+            foreach (var anchor in _anchorPoints) {
                 anchors[anchor.Label] = new JSONClass
                 {
                     {"offset", SerializeVector3(anchor.PhysicalOffset)},
@@ -338,9 +307,7 @@ public class Snug : MVRScript
             }
             json["anchors"] = anchors;
             needsStore = true;
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(GetJSON)}:  {exc}");
         }
 
@@ -351,24 +318,19 @@ public class Snug : MVRScript
     private static string SerializeVector3(Vector3 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}"; }
     private static string SerializeVector2(Vector2 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)}"; }
 
-    public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
-    {
+    public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true) {
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
 
-        try
-        {
+        try {
             var handsJSON = jc["hands"];
-            if (handsJSON != null)
-            {
+            if (handsJSON != null) {
                 _palmToWristOffset = DeserializeVector3(handsJSON["offset"]);
                 _handRotateOffset = DeserializeVector3(handsJSON["rotation"]);
             }
 
             var anchorsJSON = jc["anchors"];
-            if (anchorsJSON != null)
-            {
-                foreach (var anchor in _anchorPoints)
-                {
+            if (anchorsJSON != null) {
+                foreach (var anchor in _anchorPoints) {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
                     anchor.PhysicalOffset = DeserializeVector3(anchorJSON["offset"]);
@@ -379,9 +341,7 @@ public class Snug : MVRScript
             }
 
             _loaded = true;
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(RestoreFromJSON)}: {exc}");
         }
     }
@@ -392,8 +352,7 @@ public class Snug : MVRScript
 
     #endregion
 
-    private void SyncSelectedAnchorJSON(string _)
-    {
+    private void SyncSelectedAnchorJSON(string _) {
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
@@ -409,8 +368,7 @@ public class Snug : MVRScript
         _anchorPhysOffsetZJSON.valNoCallback = anchor.PhysicalOffset.z;
     }
 
-    private void UpdateAnchor(float _)
-    {
+    private void UpdateAnchor(float _) {
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
@@ -421,8 +379,7 @@ public class Snug : MVRScript
         anchor.Update();
     }
 
-    private void SyncHandsOffset()
-    {
+    private void SyncHandsOffset() {
         if (!_ready) return;
         _handOffsetXJSON.valNoCallback = _palmToWristOffset.x;
         _handOffsetYJSON.valNoCallback = _palmToWristOffset.y;
@@ -433,8 +390,7 @@ public class Snug : MVRScript
 
     }
 
-    private void UpdateHandsOffset(float _)
-    {
+    private void UpdateHandsOffset(float _) {
         if (!_ready) return;
         _palmToWristOffset = new Vector3(_handOffsetXJSON.val, _handOffsetYJSON.val, _handOffsetZJSON.val);
         _handRotateOffset = new Vector3(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
@@ -442,36 +398,28 @@ public class Snug : MVRScript
 
     #region Update
 
-    public void Update()
-    {
+    public void Update() {
         if (!_ready) return;
-        try
-        {
+        try {
             UpdateCueLine(_lHandVisualCueLine, _lHandVisualCueLinePoints, _lHandVisualCueLinePointIndicators);
             UpdateCueLine(_rHandVisualCueLine, _rHandVisualCueLinePoints, _rHandVisualCueLinePointIndicators);
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(Update)}: {exc}");
             OnDisable();
         }
     }
 
-    private static void UpdateCueLine(LineRenderer line, Vector3[] points, IList<GameObject> indicators)
-    {
-        if (line != null)
-        {
+    private static void UpdateCueLine(LineRenderer line, Vector3[] points, IList<GameObject> indicators) {
+        if (line != null) {
             line.SetPositions(points);
             for (var i = 0; i < points.Length; i++)
                 indicators[i].transform.position = points[i];
         }
     }
 
-    public void FixedUpdate()
-    {
+    public void FixedUpdate() {
         if (!_ready) return;
-        try
-        {
+        try {
             if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
                 ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset), _lHandVisualCueLinePoints);
             if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
@@ -479,16 +427,13 @@ public class Snug : MVRScript
 
             // var rHandDbg = SuperController.singleton.GetAtomByUid("snugRHandDebug").freeControllers[0];
             // ProcessHand(_rightHandTarget, rHandDbg.transform, rHandDbg.transform, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(FixedUpdate)}: {exc}");
             OnDisable();
         }
     }
 
-    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset, Vector3[] visualCueLinePoints)
-    {
+    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset, Vector3[] visualCueLinePoints) {
         if (physicalHand == null || handTarget == null || autoSnapPoint == null) return;
 
         var position = physicalHand.position;
@@ -496,15 +441,11 @@ public class Snug : MVRScript
 
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
-        foreach (var anchorPoint in _anchorPoints)
-        {
+        foreach (var anchorPoint in _anchorPoints) {
             var anchorPointY = anchorPoint.GetWorldY();
-            if (position.y > anchorPointY && (lower == null || anchorPointY > lower.GetWorldY()))
-            {
+            if (position.y > anchorPointY && (lower == null || anchorPointY > lower.GetWorldY())) {
                 lower = anchorPoint;
-            }
-            else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.GetWorldY()))
-            {
+            } else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.GetWorldY())) {
                 upper = anchorPoint;
             }
         }
@@ -538,7 +479,7 @@ public class Snug : MVRScript
         var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
         var physicalScale = new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight + new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight;
         var positionOffset = new Vector3(
-            (anchorPosition.x - position.x) * (1f /physicalScale.x),
+            (anchorPosition.x - position.x) * (1f / physicalScale.x),
             0f,
             (anchorPosition.z - position.z) * (1f / physicalScale.z)
             );
@@ -567,34 +508,25 @@ public class Snug : MVRScript
 
     #region Lifecycle
 
-    public void OnEnable()
-    {
-        try
-        {
+    public void OnEnable() {
+        try {
             _ready = true;
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(OnEnable)}: {exc}");
         }
     }
 
-    public void OnDisable()
-    {
-        try
-        {
+    public void OnDisable() {
+        try {
             _ready = false;
             DestroyVisualCues();
             Destroy(_rightHandTarget);
-        }
-        catch (Exception exc)
-        {
+        } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(OnDisable)}: {exc}");
         }
     }
 
-    public void OnDestroy()
-    {
+    public void OnDestroy() {
         OnDisable();
     }
 
@@ -602,15 +534,13 @@ public class Snug : MVRScript
 
     #region Debuggers
 
-    private void CreateVisualCues()
-    {
+    private void CreateVisualCues() {
         DestroyVisualCues();
 
         //_lHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.leftHand, _personLHandController, _leftHandTarget, _lHandVisualCueLinePointIndicators);
         _rHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.rightHand, _personRHandController, _rightHandTarget, _rHandVisualCueLinePointIndicators);
 
-        foreach (var anchorPoint in _anchorPoints)
-        {
+        foreach (var anchorPoint in _anchorPoints) {
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
             anchorPoint.Update();
 
@@ -619,8 +549,7 @@ public class Snug : MVRScript
         }
     }
 
-    private LineRenderer CreateHandVisualCue(Transform physicalHand, FreeControllerV3 controllerV3, GameObject target, List<GameObject> visualCueLinePointIndicators)
-    {
+    private LineRenderer CreateHandVisualCue(Transform physicalHand, FreeControllerV3 controllerV3, GameObject target, List<GameObject> visualCueLinePointIndicators) {
         // var handCue = VisualCuesHelper.Cross(Color.red);
         // handCue.transform.SetPositionAndRotation(
         //     physicalHand.position,
@@ -649,8 +578,7 @@ public class Snug : MVRScript
         var line = VisualCuesHelper.CreateLine(wristCue, Color.yellow, 0.002f, VisualCueLineIndices.Count, true);
         _cues.Add(wristCue);
 
-        for (var i = 0; i < VisualCueLineIndices.Count; i++)
-        {
+        for (var i = 0; i < VisualCueLineIndices.Count; i++) {
             var p = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, Color.yellow);
             p.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
             visualCueLinePointIndicators.Add(p);
@@ -659,8 +587,7 @@ public class Snug : MVRScript
         return line;
     }
 
-    private void DestroyVisualCues()
-    {
+    private void DestroyVisualCues() {
         _lHandVisualCueLine = null;
         _rHandVisualCueLine = null;
         foreach (var p in _lHandVisualCueLinePointIndicators)
@@ -669,13 +596,11 @@ public class Snug : MVRScript
         foreach (var p in _rHandVisualCueLinePointIndicators)
             Destroy(p);
         _rHandVisualCueLinePointIndicators.Clear();
-        foreach (var debugger in _cues)
-        {
+        foreach (var debugger in _cues) {
             Destroy(debugger);
         }
         _cues.Clear();
-        foreach (var anchor in _anchorPoints)
-        {
+        foreach (var anchor in _anchorPoints) {
             Destroy(anchor.VirtualCue?.gameObject);
             anchor.VirtualCue = null;
             Destroy(anchor.PhysicalCue?.gameObject);
@@ -685,8 +610,7 @@ public class Snug : MVRScript
 
     #endregion
 
-    private class ControllerAnchorPoint
-    {
+    private class ControllerAnchorPoint {
         public string Label { get; internal set; }
         public Rigidbody RigidBody { get; set; }
         public Vector3 PhysicalOffset { get; set; }
@@ -696,23 +620,19 @@ public class Snug : MVRScript
         public ControllerAnchorPointVisualCue VirtualCue { get; set; }
         public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
 
-        public float GetWorldY()
-        {
+        public float GetWorldY() {
             return RigidBody.transform.position.y + VirtualOffset.y;
         }
 
-        internal void Update()
-        {
-            if (PhysicalCue != null)
-            {
+        internal void Update() {
+            if (PhysicalCue != null) {
                 VirtualCue.Update(VirtualOffset, VirtualScale);
                 PhysicalCue.Update(VirtualOffset + PhysicalOffset, VirtualScale * PhysicalScale);
             }
         }
     }
 
-    private class ControllerAnchorPointVisualCue : IDisposable
-    {
+    private class ControllerAnchorPointVisualCue : IDisposable {
         private const float _width = 0.005f;
         public readonly GameObject gameObject;
         private readonly Transform _xAxis;
@@ -722,8 +642,7 @@ public class Snug : MVRScript
         private readonly Transform _rightHandle;
         private readonly LineRenderer _ellipse;
 
-        public ControllerAnchorPointVisualCue(Transform parent, Color color)
-        {
+        public ControllerAnchorPointVisualCue(Transform parent, Color color) {
             var go = new GameObject();
             _xAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform;
             _zAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform;
@@ -738,8 +657,7 @@ public class Snug : MVRScript
             gameObject.transform.localRotation = Quaternion.identity;
         }
 
-        public void Update(Vector3 offset, Vector2 scale)
-        {
+        public void Update(Vector3 offset, Vector2 scale) {
             gameObject.transform.localPosition = offset;
 
             var size = new Vector2(_baseCueSize * scale.x, _baseCueSize * scale.y);
@@ -755,16 +673,13 @@ public class Snug : MVRScript
             VisualCuesHelper.DrawEllipse(_ellipse, new Vector2(size.x / 2f, size.y / 2f));
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Destroy(gameObject);
         }
     }
 
-    private static class VisualCuesHelper
-    {
-        public static GameObject Cross(Color color)
-        {
+    private static class VisualCuesHelper {
+        public static GameObject Cross(Color color) {
             var go = new GameObject();
             var size = 0.2f; var width = 0.005f;
             CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform.localScale = new Vector3(size, width, width);
@@ -775,8 +690,7 @@ public class Snug : MVRScript
             return go;
         }
 
-        public static GameObject CreatePrimitive(Transform parent, PrimitiveType type, Color color)
-        {
+        public static GameObject CreatePrimitive(Transform parent, PrimitiveType type, Color color) {
             var go = GameObject.CreatePrimitive(type);
             go.GetComponent<Renderer>().material = new Material(Shader.Find("Sprites/Default")) { color = color, renderQueue = 4000 };
             foreach (var c in go.GetComponents<Collider>()) { c.enabled = false; Destroy(c); }
@@ -784,30 +698,25 @@ public class Snug : MVRScript
             return go;
         }
 
-        public static LineRenderer CreateLine(GameObject go, Color color, float width, int points, bool useWorldSpace)
-        {
+        public static LineRenderer CreateLine(GameObject go, Color color, float width, int points, bool useWorldSpace) {
             var line = go.AddComponent<LineRenderer>();
             line.useWorldSpace = useWorldSpace;
             line.material = new Material(Shader.Find("Sprites/Default")) { renderQueue = 4000 };
             line.widthMultiplier = width;
-            line.colorGradient = new Gradient
-            {
+            line.colorGradient = new Gradient {
                 colorKeys = new[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 1f) }
             };
             line.positionCount = points;
             return line;
         }
 
-        public static LineRenderer CreateEllipse(GameObject go, Color color, float width, int resolution = 32)
-        {
+        public static LineRenderer CreateEllipse(GameObject go, Color color, float width, int resolution = 32) {
             var line = CreateLine(go, color, width, resolution, false);
             return line;
         }
 
-        public static void DrawEllipse(LineRenderer line, Vector2 radius)
-        {
-            for (int i = 0; i <= line.positionCount; i++)
-            {
+        public static void DrawEllipse(LineRenderer line, Vector2 radius) {
+            for (int i = 0; i <= line.positionCount; i++) {
                 var angle = i / (float)line.positionCount * 2.0f * Mathf.PI;
                 Quaternion pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
                 Vector3 pointPosition;
