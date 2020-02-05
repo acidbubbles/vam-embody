@@ -55,8 +55,8 @@ public class Snug : MVRScript
                 touchObjectLeft = s.viveObjectLeft;
             if (touchObjectLeft != null)
                 _leftAutoSnapPoint = touchObjectLeft.GetComponent<Possessor>().autoSnapPoint;
-            _personLHandController = containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
-            if (_personLHandController == null) throw new NullReferenceException("Could not find the lHandControl controller");
+            _personLHandController = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl");
+            if (_personLHandController == null) throw new NullReferenceException($"Could not find the lHandControl controller. Controllers: {string.Join(", ", containingAtom.freeControllers.Select(fc => fc.name).ToArray())}");
             _leftHandTarget = new GameObject($"{containingAtom.gameObject.name}.lHandController.snugTarget");
             var leftHandRigidBody = _leftHandTarget.AddComponent<Rigidbody>();
             leftHandRigidBody.isKinematic = true;
@@ -69,8 +69,8 @@ public class Snug : MVRScript
                 touchObjectRight = s.viveObjectRight;
             if (touchObjectRight != null)
                 _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
-            _personRHandController = containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
-            if (_personRHandController == null) throw new NullReferenceException("Could not find the rHandControl controller");
+            _personRHandController = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl");
+            if (_personRHandController == null) throw new NullReferenceException($"Could not find the rHandControl controller. Controllers: {string.Join(", ", containingAtom.freeControllers.Select(fc => fc.name).ToArray())}");
             _rightHandTarget = new GameObject($"{containingAtom.gameObject.name}.rHandController.snugTarget");
             var rightHandRigidBody = _rightHandTarget.AddComponent<Rigidbody>();
             rightHandRigidBody.isKinematic = true;
@@ -231,7 +231,7 @@ public class Snug : MVRScript
 
             // TODO: Figure out a simple way to configure this quickly (e.g. two moveable controllers, one for the vr body, the other for the real space equivalent)
 
-            _falloffJSON = new JSONStorableFloat("Effect Falloff", 1f, UpdateHandsOffset, 0f, 5f, false) { isStorable = false };
+            _falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, UpdateHandsOffset, 0f, 5f, false) { isStorable = false };
             CreateSlider(_falloffJSON, false);
 
             _handOffsetXJSON = new JSONStorableFloat("Hand Offset X", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) { isStorable = false };
@@ -432,13 +432,16 @@ public class Snug : MVRScript
 
     public void FixedUpdate()
     {
-        if (!_ready || _rightAutoSnapPoint == null) return;
+        if (!_ready) return;
         try
         {
-            if (_leftAutoSnapPoint != null && _leftHandTarget.transform.position != Vector3.zero)
+            if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
                 ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset));
-            if (_rightAutoSnapPoint != null && _rightHandTarget.transform.position != Vector3.zero)
+            if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
                 ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset);
+
+            // var rHand = SuperController.singleton.GetAtomByUid("snugRHandDebug").freeControllers[0];
+            // ProcessHand(_rightHandTarget, rHand.transform, rHand.transform, _palmToWristOffset, _handRotateOffset);
         }
         catch (Exception exc)
         {
@@ -477,7 +480,7 @@ public class Snug : MVRScript
         var yUpperDelta = upper.GetWorldY() - position.y;
         var yLowerDelta = position.y - lower.GetWorldY();
         var totalDelta = yLowerDelta + yUpperDelta;
-        var upperWeight = yLowerDelta / totalDelta;
+        var upperWeight = totalDelta == 0 ? 1f : yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
         var anchorPosition = ((upper.RigidBody.transform.position + upper.VirtualOffset) * upperWeight) + ((lower.RigidBody.transform.position + lower.VirtualOffset) * lowerWeight);
 
@@ -488,15 +491,15 @@ public class Snug : MVRScript
         ));
 
         var anchorScale = (upper.PhysicalScale * upperWeight) + (lower.PhysicalScale * lowerWeight);
-        var cueDistanceFromCenter = _baseCueSize * Mathf.Max(anchorScale.x, anchorScale.y);
-        // NOTE: This Clamp01 is only necessary because falloffJSON can be set to values lower than the cueDistanceFromCenter.
-        var falloff = Mathf.Clamp01((_falloffJSON.val - cueDistanceFromCenter) / Mathf.Clamp(distance - cueDistanceFromCenter, cueDistanceFromCenter, _falloffJSON.val));
+        var cueDistanceFromCenter = _baseCueSize / 2f * Mathf.Max(anchorScale.x, anchorScale.y);
+        var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - cueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
         var anchorOffset = ((upper.PhysicalOffset * upperWeight) + (lower.PhysicalOffset * lowerWeight)) * falloff;
         var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight * falloff);
 
         // SuperController.singleton.ClearMessages();
-        // SuperController.LogMessage($"Between {lower.RigidBody.name} ({lowerWeight}) and {upper.RigidBody.name} ({upperWeight}) with distance {distance} (falloff {falloff})");
-        // SuperController.LogMessage($"Anchor {upper.VirtualOffset.y} and {lower.VirtualOffset.y} = {anchorOffset.y}");
+        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00}) and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00})");
+        // SuperController.LogMessage($"dist {distance:0.00} btwn {anchorPosition:0.00} and {position:0.00} cue dist {cueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        // SuperController.LogMessage($"({_falloffJSON.val:0.00} - {cueDistanceFromCenter:0.00}) / Mathf.Clamp({distance:0.00} - {cueDistanceFromCenter:0.00}, {cueDistanceFromCenter:0.00}, {_falloffJSON.val:0.00})");
 
         var resultPosition = position + snapOffset + palmToWristOffset + (anchorRotation * new Vector3(-anchorOffset.x, 0f, -anchorOffset.z));
         resultPosition.x = anchorPosition.x + (resultPosition.x - anchorPosition.x) * (1f / anchorScale.y);
