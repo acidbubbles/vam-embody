@@ -128,32 +128,32 @@ public class Snug : MVRScript
             RegisterBool(_showVisualCuesJSON);
             CreateToggle(_showVisualCuesJSON);
 
-            {
-                GameObject lastRbCue = null;
-                var rigidBodiesJSON = new JSONStorableStringChooser(
-                    "Target",
-                    containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target",
-                    (string val) =>
-                    {
-                        if (lastRbCue != null)
-                        {
-                            Destroy(lastRbCue);
-                            _cues.Remove(lastRbCue);
-                        }
+            // {
+            //     GameObject lastRbCue = null;
+            //     var rigidBodiesJSON = new JSONStorableStringChooser(
+            //         "Target",
+            //         containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target",
+            //         (string val) =>
+            //         {
+            //             if (lastRbCue != null)
+            //             {
+            //                 Destroy(lastRbCue);
+            //                 _cues.Remove(lastRbCue);
+            //             }
 
-                        var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
-                        if (rigidbody == null) return;
-                        var rbCue = VisualCuesHelper.Cross(Color.white);
-                        rbCue.transform.parent = rigidbody.transform;
-                        rbCue.transform.localScale = new Vector3(2f, 2f, 2f);
-                        rbCue.transform.localPosition = Vector3.zero;
-                        _cues.Add(rbCue);
-                        lastRbCue = rbCue;
-                    }
-                )
-                { isStorable = false };
-                CreateScrollablePopup(rigidBodiesJSON);
-            }
+            //             var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
+            //             if (rigidbody == null) return;
+            //             var rbCue = VisualCuesHelper.Cross(Color.white);
+            //             rbCue.transform.parent = rigidbody.transform;
+            //             rbCue.transform.localScale = new Vector3(2f, 2f, 2f);
+            //             rbCue.transform.localPosition = Vector3.zero;
+            //             _cues.Add(rbCue);
+            //             lastRbCue = rbCue;
+            //         }
+            //     )
+            //     { isStorable = false };
+            //     CreateScrollablePopup(rigidBodiesJSON);
+            // }
 
             _anchorPoints.Add(new ControllerAnchorPoint
             {
@@ -472,13 +472,13 @@ public class Snug : MVRScript
         if (!_ready) return;
         try
         {
-            // if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
-            //     ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset), _lHandVisualCueLinePoints);
-            // if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
-            //     ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
+            if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
+                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset), _lHandVisualCueLinePoints);
+            if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
+                ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
 
-            var rHandDbg = SuperController.singleton.GetAtomByUid("snugRHandDebug").freeControllers[0];
-            ProcessHand(_rightHandTarget, rHandDbg.transform, rHandDbg.transform, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
+            // var rHandDbg = SuperController.singleton.GetAtomByUid("snugRHandDebug").freeControllers[0];
+            // ProcessHand(_rightHandTarget, rHandDbg.transform, rHandDbg.transform, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
         }
         catch (Exception exc)
         {
@@ -557,10 +557,10 @@ public class Snug : MVRScript
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
 
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        SuperController.LogMessage($"anchor {anchorPosition} ctrl {physicalHand.transform.position} offs {positionOffset} result {resultPosition}");
+        // SuperController.singleton.ClearMessages();
+        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
+        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        // SuperController.LogMessage($"anchor {anchorPosition} ctrl {physicalHand.transform.position} offs {positionOffset} result {resultPosition}");
     }
 
     #endregion
