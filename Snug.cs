@@ -9,7 +9,7 @@ using UnityEngine;
 /// <summary>
 /// Snug
 /// By Acidbubbles
-/// Better controller alignement when possessing
+/// Adjust hand alignement and position to match your actual body
 /// Source: https://github.com/acidbubbles/vam-wrist
 /// </summary>
 public class Snug : MVRScript {
@@ -434,10 +434,8 @@ public class Snug : MVRScript {
     }
 
     private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset, Vector3[] visualCueLinePoints) {
-        if (physicalHand == null || handTarget == null || autoSnapPoint == null) return;
-
         var position = physicalHand.position;
-        var snapOffset = autoSnapPoint.position - position;
+        var snapOffset = autoSnapPoint.localPosition; // TODO: To confirm
 
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
@@ -460,14 +458,13 @@ public class Snug : MVRScript {
         var totalDelta = yLowerDelta + yUpperDelta;
         var upperWeight = totalDelta == 0 ? 1f : yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
-        var anchorPosition = ((upper.RigidBody.transform.position + upper.RigidBody.transform.rotation * (upper.VirtualOffset + upper.PhysicalOffset)) * upperWeight) + ((lower.RigidBody.transform.position + lower.RigidBody.transform.rotation * (lower.VirtualOffset + lower.PhysicalOffset)) * lowerWeight);
+        var lowerRotation = lower.RigidBody.transform.rotation;
+        var upperRotation = upper.RigidBody.transform.rotation;
+        var anchorPosition = ((upper.RigidBody.transform.position + upperRotation * (upper.VirtualOffset + upper.PhysicalOffset)) * upperWeight) + ((lower.RigidBody.transform.position + lowerRotation * (lower.VirtualOffset + lower.PhysicalOffset)) * lowerWeight);
         visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
         // TODO: Even better to use closest point on ellipse, but not necessary.
-        var distance = Mathf.Abs(Vector2.Distance(
-            new Vector2(anchorPosition.x, anchorPosition.z),
-            new Vector2(position.x, position.z)
-        ));
+        var distance = Mathf.Abs(Vector2.Distance(anchorPosition, position));
 
         var virtualCueSize = new Vector2(upper.VirtualScale.x * upperWeight, lower.VirtualScale.y * lowerWeight) * (_baseCueSize / 2f);
         var physicalCueSize = new Vector2(upper.VirtualScale.x * upper.PhysicalScale.x * upperWeight, lower.VirtualScale.y * lower.PhysicalScale.y * lowerWeight) * (_baseCueSize / 2f);
@@ -475,19 +472,19 @@ public class Snug : MVRScript {
         // TODO: Check both x and z to determine a falloff relative to both distances
         var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
-        var cueDelta = physicalCueSize - virtualCueSize;
-        var anchorRotation = Quaternion.Lerp(lower.RigidBody.transform.rotation, upper.RigidBody.transform.rotation, upperWeight);
-        var physicalScale = new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight + new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight;
-        var positionOffset = new Vector3(
-            (anchorPosition.x - position.x) * (1f / physicalScale.x),
-            0f,
-            (anchorPosition.z - position.z) * (1f / physicalScale.z)
-            );
+        var physicalScale = (upperRotation * new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight) + (lowerRotation * new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight);
+        var physicalOffset = (upperRotation * upper.PhysicalOffset * upperWeight) + (lowerRotation * lower.PhysicalOffset * lowerWeight);
+        var baseOffset = position - anchorPosition;
+        var resultOffset = new Vector3(
+            (baseOffset.x / Mathf.Abs(physicalScale.x)) - physicalOffset.x,
+            -physicalOffset.y,
+            (baseOffset.z / Mathf.Abs(physicalScale.z)) - physicalOffset.z
+        );
 
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
-        var resultPosition = position + snapOffset + palmToWristOffset + positionOffset * falloff;
+        var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, 1f); //falloff);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
 
         // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
@@ -498,10 +495,10 @@ public class Snug : MVRScript {
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
 
-        // SuperController.singleton.ClearMessages();
-        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        // SuperController.LogMessage($"anchor {anchorPosition} ctrl {physicalHand.transform.position} offs {positionOffset} result {resultPosition}");
+        SuperController.singleton.ClearMessages();
+        SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
+        SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
     }
 
     #endregion
@@ -611,7 +608,7 @@ public class Snug : MVRScript {
     #endregion
 
     private class ControllerAnchorPoint {
-        public string Label { get; internal set; }
+        public string Label { get; set; }
         public Rigidbody RigidBody { get; set; }
         public Vector3 PhysicalOffset { get; set; }
         public Vector2 PhysicalScale { get; set; }
@@ -624,7 +621,7 @@ public class Snug : MVRScript {
             return RigidBody.transform.position.y + VirtualOffset.y;
         }
 
-        internal void Update() {
+        public void Update() {
             if (PhysicalCue != null) {
                 VirtualCue.Update(VirtualOffset, VirtualScale);
                 PhysicalCue.Update(VirtualOffset + PhysicalOffset, VirtualScale * PhysicalScale);
