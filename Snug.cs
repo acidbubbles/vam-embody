@@ -461,11 +461,12 @@ public class Snug : MVRScript {
         var lowerRotation = lower.RigidBody.transform.rotation;
         var upperRotation = upper.RigidBody.transform.rotation;
         var anchorPosition = ((upper.RigidBody.transform.position + upperRotation * (upper.VirtualOffset + upper.PhysicalOffset)) * upperWeight) + ((lower.RigidBody.transform.position + lowerRotation * (lower.VirtualOffset + lower.PhysicalOffset)) * lowerWeight);
+        var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
         anchorPosition.y = position.y;
         visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
         // TODO: Even better to use closest point on ellipse, but not necessary.
-        var distance = Mathf.Abs(Vector2.Distance(anchorPosition, position));
+        var distance = Mathf.Abs(Vector3.Distance(anchorPosition, position));
 
         var virtualCueSize = new Vector2(upper.VirtualScale.x * upperWeight, lower.VirtualScale.y * lowerWeight) * (_baseCueSize / 2f);
         var physicalCueSize = new Vector2(upper.VirtualScale.x * upper.PhysicalScale.x * upperWeight, lower.VirtualScale.y * lower.PhysicalScale.y * lowerWeight) * (_baseCueSize / 2f);
@@ -473,21 +474,24 @@ public class Snug : MVRScript {
         // TODO: Check both x and z to determine a falloff relative to both distances
         var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
-        var physicalScale = (upperRotation * new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight) + (lowerRotation * new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight);
-        var physicalOffset = (upperRotation * upper.PhysicalOffset * upperWeight) + (lowerRotation * lower.PhysicalOffset * lowerWeight);
+        var physicalScale = new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight + new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight;
+        var physicalOffset = upper.PhysicalOffset * upperWeight + lower.PhysicalOffset * lowerWeight;
         var baseOffset = position - anchorPosition;
-        var resultOffset = new Vector3(
-            (baseOffset.x / Mathf.Abs(physicalScale.x)) - physicalOffset.x,
-            -physicalOffset.y,
-            (baseOffset.z / Mathf.Abs(physicalScale.z)) - physicalOffset.z
+        var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
+        resultOffset = new Vector3(
+            (resultOffset.x / Mathf.Abs(physicalScale.x)) - physicalOffset.x,
+            resultOffset.y,
+            (resultOffset.z / Mathf.Abs(physicalScale.z)) - physicalOffset.z
         );
+        resultOffset.y -= physicalOffset.y;
+        resultOffset = anchorRotation * resultOffset;
 
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
-        resultPosition += physicalHand.transform.rotation * (snapOffset + palmToWristOffset);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
+        resultPosition += physicalHand.transform.rotation * (snapOffset + palmToWristOffset);
 
         // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
         var rb = handTarget.GetComponent<Rigidbody>();
@@ -497,10 +501,10 @@ public class Snug : MVRScript {
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
 
-        // SuperController.singleton.ClearMessages();
-        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        // SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
+        SuperController.singleton.ClearMessages();
+        SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
+        SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
     }
 
     #endregion
