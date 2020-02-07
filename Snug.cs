@@ -421,7 +421,7 @@ public class Snug : MVRScript {
         if (!_ready) return;
         try {
             if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
-                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), Vector3.Reflect(Vector3.forward, _handRotateOffset), _lHandVisualCueLinePoints);
+                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z), _lHandVisualCueLinePoints);
             if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
                 ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
 
@@ -461,6 +461,7 @@ public class Snug : MVRScript {
         var lowerRotation = lower.RigidBody.transform.rotation;
         var upperRotation = upper.RigidBody.transform.rotation;
         var anchorPosition = ((upper.RigidBody.transform.position + upperRotation * (upper.VirtualOffset + upper.PhysicalOffset)) * upperWeight) + ((lower.RigidBody.transform.position + lowerRotation * (lower.VirtualOffset + lower.PhysicalOffset)) * lowerWeight);
+        anchorPosition.y = position.y;
         visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
         // TODO: Even better to use closest point on ellipse, but not necessary.
@@ -484,21 +485,22 @@ public class Snug : MVRScript {
         var resultRotation = autoSnapPoint.rotation;
         resultRotation.eulerAngles += handRotateOffset;
 
-        var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, 1f); //falloff);
+        var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
+        resultPosition += physicalHand.transform.rotation * (snapOffset + palmToWristOffset);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
 
         // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
         var rb = handTarget.GetComponent<Rigidbody>();
         // handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
-        rb.MoveRotation(resultRotation);
         rb.MovePosition(resultPosition);
+        rb.MoveRotation(resultRotation);
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
 
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
+        // SuperController.singleton.ClearMessages();
+        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
+        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        // SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
     }
 
     #endregion
@@ -534,7 +536,7 @@ public class Snug : MVRScript {
     private void CreateVisualCues() {
         DestroyVisualCues();
 
-        //_lHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.leftHand, _personLHandController, _leftHandTarget, _lHandVisualCueLinePointIndicators);
+        _lHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.leftHand, _personLHandController, _leftHandTarget, _lHandVisualCueLinePointIndicators);
         _rHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.rightHand, _personRHandController, _rightHandTarget, _rHandVisualCueLinePointIndicators);
 
         foreach (var anchorPoint in _anchorPoints) {
@@ -566,14 +568,17 @@ public class Snug : MVRScript {
         //     _cues.Add(controllerCue);
         // }
 
-        var wristCue = VisualCuesHelper.Cross(Color.green);
-        wristCue.transform.SetPositionAndRotation(
-            target.transform.position,
-            target.transform.rotation
-        );
-        wristCue.transform.parent = target.transform;
-        var line = VisualCuesHelper.CreateLine(wristCue, Color.yellow, 0.002f, VisualCueLineIndices.Count, true);
-        _cues.Add(wristCue);
+        // var wristCue = VisualCuesHelper.Cross(Color.green);
+        // wristCue.transform.SetPositionAndRotation(
+        //     target.transform.position,
+        //     target.transform.rotation
+        // );
+        // wristCue.transform.parent = target.transform;
+        // _cues.Add(wristCue);
+
+        var lineGo = new GameObject();
+        var line = VisualCuesHelper.CreateLine(lineGo, Color.yellow, 0.002f, VisualCueLineIndices.Count, true);
+        _cues.Add(lineGo);
 
         for (var i = 0; i < VisualCueLineIndices.Count; i++) {
             var p = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, Color.yellow);
