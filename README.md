@@ -12,14 +12,14 @@ This should provide improved realism when touching your own body while possessin
 
 1. Add `Snug.cs` to a Person atom
 2. In the plugin UI, check the `Show Visual Cues` checkbox. Circles will appear and you will see crosses in your hands and wrist.
-3. For each Anchor:
-   1. Adjust the "Virtual" scale and offset until it matches the model on the screen tightly.
-   2. Adjust the "Physical" scale and offset until it matches your physical hand in space (this can be harder to do) .
-4. Adjust the world scale until your extended arms match the model's arms.
+3. Adjust the world scale until your extended arms match the model's arms.
+4. For each Anchor:
+   1. Adjust the "Virtual" (grey) scale and offset until it matches the model on the screen tightly.
+   2. Adjust the "Physical" (white) scale and offset until it matches your physical hand in space.
 5. Possess the model, but not the hands.
 6. Check the `Possess Hands` checkbox.
 
-You can also made adjustments to the hands, so that they better align with yours. You can move your hands in front of your eyes and put your headset on and off until the position matches.
+You can also make adjustments to the hands, so that they better align with yours. You can move your hands in front of your eyes and put your headset on and off until the position matches.
 
 ## License
 
