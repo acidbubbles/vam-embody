@@ -146,52 +146,52 @@ public class Snug : MVRScript {
                 Label = "Head",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Lips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Chest",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Abdomen",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Hips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
 
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Ground (Control)",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
                 PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector2(1, 1),
+                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector2(1, 1)
+                VirtualScale = new Vector3(1, 1, 1)
 
             });
 
@@ -300,9 +300,9 @@ public class Snug : MVRScript {
                 anchors[anchor.Label] = new JSONClass
                 {
                     {"offset", SerializeVector3(anchor.PhysicalOffset)},
-                    {"scale", SerializeVector2(anchor.PhysicalScale)},
+                    {"scale", SerializeVector2(new Vector2(anchor.PhysicalScale.x, anchor.PhysicalScale.z))},
                     {"cueOffset", SerializeVector3(anchor.VirtualOffset)},
-                    {"cueScale", SerializeVector2(anchor.VirtualScale)},
+                    {"cueScale", SerializeVector2(new Vector3(anchor.VirtualScale.x, anchor.VirtualScale.z))},
                 };
             }
             json["anchors"] = anchors;
@@ -334,9 +334,9 @@ public class Snug : MVRScript {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
                     anchor.PhysicalOffset = DeserializeVector3(anchorJSON["offset"]);
-                    anchor.PhysicalScale = DeserializeVector2(anchorJSON["scale"]);
+                    anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["scale"]);
                     anchor.VirtualOffset = DeserializeVector3(anchorJSON["cueOffset"]);
-                    anchor.VirtualScale = DeserializeVector2(anchorJSON["cueScale"]);
+                    anchor.VirtualScale = DeserializeVector2AsFlatScale(anchorJSON["cueScale"]);
                 }
             }
 
@@ -348,7 +348,7 @@ public class Snug : MVRScript {
 
     private static Quaternion DeserializeQuaternion(string v) { var s = v.Split(','); return new Quaternion(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture), float.Parse(s[3], CultureInfo.InvariantCulture)); }
     private static Vector3 DeserializeVector3(string v) { var s = v.Split(','); return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture)); }
-    private static Vector2 DeserializeVector2(string v) { var s = v.Split(','); return new Vector2(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture)); }
+    private static Vector3 DeserializeVector2AsFlatScale(string v) { var s = v.Split(','); return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), 1f, float.Parse(s[1], CultureInfo.InvariantCulture)); }
 
     #endregion
 
@@ -357,12 +357,12 @@ public class Snug : MVRScript {
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
         _anchorVirtScaleXJSON.valNoCallback = anchor.VirtualScale.x;
-        _anchorVirtScaleZJSON.valNoCallback = anchor.VirtualScale.y;
+        _anchorVirtScaleZJSON.valNoCallback = anchor.VirtualScale.z;
         _anchorVirtOffsetXJSON.valNoCallback = anchor.VirtualOffset.x;
         _anchorVirtOffsetYJSON.valNoCallback = anchor.VirtualOffset.y;
         _anchorVirtOffsetZJSON.valNoCallback = anchor.VirtualOffset.z;
         _anchorPhysScaleXJSON.valNoCallback = anchor.PhysicalScale.x;
-        _anchorPhysScaleZJSON.valNoCallback = anchor.PhysicalScale.y;
+        _anchorPhysScaleZJSON.valNoCallback = anchor.PhysicalScale.z;
         _anchorPhysOffsetXJSON.valNoCallback = anchor.PhysicalOffset.x;
         _anchorPhysOffsetYJSON.valNoCallback = anchor.PhysicalOffset.y;
         _anchorPhysOffsetZJSON.valNoCallback = anchor.PhysicalOffset.z;
@@ -372,9 +372,9 @@ public class Snug : MVRScript {
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        anchor.VirtualScale = new Vector2(_anchorVirtScaleXJSON.val, _anchorVirtScaleZJSON.val);
+        anchor.VirtualScale = new Vector3(_anchorVirtScaleXJSON.val, 1f, _anchorVirtScaleZJSON.val);
         anchor.VirtualOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
-        anchor.PhysicalScale = new Vector2(_anchorPhysScaleXJSON.val, _anchorPhysScaleZJSON.val);
+        anchor.PhysicalScale = new Vector3(_anchorPhysScaleXJSON.val, 1f, _anchorPhysScaleZJSON.val);
         anchor.PhysicalOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
         anchor.Update();
     }
@@ -440,10 +440,10 @@ public class Snug : MVRScript {
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
         foreach (var anchorPoint in _anchorPoints) {
-            var anchorPointY = anchorPoint.GetWorldY();
-            if (position.y > anchorPointY && (lower == null || anchorPointY > lower.GetWorldY())) {
+            var anchorPointPos = anchorPoint.GetWorldPosition();
+            if (position.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetWorldPosition().y)) {
                 lower = anchorPoint;
-            } else if (position.y < anchorPointY && (upper == null || anchorPointY < upper.GetWorldY())) {
+            } else if (position.y < anchorPointPos.y && (upper == null || anchorPointPos.y < upper.GetWorldPosition().y)) {
                 upper = anchorPoint;
             }
         }
@@ -453,45 +453,40 @@ public class Snug : MVRScript {
         else if (upper == null)
             upper = lower;
 
-        var yUpperDelta = upper.GetWorldY() - position.y;
-        var yLowerDelta = position.y - lower.GetWorldY();
+        var upperPosition = upper.GetWorldPosition();
+        var lowerPosition = lower.GetWorldPosition();
+        var yUpperDelta = upperPosition.y - position.y;
+        var yLowerDelta = position.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;
         var upperWeight = totalDelta == 0 ? 1f : yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
         var lowerRotation = lower.RigidBody.transform.rotation;
         var upperRotation = upper.RigidBody.transform.rotation;
-        var anchorPosition = ((upper.RigidBody.transform.position + upperRotation * (upper.VirtualOffset + upper.PhysicalOffset)) * upperWeight) + ((lower.RigidBody.transform.position + lowerRotation * (lower.VirtualOffset + lower.PhysicalOffset)) * lowerWeight);
+        var anchorPosition = Vector3.Lerp(upperPosition, lowerPosition, lowerWeight);
         var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
+        // TODO: Is this useful?
         anchorPosition.y = position.y;
         visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
         // TODO: Even better to use closest point on ellipse, but not necessary.
         var distance = Mathf.Abs(Vector3.Distance(anchorPosition, position));
-
-        var virtualCueSize = new Vector2(upper.VirtualScale.x * upperWeight, lower.VirtualScale.y * lowerWeight) * (_baseCueSize / 2f);
-        var physicalCueSize = new Vector2(upper.VirtualScale.x * upper.PhysicalScale.x * upperWeight, lower.VirtualScale.y * lower.PhysicalScale.y * lowerWeight) * (_baseCueSize / 2f);
-        var physicalCueDistanceFromCenter = Mathf.Max(physicalCueSize.x, physicalCueSize.y);
+        var physicalCueSize = Vector3.Lerp(Vector3.Scale(upper.VirtualScale, upper.PhysicalScale), Vector3.Scale(lower.VirtualScale, lower.PhysicalScale), lowerWeight) * (_baseCueSize / 2f);
+        var physicalCueDistanceFromCenter = Mathf.Max(physicalCueSize.x, physicalCueSize.z);
         // TODO: Check both x and z to determine a falloff relative to both distances
         var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
-        var physicalScale = new Vector3(upper.PhysicalScale.x, 1f, upper.PhysicalScale.y) * upperWeight + new Vector3(lower.PhysicalScale.x, 1f, lower.PhysicalScale.y) * lowerWeight;
-        var physicalOffset = upper.PhysicalOffset * upperWeight + lower.PhysicalOffset * lowerWeight;
+        var physicalScale = Vector3.Lerp(upper.PhysicalScale, lower.PhysicalScale, lowerWeight);
+        var physicalOffset = Vector3.Lerp(upper.PhysicalOffset, lower.PhysicalOffset, lowerWeight);
         var baseOffset = position - anchorPosition;
         var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
-        resultOffset = new Vector3(
-            (resultOffset.x / Mathf.Abs(physicalScale.x)) - physicalOffset.x,
-            resultOffset.y,
-            (resultOffset.z / Mathf.Abs(physicalScale.z)) - physicalOffset.z
-        );
-        resultOffset.y -= physicalOffset.y;
+        resultOffset = new Vector3(resultOffset.x / physicalScale.x, resultOffset.y / physicalScale.y, resultOffset.z / physicalScale.z) - physicalOffset;
         resultOffset = anchorRotation * resultOffset;
 
-        var resultRotation = autoSnapPoint.rotation;
-        resultRotation.eulerAngles += handRotateOffset;
+        var resultRotation = autoSnapPoint.rotation * Quaternion.Euler(handRotateOffset);
 
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
-        resultPosition += physicalHand.transform.rotation * (snapOffset + palmToWristOffset);
+        resultPosition += resultRotation * (snapOffset + palmToWristOffset);
 
         // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
         var rb = handTarget.GetComponent<Rigidbody>();
@@ -501,10 +496,10 @@ public class Snug : MVRScript {
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
 
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
+        // SuperController.singleton.ClearMessages();
+        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
+        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
+        // SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
     }
 
     #endregion
@@ -620,20 +615,20 @@ public class Snug : MVRScript {
         public string Label { get; set; }
         public Rigidbody RigidBody { get; set; }
         public Vector3 PhysicalOffset { get; set; }
-        public Vector2 PhysicalScale { get; set; }
+        public Vector3 PhysicalScale { get; set; }
         public Vector3 VirtualOffset { get; set; }
-        public Vector2 VirtualScale { get; set; }
+        public Vector3 VirtualScale { get; set; }
         public ControllerAnchorPointVisualCue VirtualCue { get; set; }
         public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
 
-        public float GetWorldY() {
-            return RigidBody.transform.position.y + VirtualOffset.y;
+        public Vector3 GetWorldPosition() {
+            return RigidBody.transform.position + RigidBody.transform.rotation * (VirtualOffset + PhysicalOffset);
         }
 
         public void Update() {
             if (PhysicalCue != null) {
                 VirtualCue.Update(VirtualOffset, VirtualScale);
-                PhysicalCue.Update(VirtualOffset + PhysicalOffset, VirtualScale * PhysicalScale);
+                PhysicalCue.Update(VirtualOffset + PhysicalOffset, Vector3.Scale(VirtualScale, PhysicalScale));
             }
         }
     }
@@ -663,10 +658,10 @@ public class Snug : MVRScript {
             gameObject.transform.localRotation = Quaternion.identity;
         }
 
-        public void Update(Vector3 offset, Vector2 scale) {
+        public void Update(Vector3 offset, Vector3 scale) {
             gameObject.transform.localPosition = offset;
 
-            var size = new Vector2(_baseCueSize * scale.x, _baseCueSize * scale.y);
+            var size = new Vector2(_baseCueSize * scale.x, _baseCueSize * scale.z);
             _xAxis.localScale = new Vector3(size.x - _width * 2, _width * 0.25f, _width * 0.25f);
             _zAxis.localScale = new Vector3(_width * 0.25f, _width * 0.25f, size.y - _width * 2);
             _frontHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
