@@ -195,7 +195,7 @@ public class Snug : MVRScript {
 
             });
 
-            _selectedAnchorsJSON = new JSONStorableStringChooser("Selected Anchor", _anchorPoints.Select(a => a.Label).ToList(), _anchorPoints[0].Label, "Anchor", SyncSelectedAnchorJSON) { isStorable = false };
+            _selectedAnchorsJSON = new JSONStorableStringChooser("Selected Anchor", _anchorPoints.Select(a => a.Label).ToList(), "Chest", "Anchor", SyncSelectedAnchorJSON) { isStorable = false };
             CreateScrollablePopup(_selectedAnchorsJSON, true);
 
             _anchorVirtScaleXJSON = new JSONStorableFloat("Virtual Scale X", 1f, UpdateAnchor, 0.01f, 3f, true) { isStorable = false };
