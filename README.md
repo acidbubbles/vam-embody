@@ -14,12 +14,12 @@ This should provide improved realism when touching your own body while possessin
 2. In the plugin UI, check the `Show Visual Cues` checkbox. Circles will appear and you will see crosses in your hands and wrist.
 3. Adjust the world scale until your extended arms match the model's arms.
 4. For each Anchor:
-   1. Adjust the "Virtual" (grey) scale and offset until it matches the model on the screen tightly.
-   2. Adjust the "Physical" (white) scale and offset until it matches your physical hand in space.
+   1. Adjust the "Virtual" (grey) scale and offset until it matches the model proportions tightly. Try to align to specific things, like Abdomen should be aligned with the navel, and Chest should be aligned with the nipples.
+   2. Adjust the "Physical" (white) scale and offset until it matches your physical hand in space. For example, if you touch your own navel, try to make the white abdomen cue line touch your controller position. You should see a yellow line connecting your controller, then the "adjusted" controller position, and finally reach the center of the model.
 5. Possess the model, but not the hands.
-6. Check the `Possess Hands` checkbox.
+6. Check the `Possess Hands` checkbox in the Snug plugin interface.
 
-You can also make adjustments to the hands, so that they better align with yours. You can move your hands in front of your eyes and put your headset on and off until the position matches.
+You can also make adjustments to the hands, so that they better align with yours using the Hand Offset and Rotation sliders. You can move your hands in front of your eyes and put your headset on and off until the position matches.
 
 ## License
 
