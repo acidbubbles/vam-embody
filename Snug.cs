@@ -11,6 +11,7 @@ using UnityEngine;
 /// By Acidbubbles
 /// Adjust hand alignement and position to match your actual body
 /// Source: https://github.com/acidbubbles/vam-wrist
+/// Note: See FixedUpdate for the implementation of the algorithm
 /// </summary>
 public class Snug : MVRScript {
     private const float _baseCueSize = 0.35f;
@@ -114,33 +115,6 @@ public class Snug : MVRScript {
             });
             RegisterBool(_showVisualCuesJSON);
             CreateToggle(_showVisualCuesJSON);
-
-            // {
-            //     GameObject lastRbCue = null;
-            //     var rigidBodiesJSON = new JSONStorableStringChooser(
-            //         "Target",
-            //         containingAtom.rigidbodies.Select(rb => rb.name).OrderBy(n => n).ToList(), "", "Target",
-            //         (string val) =>
-            //         {
-            //             if (lastRbCue != null)
-            //             {
-            //                 Destroy(lastRbCue);
-            //                 _cues.Remove(lastRbCue);
-            //             }
-
-            //             var rigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == val);
-            //             if (rigidbody == null) return;
-            //             var rbCue = VisualCuesHelper.Cross(Color.white);
-            //             rbCue.transform.parent = rigidbody.transform;
-            //             rbCue.transform.localScale = new Vector3(2f, 2f, 2f);
-            //             rbCue.transform.localPosition = Vector3.zero;
-            //             _cues.Add(rbCue);
-            //             lastRbCue = rbCue;
-            //         }
-            //     )
-            //     { isStorable = false };
-            //     CreateScrollablePopup(rigidBodiesJSON);
-            // }
 
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Head",
@@ -430,9 +404,6 @@ public class Snug : MVRScript {
                 ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z), _lHandVisualCueLinePoints);
             if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
                 ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
-
-            // var rHandDbg = SuperController.singleton.GetAtomByUid("snugRHandDebug").freeControllers[0];
-            // ProcessHand(_rightHandTarget, rHandDbg.transform, rHandDbg.transform, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
         } catch (Exception exc) {
             SuperController.LogError($"{nameof(Snug)}.{nameof(FixedUpdate)}: {exc}");
             OnDisable();
@@ -440,9 +411,11 @@ public class Snug : MVRScript {
     }
 
     private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset, Vector3[] visualCueLinePoints) {
+        // Base position
         var position = physicalHand.position;
-        var snapOffset = autoSnapPoint.localPosition; // TODO: To confirm
+        var snapOffset = autoSnapPoint.localPosition;
 
+        // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
         foreach (var anchorPoint in _anchorPoints) {
@@ -459,6 +432,7 @@ public class Snug : MVRScript {
         else if (upper == null)
             upper = lower;
 
+        // Find the weight of both anchors (closest = strongest effect)
         var upperPosition = upper.GetWorldPosition();
         var lowerPosition = lower.GetWorldPosition();
         var yUpperDelta = upperPosition.y - position.y;
@@ -474,6 +448,7 @@ public class Snug : MVRScript {
         anchorPosition.y = position.y;
         visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
+        // Determine the falloff (closer = stronger, fades out with distance)
         // TODO: Even better to use closest point on ellipse, but not necessary.
         var distance = Mathf.Abs(Vector3.Distance(anchorPosition, position));
         var physicalCueSize = Vector3.Lerp(Vector3.Scale(upper.VirtualScale, upper.PhysicalScale), Vector3.Scale(lower.VirtualScale, lower.PhysicalScale), lowerWeight) * (_baseCueSize / 2f);
@@ -481,22 +456,22 @@ public class Snug : MVRScript {
         // TODO: Check both x and z to determine a falloff relative to both distances
         var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
+        // Calculate the controller offset based on the physical scale/offset of anchors
         var physicalScale = Vector3.Lerp(upper.PhysicalScale, lower.PhysicalScale, lowerWeight);
         var physicalOffset = Vector3.Lerp(upper.PhysicalOffset, lower.PhysicalOffset, lowerWeight);
         var baseOffset = position - anchorPosition;
         var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
         resultOffset = new Vector3(resultOffset.x / physicalScale.x, resultOffset.y / physicalScale.y, resultOffset.z / physicalScale.z) - physicalOffset;
         resultOffset = anchorRotation * resultOffset;
-
-        var resultRotation = autoSnapPoint.rotation * Quaternion.Euler(handRotateOffset);
-
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
+
+        // Apply the hands adjustments
+        var resultRotation = autoSnapPoint.rotation * Quaternion.Euler(handRotateOffset);
         resultPosition += resultRotation * (snapOffset + palmToWristOffset);
 
-        // TODO: To avoid explosions, limit distance from body (if possible based on bones length?)
+        // Do the displacement
         var rb = handTarget.GetComponent<Rigidbody>();
-        // handTarget.transform.SetPositionAndRotation(resultPosition, resultRotation);
         rb.MovePosition(resultPosition);
         rb.MoveRotation(resultRotation);
 
@@ -541,8 +516,8 @@ public class Snug : MVRScript {
     private void CreateVisualCues() {
         DestroyVisualCues();
 
-        _lHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.leftHand, _personLHandController, _leftHandTarget, _lHandVisualCueLinePointIndicators);
-        _rHandVisualCueLine = CreateHandVisualCue(SuperController.singleton.rightHand, _personRHandController, _rightHandTarget, _rHandVisualCueLinePointIndicators);
+        _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
+        _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
 
         foreach (var anchorPoint in _anchorPoints) {
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
@@ -553,34 +528,7 @@ public class Snug : MVRScript {
         }
     }
 
-    private LineRenderer CreateHandVisualCue(Transform physicalHand, FreeControllerV3 controllerV3, GameObject target, List<GameObject> visualCueLinePointIndicators) {
-        // var handCue = VisualCuesHelper.Cross(Color.red);
-        // handCue.transform.SetPositionAndRotation(
-        //     physicalHand.position,
-        //     physicalHand.rotation
-        // );
-        // handCue.transform.parent = physicalHand;
-        // _cues.Add(handCue);
-
-        // if (controllerV3 != null)
-        // {
-        //     var controllerCue = VisualCuesHelper.Cross(Color.blue);
-        //     controllerCue.transform.SetPositionAndRotation(
-        //         controllerV3.control.position,
-        //         controllerV3.control.rotation
-        //     );
-        //     controllerCue.transform.parent = controllerV3.control;
-        //     _cues.Add(controllerCue);
-        // }
-
-        // var wristCue = VisualCuesHelper.Cross(Color.green);
-        // wristCue.transform.SetPositionAndRotation(
-        //     target.transform.position,
-        //     target.transform.rotation
-        // );
-        // wristCue.transform.parent = target.transform;
-        // _cues.Add(wristCue);
-
+    private LineRenderer CreateHandVisualCue(List<GameObject> visualCueLinePointIndicators) {
         var lineGo = new GameObject();
         var line = VisualCuesHelper.CreateLine(lineGo, Color.yellow, 0.002f, VisualCueLineIndices.Count, true);
         _cues.Add(lineGo);
