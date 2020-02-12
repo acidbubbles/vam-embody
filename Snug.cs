@@ -147,7 +147,7 @@ public class Snug : MVRScript {
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
                 PhysicalOffset = new Vector3(0, 0, 0),
                 PhysicalScale = new Vector3(1, 1, 1),
-                VirtualOffset = new Vector3(0, 0, 0),
+                VirtualOffset = new Vector3(0, 0.2f, 0),
                 VirtualScale = new Vector3(1, 1, 1)
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
@@ -299,10 +299,10 @@ public class Snug : MVRScript {
             foreach (var anchor in _anchorPoints) {
                 anchors[anchor.Label] = new JSONClass
                 {
-                    {"offset", SerializeVector3(anchor.PhysicalOffset)},
-                    {"scale", SerializeVector2(new Vector2(anchor.PhysicalScale.x, anchor.PhysicalScale.z))},
-                    {"cueOffset", SerializeVector3(anchor.VirtualOffset)},
-                    {"cueScale", SerializeVector2(new Vector3(anchor.VirtualScale.x, anchor.VirtualScale.z))},
+                    {"virOffset", SerializeVector3(anchor.VirtualOffset)},
+                    {"virScale", SerializeVector2(new Vector3(anchor.VirtualScale.x, anchor.VirtualScale.z))},
+                    {"phyOffset", SerializeVector3(anchor.PhysicalOffset)},
+                    {"phyScale", SerializeVector2(new Vector2(anchor.PhysicalScale.x, anchor.PhysicalScale.z))},
                 };
             }
             json["anchors"] = anchors;
@@ -333,10 +333,10 @@ public class Snug : MVRScript {
                 foreach (var anchor in _anchorPoints) {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
-                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["offset"]);
-                    anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["scale"]);
-                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["cueOffset"]);
-                    anchor.VirtualScale = DeserializeVector2AsFlatScale(anchorJSON["cueScale"]);
+                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["virOffset"]);
+                    anchor.VirtualScale = DeserializeVector2AsFlatScale(anchorJSON["virScale"]);
+                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["phyOffset"]);
+                    anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["phyScale"]);
                 }
             }
 
