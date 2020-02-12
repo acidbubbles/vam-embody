@@ -314,7 +314,6 @@ public class Snug : MVRScript {
         return json;
     }
 
-    private static string SerializeQuaternion(Quaternion v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}"; }
     private static string SerializeVector3(Vector3 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}"; }
     private static string SerializeVector2(Vector2 v) { return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)}"; }
 
@@ -324,8 +323,8 @@ public class Snug : MVRScript {
         try {
             var handsJSON = jc["hands"];
             if (handsJSON != null) {
-                _palmToWristOffset = DeserializeVector3(handsJSON["offset"]);
-                _handRotateOffset = DeserializeVector3(handsJSON["rotation"]);
+                _palmToWristOffset = DeserializeVector3(handsJSON["offset"], _palmToWristOffset);
+                _handRotateOffset = DeserializeVector3(handsJSON["rotation"], _handRotateOffset);
             }
 
             var anchorsJSON = jc["anchors"];
@@ -333,10 +332,10 @@ public class Snug : MVRScript {
                 foreach (var anchor in _anchorPoints) {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
-                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["virOffset"]);
-                    anchor.VirtualScale = DeserializeVector2AsFlatScale(anchorJSON["virScale"]);
-                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["phyOffset"]);
-                    anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["phyScale"]);
+                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["virOffset"], anchor.VirtualOffset);
+                    anchor.VirtualScale = DeserializeVector2AsFlatScale(anchorJSON["virScale"], anchor.VirtualScale);
+                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["phyOffset"], anchor.PhysicalOffset);
+                    anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["phyScale"], anchor.PhysicalScale);
                 }
             }
 
@@ -346,9 +345,16 @@ public class Snug : MVRScript {
         }
     }
 
-    private static Quaternion DeserializeQuaternion(string v) { var s = v.Split(','); return new Quaternion(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture), float.Parse(s[3], CultureInfo.InvariantCulture)); }
-    private static Vector3 DeserializeVector3(string v) { var s = v.Split(','); return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture)); }
-    private static Vector3 DeserializeVector2AsFlatScale(string v) { var s = v.Split(','); return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), 1f, float.Parse(s[1], CultureInfo.InvariantCulture)); }
+    private static Vector3 DeserializeVector3(string v, Vector3 defaultValue) {
+        if (string.IsNullOrEmpty(v)) return defaultValue;
+        var s = v.Split(',');
+        return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture));
+    }
+    private static Vector3 DeserializeVector2AsFlatScale(string v, Vector3 defaultValue) {
+        if (string.IsNullOrEmpty(v)) return defaultValue;
+        var s = v.Split(',');
+        return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), 1f, float.Parse(s[1], CultureInfo.InvariantCulture));
+    }
 
     #endregion
 
