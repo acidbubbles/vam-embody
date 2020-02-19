@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// Passenger Version 0.0.0
@@ -75,8 +74,10 @@ public class Passenger : MVRScript
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
         links.Insert(0, "none");
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
-        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", OnLinkChanged);
-        _linkJSON.storeType = JSONStorableParam.StoreType.Physical;
+        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", OnLinkChanged)
+        {
+            storeType = JSONStorableParam.StoreType.Physical
+        };
         RegisterStringChooser(_linkJSON);
         var linkPopup = CreateScrollablePopup(_linkJSON, LeftSide);
         linkPopup.popupPanelHeight = 600f;
@@ -168,14 +169,6 @@ public class Passenger : MVRScript
     private void ApplyToggleKey(string val)
     {
         _toggleKey = (KeyCode)Enum.Parse(typeof(KeyCode), val);
-    }
-
-    private Slider CreateSlider(string label, float val, float max, bool constrained, string format)
-    {
-        var uiElement = CreateUIElement(manager.configurableSliderPrefab.transform, true);
-        var dynamicSlider = uiElement.GetComponent<UIDynamicSlider>();
-        dynamicSlider.Configure(label, -max, max, val, constrained, format, true, !constrained);
-        return dynamicSlider.slider;
     }
 
     private void OnLinkChanged(string linkName)
@@ -304,7 +297,6 @@ public class Passenger : MVRScript
 
             if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
             {
-
                 _activeJSON.val = false;
                 return;
             }
@@ -312,7 +304,7 @@ public class Passenger : MVRScript
             var navigationRig = SuperController.singleton.navigationRig;
 
             if (_follower != null)
-                PossessRotation(navigationRig);
+                PossessRotation();
             else if (_rotationLockJSON.val)
                 UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
 
@@ -356,7 +348,7 @@ public class Passenger : MVRScript
         SuperController.singleton.playerHeightAdjust += playerHeightAdjustOffset;
     }
 
-    private void PossessRotation(Transform navigationRig)
+    private void PossessRotation()
     {
         _follower.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
          * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
