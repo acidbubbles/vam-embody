@@ -8,6 +8,8 @@ Identify the VR model proportions, and displace the VR hands so they fit your ow
 
 This should provide improved realism when touching your own body while possessing a person in Virt-A-Mate.
 
+![vam-snug default ring size](screenshots/vam-snug-anchors.png)
+
 ## How to use
 
 1. Add `Snug.cs` to a Person atom
