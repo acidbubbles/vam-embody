@@ -12,16 +12,21 @@ This should provide improved realism when touching your own body while possessin
 
 ## How to use
 
-1. Add `Snug.cs` to a Person atom
-2. In the plugin UI, check the `Show Visual Cues` checkbox. Circles will appear and you will see crosses in your hands and wrist.
-3. Adjust the world scale until your extended arms match the model's arms.
-4. For each Anchor:
-   1. Adjust the "Virtual" (grey) scale and offset until it matches the model proportions tightly. Try to align to specific things, like Abdomen should be aligned with the navel, and Chest should be aligned with the nipples.
-   2. Adjust the "Physical" (white) scale and offset until it matches your physical hand in space. For example, if you touch your own navel, try to make the white abdomen cue line touch your controller position. You should see a yellow line connecting your controller, then the "adjusted" controller position, and finally reach the center of the model.
-5. Possess the model, but not the hands.
-6. Check the `Possess Hands` checkbox in the Snug plugin interface.
+Add `Snug.cs` to a Person atom. You should see rings appear. Those are "anchors", which represents the virtual model proportions.
 
-You can also make adjustments to the hands, so that they better align with yours using the Hand Offset and Rotation sliders. You can move your hands in front of your eyes and put your headset on and off until the position matches.
+Play with the "virtual offset" and "virtual scale" values until the rings fit (does't need to be ultra precise).
+
+First, try possessing the model normally and play with the world scale until your arms stretch horizontally naturally (the model shouldn't look like the arms are being teared of, nor be too bended when yours are extended). I also recommend [vam-improved-pov](https://github.com/acidbubbles/vam-improved-pov) to help with the eyes position, otherwise the body will always feel too far behind.
+
+Now to adjust to your own body proportions. For each anchor, adjust the "physical" scale and offset until it matches where your actual hand is. For example, if you touch your own navel, the abdomen physical anchor (white) should touch your controller position.
+
+You should see a yellow line connecting your controller, then the "adjusted" controller position, and finally reach the center of the model. This is only to help visualize the displacement.
+
+You can now proceed with possessing the model. First, uncheck the `Show Visual Cues` checkbox in the plugin UI. Then, possess the person, but do not possess the hands. Finally, check the `Possess Hands` checkbox in the Snug plugin interface.
+
+You can make some finer adjustments to the physical scale and offset, as well as your hands, so that they better align with yours using the Hand Offset and Rotation sliders. You can move your hands in front of your eyes and put your headset on and off until the position matches.
+
+You should now be able to interact with your own body, and have the virtual model do the same thing even though your proportions differ!
 
 ## License
 
