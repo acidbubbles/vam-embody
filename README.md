@@ -10,6 +10,10 @@ This should provide improved realism when touching your own body while possessin
 
 ![vam-snug default ring size](screenshots/vam-snug-anchors.png)
 
+## Download
+
+Download the latest version here: [Snug.cs](https://raw.githubusercontent.com/acidbubbles/vam-snug/master/Snug.cs)
+
 ## How to use
 
 Add `Snug.cs` to a Person atom. You should see rings appear. Those are "anchors", which represents the virtual model proportions.
