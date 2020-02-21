@@ -120,56 +120,56 @@ public class Snug : MVRScript {
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Head",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
-                PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0.2f, 0),
                 VirtualScale = new Vector3(1, 1, 1),
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector3(1, 1, 1),
                 Active = true,
                 Locked = true
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Lips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
+                VirtualOffset = new Vector3(0, 0, -0.07113313f),
+                VirtualScale = new Vector3(0.3830788f, 1f, 0.5201911f),
                 PhysicalOffset = new Vector3(0, 0, 0),
                 PhysicalScale = new Vector3(1, 1, 1),
-                VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector3(1, 1, 1),
                 Active = true
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Chest",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
+                VirtualOffset = new Vector3(0, 0.0682705f, 0.04585214f),
+                VirtualScale = new Vector3(0.8217609f, 1, 0.8080147f),
                 PhysicalOffset = new Vector3(0, 0, 0),
                 PhysicalScale = new Vector3(1, 1, 1),
-                VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector3(1, 1, 1),
                 Active = true
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Abdomen",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
+                VirtualOffset = new Vector3(0, 0.0770329f, 0.04218798f),
+                VirtualScale = new Vector3(0.7670161f, 1, 0.5064289f),
                 PhysicalOffset = new Vector3(0, 0, 0),
                 PhysicalScale = new Vector3(1, 1, 1),
-                VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector3(1, 1, 1),
                 Active = true
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Hips",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
+                VirtualOffset = new Vector3(0, -0.08762675f, -0.009161186f),
+                VirtualScale = new Vector3(1.041181f, 1, 0.8080372f),
                 PhysicalOffset = new Vector3(0, 0, 0),
                 PhysicalScale = new Vector3(1, 1, 1),
-                VirtualOffset = new Vector3(0, 0, 0),
-                VirtualScale = new Vector3(1, 1, 1),
                 Active = true
             });
             _anchorPoints.Add(new ControllerAnchorPoint {
                 Label = "Ground (Control)",
                 RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
-                PhysicalOffset = new Vector3(0, 0, 0),
-                PhysicalScale = new Vector3(1, 1, 1),
                 VirtualOffset = new Vector3(0, 0, 0),
                 VirtualScale = new Vector3(1, 1, 1),
+                PhysicalOffset = new Vector3(0, 0, 0),
+                PhysicalScale = new Vector3(1, 1, 1),
                 Active = true,
                 Locked = true
             });
