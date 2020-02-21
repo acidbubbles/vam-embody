@@ -42,7 +42,6 @@ public class ImprovedPoV : MVRScript
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
     private float _originalWorldScale;
-    private float _originalPlayerHeightAdjust;
 
     public override void Init()
     {
@@ -299,7 +298,6 @@ public class ImprovedPoV : MVRScript
         }
     }
 
-    bool once;
     private void ApplyAll(bool active)
     {
         // Try again next frame
@@ -323,7 +321,7 @@ public class ImprovedPoV : MVRScript
         {
             var hairHandler = _hairHandlers[i];
             if (UpdateHandler(ref hairHandler, active && _hideHairJSON.val))
-                ConfigureHandler("Hair", ref hairHandler, hairHandler.Configure(_character, _hair[i]));
+                ConfigureHandler("Hair", ref hairHandler, hairHandler.Configure(_hair[i]));
             _hairHandlers[i] = hairHandler;
         }
 
@@ -436,7 +434,6 @@ public class ImprovedPoV : MVRScript
         if (_originalWorldScale == 0f)
         {
             _originalWorldScale = SuperController.singleton.worldScale;
-            _originalPlayerHeightAdjust = SuperController.singleton.playerHeightAdjust;
         }
 
         var eyes = _person.GetComponentsInChildren<LookAtWithLimits>();
@@ -489,13 +486,14 @@ public class ImprovedPoV : MVRScript
 
             public static SkinShaderMaterialReference FromMaterial(Material material)
             {
-                var materialRef = new SkinShaderMaterialReference();
-                materialRef.material = material;
-                materialRef.originalShader = material.shader;
-                materialRef.originalAlphaAdjust = material.GetFloat("_AlphaAdjust");
-                materialRef.originalColorAlpha = material.GetColor("_Color").a;
-                materialRef.originalSpecColor = material.GetColor("_SpecColor");
-                return materialRef;
+                return new SkinShaderMaterialReference
+                {
+                    material = material,
+                    originalShader = material.shader,
+                    originalAlphaAdjust = material.GetFloat("_AlphaAdjust"),
+                    originalColorAlpha = material.GetColor("_Color").a,
+                    originalSpecColor = material.GetColor("_SpecColor")
+                };
             }
         }
 
@@ -646,7 +644,7 @@ public class ImprovedPoV : MVRScript
         private float _hairShaderOriginalValue;
         private List<MaterialReference> _materialRefs;
 
-        public int Configure(DAZCharacter character, DAZHairGroup hair)
+        public int Configure(DAZHairGroup hair)
         {
             if (hair == null || hair.name == "NoHair")
                 return HandlerConfigurationResult.CannotApply;
