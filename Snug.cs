@@ -107,7 +107,7 @@ public class Snug : MVRScript {
             RegisterBool(_possessHandsJSON);
             CreateToggle(_possessHandsJSON);
 
-            _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) => {
+            _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", true, (bool val) => {
                 if (!_ready) return;
                 if (val)
                     CreateVisualCues();
