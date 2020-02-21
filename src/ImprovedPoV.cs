@@ -483,6 +483,7 @@ public class ImprovedPoV : MVRScript
             public float originalAlphaAdjust;
             public float originalColorAlpha;
             public Color originalSpecColor;
+            public int originalRenderQueue;
 
             public static SkinShaderMaterialReference FromMaterial(Material material)
             {
@@ -490,6 +491,7 @@ public class ImprovedPoV : MVRScript
                 {
                     material = material,
                     originalShader = material.shader,
+                    originalRenderQueue = material.renderQueue,
                     originalAlphaAdjust = material.GetFloat("_AlphaAdjust"),
                     originalColorAlpha = material.GetColor("_Color").a,
                     originalSpecColor = material.GetColor("_SpecColor")
@@ -544,7 +546,7 @@ public class ImprovedPoV : MVRScript
             return materials;
         }
 
-        private static Dictionary<string, Shader> ReplacementShaders = new Dictionary<string, Shader>
+        private static readonly Dictionary<string, Shader> ReplacementShaders = new Dictionary<string, Shader>
             {
                 // Opaque materials
                 { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
@@ -584,7 +586,22 @@ public class ImprovedPoV : MVRScript
                 if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
                     SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
 
-                if (shader != null) material.shader = shader;
+                if (shader != null)
+                {
+                    material.shader = shader;
+                    material.renderQueue = materialInfo.originalRenderQueue;
+                }
+
+                switch (material.name)
+                {
+                    // case "Pupils":
+                    //     // Looks like pupils reflection does not show up. No idea how to fix that.
+                    //     material.renderQueue = 1900;
+                    //     break;
+                    case "Lacrimals":
+                        material.renderQueue = 1900;
+                        break;
+                }
 
                 _materialRefs.Add(materialInfo);
             }
@@ -597,7 +614,10 @@ public class ImprovedPoV : MVRScript
         public void Restore()
         {
             foreach (var material in _materialRefs)
+            {
                 material.material.shader = material.originalShader;
+                material.material.renderQueue = material.originalRenderQueue;
+            }
 
             _materialRefs = null;
 
