@@ -129,7 +129,10 @@ public class ImprovedPoV : MVRScript
             // Steam VR
             cam.name == "Camera (eye)" ||
             // Desktop
-            cam.name == "MonitorRig";
+            cam.name == "MonitorRig"; /* ||
+            // Window Camera
+            cam.name == "MiniCamera";
+            */
     }
 
     private void InitControls()
