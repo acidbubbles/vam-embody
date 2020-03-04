@@ -32,10 +32,10 @@ public class Passenger : MVRScript
     private JSONStorableStringChooser _followerJSON;
     private JSONStorableBool _worldScaleEnabledJSON;
     private JSONStorableFloat _worldScaleJSON;
+    private JSONStorableFloat _eyesToHeadDistanceJSON;
     private JSONStorableStringChooser _toggleKeyJSON;
     private KeyCode _toggleKey = KeyCode.None;
     private Vector3 _previousPosition;
-    private float _previousPlayerHeight;
     private Quaternion _previousRotation;
     private bool _active;
     private Quaternion _currentRotationVelocity;
@@ -113,7 +113,6 @@ public class Passenger : MVRScript
         var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
         controllers.Insert(0, TargetNone);
         _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", OnFollowChanged);
-        _followerJSON.storeType = JSONStorableParam.StoreType.Physical;
         RegisterStringChooser(_followerJSON);
         var followerPopup = CreateScrollablePopup(_followerJSON, LeftSide);
         followerPopup.popupPanelHeight = 600f;
@@ -164,6 +163,10 @@ public class Passenger : MVRScript
         _worldScaleJSON = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
         RegisterFloat(_worldScaleJSON);
         CreateSlider(_worldScaleJSON, RightSide);
+
+        _eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
+        RegisterFloat(_eyesToHeadDistanceJSON);
+        CreateSlider(_eyesToHeadDistanceJSON, RightSide);
     }
 
     private void ApplyToggleKey(string val)
@@ -215,7 +218,6 @@ public class Passenger : MVRScript
 
         _previousRotation = navigationRig.rotation;
         _previousPosition = navigationRig.position;
-        _previousPlayerHeight = superController.playerHeightAdjust;
 
         var rigidBody = _link.GetComponent<Rigidbody>();
         _previousInterpolation = rigidBody.interpolation;
@@ -227,7 +229,7 @@ public class Passenger : MVRScript
 
         ApplyWorldScale();
         UpdateRotation(navigationRig, 0);
-        MoveToStartingPosition(navigationRig, GetTargetPosition(navigationRig));
+        UpdatePosition(navigationRig, 0);
 
         _active = true;
     }
@@ -252,7 +254,6 @@ public class Passenger : MVRScript
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;
         SuperController.singleton.navigationRig.position = _previousPosition;
-        SuperController.singleton.playerHeightAdjust = _previousPlayerHeight;
 
         if (_link != null)
         {
@@ -309,7 +310,7 @@ public class Passenger : MVRScript
                 UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
 
             if (_positionLockJSON.val)
-                UpdatePosition(navigationRig, GetTargetPosition(navigationRig));
+                UpdatePosition(navigationRig, _positionSmoothingJSON.val);
         }
         catch (Exception e)
         {
@@ -324,28 +325,15 @@ public class Passenger : MVRScript
         Deactivate();
     }
 
-    private Vector3 GetTargetPosition(Transform navigationRig)
+    private void UpdatePosition(Transform navigationRig, float positionSmoothing)
     {
-        var targetPosition = _link.position + _link.transform.forward * _positionOffsetZJSON.val + _link.transform.right * _positionOffsetXJSON.val + _link.transform.up * _positionOffsetYJSON.val;
-        var positionOffset = navigationRig.position + targetPosition - _possessor.autoSnapPoint.position;
-        return positionOffset;
-    }
+        var cameraDelta = CameraTarget.centerTarget.transform.position - navigationRig.transform.position - CameraTarget.centerTarget.transform.rotation * new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
+        var resultPosition = _link.transform.position - cameraDelta + _link.transform.rotation * new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
 
-    private void UpdatePosition(Transform navigationRig, Vector3 targetPosition)
-    {
-        if (_positionSmoothingJSON.val > 0)
-            targetPosition = Vector3.SmoothDamp(navigationRig.position, targetPosition, ref _currentPositionVelocity, _positionSmoothingJSON.val, Mathf.Infinity, Time.smoothDeltaTime);
+        if (positionSmoothing > 0)
+            resultPosition = Vector3.SmoothDamp(navigationRig.position, resultPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
 
-        navigationRig.position = targetPosition;
-    }
-
-    private static void MoveToStartingPosition(Transform navigationRig, Vector3 targetPosition)
-    {
-        // Adjust the player height so the user can adjust as needed
-        var up = navigationRig.up;
-        var playerHeightAdjustOffset = Vector3.Dot(targetPosition - navigationRig.position, up);
-        navigationRig.position = targetPosition + up * -playerHeightAdjustOffset;
-        SuperController.singleton.playerHeightAdjust += playerHeightAdjustOffset;
+        navigationRig.transform.position = resultPosition;
     }
 
     private void PossessRotation()
