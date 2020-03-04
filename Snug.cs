@@ -242,7 +242,7 @@ public class Snug : MVRScript {
         controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
         controllerV3.canGrabPosition = false;
         controllerV3.canGrabRotation = false;
-        controllerV3.possessed = false;
+        controllerV3.possessed = true;
         controllerV3.possessable = false;
     }
 
@@ -251,6 +251,7 @@ public class Snug : MVRScript {
         // TODO: This should return to the previous state
         controllerV3.canGrabPosition = true;
         controllerV3.canGrabRotation = true;
+        controllerV3.possessed = false;
         controllerV3.possessable = true;
     }
 
