@@ -12,7 +12,7 @@ This should provide improved realism when touching your own body while possessin
 
 ## Download
 
-Download the latest version here: [Snug.cs](https://raw.githubusercontent.com/acidbubbles/vam-snug/master/Snug.cs)
+Download the latest version's `.var` file in the [Releases](https://github.com/acidbubbles/vam-snug/releases), or download directly [Snug.cs](https://raw.githubusercontent.com/acidbubbles/vam-snug/master/Snug.cs) for VaM versions prior to 1.19.
 
 ## How to use
 
