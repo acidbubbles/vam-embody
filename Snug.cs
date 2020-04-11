@@ -244,6 +244,7 @@ public class Snug : MVRScript {
         controllerV3.canGrabRotation = false;
         controllerV3.possessed = true;
         controllerV3.possessable = false;
+        (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = true;
     }
 
     private static void CustomReleaseHand(FreeControllerV3 controllerV3) {
@@ -253,6 +254,7 @@ public class Snug : MVRScript {
         controllerV3.canGrabRotation = true;
         controllerV3.possessed = false;
         controllerV3.possessable = true;
+        (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = false;
     }
 
     private IEnumerator DeferredInit() {
