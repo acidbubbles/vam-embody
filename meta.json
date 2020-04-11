@@ -1,0 +1,16 @@
+{ 
+   "licenseType" : "CC BY-SA", 
+   "creatorName" : "AcidBubbles", 
+   "packageName" : "Snug", 
+   "includeVersionsInReferences" : "true", 
+   "description" : "v0.0.0 Adjust possessed VR hands so your real body matches with your VR body proportions.", 
+   "credits" : "Timbo for the idea.", 
+   "instructions" : "Add to a Person atom, adjust the rings so they fit and check the possess hands toggle. See link for instructions.", 
+   "promotionalLink" : "https://github.com/AcidBubbles/vam-snug", 
+   "programVersion" : "1.19.2.0", 
+   "contentList" : [ 
+      "Custom\\Scripts\\AcidBubbles\\Snug\\Snug.cs"
+   ], 
+   "dependencies" : { 
+   }
+}
