@@ -14,6 +14,16 @@ This should provide improved realism when touching your own body while possessin
 
 Download the latest version's `.var` file in the [Releases](https://github.com/acidbubbles/vam-snug/releases), or download directly [Snug.cs](https://raw.githubusercontent.com/acidbubbles/vam-snug/master/Snug.cs) for VaM versions prior to 1.19.
 
+## Videos
+
+Snug standing tutorial:
+
+[![Snug Standing Tutorial](https://img.youtube.com/vi/luZpxPGnYhg/0.jpg)](https://www.youtube.com/watch?v=luZpxPGnYhg)
+
+Snug sitting tutorial:
+
+[![Snug Sitting Tutorial](https://img.youtube.com/vi/ljJgaQqVssk/0.jpg)](https://www.youtube.com/watch?v=ljJgaQqVssk)
+
 ## How to use
 
 Add `Snug.cs` to a Person atom. You should see rings appear. Those are "anchors", which represents the virtual model proportions.
