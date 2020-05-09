@@ -296,7 +296,7 @@ public class Passenger : MVRScript
 
             if (!HealthCheck()) return;
 
-            if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+            if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
             {
                 _activeJSON.val = false;
                 return;
