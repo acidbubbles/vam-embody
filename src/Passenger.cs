@@ -1,10 +1,9 @@
-#define VAM_DIAGNOSTICS
 using System;
 using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Passenger Version 0.0.0
+/// Passenger
 /// By Acidbubbles
 /// Your eyes follow the model's eyes, not the other way around
 /// Source: https://github.com/acidbubbles/vam-passenger
