@@ -1,6 +1,6 @@
 { 
    "licenseType" : "CC BY-SA", 
-   "creatorName" : "Acidbubbles", 
+   "creatorName" : "AcidBubbles", 
    "packageName" : "Passenger", 
    "includeVersionsInReferences" : "true", 
    "description" : "v0.0.0 Be possessed (controls the VR camera and follow the atom's movement)", 
@@ -9,7 +9,7 @@
    "promotionalLink" : "https://github.com/acidbubbles/vam-passenger", 
    "programVersion" : "1.19.0.5", 
    "contentList" : [ 
-      "Custom\\Scripts\\Acidbubbles\\Passenger\\Passenger.cs"
+      "Custom\\Scripts\\AcidBubbles\\Passenger\\Passenger.cs"
    ], 
    "dependencies" : { 
    }

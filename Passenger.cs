@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// Passenger
-/// By Acidbubbles
+/// By AcidBubbles
 /// Your eyes follow the model's eyes, not the other way around
 /// Source: https://github.com/acidbubbles/vam-passenger
 /// </summary>
