@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ using UnityEngine;
 public class Snug : MVRScript {
     private const float _baseCueSize = 0.35f;
     private const string _saveExt = "snugprofile";
+    private const string _saveFolder = "Saves\\snugprofiles";
 
     private readonly List<GameObject> _cues = new List<GameObject>();
     private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
@@ -42,7 +44,6 @@ public class Snug : MVRScript {
     private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
     private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
     private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
-    private string _lastBrowseDir = SuperController.singleton.savesDir;
     private static class VisualCueLineIndices {
         public static int Anchor = 0;
         public static int Hand = 1;
@@ -176,25 +177,24 @@ public class Snug : MVRScript {
     private void InitPresetUI() {
         var loadPresetUI = CreateButton("Load Preset", false);
         loadPresetUI.button.onClick.AddListener(() => {
-            if (_lastBrowseDir != null) SuperController.singleton.NormalizeMediaPath(_lastBrowseDir);
+            FileManagerSecure.CreateDirectory(_saveFolder);
+            var shortcuts = FileManagerSecure.GetShortCutsForDirectory(_saveFolder);
             SuperController.singleton.GetMediaPathDialog((string path) => {
                 if (string.IsNullOrEmpty(path))
                     return;
-                _lastBrowseDir = path.Substring(0, path.LastIndexOfAny(new char[] { '/', '\\' })) + @"\";
                 JSONClass jc = (JSONClass)LoadJSON(path);
                 RestoreFromJSON(jc);
                 SyncSelectedAnchorJSON("");
                 SyncHandsOffset();
-            }, _saveExt);
+            }, _saveExt, _saveFolder, false, true, false, null, false, shortcuts);
         });
 
         var savePresetUI = CreateButton("Save Preset", false);
         savePresetUI.button.onClick.AddListener(() => {
-            SuperController.singleton.NormalizeMediaPath(_lastBrowseDir);
+            FileManagerSecure.CreateDirectory(_saveFolder);
             SuperController.singleton.GetMediaPathDialog((string path) => {
                 if (string.IsNullOrEmpty(path))
                     return;
-                _lastBrowseDir = path.Substring(0, path.LastIndexOfAny(new char[] { '/', '\\' })) + @"\";
 
                 if (!path.ToLower().EndsWith($".{_saveExt}")) {
                     path += $".{_saveExt}";
@@ -202,7 +202,7 @@ public class Snug : MVRScript {
                 var jc = GetJSON();
                 jc.Remove("id");
                 SaveJSON(jc, path);
-            }, _saveExt);
+            }, _saveExt, _saveFolder, false);
 
             var browser = SuperController.singleton.mediaFileBrowserUI;
             browser.SetTextEntry(true);
