@@ -59,6 +59,7 @@ public class Snug : MVRScript {
 
             InitPossessHandsUI();
             InitVisualCuesUI();
+            InitArmForRecordUI();
             CreateSpacer().height = 10f;
             InitPresetUI();
             CreateSpacer().height = 10f;
@@ -137,6 +138,14 @@ public class Snug : MVRScript {
         });
         RegisterBool(_showVisualCuesJSON);
         CreateToggle(_showVisualCuesJSON);
+    }
+
+    private void InitArmForRecordUI() {
+        CreateButton("Arm hands for record").button.onClick.AddListener(() => {
+            SuperController.singleton.ArmAllControlledControllersForRecord();
+            _personLHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
+            _personRHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
+        });
     }
 
     private void InitPresetUI() {
