@@ -60,6 +60,7 @@ public class Snug : MVRScript {
             InitPossessHandsUI();
             InitVisualCuesUI();
             InitArmForRecordUI();
+            InitDisableSelectionUI();
             CreateSpacer().height = 10f;
             InitPresetUI();
             CreateSpacer().height = 10f;
@@ -146,6 +147,30 @@ public class Snug : MVRScript {
             _personLHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
             _personRHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
         });
+    }
+
+    private struct FreeControllerV3Snapshot { public bool canGrabPosition; public bool canGrabRotation; }
+    private readonly Dictionary<FreeControllerV3, FreeControllerV3Snapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3Snapshot>();
+    private void InitDisableSelectionUI() {
+        var disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, (bool val) => {
+            if (val) {
+                foreach (var fc in containingAtom.freeControllers) {
+                    if (fc == _personLHandController || fc == _personRHandController) continue;
+                    if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
+                    var state = new FreeControllerV3Snapshot { canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation };
+                    _previousState[fc] = state;
+                    fc.canGrabPosition = false;
+                    fc.canGrabRotation = false;
+                }
+            } else {
+                foreach (var kvp in _previousState) {
+                    kvp.Key.canGrabPosition = kvp.Value.canGrabPosition;
+                    kvp.Key.canGrabRotation = kvp.Value.canGrabRotation;
+                }
+                _previousState.Clear();
+            }
+        });
+        CreateToggle(disableSelectionJSON);
     }
 
     private void InitPresetUI() {
