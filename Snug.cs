@@ -417,6 +417,7 @@ public class Snug : MVRScript {
                     anchor.PhysicalOffset = DeserializeVector3(anchorJSON["phyOffset"], anchor.PhysicalOffset);
                     anchor.PhysicalScale = DeserializeVector2AsFlatScale(anchorJSON["phyScale"], anchor.PhysicalScale);
                     anchor.Active = anchorJSON["active"]?.Value != "false";
+                    anchor.Update();
                 }
             }
 
