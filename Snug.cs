@@ -180,8 +180,7 @@ public class Snug : MVRScript {
             FileManagerSecure.CreateDirectory(_saveFolder);
             var shortcuts = FileManagerSecure.GetShortCutsForDirectory(_saveFolder);
             SuperController.singleton.GetMediaPathDialog((string path) => {
-                if (string.IsNullOrEmpty(path))
-                    return;
+                if (string.IsNullOrEmpty(path)) return;
                 JSONClass jc = (JSONClass)LoadJSON(path);
                 RestoreFromJSON(jc);
                 SyncSelectedAnchorJSON("");
@@ -192,22 +191,25 @@ public class Snug : MVRScript {
         var savePresetUI = CreateButton("Save Preset", false);
         savePresetUI.button.onClick.AddListener(() => {
             FileManagerSecure.CreateDirectory(_saveFolder);
-            SuperController.singleton.GetMediaPathDialog((string path) => {
-                if (string.IsNullOrEmpty(path))
-                    return;
-
-                if (!path.ToLower().EndsWith($".{_saveExt}")) {
-                    path += $".{_saveExt}";
-                }
+            var fileBrowserUI = SuperController.singleton.fileBrowserUI;
+            fileBrowserUI.SetTitle("Save colliders preset");
+            fileBrowserUI.fileRemovePrefix = null;
+            fileBrowserUI.hideExtension = false;
+            fileBrowserUI.keepOpen = false;
+            fileBrowserUI.fileFormat = _saveExt;
+            fileBrowserUI.defaultPath = _saveFolder;
+            fileBrowserUI.showDirs = true;
+            fileBrowserUI.shortCuts = null;
+            fileBrowserUI.browseVarFilesAsDirectories = false;
+            fileBrowserUI.SetTextEntry(true);
+            fileBrowserUI.Show((string path) => {
+                if (string.IsNullOrEmpty(path)) return;
+                if (!path.ToLower().EndsWith($".{_saveExt}")) path += $".{_saveExt}";
                 var jc = GetJSON();
                 jc.Remove("id");
                 SaveJSON(jc, path);
-            }, _saveExt, _saveFolder, false);
-
-            var browser = SuperController.singleton.mediaFileBrowserUI;
-            browser.SetTextEntry(true);
-            browser.fileEntryField.text = string.Format("{0}.{1}", ((int)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString(), _saveExt);
-            browser.ActivateFileNameField();
+            });
+            fileBrowserUI.ActivateFileNameField();
         });
     }
 
