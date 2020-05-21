@@ -203,6 +203,7 @@ public class Snug : MVRScript {
             fileBrowserUI.browseVarFilesAsDirectories = false;
             fileBrowserUI.SetTextEntry(true);
             fileBrowserUI.Show((string path) => {
+                fileBrowserUI.fileFormat = null;
                 if (string.IsNullOrEmpty(path)) return;
                 if (!path.ToLower().EndsWith($".{_saveExt}")) path += $".{_saveExt}";
                 var jc = GetJSON();
