@@ -2,6 +2,8 @@
 
 Better VR controller alignement in possession mode
 
+> Check out [Snug on Virt-A-Mate Hub](https://hub.virtamate.com/resources/snug.104/)
+
 ## What does it do
 
 Identify the VR model proportions, and displace the VR hands so they fit your own body. For example, touching your navel in reality should also touch the VR model navel, even though it may have different proportions.
