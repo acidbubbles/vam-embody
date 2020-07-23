@@ -2,6 +2,8 @@
 
 Improved POV handling so that possession actually feels right.
 
+> Check out [Improved PoV on Virt-A-Mate Hub](https://hub.virtamate.com/resources/improved-pov.102/)
+
 ## Why
 
 Currently, the possession mode (point-of-view) in Virt-A-Mate places the camera in _front_ of the head. That feels like you're floating in front of someone's body.
