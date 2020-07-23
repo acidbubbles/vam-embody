@@ -1,5 +1,7 @@
 # Virt-A-Mate Passenger
 
+> Check out [Passenger on Virt-A-Mate Hub](https://hub.virtamate.com/resources/passenger.103/)
+
 Instead of possessing a model that follows your movement, YOU will be following the model's movements.
 
 Note that for some people, it may induce terrible nausea...
