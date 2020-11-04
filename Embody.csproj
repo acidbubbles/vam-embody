@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="MyPlugin.cs" />
+    <Compile Include="Embody.cs" />
   </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

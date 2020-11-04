@@ -1,15 +1,15 @@
 { 
    "licenseType" : "CC BY-SA", 
-   "creatorName" : "Author", 
-   "packageName" : "MyPlugin", 
+   "creatorName" : "AcidBubbles", 
+   "packageName" : "Embody", 
    "includeVersionsInReferences" : "true", 
-   "description" : "v0.0.0 MyPlugin Description", 
+   "description" : "v0.0.0 Plugins to improve possession experience (include Improved PoV, Passenger and Snug) ", 
    "credits" : "", 
    "instructions" : "", 
-   "promotionalLink" : "https://github.com/Author/MyPlugin", 
-   "programVersion" : "1.19.0.5", 
+   "promotionalLink" : "https://github.com/acidbubbles/vam-embody", 
+   "programVersion" : "1.20.1.0", 
    "contentList" : [ 
-      "Custom\\Scripts\\Author\\MyPlugin\\MyPlugin.cs"
+      "Custom\\Scripts\\AcidBubbles\\Embody\\Embody.cs"
    ], 
    "dependencies" : { 
    }
