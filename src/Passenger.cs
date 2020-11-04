@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Passenger : MVRScript
 {
-    private const string TargetNone = "none";
+    private const string _targetNone = "none";
     private Rigidbody _link;
     private Rigidbody _follower;
     private Possessor _possessor;
@@ -104,7 +104,7 @@ public class Passenger : MVRScript
         CreateToggle(_worldScaleEnabledJSON, LeftSide);
 
         var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
-        controllers.Insert(0, TargetNone);
+        controllers.Insert(0, _targetNone);
         _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", OnFollowChanged);
         RegisterStringChooser(_followerJSON);
         var followerPopup = CreateScrollablePopup(_followerJSON, LeftSide);
@@ -187,7 +187,7 @@ public class Passenger : MVRScript
             _activeJSON.val = false;
         }
 
-        if (linkName == TargetNone)
+        if (linkName == _targetNone)
         {
             target = null;
             return;

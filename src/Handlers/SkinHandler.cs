@@ -75,7 +75,7 @@ namespace Handlers
             return materials;
         }
 
-        private static readonly Dictionary<string, Shader> ReplacementShaders = new Dictionary<string, Shader>
+        private static readonly Dictionary<string, Shader> _replacementShaders = new Dictionary<string, Shader>
             {
                 // Opaque materials
                 { "Custom/Subsurface/GlossCullComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff") },
@@ -112,7 +112,7 @@ namespace Handlers
                 var materialInfo = SkinShaderMaterialReference.FromMaterial(material);
 
                 Shader shader;
-                if (!ReplacementShaders.TryGetValue(material.shader.name, out shader))
+                if (!_replacementShaders.TryGetValue(material.shader.name, out shader))
                     SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
 
                 if (shader != null) material.shader = shader;
