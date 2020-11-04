@@ -19,7 +19,8 @@ jobs:
       id: zip
       run: |
         mkdir -p publish/Custom/Scripts/AcidBubbles/Embody
-        cp *.cs publish/Custom/Scripts/AcidBubbles/Embody/
+        cp -r src publish/Custom/Scripts/AcidBubbles/Embody/
+        cp *.cslist publish/Custom/Scripts/AcidBubbles/Embody/
         cp meta.json publish/
         sed -i 's/v0.0.0/${{ steps.get_version.outputs.VERSION }}/' publish/meta.json
         cd publish

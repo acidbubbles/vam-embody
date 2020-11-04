@@ -62,7 +62,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Embody.cs" />
+    <!-- SourceFiles -->
+    <Compile Include="src\ImprovedPoV.cs" />
+    <Compile Include="src\Passenger.cs" />
+    <!-- /SourceFiles -->
   </ItemGroup>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
