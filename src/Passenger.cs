@@ -2,12 +2,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-/// <summary>
-/// Passenger
-/// By AcidBubbles
-/// Your eyes follow the model's eyes, not the other way around
-/// Source: https://github.com/acidbubbles/vam-passenger
-/// </summary>
 public class Passenger : MVRScript
 {
     private const string TargetNone = "none";

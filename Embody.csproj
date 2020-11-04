@@ -63,6 +63,10 @@
 
   <ItemGroup>
     <!-- SourceFiles -->
+    <Compile Include="src\Handlers\HairHandler.cs" />
+    <Compile Include="src\Handlers\HandlerConfigurationResult.cs" />
+    <Compile Include="src\Handlers\IHandler.cs" />
+    <Compile Include="src\Handlers\SkinHandler.cs" />
     <Compile Include="src\ImprovedPoV.cs" />
     <Compile Include="src\Passenger.cs" />
     <!-- /SourceFiles -->
