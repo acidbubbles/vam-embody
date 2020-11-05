@@ -69,6 +69,7 @@
     <Compile Include="src\Handlers\SkinHandler.cs" />
     <Compile Include="src\ImprovedPoV.cs" />
     <Compile Include="src\Passenger.cs" />
+    <Compile Include="src\PassengerExperimental.cs" />
     <!-- /SourceFiles -->
   </ItemGroup>
 
