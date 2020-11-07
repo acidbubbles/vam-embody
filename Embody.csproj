@@ -67,6 +67,9 @@
     <Compile Include="src\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\Handlers\IHandler.cs" />
     <Compile Include="src\Handlers\SkinHandler.cs" />
+    <Compile Include="src\Interop\IEmbodyPlugin.cs" />
+    <Compile Include="src\Interop\IImprovedPoV.cs" />
+    <Compile Include="src\Interop\InteropProxy.cs" />
     <Compile Include="src\ImprovedPoV.cs" />
     <Compile Include="src\Passenger.cs" />
     <Compile Include="src\PassengerExperimental.cs" />

@@ -3,23 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Handlers;
+using Interop;
 using UnityEngine;
 
-public class ImprovedPoV : MVRScript
+public class ImprovedPoV : MVRScript, IImprovedPoV
 {
     private Atom _person;
     private Camera _mainCamera;
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
     private DAZCharacterSelector _selector;
-    private JSONStorableFloat _cameraDepthJSON;
-    private JSONStorableFloat _cameraHeightJSON;
-    private JSONStorableFloat _cameraPitchJSON;
-    private JSONStorableFloat _clipDistanceJSON;
-    private JSONStorableBool _autoWorldScaleJSON;
-    private JSONStorableBool _possessedOnlyJSON;
-    private JSONStorableBool _hideFaceJSON;
-    private JSONStorableBool _hideHairJSON;
+    public JSONStorableFloat cameraDepthJSON { get; set; }
+    public JSONStorableFloat cameraHeightJSON { get; set; }
+    public JSONStorableFloat cameraPitchJSON { get; set; }
+    public JSONStorableFloat clipDistanceJSON { get; set; }
+    public JSONStorableBool autoWorldScaleJSON { get; set; }
+    public JSONStorableBool possessedOnlyJSON { get; set; }
+    public JSONStorableBool hideFaceJSON { get; set; }
+    public JSONStorableBool hideHairJSON { get; set; }
 
     private SkinHandler _skinHandler;
     private List<HairHandler> _hairHandlers;
@@ -135,9 +136,9 @@ public class ImprovedPoV : MVRScript
         try
         {
             {
-                _cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, 0.2f, false);
-                RegisterFloat(_cameraDepthJSON);
-                var cameraDepthSlider = CreateSlider(_cameraDepthJSON, false);
+                cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, 0.2f, false);
+                RegisterFloat(cameraDepthJSON);
+                var cameraDepthSlider = CreateSlider(cameraDepthJSON, false);
                 cameraDepthSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
@@ -145,9 +146,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.05f, 0.05f, false);
-                RegisterFloat(_cameraHeightJSON);
-                var cameraHeightSlider = CreateSlider(_cameraHeightJSON, false);
+                cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.05f, 0.05f, false);
+                RegisterFloat(cameraHeightJSON);
+                var cameraHeightSlider = CreateSlider(cameraHeightJSON, false);
                 cameraHeightSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
@@ -155,9 +156,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _cameraPitchJSON = new JSONStorableFloat("Camera pitch", 0f, -135f, 45f, true);
-                RegisterFloat(_cameraPitchJSON);
-                var cameraPitchSlider = CreateSlider(_cameraPitchJSON, false);
+                cameraPitchJSON = new JSONStorableFloat("Camera pitch", 0f, -135f, 45f, true);
+                RegisterFloat(cameraPitchJSON);
+                var cameraPitchSlider = CreateSlider(cameraPitchJSON, false);
                 cameraPitchSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
@@ -165,9 +166,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, true);
-                RegisterFloat(_clipDistanceJSON);
-                var clipDistanceSlider = CreateSlider(_clipDistanceJSON, false);
+                clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, true);
+                RegisterFloat(clipDistanceJSON);
+                var clipDistanceSlider = CreateSlider(clipDistanceJSON, false);
                 clipDistanceSlider.slider.onValueChanged.AddListener(delegate (float val)
                 {
                     ApplyCameraPosition(_lastActive);
@@ -175,9 +176,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _autoWorldScaleJSON = new JSONStorableBool("Auto world scale", false);
-                RegisterBool(_autoWorldScaleJSON);
-                var autoWorldScaleToggle = CreateToggle(_autoWorldScaleJSON, true);
+                autoWorldScaleJSON = new JSONStorableBool("Auto world scale", false);
+                RegisterBool(autoWorldScaleJSON);
+                var autoWorldScaleToggle = CreateToggle(autoWorldScaleJSON, true);
                 autoWorldScaleToggle.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
@@ -190,9 +191,9 @@ public class ImprovedPoV : MVRScript
                 // NOTE: Easier to test when it's always on
                 possessedOnlyDefaultValue = false;
 #endif
-                _possessedOnlyJSON = new JSONStorableBool("Activate only when possessed", possessedOnlyDefaultValue);
-                RegisterBool(_possessedOnlyJSON);
-                var possessedOnlyCheckbox = CreateToggle(_possessedOnlyJSON, true);
+                possessedOnlyJSON = new JSONStorableBool("Activate only when possessed", possessedOnlyDefaultValue);
+                RegisterBool(possessedOnlyJSON);
+                var possessedOnlyCheckbox = CreateToggle(possessedOnlyJSON, true);
                 possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
@@ -200,9 +201,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _hideFaceJSON = new JSONStorableBool("Hide face", true);
-                RegisterBool(_hideFaceJSON);
-                var hideFaceToggle = CreateToggle(_hideFaceJSON, true);
+                hideFaceJSON = new JSONStorableBool("Hide face", true);
+                RegisterBool(hideFaceJSON);
+                var hideFaceToggle = CreateToggle(hideFaceJSON, true);
                 hideFaceToggle.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
@@ -210,9 +211,9 @@ public class ImprovedPoV : MVRScript
             }
 
             {
-                _hideHairJSON = new JSONStorableBool("Hide hair", true);
-                RegisterBool(_hideHairJSON);
-                var hideHairToggle = CreateToggle(_hideHairJSON, true);
+                hideHairJSON = new JSONStorableBool("Hide hair", true);
+                RegisterBool(hideHairJSON);
+                var hideHairToggle = CreateToggle(hideHairJSON, true);
                 hideHairToggle.toggle.onValueChanged.AddListener(delegate (bool val)
                 {
                     _dirty = true;
@@ -250,7 +251,7 @@ public class ImprovedPoV : MVRScript
     {
         try
         {
-            var active = _headControl.possessed || !_possessedOnlyJSON.val;
+            var active = _headControl.possessed || !possessedOnlyJSON.val;
 
             if (!_lastActive && active)
             {
@@ -311,14 +312,14 @@ public class ImprovedPoV : MVRScript
         ApplyAutoWorldScale(active);
         ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
-        if (UpdateHandler(ref _skinHandler, active && _hideFaceJSON.val))
+        if (UpdateHandler(ref _skinHandler, active && hideFaceJSON.val))
             ConfigureHandler("Skin", ref _skinHandler, _skinHandler.Configure(_character.skin));
         if (_hairHandlers == null)
             _hairHandlers = new List<HairHandler>(new HairHandler[_hair.Length]);
         for (var i = 0; i < _hairHandlers.Count; i++)
         {
             var hairHandler = _hairHandlers[i];
-            if (UpdateHandler(ref hairHandler, active && _hideHairJSON.val))
+            if (UpdateHandler(ref hairHandler, active && hideHairJSON.val))
                 ConfigureHandler("Hair", ref hairHandler, hairHandler.Configure(_hair[i]));
             _hairHandlers[i] = hairHandler;
         }
@@ -383,11 +384,11 @@ public class ImprovedPoV : MVRScript
     {
         try
         {
-            _mainCamera.nearClipPlane = active ? _clipDistanceJSON.val : 0.01f;
+            _mainCamera.nearClipPlane = active ? clipDistanceJSON.val : 0.01f;
 
-            var cameraDepth = active ? _cameraDepthJSON.val : 0;
-            var cameraHeight = active ? _cameraHeightJSON.val : 0;
-            var cameraPitch = active ? _cameraPitchJSON.val : 0;
+            var cameraDepth = active ? cameraDepthJSON.val : 0;
+            var cameraHeight = active ? cameraHeightJSON.val : 0;
+            var cameraPitch = active ? cameraPitchJSON.val : 0;
             var pos = _possessor.transform.position;
             _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraDepth - _mainCamera.transform.rotation * Vector3.down * cameraHeight;
             _possessor.transform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
@@ -427,7 +428,7 @@ public class ImprovedPoV : MVRScript
             return;
         }
 
-        if (!_autoWorldScaleJSON.val) return;
+        if (!autoWorldScaleJSON.val) return;
 
         if (_originalWorldScale == 0f)
         {
