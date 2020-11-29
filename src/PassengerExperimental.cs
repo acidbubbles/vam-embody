@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Interop;
+using MeshVR;
 using UnityEngine;
 
 public class PassengerExperimental : MVRScript
@@ -14,12 +15,14 @@ public class PassengerExperimental : MVRScript
     private Transform _cameraRigParent;
     private Quaternion _cameraRigRotationBackup;
     private Vector3 _cameraRigPositionBackup;
+    private bool _ready;
 
     public override void Init()
     {
         _interop = new InteropProxy(containingAtom);
         _activeJSON = new JSONStorableBool("Active", false, val =>
         {
+            if (!_ready) return;
             if (val)
                 Activate();
             else
@@ -34,6 +37,8 @@ public class PassengerExperimental : MVRScript
     {
         yield return new WaitForEndOfFrame();
         _interop.Connect();
+        _ready = true;
+        if (_activeJSON.val) Activate();
     }
 
     public void OnDisable()
@@ -47,18 +52,19 @@ public class PassengerExperimental : MVRScript
         {
             _link = containingAtom.rigidbodies.First(rb => rb.name == "head");
 
-            // GlobalSceneOptions.singleton.disableNavigation = true;
+            _cameraRig = SuperController.singleton.centerCameraTarget.transform.parent.GetComponentInChildren<Camera>().transform;
+            var cameraRigTransform = _cameraRig.transform;
+            _cameraRigParent = cameraRigTransform.parent;
 
-            _cameraRig = SuperController.singleton.centerCameraTarget.transform.parent;
-            _cameraRigParent = _cameraRig.transform.parent;
+            _cameraRigRotationBackup = cameraRigTransform.localRotation;
+            _cameraRigPositionBackup = cameraRigTransform.localPosition;
 
-            _cameraRigRotationBackup = _cameraRig.transform.localRotation;
-            _cameraRigPositionBackup = _cameraRig.transform.localPosition;
-
-            _cameraRig.transform.SetParent(_link.transform, false);
+            cameraRigTransform.SetParent(_link.transform, false);
 
             if (_interop.improvedPoV?.possessedOnlyJSON != null)
                 _interop.improvedPoV.possessedOnlyJSON.val = false;
+
+            GlobalSceneOptions.singleton.disableNavigation = true;
         }
         catch (Exception exc)
         {
@@ -69,13 +75,14 @@ public class PassengerExperimental : MVRScript
 
     private void Deactivate()
     {
-        // GlobalSceneOptions.singleton.disableNavigation = false;
+        GlobalSceneOptions.singleton.disableNavigation = false;
 
         if (_cameraRig != null)
         {
-            _cameraRig.transform.SetParent(_cameraRigParent, false);
-            _cameraRig.transform.localRotation = _cameraRigRotationBackup;
-            _cameraRig.transform.localPosition = _cameraRigPositionBackup;
+            var cameraRigTransform = _cameraRig.transform;
+            cameraRigTransform.SetParent(_cameraRigParent, false);
+            cameraRigTransform.localRotation = _cameraRigRotationBackup;
+            cameraRigTransform.localPosition = _cameraRigPositionBackup;
 
             _cameraRig = null;
             _cameraRigParent = null;
@@ -99,7 +106,6 @@ public class PassengerExperimental : MVRScript
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.Space))
         {
             _activeJSON.val = false;
-            return;
         }
     }
 
