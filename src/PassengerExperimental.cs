@@ -17,6 +17,8 @@ public class PassengerExperimental : MVRScript
     private Vector3 _cameraRigPositionBackup;
     private bool _ready;
     private FreeControllerV3 _lookAt;
+    private JSONStorableStringChooser _linkJSON;
+    private JSONStorableBool _lookAtJSON;
 
     public override void Init()
     {
@@ -31,7 +33,28 @@ public class PassengerExperimental : MVRScript
         });
         RegisterBool(_activeJSON);
         CreateToggle(_activeJSON);
+
+        var defaultLink = containingAtom.type == "Person" ? "head" : "object";
+        var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
+        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", (string val) => Refresh());
+        RegisterStringChooser(_linkJSON);
+        CreateScrollablePopup(_linkJSON).popupPanelHeight = 600f;
+
+        _lookAtJSON = new JSONStorableBool("Look At Eye Target", false, (bool val) => Refresh());
+        if (containingAtom.type == "Person")
+        {
+            RegisterBool(_lookAtJSON);
+            CreateToggle(_lookAtJSON);
+        }
+
         SuperController.singleton.StartCoroutine(InitDeferred());
+    }
+
+    private void Refresh()
+    {
+        if (_activeJSON?.val != true) return;
+        _activeJSON.val = false;
+        _activeJSON.val = true;
     }
 
     private IEnumerator InitDeferred()
@@ -39,7 +62,8 @@ public class PassengerExperimental : MVRScript
         yield return new WaitForEndOfFrame();
         _interop.Connect();
         _ready = true;
-        if (_activeJSON.val) Activate();
+        if (_activeJSON.val)
+            Activate();
     }
 
     public void OnDisable()
@@ -51,8 +75,16 @@ public class PassengerExperimental : MVRScript
     {
         try
         {
-            _link = containingAtom.rigidbodies.First(rb => rb.name == "head");
-            _lookAt = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
+            _link = containingAtom.rigidbodies.First(rb => rb.name == _linkJSON.val);
+
+            if (!CanActivate())
+            {
+                _activeJSON.valNoCallback = false;
+                return;
+            }
+
+            if (_lookAtJSON.val)
+                _lookAt = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
 
             _cameraRig = SuperController.singleton.centerCameraTarget.transform.parent.GetComponentInChildren<Camera>().transform;
             var cameraRigTransform = _cameraRig.transform;
@@ -71,8 +103,34 @@ public class PassengerExperimental : MVRScript
         catch (Exception exc)
         {
             SuperController.LogError($"Embody: Failed to activate Passenger.\n{exc}");
+            _activeJSON.valNoCallback = false;
             Deactivate();
         }
+    }
+
+    private bool CanActivate()
+    {
+        if (_link == null)
+        {
+            SuperController.LogError("Embody: Could not find the specified link.");
+            return false;
+        }
+
+        var userPreferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
+        if (userPreferences.useHeadCollider)
+        {
+            SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
+            return false;
+        }
+
+        var linkController = containingAtom.GetStorableByID(_link.name.EndsWith("Control") ? _link.name : $"{_link.name}Control") as FreeControllerV3;
+        if (linkController != null && linkController.possessed)
+        {
+            SuperController.LogError($"Embody: Cannot activate Passenger while the target rigidbody {_link.name} is being possessed. Use the 'Active' checkbox or trigger instead of using built-in Virt-A-Mate possession.");
+            return false;
+        }
+
+        return true;
     }
 
     private void Deactivate()
@@ -88,12 +146,13 @@ public class PassengerExperimental : MVRScript
 
             _cameraRig = null;
             _cameraRigParent = null;
-
-            _link = null;
         }
 
         if (_interop.improvedPoV?.possessedOnlyJSON != null)
             _interop.improvedPoV.possessedOnlyJSON.val = true;
+
+        _link = null;
+        _lookAt = null;
     }
 
     public void Update()
@@ -122,6 +181,7 @@ public class PassengerExperimental : MVRScript
     public void PositionCamera()
     {
         _cameraRig.localPosition = Vector3.zero;
-        _cameraRig.LookAt(_lookAt.transform);
+        if (_lookAt)
+            _cameraRig.LookAt(_lookAt.transform);
     }
 }
