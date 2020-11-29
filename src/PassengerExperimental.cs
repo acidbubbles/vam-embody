@@ -16,6 +16,7 @@ public class PassengerExperimental : MVRScript
     private Quaternion _cameraRigRotationBackup;
     private Vector3 _cameraRigPositionBackup;
     private bool _ready;
+    private FreeControllerV3 _lookAt;
 
     public override void Init()
     {
@@ -51,6 +52,7 @@ public class PassengerExperimental : MVRScript
         try
         {
             _link = containingAtom.rigidbodies.First(rb => rb.name == "head");
+            _lookAt = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
 
             _cameraRig = SuperController.singleton.centerCameraTarget.transform.parent.GetComponentInChildren<Camera>().transform;
             var cameraRigTransform = _cameraRig.transform;
@@ -120,5 +122,6 @@ public class PassengerExperimental : MVRScript
     public void PositionCamera()
     {
         _cameraRig.localPosition = Vector3.zero;
+        _cameraRig.LookAt(_lookAt.transform);
     }
 }
