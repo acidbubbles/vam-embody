@@ -66,12 +66,19 @@
     <Compile Include="src\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\Handlers\IHandler.cs" />
     <Compile Include="src\Handlers\SkinHandler.cs" />
+    <Compile Include="src\Interop\EmbodyPluginHelper.cs" />
+    <Compile Include="src\Interop\ICameraOffset.cs" />
     <Compile Include="src\Interop\IEmbodyPlugin.cs" />
-    <Compile Include="src\Interop\IImprovedPoV.cs" />
+    <Compile Include="src\Interop\IHideGeometry.cs" />
     <Compile Include="src\Interop\InteropProxy.cs" />
-    <Compile Include="src\ImprovedPoV.cs" />
+    <Compile Include="src\Interop\IPassenger.cs" />
+    <Compile Include="src\Interop\IWorldScale.cs" />
+    <Compile Include="src\Utils\QuaternionExtensions.cs" />
+    <Compile Include="src\Embody.cs" />
+    <Compile Include="src\HideGeometry.cs" />
+    <Compile Include="src\OffsetCamera.cs" />
     <Compile Include="src\Passenger.cs" />
-    <Compile Include="src\QuaternionExtensions.cs" />
+    <Compile Include="src\WorldScale.cs" />
     <!-- /SourceFiles -->
   </ItemGroup>
 

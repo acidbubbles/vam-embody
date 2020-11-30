@@ -1,4 +1,3 @@
-// #define POV_DIAGNOSTICS
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,21 +5,14 @@ using Handlers;
 using Interop;
 using UnityEngine;
 
-public class ImprovedPoV : MVRScript, IImprovedPoV
+public class HideGeometry : MVRScript, IHideGeometry
 {
     private Atom _person;
-    private Camera _mainCamera;
     private Possessor _possessor;
-    private FreeControllerV3 _headControl;
     private DAZCharacterSelector _selector;
-    public JSONStorableFloat cameraDepthJSON { get; set; }
-    public JSONStorableFloat cameraHeightJSON { get; set; }
-    public JSONStorableFloat cameraPitchJSON { get; set; }
-    public JSONStorableFloat clipDistanceJSON { get; set; }
-    public JSONStorableBool autoWorldScaleJSON { get; set; }
-    public JSONStorableBool possessedOnlyJSON { get; set; }
     public JSONStorableBool hideFaceJSON { get; set; }
     public JSONStorableBool hideHairJSON { get; set; }
+    public JSONStorableBool activeJSON { get; set; }
 
     private SkinHandler _skinHandler;
     private List<HairHandler> _hairHandlers;
@@ -29,15 +21,13 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
     private DAZHairGroup[] _hair;
 
 
-    // Whether the PoV effects are currently active, i.e. in possession mode
-    private bool _lastActive;
     // Requires re-generating all shaders and materials, either because last frame was not ready or because something changed
     private bool _dirty;
     // To avoid spamming errors when something failed
     private bool _failedOnce;
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
-    private float _originalWorldScale;
+    private InteropProxy _interop;
 
     public override void Init()
     {
@@ -45,20 +35,17 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         {
             if (containingAtom?.type != "Person")
             {
-                SuperController.LogError($"Please apply the ImprovedPoV plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
+                SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
                 DestroyImmediate(this);
                 return;
             }
 
             _person = containingAtom;
-            _mainCamera = CameraTarget.centerTarget?.targetCamera;
-            _possessor = SuperController
-                .FindObjectsOfType(typeof(Possessor))
-                .Where(p => p.name == "CenterEye")
-                .Select(p => p as Possessor)
-                .FirstOrDefault();
-            _headControl = (FreeControllerV3)_person.GetStorableByID("headControl");
+            _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
+            _interop = new InteropProxy(this, containingAtom);
+            _interop.Init();
+
 
             InitControls();
             Camera.onPreRender += OnPreRender;
@@ -67,7 +54,6 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         catch (Exception e)
         {
             SuperController.LogError("Failed to initialize Improved PoV: " + e);
-            DestroyImmediate(this);
         }
     }
 
@@ -136,71 +122,6 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         try
         {
             {
-                cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, 0.2f, false);
-                RegisterFloat(cameraDepthJSON);
-                var cameraDepthSlider = CreateSlider(cameraDepthJSON, false);
-                cameraDepthSlider.slider.onValueChanged.AddListener(delegate (float val)
-                {
-                    ApplyCameraPosition(_lastActive);
-                });
-            }
-
-            {
-                cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.05f, 0.05f, false);
-                RegisterFloat(cameraHeightJSON);
-                var cameraHeightSlider = CreateSlider(cameraHeightJSON, false);
-                cameraHeightSlider.slider.onValueChanged.AddListener(delegate (float val)
-                {
-                    ApplyCameraPosition(_lastActive);
-                });
-            }
-
-            {
-                cameraPitchJSON = new JSONStorableFloat("Camera pitch", 0f, -135f, 45f, true);
-                RegisterFloat(cameraPitchJSON);
-                var cameraPitchSlider = CreateSlider(cameraPitchJSON, false);
-                cameraPitchSlider.slider.onValueChanged.AddListener(delegate (float val)
-                {
-                    ApplyCameraPosition(_lastActive);
-                });
-            }
-
-            {
-                clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, true);
-                RegisterFloat(clipDistanceJSON);
-                var clipDistanceSlider = CreateSlider(clipDistanceJSON, false);
-                clipDistanceSlider.slider.onValueChanged.AddListener(delegate (float val)
-                {
-                    ApplyCameraPosition(_lastActive);
-                });
-            }
-
-            {
-                autoWorldScaleJSON = new JSONStorableBool("Auto world scale", false);
-                RegisterBool(autoWorldScaleJSON);
-                var autoWorldScaleToggle = CreateToggle(autoWorldScaleJSON, true);
-                autoWorldScaleToggle.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    _dirty = true;
-                });
-            }
-
-            {
-                var possessedOnlyDefaultValue = true;
-#if (POV_DIAGNOSTICS)
-                // NOTE: Easier to test when it's always on
-                possessedOnlyDefaultValue = false;
-#endif
-                possessedOnlyJSON = new JSONStorableBool("Activate only when possessed", possessedOnlyDefaultValue);
-                RegisterBool(possessedOnlyJSON);
-                var possessedOnlyCheckbox = CreateToggle(possessedOnlyJSON, true);
-                possessedOnlyCheckbox.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    _dirty = true;
-                });
-            }
-
-            {
                 hideFaceJSON = new JSONStorableBool("Hide face", true);
                 RegisterBool(hideFaceJSON);
                 var hideFaceToggle = CreateToggle(hideFaceJSON, true);
@@ -226,23 +147,23 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         }
     }
 
+    public void OnEnable()
+    {
+        if (_interop?.ready != true) return;
+
+        ApplyAll(true);
+    }
+
     public void OnDisable()
     {
-        try
-        {
-            _dirty = false;
-            ApplyAll(false);
-            _lastActive = false;
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to disable Improved PoV: " + e);
-        }
+        if (_interop?.ready != true) return;
+
+        _dirty = false;
+        ApplyAll(false);
     }
 
     public void OnDestroy()
     {
-        OnDisable();
         Camera.onPreRender -= OnPreRender;
         Camera.onPostRender -= OnPostRender;
     }
@@ -251,30 +172,18 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
     {
         try
         {
-            var active = _headControl.possessed || !possessedOnlyJSON.val;
-
-            if (!_lastActive && active)
-            {
-                ApplyAll(true);
-                _lastActive = true;
-            }
-            else if (_lastActive && !active)
-            {
-                ApplyAll(false);
-                _lastActive = false;
-            }
-            else if (_dirty)
+            if (_dirty)
             {
                 _dirty = false;
-                ApplyAll(_lastActive);
+                ApplyAll(true);
             }
-            else if (_lastActive && _selector.selectedCharacter != _character)
+            else if (_selector.selectedCharacter != _character)
             {
                 _skinHandler?.Restore();
                 _skinHandler = null;
                 ApplyAll(true);
             }
-            else if (_lastActive && !_selector.hairItems.Where(h => h.active).SequenceEqual(_hair))
+            else if (!_selector.hairItems.Where(h => h.active).SequenceEqual(_hair))
             {
                 // Note: This only checks if the first hair changed. It'll be good enough for most purposes, but imperfect.
                 if (_hairHandlers != null)
@@ -309,8 +218,6 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         _character = _selector.selectedCharacter;
         _hair = _selector.hairItems.Where(h => h.active).ToArray();
 
-        ApplyAutoWorldScale(active);
-        ApplyCameraPosition(active);
         ApplyPossessorMeshVisibility(active);
         if (UpdateHandler(ref _skinHandler, active && hideFaceJSON.val))
             ConfigureHandler("Skin", ref _skinHandler, _skinHandler.Configure(_character.skin));
@@ -333,7 +240,7 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         _tryAgainAttempts++;
         if (_tryAgainAttempts > 90 * 20) // Approximately 20 to 40 seconds
         {
-            SuperController.LogError("Failed to apply ImprovedPoV. Reason: " + reason + ". Try reloading the plugin, or report the issue to @Acidbubbles.");
+            SuperController.LogError("Failed to apply HideGeometry. Reason: " + reason + ". Try reloading the plugin, or report the issue to @Acidbubbles.");
             enabled = false;
         }
     }
@@ -380,25 +287,6 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         return false;
     }
 
-    private void ApplyCameraPosition(bool active)
-    {
-        try
-        {
-            _mainCamera.nearClipPlane = active ? clipDistanceJSON.val : 0.01f;
-
-            var cameraDepth = active ? cameraDepthJSON.val : 0;
-            var cameraHeight = active ? cameraHeightJSON.val : 0;
-            var cameraPitch = active ? cameraPitchJSON.val : 0;
-            var pos = _possessor.transform.position;
-            _mainCamera.transform.position = pos - _mainCamera.transform.rotation * Vector3.forward * cameraDepth - _mainCamera.transform.rotation * Vector3.down * cameraHeight;
-            _possessor.transform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
-            _possessor.transform.position = pos;
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to update camera position: " + e);
-        }
-    }
 
     private void ApplyPossessorMeshVisibility(bool active)
     {
@@ -414,48 +302,5 @@ public class ImprovedPoV : MVRScript, IImprovedPoV
         {
             SuperController.LogError("Failed to update possessor mesh visibility: " + e);
         }
-    }
-
-    private void ApplyAutoWorldScale(bool active)
-    {
-        if (!active)
-        {
-            if (_originalWorldScale != 0f && SuperController.singleton.worldScale != _originalWorldScale)
-            {
-                SuperController.singleton.worldScale = _originalWorldScale;
-                _originalWorldScale = 0f;
-            }
-            return;
-        }
-
-        if (!autoWorldScaleJSON.val) return;
-
-        if (_originalWorldScale == 0f)
-        {
-            _originalWorldScale = SuperController.singleton.worldScale;
-        }
-
-        var eyes = _person.GetComponentsInChildren<LookAtWithLimits>();
-        var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
-        var rEye = eyes.FirstOrDefault(eye => eye.name == "rEye");
-        if (lEye == null || rEye == null)
-            return;
-        var atomEyeDistance = Vector3.Distance(lEye.transform.position, rEye.transform.position);
-
-        var rig = GameObject.FindObjectOfType<OVRCameraRig>();
-        if (rig == null)
-            return;
-        var rigEyesDistance = Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
-
-        var scale = atomEyeDistance / rigEyesDistance;
-        var worldScale = SuperController.singleton.worldScale * scale;
-
-        if (SuperController.singleton.worldScale != worldScale)
-            SuperController.singleton.worldScale = worldScale;
-
-        var yAdjust = _possessor.autoSnapPoint.position.y - _headControl.possessPoint.position.y;
-
-        if (yAdjust != 0)
-            SuperController.singleton.playerHeightAdjust = SuperController.singleton.playerHeightAdjust - yAdjust;
     }
 }

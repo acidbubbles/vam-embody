@@ -1,17 +1,16 @@
 using System;
-using System.Collections;
 using System.Linq;
 using Interop;
 using MeshVR;
 using UnityEngine;
 
-public class Passenger : MVRScript
+public class Passenger : MVRScript, IPassenger
 {
     private const string _targetNone = "none";
+
     private Rigidbody _link;
     private Rigidbody _follower;
     private Possessor _possessor;
-    private JSONStorableBool _activeJSON;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
     private JSONStorableFloat _rotationSmoothingJSON;
@@ -25,11 +24,7 @@ public class Passenger : MVRScript
     private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
     private JSONStorableStringChooser _followerJSON;
-    private JSONStorableBool _worldScaleEnabledJSON;
-    private JSONStorableFloat _worldScaleJSON;
     private JSONStorableFloat _eyesToHeadDistanceJSON;
-    private JSONStorableStringChooser _toggleKeyJSON;
-    private KeyCode _toggleKey = KeyCode.None;
     private Vector3 _previousPosition;
     private Quaternion _previousRotation;
     private Quaternion _currentRotationVelocity;
@@ -37,9 +32,7 @@ public class Passenger : MVRScript
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
-    private float _previousWorldScale;
     private InteropProxy _interop;
-    private bool _ready;
     private JSONStorableBool _lookAtJSON;
     private FreeControllerV3 _lookAt;
 
@@ -48,7 +41,8 @@ public class Passenger : MVRScript
         const bool leftSide = false;
         const bool rightSide = true;
 
-        _interop = new InteropProxy(containingAtom);
+        _interop = new InteropProxy(this, containingAtom);
+        _interop.Init();
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
@@ -59,17 +53,6 @@ public class Passenger : MVRScript
         _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", (string val) => Reapply());
         RegisterStringChooser(_linkJSON);
         CreateFilterablePopup(_linkJSON).popupPanelHeight = 600f;
-
-        _activeJSON = new JSONStorableBool("Active", false, val =>
-        {
-            if (!_ready) return;
-            if (val)
-                Activate();
-            else
-                Deactivate();
-        });
-        RegisterBool(_activeJSON);
-        var activeToggle = CreateToggle(_activeJSON, leftSide);
 
         _lookAtJSON = new JSONStorableBool("Look At Eye Target", false, (bool val) => Reapply());
         if (containingAtom.type == "Person")
@@ -95,22 +78,12 @@ public class Passenger : MVRScript
         RegisterBool(_positionLockJSON);
         var positionLockToggle = CreateToggle(_positionLockJSON, leftSide);
 
-        _worldScaleEnabledJSON = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_worldScaleEnabledJSON);
-        CreateToggle(_worldScaleEnabledJSON, leftSide);
-
         var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
         controllers.Insert(0, _targetNone);
         _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", (string val) => Reapply());
         RegisterStringChooser(_followerJSON);
         var followerPopup = CreateFilterablePopup(_followerJSON, leftSide);
         followerPopup.popupPanelHeight = 600f;
-
-        var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, "None", "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
-        RegisterStringChooser(_toggleKeyJSON);
-        var toggleKeyPopup = CreateFilterablePopup(_toggleKeyJSON, leftSide);
-        toggleKeyPopup.popupPanelHeight = 600f;
 
         // Right Side
 
@@ -146,41 +119,22 @@ public class Passenger : MVRScript
         RegisterFloat(_positionOffsetZJSON);
         CreateSlider(_positionOffsetZJSON, rightSide).valueFormat = "F4";
 
-        _worldScaleJSON = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
-        RegisterFloat(_worldScaleJSON);
-        CreateSlider(_worldScaleJSON, rightSide);
-
         _eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
         RegisterFloat(_eyesToHeadDistanceJSON);
         CreateSlider(_eyesToHeadDistanceJSON, rightSide);
-
-        // Deferred
-        SuperController.singleton.StartCoroutine(InitDeferred());
     }
 
     private void Reapply()
     {
-        if (_activeJSON?.val != true) return;
-        _activeJSON.val = false;
-        _activeJSON.val = true;
+        if (enabledJSON?.val != true) return;
+        enabledJSON.val = false;
+        enabledJSON.val = true;
     }
 
-    private IEnumerator InitDeferred()
+    public void OnEnable()
     {
-        yield return new WaitForEndOfFrame();
-        _interop.Connect();
-        _ready = true;
-        if (_activeJSON.val)
-            Activate();
-    }
+        if (_interop?.ready != true) return;
 
-    public void OnDisable()
-    {
-        if (_activeJSON.val) _activeJSON.val = false;
-    }
-
-    private void Activate()
-    {
         try
         {
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
@@ -191,14 +145,8 @@ public class Passenger : MVRScript
 
             if (!CanActivate() || !IsValid())
             {
-                _activeJSON.valNoCallback = false;
+                enabledJSON.val = false;
                 return;
-            }
-
-            if (_link.name == "head")
-            {
-                if (_interop.improvedPoV?.possessedOnlyJSON != null)
-                    _interop.improvedPoV.possessedOnlyJSON.val = false;
             }
 
             var superController = SuperController.singleton;
@@ -215,7 +163,6 @@ public class Passenger : MVRScript
             if (offsetStartRotation)
                 _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
-            ApplyWorldScale();
             UpdateRotation(navigationRig, 0);
             UpdatePosition(navigationRig, 0);
 
@@ -224,8 +171,7 @@ public class Passenger : MVRScript
         catch (Exception exc)
         {
             SuperController.LogError($"Embody: Failed to activate Passenger.\n{exc}");
-            _activeJSON.valNoCallback = false;
-            Deactivate();
+            enabledJSON.val = false;
         }
     }
 
@@ -259,23 +205,11 @@ public class Passenger : MVRScript
         return true;
     }
 
-    private void ApplyWorldScale()
+    public void OnDisable()
     {
-        if (!_worldScaleEnabledJSON.val) return;
+        if (_interop?.ready != true) return;
 
-        _previousWorldScale = SuperController.singleton.worldScale;
-        SuperController.singleton.worldScale = _worldScaleJSON.val;
-    }
-
-    private void Deactivate()
-    {
         GlobalSceneOptions.singleton.disableNavigation = false;
-
-        if (_previousWorldScale > 0f)
-        {
-            SuperController.singleton.worldScale = _previousWorldScale;
-            _previousWorldScale = 0f;
-        }
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;
         SuperController.singleton.navigationRig.position = _previousPosition;
@@ -284,12 +218,6 @@ public class Passenger : MVRScript
         {
             var rigidBody = _link.GetComponent<Rigidbody>();
             rigidBody.interpolation = _previousInterpolation;
-
-            if (_link.name == "head")
-            {
-                if (_interop.improvedPoV?.possessedOnlyJSON != null)
-                    _interop.improvedPoV.possessedOnlyJSON.val = true;
-            }
         }
 
         _currentPositionVelocity = Vector3.zero;
@@ -304,44 +232,86 @@ public class Passenger : MVRScript
     {
         try
         {
-            if (!_activeJSON.val)
-            {
-                if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
-                {
-                    _activeJSON.val = true;
-                    return;
-                }
-
-                return;
-            }
-
             if (!IsValid())
             {
-                _activeJSON.val = false;
-                return;
-            }
-
-            if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
-            {
-                _activeJSON.val = false;
+                enabledJSON.val = false;
                 return;
             }
 
             var navigationRig = SuperController.singleton.navigationRig;
 
-            if (_follower != null)
-                PossessRotation();
-            else if (_rotationLockJSON.val)
-                UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
+            // if (_follower != null)
+            //     PossessRotation();
+            // else if (_rotationLockJSON.val)
+            //     UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
+            //
+            // if (_positionLockJSON.val)
+            //     UpdatePosition(navigationRig, _positionSmoothingJSON.val);
 
-            if (_positionLockJSON.val)
-                UpdatePosition(navigationRig, _positionSmoothingJSON.val);
+            UpdateNavigationRig();
         }
         catch (Exception e)
         {
             SuperController.LogError($"Embody: Failed to update.\n{e}");
-            _activeJSON.val = false;
+            enabledJSON.val = false;
         }
+    }
+
+    private void UpdateNavigationRig()
+    {
+        // Context
+        var positionSmoothing = _positionSmoothingJSON.val;
+        var rotationSmoothing = _rotationSmoothingJSON.val;
+        var navigationRig = SuperController.singleton.navigationRig;
+        var positionOffset = new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
+        var eyesToHeadOffset = new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
+        var rotationOffset = Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+
+        var centerTargetTransform = CameraTarget.centerTarget.transform;
+        var navigationRigTransform = navigationRig.transform;
+        var linkTransform = _link.transform;
+
+        // Desired camera position
+
+        var position = linkTransform.position;
+        var rotation = linkTransform.rotation;
+
+        if(!ReferenceEquals(_lookAt, null))
+            rotation.SetLookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
+
+        rotation *= rotationOffset;
+
+        if (_rotationLockNoRollJSON.val)
+            rotation.SetLookRotation(rotation * Vector3.forward, Vector3.up);
+
+        position += rotation * positionOffset;
+
+        // Move navigation rig
+
+        var cameraDelta = centerTargetTransform.position
+                          - navigationRigTransform.position
+                          - centerTargetTransform.rotation * eyesToHeadOffset;
+        var navigationRigPosition = position - cameraDelta;
+
+        var navigationRigRotation = rotation;
+        if (_startRotationOffset == Quaternion.identity)
+            navigationRigRotation *= _startRotationOffset;
+
+        // TODO? Necessary?
+        if (_startRotationOffset == Quaternion.identity)
+            navigationRigRotation *= _startRotationOffset;
+
+        if (positionSmoothing > 0)
+            navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
+
+        if (rotationSmoothing > 0)
+            navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
+
+        navigationRigTransform.rotation = navigationRigRotation;
+        navigationRigTransform.position = navigationRigPosition;
+
+        // TODO: Re-position the main menu and the hud anchors (ovr) if that's possible
+        // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positionning
     }
 
     private void UpdatePosition(Transform navigationRig, float positionSmoothing)
@@ -373,6 +343,8 @@ public class Passenger : MVRScript
     {
         var navigationRigRotation = _link.transform.rotation;
 
+        if(!ReferenceEquals(_lookAt, null))
+            navigationRigRotation.SetLookRotation(_lookAt.transform.position - _link.position, _link.transform.up);
         if (_rotationLockNoRollJSON.val)
             navigationRigRotation.SetLookRotation(navigationRigRotation * Vector3.forward, Vector3.up);
 
