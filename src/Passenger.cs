@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Linq;
+using Interop;
+using MeshVR;
 using UnityEngine;
 
 public class Passenger : MVRScript
@@ -8,7 +11,6 @@ public class Passenger : MVRScript
     private Rigidbody _link;
     private Rigidbody _follower;
     private Possessor _possessor;
-    private FreeControllerV3 _headControl;
     private JSONStorableBool _activeJSON;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
@@ -30,201 +32,231 @@ public class Passenger : MVRScript
     private KeyCode _toggleKey = KeyCode.None;
     private Vector3 _previousPosition;
     private Quaternion _previousRotation;
-    private bool _active;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
     private float _previousWorldScale;
+    private InteropProxy _interop;
+    private bool _ready;
+    private JSONStorableBool _lookAtJSON;
+    private FreeControllerV3 _lookAt;
 
     public override void Init()
     {
-        try
-        {
-            _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
-            _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
-            _headControl = (FreeControllerV3)containingAtom.GetStorableByID("headControl");
+        const bool leftSide = false;
+        const bool rightSide = true;
 
-            InitControls();
-
-            if (_activeJSON.val)
-                Activate();
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to initialize plugin: " + e);
-        }
-    }
-
-    private void InitControls()
-    {
-        const bool LeftSide = false;
-        const bool RightSide = true;
+        _interop = new InteropProxy(containingAtom);
+        _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
+        _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
         // Left Side
 
-        var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
-        links.Insert(0, "none");
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
-        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", OnLinkChanged)
-        {
-            storeType = JSONStorableParam.StoreType.Physical
-        };
+        var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
+        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", (string val) => Reapply());
         RegisterStringChooser(_linkJSON);
-        var linkPopup = CreateScrollablePopup(_linkJSON, LeftSide);
-        linkPopup.popupPanelHeight = 600f;
-        if (!string.IsNullOrEmpty(_linkJSON.val))
-            OnLinkChanged(_linkJSON.val);
+        CreateFilterablePopup(_linkJSON).popupPanelHeight = 600f;
 
         _activeJSON = new JSONStorableBool("Active", false, val =>
         {
+            if (!_ready) return;
             if (val)
                 Activate();
             else
                 Deactivate();
         });
         RegisterBool(_activeJSON);
-        var activeToggle = CreateToggle(_activeJSON, LeftSide);
+        var activeToggle = CreateToggle(_activeJSON, leftSide);
+
+        _lookAtJSON = new JSONStorableBool("Look At Eye Target", false, (bool val) => Reapply());
+        if (containingAtom.type == "Person")
+        {
+            RegisterBool(_lookAtJSON);
+            CreateToggle(_lookAtJSON);
+            CreateButton("Select Eye Target").button.onClick.AddListener(() =>
+            {
+                var eyeTarget = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
+                if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
+            });
+        }
 
         _rotationLockJSON = new JSONStorableBool("Rotation Lock", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_rotationLockJSON);
-        var rotationLockToggle = CreateToggle(_rotationLockJSON, LeftSide);
+        var rotationLockToggle = CreateToggle(_rotationLockJSON, leftSide);
 
         _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_rotationLockNoRollJSON);
-        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, LeftSide);
+        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, leftSide);
 
         _positionLockJSON = new JSONStorableBool("Position Lock", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_positionLockJSON);
-        var positionLockToggle = CreateToggle(_positionLockJSON, LeftSide);
+        var positionLockToggle = CreateToggle(_positionLockJSON, leftSide);
 
         _worldScaleEnabledJSON = new JSONStorableBool("World Scale Enabled", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_worldScaleEnabledJSON);
-        CreateToggle(_worldScaleEnabledJSON, LeftSide);
+        CreateToggle(_worldScaleEnabledJSON, leftSide);
 
         var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
         controllers.Insert(0, _targetNone);
-        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", OnFollowChanged);
+        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", (string val) => Reapply());
         RegisterStringChooser(_followerJSON);
-        var followerPopup = CreateScrollablePopup(_followerJSON, LeftSide);
+        var followerPopup = CreateFilterablePopup(_followerJSON, leftSide);
         followerPopup.popupPanelHeight = 600f;
-        if (!string.IsNullOrEmpty(_followerJSON.val))
-            OnLinkChanged(_followerJSON.val);
 
         var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, "None", "Toggle Key", new JSONStorableStringChooser.SetStringCallback(v => ApplyToggleKey(v)));
+        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, "None", "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         RegisterStringChooser(_toggleKeyJSON);
-        var toggleKeyPopup = CreateScrollablePopup(_toggleKeyJSON, LeftSide);
+        var toggleKeyPopup = CreateFilterablePopup(_toggleKeyJSON, leftSide);
         toggleKeyPopup.popupPanelHeight = 600f;
-        ApplyToggleKey(_toggleKeyJSON.val);
 
         // Right Side
 
         _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
         RegisterFloat(_rotationSmoothingJSON);
-        CreateSlider(_rotationSmoothingJSON, RightSide);
+        CreateSlider(_rotationSmoothingJSON, rightSide);
 
         _rotationOffsetXJSON = new JSONStorableFloat("Rotation X", 0f, -180, 180, true, true);
         RegisterFloat(_rotationOffsetXJSON);
-        CreateSlider(_rotationOffsetXJSON, RightSide);
+        CreateSlider(_rotationOffsetXJSON, rightSide);
 
         _rotationOffsetYJSON = new JSONStorableFloat("Rotation Y", 0f, -180, 180, true, true);
         RegisterFloat(_rotationOffsetYJSON);
-        CreateSlider(_rotationOffsetYJSON, RightSide);
+        CreateSlider(_rotationOffsetYJSON, rightSide);
 
         _rotationOffsetZJSON = new JSONStorableFloat("Rotation Z", 0f, -180, 180, true, true);
         RegisterFloat(_rotationOffsetZJSON);
-        CreateSlider(_rotationOffsetZJSON, RightSide);
+        CreateSlider(_rotationOffsetZJSON, rightSide);
 
         _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
         RegisterFloat(_positionSmoothingJSON);
-        CreateSlider(_positionSmoothingJSON, RightSide);
+        CreateSlider(_positionSmoothingJSON, rightSide);
 
         _positionOffsetXJSON = new JSONStorableFloat("Position X", 0f, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetXJSON);
-        CreateSlider(_positionOffsetXJSON, RightSide).valueFormat = "F4";
+        CreateSlider(_positionOffsetXJSON, rightSide).valueFormat = "F4";
 
-        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0f, -2f, 2f, false, true);
+        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.06f, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetYJSON);
-        CreateSlider(_positionOffsetYJSON, RightSide).valueFormat = "F4";
+        CreateSlider(_positionOffsetYJSON, rightSide).valueFormat = "F4";
 
         _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetZJSON);
-        CreateSlider(_positionOffsetZJSON, RightSide).valueFormat = "F4";
+        CreateSlider(_positionOffsetZJSON, rightSide).valueFormat = "F4";
 
         _worldScaleJSON = new JSONStorableFloat("World Scale", 1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0.1f, 10f);
         RegisterFloat(_worldScaleJSON);
-        CreateSlider(_worldScaleJSON, RightSide);
+        CreateSlider(_worldScaleJSON, rightSide);
 
         _eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
         RegisterFloat(_eyesToHeadDistanceJSON);
-        CreateSlider(_eyesToHeadDistanceJSON, RightSide);
+        CreateSlider(_eyesToHeadDistanceJSON, rightSide);
+
+        // Deferred
+        SuperController.singleton.StartCoroutine(InitDeferred());
     }
 
-    private void ApplyToggleKey(string val)
+    private void Reapply()
     {
-        _toggleKey = (KeyCode)Enum.Parse(typeof(KeyCode), val);
+        if (_activeJSON?.val != true) return;
+        _activeJSON.val = false;
+        _activeJSON.val = true;
     }
 
-    private void OnLinkChanged(string linkName)
+    private IEnumerator InitDeferred()
     {
-        OnTargetControllerChanged(ref _link, linkName);
+        yield return new WaitForEndOfFrame();
+        _interop.Connect();
+        _ready = true;
+        if (_activeJSON.val)
+            Activate();
     }
 
-    private void OnFollowChanged(string linkName)
+    public void OnDisable()
     {
-        OnTargetControllerChanged(ref _follower, linkName);
-    }
-
-    private void OnTargetControllerChanged(ref Rigidbody target, string linkName)
-    {
-        if (containingAtom == null) throw new NullReferenceException("containingAtom");
-
-        if (_activeJSON != null)
-        {
-            Deactivate();
-            _activeJSON.val = false;
-        }
-
-        if (linkName == _targetNone)
-        {
-            target = null;
-            return;
-        }
-
-        target = containingAtom.linkableRigidbodies.FirstOrDefault(c => c.name == linkName);
-        if (target == null)
-            SuperController.LogError("Controller does not exist: " + linkName);
+        if (_activeJSON.val) _activeJSON.val = false;
     }
 
     private void Activate()
     {
-        if (_active) return;
-        if (!HealthCheck()) return;
+        try
+        {
+            _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
+            if (_lookAtJSON.val)
+                _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
+            if (!string.IsNullOrEmpty(_followerJSON.val))
+                _follower = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _followerJSON.val);
 
-        if (_link.name == "head")
-            GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()?.SetVal(false);
+            if (!CanActivate() || !IsValid())
+            {
+                _activeJSON.valNoCallback = false;
+                return;
+            }
 
-        var superController = SuperController.singleton;
-        var navigationRig = superController.navigationRig;
+            if (_link.name == "head")
+            {
+                if (_interop.improvedPoV?.possessedOnlyJSON != null)
+                    _interop.improvedPoV.possessedOnlyJSON.val = false;
+            }
 
-        _previousRotation = navigationRig.rotation;
-        _previousPosition = navigationRig.position;
+            var superController = SuperController.singleton;
+            var navigationRig = superController.navigationRig;
 
-        var rigidBody = _link.GetComponent<Rigidbody>();
-        _previousInterpolation = rigidBody.interpolation;
-        rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
+            _previousRotation = navigationRig.rotation;
+            _previousPosition = navigationRig.position;
 
-        var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
-        if (offsetStartRotation)
-            _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
+            var rigidBody = _link.GetComponent<Rigidbody>();
+            _previousInterpolation = rigidBody.interpolation;
+            rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
 
-        ApplyWorldScale();
-        UpdateRotation(navigationRig, 0);
-        UpdatePosition(navigationRig, 0);
+            var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
+            if (offsetStartRotation)
+                _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
-        _active = true;
+            ApplyWorldScale();
+            UpdateRotation(navigationRig, 0);
+            UpdatePosition(navigationRig, 0);
+
+            GlobalSceneOptions.singleton.disableNavigation = true;
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: Failed to activate Passenger.\n{exc}");
+            _activeJSON.valNoCallback = false;
+            Deactivate();
+        }
+    }
+
+    private bool CanActivate()
+    {
+        if (_link == null)
+        {
+            SuperController.LogError("Embody: Could not find the specified link.");
+            return false;
+        }
+
+        var linkController = containingAtom.GetStorableByID(_link.name.EndsWith("Control") ? _link.name : $"{_link.name}Control") as FreeControllerV3;
+        if (linkController != null && linkController.possessed)
+        {
+            SuperController.LogError(
+                $"Embody: Cannot activate Passenger while the target rigidbody {_link.name} is being possessed. Use the 'Active' checkbox or trigger instead of using built-in Virt-A-Mate possession.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsValid()
+    {
+        if (_preferences.useHeadCollider)
+        {
+            SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
+            return false;
+        }
+
+        return true;
     }
 
     private void ApplyWorldScale()
@@ -237,7 +269,7 @@ public class Passenger : MVRScript
 
     private void Deactivate()
     {
-        if (!_active) return;
+        GlobalSceneOptions.singleton.disableNavigation = false;
 
         if (_previousWorldScale > 0f)
         {
@@ -254,29 +286,25 @@ public class Passenger : MVRScript
             rigidBody.interpolation = _previousInterpolation;
 
             if (_link.name == "head")
-                GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()?.SetVal(true);
+            {
+                if (_interop.improvedPoV?.possessedOnlyJSON != null)
+                    _interop.improvedPoV.possessedOnlyJSON.val = true;
+            }
         }
 
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
 
-        _active = false;
-    }
-
-    private void Reapply()
-    {
-        if (!_active) return;
-
-        Deactivate();
-        Activate();
+        _link = null;
+        _lookAt = null;
     }
 
     public void Update()
     {
         try
         {
-            if (!_active)
+            if (!_activeJSON.val)
             {
                 if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
                 {
@@ -287,7 +315,11 @@ public class Passenger : MVRScript
                 return;
             }
 
-            if (!HealthCheck()) return;
+            if (!IsValid())
+            {
+                _activeJSON.val = false;
+                return;
+            }
 
             if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
             {
@@ -307,32 +339,34 @@ public class Passenger : MVRScript
         }
         catch (Exception e)
         {
-            SuperController.LogError("Failed to update: " + e);
+            SuperController.LogError($"Embody: Failed to update.\n{e}");
+            _activeJSON.val = false;
         }
-    }
-
-    private void AbortActivation(string message)
-    {
-        SuperController.LogError(message);
-        _activeJSON.val = false;
-        Deactivate();
     }
 
     private void UpdatePosition(Transform navigationRig, float positionSmoothing)
     {
-        var cameraDelta = CameraTarget.centerTarget.transform.position - navigationRig.transform.position - CameraTarget.centerTarget.transform.rotation * new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
-        var resultPosition = _link.transform.position - cameraDelta + _link.transform.rotation * new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
+        var centerTargetTransform = CameraTarget.centerTarget.transform;
+        var navigationRigTransform = navigationRig.transform;
+        var linkTransform = _link.transform;
+
+        var cameraDelta = centerTargetTransform.position
+                          - navigationRigTransform.position
+                          - centerTargetTransform.rotation * new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
+        var resultPosition = linkTransform.position
+                             - cameraDelta
+                             + linkTransform.rotation * new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
 
         if (positionSmoothing > 0)
             resultPosition = Vector3.SmoothDamp(navigationRig.position, resultPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
 
-        navigationRig.transform.position = resultPosition;
+        navigationRigTransform.position = resultPosition;
     }
 
     private void PossessRotation()
     {
         _follower.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
-         * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+                                       * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
     }
 
     private void UpdateRotation(Transform navigationRig, float rotationSmoothing)
@@ -349,78 +383,8 @@ public class Passenger : MVRScript
         navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
 
         if (rotationSmoothing > 0)
-            navigationRigRotation = SmoothDamp(navigationRig.rotation, navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
+            navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
 
         navigationRig.rotation = navigationRigRotation;
-    }
-
-    private bool HealthCheck()
-    {
-        if (_link == null)
-        {
-            AbortActivation("There is no link or the current link does not exist");
-            return false;
-        }
-
-        if (_headControl != null && _headControl.possessed)
-        {
-            AbortActivation("Virt-A-Mate possession and Passenger don't work together! Use Passenger's Active checkbox instead");
-            return false;
-        }
-
-        if (_preferences.useHeadCollider)
-        {
-            AbortActivation("Do not enable the head collider with Passenger, they do not work together!");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void OnDisable()
-    {
-        try
-        {
-            Deactivate();
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to disable: " + e);
-        }
-    }
-
-    // Source: https://gist.github.com/maxattack/4c7b4de00f5c1b95a33b
-    public static Quaternion SmoothDamp(Quaternion current, Quaternion target, ref Quaternion currentVelocity, float smoothTime)
-    {
-        // account for double-cover
-        var Dot = Quaternion.Dot(current, target);
-        var Multi = Dot > 0f ? 1f : -1f;
-        target.x *= Multi;
-        target.y *= Multi;
-        target.z *= Multi;
-        target.w *= Multi;
-        // smooth damp (nlerp approx)
-        var Result = new Vector4(
-            Mathf.SmoothDamp(current.x, target.x, ref currentVelocity.x, smoothTime),
-            Mathf.SmoothDamp(current.y, target.y, ref currentVelocity.y, smoothTime),
-            Mathf.SmoothDamp(current.z, target.z, ref currentVelocity.z, smoothTime),
-            Mathf.SmoothDamp(current.w, target.w, ref currentVelocity.w, smoothTime)
-        ).normalized;
-        // compute deriv
-        var dtInv = 1f / Time.smoothDeltaTime;
-        currentVelocity.x = (Result.x - current.x) * dtInv;
-        currentVelocity.y = (Result.y - current.y) * dtInv;
-        currentVelocity.z = (Result.z - current.z) * dtInv;
-        currentVelocity.w = (Result.w - current.w) * dtInv;
-        return new Quaternion(Result.x, Result.y, Result.z, Result.w);
-    }
-
-    private JSONStorableBool GetImprovedPoVOnlyWhenOnlyWhenPossessedJSON()
-    {
-        if (containingAtom == null) return null;
-        var improvedPoVStorableID = containingAtom.GetStorableIDs().FirstOrDefault(id => id.EndsWith("ImprovedPoV"));
-        if (improvedPoVStorableID == null) return null;
-        var improvedPoVStorable = containingAtom.GetStorableByID(improvedPoVStorableID);
-        return improvedPoVStorable?.GetBoolJSONParam("Activate only when possessed");
     }
 }
