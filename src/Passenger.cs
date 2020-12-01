@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Interop;
 using MeshVR;
@@ -23,8 +24,10 @@ public class Passenger : MVRScript, IPassenger
     private JSONStorableFloat _positionOffsetYJSON;
     private JSONStorableFloat _positionOffsetZJSON;
     private JSONStorableStringChooser _linkJSON;
-    private JSONStorableStringChooser _followerJSON;
+    private JSONStorableStringChooser _possessRotationLink;
     private JSONStorableFloat _eyesToHeadDistanceJSON;
+    private Vector3 _positionOffset;
+    private Quaternion _rotationOffset;
     private Vector3 _previousPosition;
     private Quaternion _previousRotation;
     private Quaternion _currentRotationVelocity;
@@ -50,40 +53,56 @@ public class Passenger : MVRScript, IPassenger
 
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
-        _linkJSON = new JSONStorableStringChooser("Target Controller", links, defaultLink, "Camera controller", (string val) => Reapply());
+        _linkJSON = new JSONStorableStringChooser("Link", links, defaultLink, "Link to", (string val) => Reapply());
         RegisterStringChooser(_linkJSON);
         CreateFilterablePopup(_linkJSON).popupPanelHeight = 600f;
 
-        _lookAtJSON = new JSONStorableBool("Look At Eye Target", false, (bool val) => Reapply());
+        _lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
         if (containingAtom.type == "Person")
         {
             RegisterBool(_lookAtJSON);
-            CreateToggle(_lookAtJSON);
-            CreateButton("Select Eye Target").button.onClick.AddListener(() =>
+            CreateToggle(_lookAtJSON).label = "Look at eye target";
+            CreateButton("Select eye target").button.onClick.AddListener(() =>
             {
                 var eyeTarget = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
                 if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
             });
         }
 
-        _rotationLockJSON = new JSONStorableBool("Rotation Lock", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_rotationLockJSON);
-        var rotationLockToggle = CreateToggle(_rotationLockJSON, leftSide);
-
-        _rotationLockNoRollJSON = new JSONStorableBool("No Roll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_rotationLockNoRollJSON);
-        var rotationLockNoRollToggle = CreateToggle(_rotationLockNoRollJSON, leftSide);
-
-        _positionLockJSON = new JSONStorableBool("Position Lock", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        _positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_positionLockJSON);
-        var positionLockToggle = CreateToggle(_positionLockJSON, leftSide);
+         CreateToggle(_positionLockJSON, leftSide).label = "Control camera position";
 
-        var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
-        controllers.Insert(0, _targetNone);
-        _followerJSON = new JSONStorableStringChooser("Follow Controller", links, null, "Possess rotation of", (string val) => Reapply());
-        RegisterStringChooser(_followerJSON);
-        var followerPopup = CreateFilterablePopup(_followerJSON, leftSide);
+        _rotationLockJSON = new JSONStorableBool("ControlRotation", false, new JSONStorableBool.SetBoolCallback(v =>
+        {
+            _possessRotationLink.valNoCallback = null;
+            Reapply();
+        }));
+        RegisterBool(_rotationLockJSON);
+        CreateToggle(_rotationLockJSON, leftSide).label = "Control camera rotation";
+
+        _rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        RegisterBool(_rotationLockNoRollJSON);
+        CreateToggle(_rotationLockNoRollJSON, leftSide).label = "Prevent camera roll";
+
+        Func<List<string>> getPossessRotationChoices = () =>
+        {
+            var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
+            controllers.Insert(0, _targetNone);
+            return controllers;
+        };
+        _possessRotationLink = new JSONStorableStringChooser("PossessRotationLink", getPossessRotationChoices(), _targetNone, "Possess rotation of", (string val) =>
+        {
+            _rotationLockJSON.valNoCallback = false;
+            Reapply();
+        });
+        RegisterStringChooser(_possessRotationLink);
+        var followerPopup = CreateFilterablePopup(_possessRotationLink, leftSide);
         followerPopup.popupPanelHeight = 600f;
+        followerPopup.popup.onOpenPopupHandlers += () =>
+        {
+            _possessRotationLink.choices = getPossessRotationChoices();
+        };
 
         // Right Side
 
@@ -91,15 +110,15 @@ public class Passenger : MVRScript, IPassenger
         RegisterFloat(_rotationSmoothingJSON);
         CreateSlider(_rotationSmoothingJSON, rightSide);
 
-        _rotationOffsetXJSON = new JSONStorableFloat("Rotation X", 0f, -180, 180, true, true);
+        _rotationOffsetXJSON = new JSONStorableFloat("Rotation X", 0f, SyncRotationOffset, -180, 180, true, true);
         RegisterFloat(_rotationOffsetXJSON);
         CreateSlider(_rotationOffsetXJSON, rightSide);
 
-        _rotationOffsetYJSON = new JSONStorableFloat("Rotation Y", 0f, -180, 180, true, true);
+        _rotationOffsetYJSON = new JSONStorableFloat("Rotation Y", 0f, SyncRotationOffset, -180, 180, true, true);
         RegisterFloat(_rotationOffsetYJSON);
         CreateSlider(_rotationOffsetYJSON, rightSide);
 
-        _rotationOffsetZJSON = new JSONStorableFloat("Rotation Z", 0f, -180, 180, true, true);
+        _rotationOffsetZJSON = new JSONStorableFloat("Rotation Z", 0f, SyncRotationOffset, -180, 180, true, true);
         RegisterFloat(_rotationOffsetZJSON);
         CreateSlider(_rotationOffsetZJSON, rightSide);
 
@@ -107,21 +126,34 @@ public class Passenger : MVRScript, IPassenger
         RegisterFloat(_positionSmoothingJSON);
         CreateSlider(_positionSmoothingJSON, rightSide);
 
-        _positionOffsetXJSON = new JSONStorableFloat("Position X", 0f, -2f, 2f, false, true);
+        _positionOffsetXJSON = new JSONStorableFloat("Position X", 0f,  SyncPositionOffset, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetXJSON);
         CreateSlider(_positionOffsetXJSON, rightSide).valueFormat = "F4";
 
-        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.06f, -2f, 2f, false, true);
+        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.06f, SyncPositionOffset, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetYJSON);
         CreateSlider(_positionOffsetYJSON, rightSide).valueFormat = "F4";
 
-        _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, -2f, 2f, false, true);
+        _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, SyncPositionOffset, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetZJSON);
         CreateSlider(_positionOffsetZJSON, rightSide).valueFormat = "F4";
 
         _eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
         RegisterFloat(_eyesToHeadDistanceJSON);
         CreateSlider(_eyesToHeadDistanceJSON, rightSide);
+
+        SyncPositionOffset(0);
+        SyncRotationOffset(0);
+    }
+
+    private void SyncRotationOffset(float _)
+    {
+        _rotationOffset = Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+    }
+
+    private void SyncPositionOffset(float _)
+    {
+        _positionOffset = new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
     }
 
     private void Reapply()
@@ -140,8 +172,8 @@ public class Passenger : MVRScript, IPassenger
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
             if (_lookAtJSON.val)
                 _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-            if (!string.IsNullOrEmpty(_followerJSON.val))
-                _follower = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _followerJSON.val);
+            if (!string.IsNullOrEmpty(_possessRotationLink.val))
+                _follower = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _possessRotationLink.val);
 
             if (!CanActivate() || !IsValid())
             {
@@ -157,7 +189,7 @@ public class Passenger : MVRScript, IPassenger
 
             var rigidBody = _link.GetComponent<Rigidbody>();
             _previousInterpolation = rigidBody.interpolation;
-            rigidBody.interpolation = RigidbodyInterpolation.Interpolate;
+            rigidBody.interpolation = RigidbodyInterpolation.Extrapolate;
 
             var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
             if (offsetStartRotation)
@@ -263,9 +295,7 @@ public class Passenger : MVRScript, IPassenger
         var positionSmoothing = _positionSmoothingJSON.val;
         var rotationSmoothing = _rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
-        var positionOffset = new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
         var eyesToHeadOffset = new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
-        var rotationOffset = Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
 
         var centerTargetTransform = CameraTarget.centerTarget.transform;
         var navigationRigTransform = navigationRig.transform;
@@ -279,12 +309,12 @@ public class Passenger : MVRScript, IPassenger
         if(!ReferenceEquals(_lookAt, null))
             rotation.SetLookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
 
-        rotation *= rotationOffset;
+        rotation *= _rotationOffset;
 
         if (_rotationLockNoRollJSON.val)
             rotation.SetLookRotation(rotation * Vector3.forward, Vector3.up);
 
-        position += rotation * positionOffset;
+        position += rotation * _positionOffset;
 
         // Move navigation rig
 

@@ -52,7 +52,7 @@ namespace Interop
                 }
             }) {isStorable = false};
             _this.RegisterBool(_activeJSON);
-            _this.CreateToggle(_activeJSON);
+            _this.CreateToggle(_activeJSON).label = "Component active";
             _this.enabledJSON.isStorable = false;
             _this.enabledJSON.setCallbackFunction += (bool val) => _activeJSON.val = val;
             _this.enabledJSON.val = false;

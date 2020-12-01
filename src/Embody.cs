@@ -56,7 +56,9 @@ public class Embody : MVRScript
         CreateToggle(_possessionActiveJSON).toggle.interactable = false;
 
         var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.Space.ToString(), "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        keys.Remove(KeyCode.None.ToString());
+        keys.Insert(0, KeyCode.None.ToString());
+        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.None.ToString(), "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         RegisterStringChooser(_toggleKeyJSON);
         var toggleKeyPopup = CreateFilterablePopup(_toggleKeyJSON);
         toggleKeyPopup.popupPanelHeight = 600f;
