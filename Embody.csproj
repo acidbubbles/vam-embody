@@ -78,6 +78,7 @@
     <Compile Include="src\HideGeometry.cs" />
     <Compile Include="src\OffsetCamera.cs" />
     <Compile Include="src\Passenger.cs" />
+    <Compile Include="src\Snug.cs" />
     <Compile Include="src\WorldScale.cs" />
     <!-- /SourceFiles -->
   </ItemGroup>

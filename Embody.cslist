@@ -14,4 +14,5 @@ src\Embody.cs
 src\HideGeometry.cs
 src\OffsetCamera.cs
 src\Passenger.cs
+src\Snug.cs
 src\WorldScale.cs
