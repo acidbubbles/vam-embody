@@ -20,7 +20,6 @@ public class HideGeometry : MVRScript, IHideGeometry
     private DAZCharacter _character;
     private DAZHairGroup[] _hair;
 
-
     // Requires re-generating all shaders and materials, either because last frame was not ready or because something changed
     private bool _dirty;
     // To avoid spamming errors when something failed
@@ -216,7 +215,7 @@ public class HideGeometry : MVRScript, IHideGeometry
         }
 
         _character = _selector.selectedCharacter;
-        _hair = _selector.hairItems.Where(h => h.active).ToArray();
+        _hair = _selector.hairItems.Where(h => h.active).Where(h => h.tagsArray.Length == 0 || h.tagsArray.Contains("head") || h.tagsArray.Contains("face")).ToArray();
 
         ApplyPossessorMeshVisibility(active);
         if (UpdateHandler(ref _skinHandler, active && hideFaceJSON.val))
