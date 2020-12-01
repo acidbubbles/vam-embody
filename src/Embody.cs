@@ -33,7 +33,10 @@ public class Embody : MVRScript
             {
                 DeactivateAll();
             }
-        });
+        })
+        {
+            isStorable = false
+        };
         RegisterBool(_passengerActiveJSON);
         CreateToggle(_passengerActiveJSON);
 
@@ -46,11 +49,14 @@ public class Embody : MVRScript
                 ((MVRScript) _interop.worldScale).enabledJSON.val = true;
             ((MVRScript) _interop.hideGeometry).enabledJSON.val = true;
             ((MVRScript) _interop.cameraOffset).enabledJSON.val = true;
-        });
+        })
+        {
+            isStorable = false
+        };
         CreateToggle(_possessionActiveJSON).toggle.interactable = false;
 
         var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, "None", "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        _toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.Space.ToString(), "Toggle Key", val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         RegisterStringChooser(_toggleKeyJSON);
         var toggleKeyPopup = CreateFilterablePopup(_toggleKeyJSON);
         toggleKeyPopup.popupPanelHeight = 600f;
@@ -91,7 +97,7 @@ public class Embody : MVRScript
 
         if (!_passengerActiveJSON.val)
         {
-            if (_toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+            if (!LookInputModule.singleton.inputFieldActive && _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
                 _passengerActiveJSON.val = true;
         }
         else if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
