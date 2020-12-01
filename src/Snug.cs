@@ -131,13 +131,16 @@ public class Snug : MVRScript {
     }
 
     private void InitVisualCuesUI() {
-        _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", true, (bool val) => {
+        _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) => {
             if (!_ready) return;
             if (val)
                 CreateVisualCues();
             else
                 DestroyVisualCues();
-        });
+        })
+        {
+            isStorable = false
+        };
         RegisterBool(_showVisualCuesJSON);
         CreateToggle(_showVisualCuesJSON);
     }
