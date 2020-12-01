@@ -10,7 +10,7 @@ public class Passenger : MVRScript, IPassenger
     private const string _targetNone = "none";
 
     private Rigidbody _link;
-    private Rigidbody _follower;
+    private Rigidbody _possessedLink;
     private Possessor _possessor;
     private JSONStorableBool _rotationLockJSON;
     private JSONStorableBool _rotationLockNoRollJSON;
@@ -130,7 +130,7 @@ public class Passenger : MVRScript, IPassenger
         RegisterFloat(_positionOffsetXJSON);
         CreateSlider(_positionOffsetXJSON, rightSide).valueFormat = "F4";
 
-        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.06f, SyncPositionOffset, -2f, 2f, false, true);
+        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.08f, SyncPositionOffset, -2f, 2f, false, true);
         RegisterFloat(_positionOffsetYJSON);
         CreateSlider(_positionOffsetYJSON, rightSide).valueFormat = "F4";
 
@@ -172,8 +172,8 @@ public class Passenger : MVRScript, IPassenger
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
             if (_lookAtJSON.val)
                 _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-            if (!string.IsNullOrEmpty(_possessRotationLink.val))
-                _follower = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _possessRotationLink.val);
+            if (_possessRotationLink.val != _targetNone)
+                _possessedLink = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _possessRotationLink.val);
 
             if (!CanActivate() || !IsValid())
             {
@@ -195,10 +195,9 @@ public class Passenger : MVRScript, IPassenger
             if (offsetStartRotation)
                 _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
-            UpdateRotation(navigationRig, 0);
-            UpdatePosition(navigationRig, 0);
-
             GlobalSceneOptions.singleton.disableNavigation = true;
+
+            UpdateNavigationRig(true);
         }
         catch (Exception exc)
         {
@@ -270,17 +269,7 @@ public class Passenger : MVRScript, IPassenger
                 return;
             }
 
-            var navigationRig = SuperController.singleton.navigationRig;
-
-            // if (_follower != null)
-            //     PossessRotation();
-            // else if (_rotationLockJSON.val)
-            //     UpdateRotation(navigationRig, _rotationSmoothingJSON.val);
-            //
-            // if (_positionLockJSON.val)
-            //     UpdatePosition(navigationRig, _positionSmoothingJSON.val);
-
-            UpdateNavigationRig();
+            UpdateNavigationRig(false);
         }
         catch (Exception e)
         {
@@ -289,7 +278,7 @@ public class Passenger : MVRScript, IPassenger
         }
     }
 
-    private void UpdateNavigationRig()
+    private void UpdateNavigationRig(bool force)
     {
         // Context
         var positionSmoothing = _positionSmoothingJSON.val;
@@ -337,56 +326,20 @@ public class Passenger : MVRScript, IPassenger
         if (rotationSmoothing > 0)
             navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
 
-        navigationRigTransform.rotation = navigationRigRotation;
-        navigationRigTransform.position = navigationRigPosition;
+        if (force || _rotationLockJSON.val)
+        {
+            if (!ReferenceEquals(_possessedLink, null))
+                _possessedLink.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation * _rotationOffset;
+            else
+                navigationRigTransform.rotation = navigationRigRotation;
+        }
+
+        if (force || _positionLockJSON.val)
+        {
+            navigationRigTransform.position = navigationRigPosition;
+        }
 
         // TODO: Re-position the main menu and the hud anchors (ovr) if that's possible
         // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positionning
-    }
-
-    private void UpdatePosition(Transform navigationRig, float positionSmoothing)
-    {
-        var centerTargetTransform = CameraTarget.centerTarget.transform;
-        var navigationRigTransform = navigationRig.transform;
-        var linkTransform = _link.transform;
-
-        var cameraDelta = centerTargetTransform.position
-                          - navigationRigTransform.position
-                          - centerTargetTransform.rotation * new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
-        var resultPosition = linkTransform.position
-                             - cameraDelta
-                             + linkTransform.rotation * new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
-
-        if (positionSmoothing > 0)
-            resultPosition = Vector3.SmoothDamp(navigationRig.position, resultPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
-
-        navigationRigTransform.position = resultPosition;
-    }
-
-    private void PossessRotation()
-    {
-        _follower.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation
-                                       * Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
-    }
-
-    private void UpdateRotation(Transform navigationRig, float rotationSmoothing)
-    {
-        var navigationRigRotation = _link.transform.rotation;
-
-        if(!ReferenceEquals(_lookAt, null))
-            navigationRigRotation.SetLookRotation(_lookAt.transform.position - _link.position, _link.transform.up);
-        if (_rotationLockNoRollJSON.val)
-            navigationRigRotation.SetLookRotation(navigationRigRotation * Vector3.forward, Vector3.up);
-
-        // TODO? Necessary?
-        if (_startRotationOffset == Quaternion.identity)
-            navigationRigRotation *= _startRotationOffset;
-
-        navigationRigRotation *= Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
-
-        if (rotationSmoothing > 0)
-            navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
-
-        navigationRig.rotation = navigationRigRotation;
     }
 }
