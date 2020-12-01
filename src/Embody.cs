@@ -55,22 +55,22 @@ public class Embody : MVRScript
         var toggleKeyPopup = CreateFilterablePopup(_toggleKeyJSON);
         toggleKeyPopup.popupPanelHeight = 600f;
 
-        _useWorldScaleJSON = new JSONStorableBool("Use WorldScale", true, (bool val) => Refresh());
-        CreateToggle(_useWorldScaleJSON, true);
+        _useWorldScaleJSON = new JSONStorableBool("UseWorldScale", true, (bool val) => Refresh());
+        CreateToggle(_useWorldScaleJSON, true).label = "Use world scale";
 
-        var configureWorldScaleJSON = new JSONStorableAction("Configure WorldScale", () => { _interop.SelectPlugin(_interop.worldScale); });
-        var configureWorldScaleBtn = CreateButton("Configure WorldScale", true);
+        var configureWorldScaleJSON = new JSONStorableAction("ConfigureWorldScale", () => { _interop.SelectPlugin(_interop.worldScale); });
+        var configureWorldScaleBtn = CreateButton("Configure world scale", true);
         configureWorldScaleJSON.dynamicButton = configureWorldScaleBtn;
 
-        var configureHideGeometryJSON = new JSONStorableAction("Configure HideGeometry", () => { _interop.SelectPlugin(_interop.hideGeometry); });
-        var configureHideGeometryBtn = CreateButton("Configure HideGeometry", true);
+        var configureHideGeometryJSON = new JSONStorableAction("ConfigureHideGeometry", () => { _interop.SelectPlugin(_interop.hideGeometry); });
+        var configureHideGeometryBtn = CreateButton("Configure hide geometry", true);
         configureHideGeometryJSON.dynamicButton = configureHideGeometryBtn;
 
-        var configureCameraJSON = new JSONStorableAction("Configure Camera Offset", () => { _interop.SelectPlugin(_interop.cameraOffset); });
-        var configureCameraBtn = CreateButton("Configure Camera Offset", true);
+        var configureCameraJSON = new JSONStorableAction("ConfigureCameraOffset", () => { _interop.SelectPlugin(_interop.cameraOffset); });
+        var configureCameraBtn = CreateButton("Configure camera offset", true);
         configureCameraJSON.dynamicButton = configureCameraBtn;
 
-        var configurePassengerJSON = new JSONStorableAction("Configure Passenger", () => { _interop.SelectPlugin(_interop.passenger); });
+        var configurePassengerJSON = new JSONStorableAction("ConfigurePassenger", () => { _interop.SelectPlugin(_interop.passenger); });
         var configurePassengerBtn = CreateButton("Configure Passenger", true);
         configurePassengerJSON.dynamicButton = configurePassengerBtn;
     }
@@ -114,9 +114,9 @@ public class Embody : MVRScript
 
     public void DeactivateAll()
     {
-        ((MVRScript) _interop.worldScale).enabledJSON.val = false;
-        ((MVRScript) _interop.cameraOffset).enabledJSON.val = false;
-        ((MVRScript) _interop.hideGeometry).enabledJSON.val = false;
-        ((MVRScript) _interop.passenger).enabledJSON.val = false;
+        if (_interop.worldScale != null) ((MVRScript) _interop.worldScale).enabledJSON.val = false;
+        if (_interop.cameraOffset != null) ((MVRScript) _interop.cameraOffset).enabledJSON.val = false;
+        if (_interop.hideGeometry != null) ((MVRScript) _interop.hideGeometry).enabledJSON.val = false;
+        if (_interop.passenger != null) ((MVRScript) _interop.passenger).enabledJSON.val = false;
     }
 }

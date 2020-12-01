@@ -35,11 +35,10 @@ public class WorldScale : MVRScript, IWorldScale
     {
         if (_interop?.ready != true) return;
 
-        if (_originalWorldScale != 0f)
-        {
-            SuperController.singleton.worldScale = _originalWorldScale;
-            _originalWorldScale = 0f;
-        }
+        if (_originalWorldScale == 0f) return;
+
+        SuperController.singleton.worldScale = _originalWorldScale;
+        _originalWorldScale = 0f;
     }
 
     private void ApplyAutoWorldScale()
@@ -51,10 +50,7 @@ public class WorldScale : MVRScript, IWorldScale
             return;
         var atomEyeDistance = Vector3.Distance(lEye.transform.position, rEye.transform.position);
 
-        var rig = FindObjectOfType<OVRCameraRig>();
-        if (rig == null)
-            return;
-        var rigEyesDistance = Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
+        var rigEyesDistance = GetRigEyesDistance();
         if (rigEyesDistance == 0)
             return;
 
@@ -71,5 +67,14 @@ public class WorldScale : MVRScript, IWorldScale
 
         if (yAdjust != 0)
             SuperController.singleton.playerHeightAdjust -= yAdjust;
+    }
+
+    private static float GetRigEyesDistance()
+    {
+        // TODO: Do it for Steam too
+        var rig = FindObjectOfType<OVRCameraRig>();
+        if (rig == null)
+            return 0;
+        return Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
     }
 }

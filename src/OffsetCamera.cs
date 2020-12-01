@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Interop;
 using UnityEngine;
 
@@ -25,33 +24,21 @@ public class OffsetCamera : MVRScript, ICameraOffset
         RegisterBool(activeJSON);
         CreateToggle(activeJSON, true);
 
-        {
-            _cameraDepthJSON = new JSONStorableFloat("Camera depth", 0.054f, 0f, 0.2f, false);
-            RegisterFloat(_cameraDepthJSON);
-            var cameraDepthSlider = CreateSlider(_cameraDepthJSON, false);
-            cameraDepthSlider.slider.onValueChanged.AddListener(delegate(float val) { Refresh(); });
-        }
+        _cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);
+        RegisterFloat(_cameraDepthJSON);
+        CreateSlider(_cameraDepthJSON, false).label = "Depth adjust";
 
-        {
-            _cameraHeightJSON = new JSONStorableFloat("Camera height", 0f, -0.05f, 0.05f, false);
-            RegisterFloat(_cameraHeightJSON);
-            var cameraHeightSlider = CreateSlider(_cameraHeightJSON, false);
-            cameraHeightSlider.slider.onValueChanged.AddListener(delegate(float val) { Refresh(); });
-        }
+        _cameraHeightJSON = new JSONStorableFloat("CameraHeightAdjust", 0f, (float val) => Refresh(), -0.05f, 0.05f, false);
+        RegisterFloat(_cameraHeightJSON);
+        CreateSlider(_cameraHeightJSON, false).label = "Height adjust";
 
-        {
-            _cameraPitchJSON = new JSONStorableFloat("Camera pitch", 0f, -135f, 45f, true);
-            RegisterFloat(_cameraPitchJSON);
-            var cameraPitchSlider = CreateSlider(_cameraPitchJSON, false);
-            cameraPitchSlider.slider.onValueChanged.AddListener(delegate(float val) { Refresh(); });
-        }
+        _cameraPitchJSON = new JSONStorableFloat("CameraPitchAdjust", 0f, (float val) => Refresh(), -135f, 45f, true);
+        RegisterFloat(_cameraPitchJSON);
+        CreateSlider(_cameraPitchJSON, false).label = "Pitch adjust";
 
-        {
-            _clipDistanceJSON = new JSONStorableFloat("Clip distance", 0.01f, 0.01f, .2f, true);
-            RegisterFloat(_clipDistanceJSON);
-            var clipDistanceSlider = CreateSlider(_clipDistanceJSON, false);
-            clipDistanceSlider.slider.onValueChanged.AddListener(delegate(float val) { Refresh(); });
-        }
+        _clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, 0.01f, .2f, true);
+        RegisterFloat(_clipDistanceJSON);
+        CreateSlider(_clipDistanceJSON, false).label = "Clip distance";
     }
 
     public void OnEnable()
@@ -79,17 +66,19 @@ public class OffsetCamera : MVRScript, ICameraOffset
     {
         try
         {
-            var mainCamera = CameraTarget.centerTarget?.targetCamera;
-
+            var mainCamera = CameraTarget.centerTarget.targetCamera;
             mainCamera.nearClipPlane = active ? _clipDistanceJSON.val : 0.01f;
-
+            var mainCameraTransform = mainCamera.transform;
             var cameraDepth = active ? _cameraDepthJSON.val : 0;
             var cameraHeight = active ? _cameraHeightJSON.val : 0;
             var cameraPitch = active ? _cameraPitchJSON.val : 0;
-            var pos = _possessor.transform.position;
-            mainCamera.transform.position = pos - mainCamera.transform.rotation * Vector3.forward * cameraDepth - mainCamera.transform.rotation * Vector3.down * cameraHeight;
-            _possessor.transform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
-            _possessor.transform.position = pos;
+
+            var possessorTransform = _possessor.transform;
+            var pos = possessorTransform.position;
+            var mainCameraRotation = mainCameraTransform.rotation;
+            mainCameraTransform.position = pos - mainCameraRotation * Vector3.forward * cameraDepth - mainCameraRotation * Vector3.down * cameraHeight;
+            possessorTransform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
+            possessorTransform.position = pos;
         }
         catch (Exception e)
         {
