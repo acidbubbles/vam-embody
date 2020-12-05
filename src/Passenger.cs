@@ -37,6 +37,7 @@ public class Passenger : MVRScript, IPassenger
     private RigidbodyInterpolation _previousInterpolation;
     private InteropProxy _interop;
     private JSONStorableBool _lookAtJSON;
+    private JSONStorableFloat _lookAtWeightJSON;
     private FreeControllerV3 _lookAt;
 
     public override void Init()
@@ -68,6 +69,10 @@ public class Passenger : MVRScript, IPassenger
                 if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
             });
         }
+
+        _lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
+        RegisterFloat(_lookAtWeightJSON);
+        CreateSlider(_lookAtWeightJSON);
 
         _positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_positionLockJSON);
@@ -295,8 +300,11 @@ public class Passenger : MVRScript, IPassenger
         var position = linkTransform.position;
         var rotation = linkTransform.rotation;
 
-        if(!ReferenceEquals(_lookAt, null))
-            rotation.SetLookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
+        if (!ReferenceEquals(_lookAt, null) && _lookAtWeightJSON.val > 0)
+        {
+            var lookAtRotation = Quaternion.LookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
+            rotation = Quaternion.Slerp(rotation, lookAtRotation, _lookAtWeightJSON.val);
+        }
 
         rotation *= _rotationOffset;
 
