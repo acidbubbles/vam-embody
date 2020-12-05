@@ -165,7 +165,10 @@ public class Passenger : MVRScript, IPassenger
     {
         if (enabledJSON?.val != true) return;
         enabledJSON.val = false;
+        _currentPositionVelocity = Vector3.zero;
+        _currentRotationVelocity = Quaternion.identity;
         enabledJSON.val = true;
+        UpdateNavigationRig(true);
     }
 
     public void OnEnable()
@@ -278,7 +281,7 @@ public class Passenger : MVRScript, IPassenger
         }
         catch (Exception e)
         {
-            SuperController.LogError($"Embody: Failed to update.\n{e}");
+            SuperController.LogError($"Embody: Failed to apply Passenger.\n{e}");
             enabledJSON.val = false;
         }
     }
@@ -328,11 +331,14 @@ public class Passenger : MVRScript, IPassenger
         if (_startRotationOffset == Quaternion.identity)
             navigationRigRotation *= _startRotationOffset;
 
-        if (positionSmoothing > 0)
-            navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
+        if (!force)
+        {
+            if (positionSmoothing > 0)
+                navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
 
-        if (rotationSmoothing > 0)
-            navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
+            if (rotationSmoothing > 0)
+                navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
+        }
 
         if (force || _rotationLockJSON.val)
         {
