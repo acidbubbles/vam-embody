@@ -53,8 +53,9 @@ public class Snug : MVRScript {
 
     public override void Init() {
         try {
-            if (containingAtom.type != "Person") {
-                SuperController.LogError("Snug can only be applied on Person atoms.");
+            if (containingAtom?.type != "Person")
+            {
+                enabledJSON.val = false;
                 return;
             }
 
@@ -606,7 +607,15 @@ public class Snug : MVRScript {
 
     #region Lifecycle
 
-    public void OnEnable() {
+    public void OnEnable()
+    {
+        if (containingAtom == null) return;
+        if (containingAtom.type != "Person")
+        {
+            enabledJSON.val = false;
+            return;
+        }
+
         try {
             _ready = true;
         } catch (Exception exc) {

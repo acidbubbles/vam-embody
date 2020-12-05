@@ -4,6 +4,7 @@ using System.Linq;
 using Handlers;
 using Interop;
 using UnityEngine;
+using Object = System.Object;
 
 public class HideGeometry : MVRScript, IHideGeometry
 {
@@ -32,18 +33,19 @@ public class HideGeometry : MVRScript, IHideGeometry
     {
         try
         {
+            _interop = new InteropProxy(this, containingAtom);
+            _interop.Init();
+
             if (containingAtom?.type != "Person")
             {
-                SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
-                DestroyImmediate(this);
+                // SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
+                enabledJSON.val = false;
                 return;
             }
 
             _person = containingAtom;
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
-            _interop = new InteropProxy(this, containingAtom);
-            _interop.Init();
 
 
             InitControls();
@@ -52,7 +54,7 @@ public class HideGeometry : MVRScript, IHideGeometry
         }
         catch (Exception e)
         {
-            SuperController.LogError("Failed to initialize Improved PoV: " + e);
+            SuperController.LogError("Failed to initialize HideGeometry: " + e);
         }
     }
 
@@ -75,7 +77,7 @@ public class HideGeometry : MVRScript, IHideGeometry
         {
             if (_failedOnce) return;
             _failedOnce = true;
-            SuperController.LogError("Failed to execute pre render Improved PoV: " + e);
+            SuperController.LogError("Failed to execute pre render HideGeometry: " + e);
         }
     }
 
@@ -98,7 +100,7 @@ public class HideGeometry : MVRScript, IHideGeometry
         {
             if (_failedOnce) return;
             _failedOnce = true;
-            SuperController.LogError("Failed to execute post render Improved PoV: " + e);
+            SuperController.LogError("Failed to execute post render HideGeometry: " + e);
         }
     }
 
@@ -149,6 +151,11 @@ public class HideGeometry : MVRScript, IHideGeometry
     public void OnEnable()
     {
         if (_interop?.ready != true) return;
+        if (containingAtom.type != "Person")
+        {
+            enabledJSON.val = false;
+            return;
+        }
 
         ApplyAll(true);
     }
@@ -156,6 +163,7 @@ public class HideGeometry : MVRScript, IHideGeometry
     public void OnDisable()
     {
         if (_interop?.ready != true) return;
+        if (ReferenceEquals(_person, null)) return;
 
         _dirty = false;
         ApplyAll(false);
@@ -201,7 +209,7 @@ public class HideGeometry : MVRScript, IHideGeometry
         {
             if (_failedOnce) return;
             _failedOnce = true;
-            SuperController.LogError("Failed to update Improved PoV: " + e);
+            SuperController.LogError("Failed to update HideGeometry: " + e);
         }
     }
 

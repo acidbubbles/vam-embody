@@ -85,16 +85,19 @@ public class Embody : MVRScript
 
     public void Update()
     {
-        if (_headControl.possessed)
+        if (_headControl != null)
         {
-            _possessionActiveJSON.val = true;
-            return;
-        }
+            if (_headControl.possessed)
+            {
+                _possessionActiveJSON.val = true;
+                return;
+            }
 
-        if (_possessionActiveJSON.val && !_headControl.possessed)
-        {
-            _possessionActiveJSON.val = false;
-            return;
+            if (_possessionActiveJSON.val && !_headControl.possessed)
+            {
+                _possessionActiveJSON.val = false;
+                return;
+            }
         }
 
         if (!_passengerActiveJSON.val)

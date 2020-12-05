@@ -24,6 +24,8 @@ namespace Interop
         private readonly MVRScript _this;
         private JSONStorableBool _activeJSON;
 
+        private bool _recursive;
+
         public InteropProxy(MVRScript @this, Atom containingAtom)
         {
             _this = @this;
@@ -34,6 +36,8 @@ namespace Interop
         {
             _activeJSON = new JSONStorableBool("Active", false, (bool val) =>
             {
+                if (_recursive) return;
+                _recursive = true;
                 try
                 {
                     _this.enabledJSON.val = val;
@@ -49,6 +53,10 @@ namespace Interop
                     {
                         SuperController.LogError($"Embody: Failed to deactivate: {exc}");
                     }
+                }
+                finally
+                {
+                    _recursive = false;
                 }
             }) {isStorable = false};
             _this.RegisterBool(_activeJSON);
