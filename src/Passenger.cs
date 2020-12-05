@@ -72,7 +72,7 @@ public class Passenger : MVRScript, IPassenger
 
         _lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
         RegisterFloat(_lookAtWeightJSON);
-        CreateSlider(_lookAtWeightJSON);
+        CreateSlider(_lookAtWeightJSON).label = "Look at weight";
 
         _positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
         RegisterBool(_positionLockJSON);
