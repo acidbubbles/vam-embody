@@ -72,6 +72,7 @@
     <Compile Include="src\Interop\IHideGeometry.cs" />
     <Compile Include="src\Interop\InteropProxy.cs" />
     <Compile Include="src\Interop\IPassenger.cs" />
+    <Compile Include="src\Interop\ISnug.cs" />
     <Compile Include="src\Interop\IWorldScale.cs" />
     <Compile Include="src\Utils\QuaternionExtensions.cs" />
     <Compile Include="src\Embody.cs" />

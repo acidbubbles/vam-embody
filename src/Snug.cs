@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Interop;
 using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
@@ -14,7 +15,7 @@ using UnityEngine;
 /// Source: https://github.com/acidbubbles/vam-wrist
 /// Note: See FixedUpdate for the implementation of the algorithm
 /// </summary>
-public class Snug : MVRScript {
+public class Snug : MVRScript, ISnug {
     private const float _baseCueSize = 0.35f;
     private const string _saveExt = "snugprofile";
     private const string _saveFolder = "Saves\\snugprofiles";
@@ -44,6 +45,7 @@ public class Snug : MVRScript {
     private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
     private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
     private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
+    private InteropProxy _interop;
     private static class VisualCueLineIndices {
         public static int Anchor = 0;
         public static int Hand = 1;
@@ -53,6 +55,9 @@ public class Snug : MVRScript {
 
     public override void Init() {
         try {
+            _interop = new InteropProxy(this, containingAtom);
+            _interop.Init();
+
             if (containingAtom?.type != "Person")
             {
                 enabledJSON.val = false;
@@ -156,6 +161,7 @@ public class Snug : MVRScript {
 
     private struct FreeControllerV3Snapshot { public bool canGrabPosition; public bool canGrabRotation; }
     private readonly Dictionary<FreeControllerV3, FreeControllerV3Snapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3Snapshot>();
+
     private void InitDisableSelectionUI() {
         var disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, (bool val) => {
             if (val) {

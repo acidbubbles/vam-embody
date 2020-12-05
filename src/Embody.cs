@@ -81,6 +81,10 @@ public class Embody : MVRScript
         var configurePassengerJSON = new JSONStorableAction("ConfigurePassenger", () => { _interop.SelectPlugin(_interop.passenger); });
         var configurePassengerBtn = CreateButton("Configure Passenger", true);
         configurePassengerJSON.dynamicButton = configurePassengerBtn;
+
+        var configureSnugJSON = new JSONStorableAction("ConfigureSnug", () => { _interop.SelectPlugin(_interop.snug); });
+        var configureSnugBtn = CreateButton("Configure Snug", true);
+        configureSnugJSON.dynamicButton = configureSnugBtn;
     }
 
     public void Update()

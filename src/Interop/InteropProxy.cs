@@ -20,6 +20,7 @@ namespace Interop
         public IPassenger passenger;
         public ICameraOffset cameraOffset;
         public IWorldScale worldScale;
+        public ISnug snug;
 
         private readonly MVRScript _this;
         private JSONStorableBool _activeJSON;
@@ -34,7 +35,7 @@ namespace Interop
 
         public void Init()
         {
-            _activeJSON = new JSONStorableBool("Active", false, (bool val) =>
+            _activeJSON = new JSONStorableBool("Active", false, val =>
             {
                 if (_recursive) return;
                 _recursive = true;
@@ -62,7 +63,7 @@ namespace Interop
             _this.RegisterBool(_activeJSON);
             _this.CreateToggle(_activeJSON).label = "Component active";
             _this.enabledJSON.isStorable = false;
-            _this.enabledJSON.setCallbackFunction += (bool val) => _activeJSON.val = val;
+            _this.enabledJSON.setCallbackFunction += val => _activeJSON.val = val;
             _this.enabledJSON.val = false;
 
             StartInitDeferred();
@@ -79,10 +80,12 @@ namespace Interop
             if (_containingAtom == null) yield break;
             foreach (var plugin in _containingAtom.GetStorableIDs().Select(s => _containingAtom.GetStorableByID(s)).OfType<IEmbodyPlugin>())
             {
+                // ReSharper disable once RedundantJumpStatement
                 if (TryAssign(plugin, ref hideGeometry)) continue;
                 if (TryAssign(plugin, ref passenger)) continue;
                 if (TryAssign(plugin, ref worldScale)) continue;
                 if (TryAssign(plugin, ref cameraOffset)) continue;
+                if (TryAssign(plugin, ref snug)) continue;
             }
             ready = true;
         }
@@ -96,7 +99,7 @@ namespace Interop
         }
 
 
-        private bool TryAssign<T>(IEmbodyPlugin plugin, ref T field)
+        private static bool TryAssign<T>(IEmbodyPlugin plugin, ref T field)
             where T : class, IEmbodyPlugin
         {
             var cast = plugin as T;

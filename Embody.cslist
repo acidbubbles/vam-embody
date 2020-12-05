@@ -8,6 +8,7 @@ src\Interop\IEmbodyPlugin.cs
 src\Interop\IHideGeometry.cs
 src\Interop\InteropProxy.cs
 src\Interop\IPassenger.cs
+src\Interop\ISnug.cs
 src\Interop\IWorldScale.cs
 src\Utils\QuaternionExtensions.cs
 src\Embody.cs
