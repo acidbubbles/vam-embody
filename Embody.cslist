@@ -1,3 +1,5 @@
+src\Anchors\ControllerAnchorPoint.cs
+src\Anchors\ControllerAnchorPointVisualCue.cs
 src\Handlers\HairHandler.cs
 src\Handlers\HandlerConfigurationResult.cs
 src\Handlers\IHandler.cs
@@ -11,6 +13,7 @@ src\Interop\IPassenger.cs
 src\Interop\ISnug.cs
 src\Interop\IWorldScale.cs
 src\Utils\QuaternionExtensions.cs
+src\Utils\VisualCuesHelper.cs
 src\Embody.cs
 src\HideGeometry.cs
 src\OffsetCamera.cs

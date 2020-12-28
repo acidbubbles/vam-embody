@@ -62,6 +62,8 @@
 
   <ItemGroup>
     <!-- SourceFiles -->
+    <Compile Include="src\Anchors\ControllerAnchorPoint.cs" />
+    <Compile Include="src\Anchors\ControllerAnchorPointVisualCue.cs" />
     <Compile Include="src\Handlers\HairHandler.cs" />
     <Compile Include="src\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\Handlers\IHandler.cs" />
@@ -75,6 +77,7 @@
     <Compile Include="src\Interop\ISnug.cs" />
     <Compile Include="src\Interop\IWorldScale.cs" />
     <Compile Include="src\Utils\QuaternionExtensions.cs" />
+    <Compile Include="src\Utils\VisualCuesHelper.cs" />
     <Compile Include="src\Embody.cs" />
     <Compile Include="src\HideGeometry.cs" />
     <Compile Include="src\OffsetCamera.cs" />
