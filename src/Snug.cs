@@ -92,6 +92,7 @@ public class Snug : MVRScript, ISnug {
         // TODO: Check when the person scale changes
         foreach (var anchor in _anchorPoints)
         {
+            if (anchor.Locked) continue;
             // if (anchor.Label != "Abdomen") continue;
             AutoSetup(anchor.RigidBody, anchor);
         }
@@ -101,18 +102,23 @@ public class Snug : MVRScript, ISnug {
     {
         const float raycastDistance = 100f;
         var rbTransform = rb.transform;
-        var rbPosition = rbTransform.position + transform.up * anchor.VirtualOffset.y;
+        var rbUp = rbTransform.up;
+        var rbOffsetPosition = rbTransform.position + rbUp * anchor.VirtualOffset.y;
+        var rbRotation = rbTransform.rotation;
         var rbForward = rbTransform.forward;
         var rbRight = rbTransform.right;
 
         var rays = new List<Ray>();
-        for (var i = 0; i < 360; i += 10)
+        // TODO: Only check front, side and back, no need to check "corners".
+        for (var i = 0; i < 360; i += 3)
         {
-            var rotation = Quaternion.Euler(0, i, 0);
-            var x = rbPosition + rotation * rbForward;
-            rays.Add(new Ray(x, rbPosition - x));
+            var rotation = Quaternion.AngleAxis(i, rbUp);
+            var origin = rbOffsetPosition + rotation * (rbForward * raycastDistance);
+            rays.Add(new Ray(origin, rbOffsetPosition - origin));
         }
-        float minX = float.PositiveInfinity, minZ = float.PositiveInfinity, maxX = float.NegativeInfinity, maxZ = float.NegativeInfinity;
+        var min = Vector3.positiveInfinity;
+        var max = Vector3.negativeInfinity;
+        var isHit = false;
         foreach (var collider in containingAtom.GetComponentsInChildren<Collider>())
         {
             if (collider.name.EndsWith("Control")) continue;
@@ -121,19 +127,23 @@ public class Snug : MVRScript, ISnug {
             {
                 RaycastHit hit;
                 if (!collider.Raycast(ray, out hit, raycastDistance)) continue;
-                minX = Mathf.Min(minX, hit.point.x);
-                minZ = Mathf.Min(minZ, hit.point.z);
-                maxX = Mathf.Max(maxX, hit.point.x);
-                maxZ = Mathf.Max(maxZ, hit.point.z);
+                isHit = true;
+                min = Vector3.Min(min, hit.point);
+                max = Vector3.Max(max, hit.point);
+
+                var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
+                _cues.Add(hitCue);
+                hitCue.transform.localScale = Vector3.one * 0.002f;
+                hitCue.transform.position = hit.point;
             }
         }
 
-        if (float.IsInfinity(minX) || float.IsInfinity(minZ)) return;
+        if (!isHit) return;
 
-        var size = new Vector3(maxX - minX, 0f, maxZ - minZ);
-        var center = new Vector3(minX + size.x / 2f, rbPosition.y, minZ + size.z / 2f);
+        var size = Quaternion.Inverse(rbRotation) * (max - min);
+        var center = min + (max - min) / 2f;
         // TODO: Why add virtual offset here?
-        var offset = center - rbPosition + new Vector3(0, anchor.VirtualOffset.y, 0);
+        var offset = center - rbTransform.position;//* + rbUp * anchor.VirtualOffset.y;
         // SuperController.LogMessage($"Found max values: {minX:0.000}, {minZ:0.000}, {maxX:0.000}, {maxZ:0.000}");
         // SuperController.LogMessage($"Size: {size.x:0.000}, {size.y:0.000}");
         // SuperController.LogMessage($"Offset: {offset.x:0.000}, {offset.z:0.000}");
@@ -315,7 +325,7 @@ public class Snug : MVRScript, ISnug {
             Label = "Head",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
             VirtualOffset = new Vector3(0, 0.2f, 0),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
+            VirtualSize = new Vector3(0.2f, 0.2f, 0.2f),
             PhysicalOffset = new Vector3(0, 0, 0),
             PhysicalSize = new Vector3(1, 1, 1),
             Active = true,
@@ -361,7 +371,7 @@ public class Snug : MVRScript, ISnug {
             Label = "Ground (Control)",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
             VirtualOffset = new Vector3(0, 0, 0),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
+            VirtualSize = new Vector3(0.2f, 0.2f, 0.2f),
             PhysicalOffset = new Vector3(0, 0, 0),
             PhysicalSize = new Vector3(1, 1, 1),
             Active = true,
@@ -718,8 +728,9 @@ public class Snug : MVRScript, ISnug {
     private void CreateVisualCues() {
         DestroyVisualCues();
 
-        _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
-        _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
+        // TODO: Uncomment when there
+        // _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
+        // _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
 
         foreach (var anchorPoint in _anchorPoints) {
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
