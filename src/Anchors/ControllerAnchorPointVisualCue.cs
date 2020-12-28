@@ -2,7 +2,8 @@
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-public class ControllerAnchorPointVisualCue : IDisposable {
+public class ControllerAnchorPointVisualCue : IDisposable
+{
     private const float _width = 0.005f;
     public readonly GameObject gameObject;
     private readonly Transform _xAxis;
@@ -12,7 +13,8 @@ public class ControllerAnchorPointVisualCue : IDisposable {
     private readonly Transform _rightHandle;
     private readonly LineRenderer _ellipse;
 
-    public ControllerAnchorPointVisualCue(Transform parent, Color color) {
+    public ControllerAnchorPointVisualCue(Transform parent, Color color)
+    {
         var go = new GameObject();
         _xAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform;
         _zAxis = VisualCuesHelper.CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform;
@@ -27,7 +29,8 @@ public class ControllerAnchorPointVisualCue : IDisposable {
         gameObject.transform.localRotation = Quaternion.identity;
     }
 
-    public void Update(Vector3 offset, Vector3 size) {
+    public void Update(Vector3 offset, Vector3 size)
+    {
         gameObject.transform.localPosition = offset;
 
         _xAxis.localScale = new Vector3(size.x - _width * 2, _width * 0.25f, _width * 0.25f);
@@ -42,7 +45,8 @@ public class ControllerAnchorPointVisualCue : IDisposable {
         VisualCuesHelper.DrawEllipse(_ellipse, new Vector2(size.x / 2f, size.z / 2f));
     }
 
-    public void Dispose() {
+    public void Dispose()
+    {
         Object.Destroy(gameObject);
     }
 }
