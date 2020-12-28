@@ -353,7 +353,9 @@ public class Passenger : MVRScript, IPassenger
             navigationRigTransform.position = navigationRigPosition;
         }
 
+        SuperController.singleton.SyncMonitorRigPosition();
+
         // TODO: Re-position the main menu and the hud anchors (ovr) if that's possible
-        // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positionning
+        // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positioning
     }
 }
