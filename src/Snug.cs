@@ -64,6 +64,8 @@ public class Snug : MVRScript, ISnug {
                 return;
             }
 
+            CreateButton("Auto").button.onClick.AddListener(AutoSetup);
+
             InitPossessHandsUI();
             InitVisualCuesUI();
             InitArmForRecordUI();
@@ -80,6 +82,41 @@ public class Snug : MVRScript, ISnug {
         }
 
         StartCoroutine(DeferredInit());
+    }
+
+    private void AutoSetup()
+    {
+        var abdomen = containingAtom.freeControllers.First(fc => fc.name == "abdomenControl");
+        var transform = abdomen.transform;
+        var position = transform.position;
+        var rays = new[]
+        {
+            new Ray(position, transform.forward),
+            new Ray(position, transform.right),
+            new Ray(position, -transform.forward),
+            new Ray(position, -transform.right),
+        };
+        float minX = float.PositiveInfinity, minZ = float.PositiveInfinity, maxX = float.NegativeInfinity, maxZ = float.NegativeInfinity;
+        foreach (var collider in containingAtom.GetComponentsInChildren<Collider>())
+        {
+            if(collider.name.EndsWith("Control")) continue;
+            if (collider.name.EndsWith("Link")) continue;
+            foreach (var ray in rays)
+            {
+                RaycastHit hit;
+                if (!collider.Raycast(ray, out hit, 100f)) continue;
+                minX = Mathf.Min(minX, hit.point.x);
+                minZ = Mathf.Min(minZ, hit.point.y);
+                maxX = Mathf.Max(minX, hit.point.x);
+                maxZ = Mathf.Max(minZ, hit.point.y);
+            }
+        }
+        var size = new Vector2(maxX - minX, maxZ - minZ);
+        var center = new Vector3(minX + size.x / 2f, position.y, minZ + size.y / 2f);
+        var offset = position - center;
+        SuperController.LogMessage($"Found max values: {minX:0.000}, {minZ:0.000}, {maxX:0.000}, {maxZ:0.000}");
+        SuperController.LogMessage($"Size: {size.x:0.000}, {size.y:0.000}");
+        SuperController.LogMessage($"Offset: {offset.x:0.000}, {offset.z:0.000}");
     }
 
     private void InitPossessHandsUI() {
