@@ -1,6 +1,4 @@
 /* TODO
-- Use InGameSize / RealLifeSize to clarify names
-- Use size instead of offset
 - Remove sliders for in-game size, or make them "advanced"
 */
 
@@ -98,16 +96,17 @@ public class Snug : MVRScript, ISnug
     {
         // TODO: Recalculate when the y offset is changed
         // TODO: Check when the person scale changes
+        var colliders = ScanBodyColliders().ToList();
         foreach (var anchor in _anchorPoints)
         {
             if (anchor.Locked) continue;
             // if (anchor.Label != "Abdomen") continue;
-            AutoSetup(anchor.RigidBody, anchor);
+            AutoSetup(anchor.RigidBody, anchor, colliders);
         }
         SyncSelectedAnchorJSON(null);
     }
 
-    private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor)
+    private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor, List<Collider> colliders)
     {
         const float raycastDistance = 100f;
         var rbTransform = rb.transform;
@@ -117,8 +116,7 @@ public class Snug : MVRScript, ISnug
         var rbForward = rbTransform.forward;
 
         var rays = new List<Ray>();
-        // TODO: Only check front, side and back, no need to check "corners".
-        for (var i = 0; i < 360; i += 10)
+        for (var i = 0; i < 360; i += 5)
         {
             var rotation = Quaternion.AngleAxis(i, rbUp);
             var origin = rbOffsetPosition + rotation * (rbForward * raycastDistance);
@@ -128,10 +126,8 @@ public class Snug : MVRScript, ISnug
         var min = Vector3.positiveInfinity;
         var max = Vector3.negativeInfinity;
         var isHit = false;
-        foreach (var collider in containingAtom.GetComponentsInChildren<Collider>())
+        foreach (var collider in colliders)
         {
-            if (collider.name.EndsWith("Control")) continue;
-            if (collider.name.EndsWith("Link")) continue;
             foreach (var ray in rays)
             {
                 RaycastHit hit;
@@ -160,13 +156,42 @@ public class Snug : MVRScript, ISnug
         // cue.transform.position = center;
 
         // TODO: Adjust padding for scale?
-        var padding = new Vector3(0.03f, 0f, 0.03f);
+        var padding = new Vector3(0.02f, 0f, 0.02f);
 
         anchor.InGameSize = size + padding;
         anchor.InGameOffset = offset;
         anchor.RealLifeSize = anchor.InGameSize;
         anchor.RealLifeOffset = Vector3.zero;
         anchor.Update();
+    }
+
+    private IEnumerable<Collider> ScanBodyColliders()
+    {
+        var personRoot = containingAtom.transform.Find("rescale2");
+        // Those are the ones where colliders can actually be found for female:
+        //.Find("geometry").Find("FemaleMorphers")
+        //.Find("PhysicsModel").Find("Genesis2Female")
+        return ScanBodyColliders(personRoot);
+    }
+
+    private IEnumerable<Collider> ScanBodyColliders(Transform root)
+    {
+        if(root.name == "lCollar" || root.name == "rCollar") yield break;
+        if(root.name == "lShin" || root.name == "rShin") yield break;
+
+        foreach (var collider in root.GetComponents<Collider>())
+        {
+            if (!collider.enabled) continue;
+            yield return collider;
+        }
+
+        for (var i = 0; i < root.childCount; i++)
+        {
+            var child = root.GetChild(i);
+            if (!child.gameObject.activeSelf) continue;
+            foreach (var collider in ScanBodyColliders(child))
+                yield return collider;
+        }
     }
 
     private void InitPossessHandsUI()
