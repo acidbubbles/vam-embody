@@ -1,4 +1,6 @@
 // #define POV_DIAGNOSTICS
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -51,15 +53,12 @@ namespace Handlers
 
         public static IList<Material> GetMaterialsToHide(DAZSkinV2 skin)
         {
-#if (POV_DIAGNOSTICS)
-            if (skin == null) throw new NullReferenceException("skin is null");
-            if (skin.GPUmaterials == null) throw new NullReferenceException("skin materials are null");
-#endif
-
             var materials = new List<Material>(MaterialsToHide.Length);
 
             foreach (var material in skin.GPUmaterials)
             {
+                if (material == null)
+                    continue;
                 if (!MaterialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
                     continue;
 
