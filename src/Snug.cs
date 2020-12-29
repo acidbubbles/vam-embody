@@ -262,8 +262,7 @@ public class Snug : MVRScript, ISnug
 
     private void InitVisualCuesUI()
     {
-        // TODO: Make the startingValue false again once this works
-        _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", true, (bool val) =>
+        _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
         {
             if (!_ready) return;
             if (val)
@@ -533,6 +532,16 @@ public class Snug : MVRScript, ISnug
             SyncSelectedAnchorJSON("");
             SyncHandsOffset();
             if (_showVisualCuesJSON.val) CreateVisualCues();
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"{nameof(Snug)}.{nameof(DeferredInit)}: {exc}");
+        }
+        // TODO: Not if already loaded
+        while (SuperController.singleton.isLoading)
+            yield return 0;
+        try
+        {
             AutoSetup();
         }
         catch (Exception exc)
