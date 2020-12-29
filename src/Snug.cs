@@ -41,10 +41,10 @@ public class Snug : MVRScript, ISnug
     private Vector3 _handRotateOffset;
     private JSONStorableBool _showVisualCuesJSON;
     private JSONStorableStringChooser _selectedAnchorsJSON;
-    private JSONStorableFloat _anchorVirtScaleXJSON, _anchorVirtScaleZJSON;
+    private JSONStorableFloat _anchorVirtSizeXJSON, _anchorVirtSizeZJSON;
     private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
     private JSONStorableFloat _anchorPhysOffsetXJSON, _anchorPhysOffsetYJSON, _anchorPhysOffsetZJSON;
-    private JSONStorableFloat _anchorPhysScaleXJSON, _anchorPhysScaleZJSON;
+    private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
     private JSONStorableBool _anchorActiveJSON;
     private readonly Vector3[] _lHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
     private readonly Vector3[] _rHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
@@ -104,6 +104,7 @@ public class Snug : MVRScript, ISnug
             // if (anchor.Label != "Abdomen") continue;
             AutoSetup(anchor.RigidBody, anchor);
         }
+        SyncSelectedAnchorJSON(null);
     }
 
     private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor)
@@ -111,14 +112,13 @@ public class Snug : MVRScript, ISnug
         const float raycastDistance = 100f;
         var rbTransform = rb.transform;
         var rbUp = rbTransform.up;
-        var rbOffsetPosition = rbTransform.position + rbUp * anchor.VirtualOffset.y;
+        var rbOffsetPosition = rbTransform.position + rbUp * anchor.InGameOffset.y;
         var rbRotation = rbTransform.rotation;
         var rbForward = rbTransform.forward;
-        var rbRight = rbTransform.right;
 
         var rays = new List<Ray>();
         // TODO: Only check front, side and back, no need to check "corners".
-        for (var i = 0; i < 360; i += 3)
+        for (var i = 0; i < 360; i += 10)
         {
             var rotation = Quaternion.AngleAxis(i, rbUp);
             var origin = rbOffsetPosition + rotation * (rbForward * raycastDistance);
@@ -140,10 +140,10 @@ public class Snug : MVRScript, ISnug
                 min = Vector3.Min(min, hit.point);
                 max = Vector3.Max(max, hit.point);
 
-                var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
-                _cues.Add(hitCue);
-                hitCue.transform.localScale = Vector3.one * 0.002f;
-                hitCue.transform.position = hit.point;
+                // var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
+                // _cues.Add(hitCue);
+                // hitCue.transform.localScale = Vector3.one * 0.002f;
+                // hitCue.transform.position = hit.point;
             }
         }
 
@@ -153,17 +153,19 @@ public class Snug : MVRScript, ISnug
         var center = min + (max - min) / 2f;
         // TODO: Why add virtual offset here?
         var offset = center - rbTransform.position; //* + rbUp * anchor.VirtualOffset.y;
-        // SuperController.LogMessage($"Found max values: {minX:0.000}, {minZ:0.000}, {maxX:0.000}, {maxZ:0.000}");
-        // SuperController.LogMessage($"Size: {size.x:0.000}, {size.y:0.000}");
-        // SuperController.LogMessage($"Offset: {offset.x:0.000}, {offset.z:0.000}");
 
         // var cue = VisualCuesHelper.Cross(Color.red);
         // _cues.Add(cue);
         // cue.transform.localScale = Vector3.one * 2f;
         // cue.transform.position = center;
 
-        anchor.VirtualSize = size;
-        anchor.VirtualOffset = offset;
+        // TODO: Adjust padding for scale?
+        var padding = new Vector3(0.03f, 0f, 0.03f);
+
+        anchor.InGameSize = size + padding;
+        anchor.InGameOffset = offset;
+        anchor.RealLifeSize = anchor.InGameSize;
+        anchor.RealLifeOffset = Vector3.zero;
         anchor.Update();
     }
 
@@ -366,14 +368,15 @@ public class Snug : MVRScript, ISnug
 
     private void InitAnchors()
     {
+        var defaultSize = new Vector3(0.2f, 0.2f, 0.2f);
         _anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Head",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
-            VirtualOffset = new Vector3(0, 0.2f, 0),
-            VirtualSize = new Vector3(0.2f, 0.2f, 0.2f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, 0.2f, 0),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true,
             Locked = true
         });
@@ -381,50 +384,50 @@ public class Snug : MVRScript, ISnug
         {
             Label = "Lips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
-            VirtualOffset = new Vector3(0, 0, -0.07113313f),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, 0, -0.07113313f),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true
         });
         _anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Chest",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
-            VirtualOffset = new Vector3(0, 0.0682705f, 0.04585214f),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, 0.0682705f, 0.04585214f),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true
         });
         _anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Abdomen",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
-            VirtualOffset = new Vector3(0, 0.0770329f, 0.04218798f),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, 0.0770329f, 0.04218798f),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true
         });
         _anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Hips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
-            VirtualOffset = new Vector3(0, -0.08762675f, -0.009161186f),
-            VirtualSize = new Vector3(0.05f, 0.05f, 0.05f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, -0.08762675f, -0.009161186f),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true
         });
         _anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Ground (Control)",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
-            VirtualOffset = new Vector3(0, 0, 0),
-            VirtualSize = new Vector3(0.2f, 0.2f, 0.2f),
-            PhysicalOffset = new Vector3(0, 0, 0),
-            PhysicalSize = new Vector3(1, 1, 1),
+            InGameOffset = new Vector3(0, 0, 0),
+            InGameSize = defaultSize,
+            RealLifeOffset = Vector3.zero,
+            RealLifeSize = defaultSize,
             Active = true,
             Locked = true
         });
@@ -436,29 +439,29 @@ public class Snug : MVRScript, ISnug
             {isStorable = false};
         CreateScrollablePopup(_selectedAnchorsJSON, true);
 
-        _anchorVirtScaleXJSON = new JSONStorableFloat("Virtual Scale X", 1f, UpdateAnchor, 0.01f, 3f, true) {isStorable = false};
-        CreateSlider(_anchorVirtScaleXJSON, true);
-        _anchorVirtScaleZJSON = new JSONStorableFloat("Virtual Scale Z", 1f, UpdateAnchor, 0.01f, 3f, true) {isStorable = false};
+        _anchorPhysSizeXJSON = new JSONStorableFloat("Real-Life Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+        CreateSlider(_anchorPhysSizeXJSON, true);
+        _anchorPhysSizeZJSON = new JSONStorableFloat("Real-Life Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+        CreateSlider(_anchorPhysSizeZJSON, true);
 
-        CreateSlider(_anchorVirtScaleZJSON, true);
-        _anchorVirtOffsetXJSON = new JSONStorableFloat("Virtual Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetXJSON, true);
-        _anchorVirtOffsetYJSON = new JSONStorableFloat("Virtual Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetYJSON, true);
-        _anchorVirtOffsetZJSON = new JSONStorableFloat("Virtual Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetZJSON, true);
-
-        _anchorPhysScaleXJSON = new JSONStorableFloat("Physical Scale X", 1f, UpdateAnchor, 0.01f, 3f, true) {isStorable = false};
-        CreateSlider(_anchorPhysScaleXJSON, true);
-        _anchorPhysScaleZJSON = new JSONStorableFloat("Physical Scale Z", 1f, UpdateAnchor, 0.01f, 3f, true) {isStorable = false};
-        CreateSlider(_anchorPhysScaleZJSON, true);
-
-        _anchorPhysOffsetXJSON = new JSONStorableFloat("Physical Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        _anchorPhysOffsetXJSON = new JSONStorableFloat("Real-Life Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorPhysOffsetXJSON, true);
-        _anchorPhysOffsetYJSON = new JSONStorableFloat("Physical Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        _anchorPhysOffsetYJSON = new JSONStorableFloat("Real-Life Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorPhysOffsetYJSON, true);
-        _anchorPhysOffsetZJSON = new JSONStorableFloat("Physical Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        _anchorPhysOffsetZJSON = new JSONStorableFloat("Real-Life Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorPhysOffsetZJSON, true);
+
+        _anchorVirtSizeXJSON = new JSONStorableFloat("In-Game Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+        CreateSlider(_anchorVirtSizeXJSON, true);
+        _anchorVirtSizeZJSON = new JSONStorableFloat("In-Game Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+
+        CreateSlider(_anchorVirtSizeZJSON, true);
+        _anchorVirtOffsetXJSON = new JSONStorableFloat("In-Game Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorVirtOffsetXJSON, true);
+        _anchorVirtOffsetYJSON = new JSONStorableFloat("In-Game Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorVirtOffsetYJSON, true);
+        _anchorVirtOffsetZJSON = new JSONStorableFloat("In-Game Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorVirtOffsetZJSON, true);
 
         _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
         CreateToggle(_anchorActiveJSON, true);
@@ -521,25 +524,25 @@ public class Snug : MVRScript, ISnug
 
         try
         {
-            json["hands"] = new JSONClass
+            json["Hands"] = new JSONClass
             {
-                {"offset", SerializeVector3(_palmToWristOffset)},
-                {"rotation", SerializeVector3(_handRotateOffset)}
+                {"Offset", SerializeVector3(_palmToWristOffset)},
+                {"Rotation", SerializeVector3(_handRotateOffset)}
             };
             var anchors = new JSONClass();
             foreach (var anchor in _anchorPoints)
             {
                 anchors[anchor.Label] = new JSONClass
                 {
-                    {"virOffset", SerializeVector3(anchor.VirtualOffset)},
-                    {"virScale", SerializeVector2(new Vector3(anchor.VirtualSize.x, anchor.VirtualSize.z))},
-                    {"phyOffset", SerializeVector3(anchor.PhysicalOffset)},
-                    {"phyScale", SerializeVector2(new Vector2(anchor.PhysicalSize.x, anchor.PhysicalSize.z))},
-                    {"active", anchor.Active ? "true" : "false"},
+                    {"InGameOffset", SerializeVector3(anchor.InGameOffset)},
+                    {"InGameSize", SerializeVector2(new Vector3(anchor.InGameSize.x, anchor.InGameSize.z))},
+                    {"RealLifeOffset", SerializeVector3(anchor.RealLifeOffset)},
+                    {"RealLifeScale", SerializeVector2(new Vector2(anchor.RealLifeSize.x, anchor.RealLifeSize.z))},
+                    {"Active", anchor.Active ? "true" : "false"},
                 };
             }
 
-            json["anchors"] = anchors;
+            json["Anchors"] = anchors;
             needsStore = true;
         }
         catch (Exception exc)
@@ -566,25 +569,25 @@ public class Snug : MVRScript, ISnug
 
         try
         {
-            var handsJSON = jc["hands"];
+            var handsJSON = jc["Hands"];
             if (handsJSON != null)
             {
-                _palmToWristOffset = DeserializeVector3(handsJSON["offset"], _palmToWristOffset);
-                _handRotateOffset = DeserializeVector3(handsJSON["rotation"], _handRotateOffset);
+                _palmToWristOffset = DeserializeVector3(handsJSON["Offset"], _palmToWristOffset);
+                _handRotateOffset = DeserializeVector3(handsJSON["Rotation"], _handRotateOffset);
             }
 
-            var anchorsJSON = jc["anchors"];
+            var anchorsJSON = jc["Anchors"];
             if (anchorsJSON != null)
             {
                 foreach (var anchor in _anchorPoints)
                 {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
-                    anchor.VirtualOffset = DeserializeVector3(anchorJSON["virOffset"], anchor.VirtualOffset);
-                    anchor.VirtualSize = DeserializeVector2AsFlatScale(anchorJSON["virScale"], anchor.VirtualSize);
-                    anchor.PhysicalOffset = DeserializeVector3(anchorJSON["phyOffset"], anchor.PhysicalOffset);
-                    anchor.PhysicalSize = DeserializeVector2AsFlatScale(anchorJSON["phyScale"], anchor.PhysicalSize);
-                    anchor.Active = anchorJSON["active"]?.Value != "false";
+                    anchor.InGameOffset = DeserializeVector3(anchorJSON["InGameOffset"], anchor.InGameOffset);
+                    anchor.InGameSize = DeserializeVector2AsFlatScale(anchorJSON["InGameSize"], anchor.InGameSize);
+                    anchor.RealLifeOffset = DeserializeVector3(anchorJSON["RealLifeOffset"], anchor.RealLifeOffset);
+                    anchor.RealLifeSize = DeserializeVector2AsFlatScale(anchorJSON["RealLifeScale"], anchor.RealLifeSize);
+                    anchor.Active = anchorJSON["Active"]?.Value != "false";
                     anchor.Update();
                 }
             }
@@ -618,16 +621,16 @@ public class Snug : MVRScript, ISnug
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        _anchorVirtScaleXJSON.valNoCallback = anchor.VirtualSize.x;
-        _anchorVirtScaleZJSON.valNoCallback = anchor.VirtualSize.z;
-        _anchorVirtOffsetXJSON.valNoCallback = anchor.VirtualOffset.x;
-        _anchorVirtOffsetYJSON.valNoCallback = anchor.VirtualOffset.y;
-        _anchorVirtOffsetZJSON.valNoCallback = anchor.VirtualOffset.z;
-        _anchorPhysScaleXJSON.valNoCallback = anchor.PhysicalSize.x;
-        _anchorPhysScaleZJSON.valNoCallback = anchor.PhysicalSize.z;
-        _anchorPhysOffsetXJSON.valNoCallback = anchor.PhysicalOffset.x;
-        _anchorPhysOffsetYJSON.valNoCallback = anchor.PhysicalOffset.y;
-        _anchorPhysOffsetZJSON.valNoCallback = anchor.PhysicalOffset.z;
+        _anchorVirtSizeXJSON.valNoCallback = anchor.InGameSize.x;
+        _anchorVirtSizeZJSON.valNoCallback = anchor.InGameSize.z;
+        _anchorVirtOffsetXJSON.valNoCallback = anchor.InGameOffset.x;
+        _anchorVirtOffsetYJSON.valNoCallback = anchor.InGameOffset.y;
+        _anchorVirtOffsetZJSON.valNoCallback = anchor.InGameOffset.z;
+        _anchorPhysSizeXJSON.valNoCallback = anchor.RealLifeSize.x;
+        _anchorPhysSizeZJSON.valNoCallback = anchor.RealLifeSize.z;
+        _anchorPhysOffsetXJSON.valNoCallback = anchor.RealLifeOffset.x;
+        _anchorPhysOffsetYJSON.valNoCallback = anchor.RealLifeOffset.y;
+        _anchorPhysOffsetZJSON.valNoCallback = anchor.RealLifeOffset.z;
         _anchorActiveJSON.valNoCallback = anchor.Active;
     }
 
@@ -636,10 +639,10 @@ public class Snug : MVRScript, ISnug
         if (!_ready) return;
         var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        anchor.VirtualSize = new Vector3(_anchorVirtScaleXJSON.val, 1f, _anchorVirtScaleZJSON.val);
-        anchor.VirtualOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
-        anchor.PhysicalSize = new Vector3(_anchorPhysScaleXJSON.val, 1f, _anchorPhysScaleZJSON.val);
-        anchor.PhysicalOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
+        anchor.InGameSize = new Vector3(_anchorVirtSizeXJSON.val, 1f, _anchorVirtSizeZJSON.val);
+        anchor.InGameOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
+        anchor.RealLifeSize = new Vector3(_anchorPhysSizeXJSON.val, 1f, _anchorPhysSizeZJSON.val);
+        anchor.RealLifeOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
         if (anchor.Locked && !_anchorActiveJSON.val)
         {
             _anchorActiveJSON.valNoCallback = true;
@@ -703,11 +706,9 @@ public class Snug : MVRScript, ISnug
         if (!_ready) return;
         try
         {
-            if (_leftHandActive || _showVisualCuesJSON.val && _leftAutoSnapPoint != null)
-                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint,
-                    new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z),
-                    new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z), _lHandVisualCueLinePoints);
-            if (_rightHandActive || _showVisualCuesJSON.val && _rightAutoSnapPoint != null)
+            if (_leftHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
+                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z), _lHandVisualCueLinePoints);
+            if (_rightHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_rightAutoSnapPoint, null) && !ReferenceEquals(_rightHandTarget, null))
                 ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
         }
         catch (Exception exc)
@@ -773,8 +774,8 @@ public class Snug : MVRScript, ISnug
         var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
         // Calculate the controller offset based on the physical scale/offset of anchors
-        var physicalScale = Vector3.Lerp(upper.PhysicalSize, lower.PhysicalSize, lowerWeight);
-        var physicalOffset = Vector3.Lerp(upper.PhysicalOffset, lower.PhysicalOffset, lowerWeight);
+        var physicalScale = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
+        var physicalOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
         var baseOffset = position - anchorPosition;
         var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
         resultOffset = new Vector3(resultOffset.x / physicalScale.x, resultOffset.y / physicalScale.y, resultOffset.z / physicalScale.z) - physicalOffset;
@@ -787,6 +788,7 @@ public class Snug : MVRScript, ISnug
         resultPosition += resultRotation * (snapOffset + palmToWristOffset);
 
         // Do the displacement
+        // TODO: Avoid getting the rigidbody component every frame
         var rb = handTarget.GetComponent<Rigidbody>();
         rb.MovePosition(resultPosition);
         rb.MoveRotation(resultRotation);
@@ -828,7 +830,6 @@ public class Snug : MVRScript, ISnug
         {
             _ready = false;
             DestroyVisualCues();
-            Destroy(_rightHandTarget);
         }
         catch (Exception exc)
         {
@@ -839,6 +840,8 @@ public class Snug : MVRScript, ISnug
     public void OnDestroy()
     {
         OnDisable();
+        Destroy(_leftHandTarget);
+        Destroy(_rightHandTarget);
     }
 
     #endregion
@@ -849,18 +852,19 @@ public class Snug : MVRScript, ISnug
     {
         DestroyVisualCues();
 
-        // TODO: Uncomment when there
-        // _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
-        // _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
+        _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
+        _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
 
         foreach (var anchorPoint in _anchorPoints)
         {
+            if (anchorPoint.Locked) continue;
+
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
             anchorPoint.Update();
 
             // TODO: Uncomment when there
-            // anchorPoint.PhysicalCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.white);
-            // anchorPoint.Update();
+            anchorPoint.PhysicalCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.white);
+            anchorPoint.Update();
         }
     }
 

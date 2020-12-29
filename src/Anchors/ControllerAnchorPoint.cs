@@ -4,10 +4,10 @@ public class ControllerAnchorPoint
 {
     public string Label { get; set; }
     public Rigidbody RigidBody { get; set; }
-    public Vector3 PhysicalOffset { get; set; }
-    public Vector3 PhysicalSize { get; set; }
-    public Vector3 VirtualOffset { get; set; }
-    public Vector3 VirtualSize { get; set; }
+    public Vector3 RealLifeOffset { get; set; }
+    public Vector3 RealLifeSize { get; set; }
+    public Vector3 InGameOffset { get; set; }
+    public Vector3 InGameSize { get; set; }
     public ControllerAnchorPointVisualCue VirtualCue { get; set; }
     public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
     public bool Active { get; set; }
@@ -15,7 +15,7 @@ public class ControllerAnchorPoint
 
     public Vector3 GetWorldPosition()
     {
-        return RigidBody.transform.position + RigidBody.transform.rotation * (VirtualOffset + PhysicalOffset);
+        return RigidBody.transform.position + RigidBody.transform.rotation * (InGameOffset + RealLifeOffset);
     }
 
     public void Update()
@@ -23,13 +23,13 @@ public class ControllerAnchorPoint
         if (VirtualCue != null)
         {
             VirtualCue.gameObject.SetActive(Active);
-            VirtualCue.Update(VirtualOffset, VirtualSize);
+            VirtualCue.Update(InGameOffset, InGameSize);
         }
 
         if (PhysicalCue != null)
         {
             PhysicalCue.gameObject.SetActive(Active);
-            PhysicalCue.Update(VirtualOffset + PhysicalOffset, PhysicalSize);
+            PhysicalCue.Update(InGameOffset + RealLifeOffset, RealLifeSize);
         }
     }
 }
