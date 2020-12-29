@@ -32,4 +32,13 @@ public class ControllerAnchorPoint
             PhysicalCue.Update(InGameOffset + RealLifeOffset, RealLifeSize);
         }
     }
+
+    public Vector3 GetRealToGameScale()
+    {
+        return new Vector3(
+            RealLifeSize.x / InGameSize.x,
+            1f,
+            RealLifeSize.z / InGameSize.z
+        );
+    }
 }

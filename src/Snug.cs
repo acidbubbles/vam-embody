@@ -707,9 +707,23 @@ public class Snug : MVRScript, ISnug
         try
         {
             if (_leftHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
-                ProcessHand(_leftHandTarget, SuperController.singleton.leftHand, _leftAutoSnapPoint, new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z), new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z), _lHandVisualCueLinePoints);
+                ProcessHand(
+                    _leftHandTarget,
+                    SuperController.singleton.leftHand,
+                    _leftAutoSnapPoint,
+                    new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z),
+                    new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z),
+                    _lHandVisualCueLinePoints
+                );
             if (_rightHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_rightAutoSnapPoint, null) && !ReferenceEquals(_rightHandTarget, null))
-                ProcessHand(_rightHandTarget, SuperController.singleton.rightHand, _rightAutoSnapPoint, _palmToWristOffset, _handRotateOffset, _rHandVisualCueLinePoints);
+                ProcessHand(
+                    _rightHandTarget,
+                    SuperController.singleton.rightHand,
+                    _rightAutoSnapPoint,
+                    _palmToWristOffset,
+                    _handRotateOffset,
+                    _rHandVisualCueLinePoints
+                );
         }
         catch (Exception exc)
         {
@@ -718,11 +732,17 @@ public class Snug : MVRScript, ISnug
         }
     }
 
-    private void ProcessHand(GameObject handTarget, Transform physicalHand, Transform autoSnapPoint, Vector3 palmToWristOffset, Vector3 handRotateOffset,
-        Vector3[] visualCueLinePoints)
+    private void ProcessHand(
+        GameObject handTarget,
+        Transform realHand,
+        Transform autoSnapPoint,
+        Vector3 palmToWristOffset,
+        Vector3 handRotateOffset,
+        Vector3[] visualCueLinePoints
+        )
     {
         // Base position
-        var position = physicalHand.position;
+        var position = realHand.position;
         var snapOffset = autoSnapPoint.localPosition;
 
         // Find the anchor over and under the controller
@@ -757,6 +777,7 @@ public class Snug : MVRScript, ISnug
         var lowerWeight = 1f - upperWeight;
         var lowerRotation = lower.RigidBody.transform.rotation;
         var upperRotation = upper.RigidBody.transform.rotation;
+        // TODO: SmoothStep?
         var anchorPosition = Vector3.Lerp(upperPosition, lowerPosition, lowerWeight);
         var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
         // TODO: Is this useful?
@@ -766,19 +787,17 @@ public class Snug : MVRScript, ISnug
         // Determine the falloff (closer = stronger, fades out with distance)
         // TODO: Even better to use closest point on ellipse, but not necessary.
         var distance = Mathf.Abs(Vector3.Distance(anchorPosition, position));
-        var
-            physicalCueSize = Vector3
-                .zero; // TODO: Bring this back correctly Vector3.Lerp(Vector3.Scale(upper.VirtualSize, upper.PhysicalSize), Vector3.Scale(lower.VirtualSize, lower.PhysicalSize), lowerWeight) * (_baseCueSize / 2f);
-        var physicalCueDistanceFromCenter = Mathf.Max(physicalCueSize.x, physicalCueSize.z);
+        var realLifeSize = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
+        var realLifeDistanceFromCenter = Mathf.Max(realLifeSize.x, realLifeSize.z);
         // TODO: Check both x and z to determine a falloff relative to both distances
-        var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - physicalCueDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
+        var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - realLifeDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
 
         // Calculate the controller offset based on the physical scale/offset of anchors
-        var physicalScale = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
-        var physicalOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
+        var realToGameScale = Vector3.Lerp(upper.GetRealToGameScale(), lower.GetRealToGameScale(), lowerWeight);
+        var realOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
         var baseOffset = position - anchorPosition;
         var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
-        resultOffset = new Vector3(resultOffset.x / physicalScale.x, resultOffset.y / physicalScale.y, resultOffset.z / physicalScale.z) - physicalOffset;
+        resultOffset = new Vector3(resultOffset.x / realToGameScale.x, resultOffset.y / realToGameScale.y, resultOffset.z / realToGameScale.z) - realOffset;
         resultOffset = anchorRotation * resultOffset;
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
         visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
@@ -793,7 +812,7 @@ public class Snug : MVRScript, ISnug
         rb.MovePosition(resultPosition);
         rb.MoveRotation(resultRotation);
 
-        visualCueLinePoints[VisualCueLineIndices.Controller] = physicalHand.transform.position;
+        visualCueLinePoints[VisualCueLineIndices.Controller] = realHand.transform.position;
 
         // SuperController.singleton.ClearMessages();
         // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
