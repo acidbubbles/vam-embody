@@ -24,6 +24,9 @@
 
   <ItemGroup>
     <Reference Include="mscorlib" />
+    <Reference Include="SteamVR, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\..\..\VaM_Data\Managed\SteamVR.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.XML" />
     <Reference Include="System.Core" />

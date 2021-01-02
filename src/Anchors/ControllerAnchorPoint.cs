@@ -13,9 +13,16 @@ public class ControllerAnchorPoint
     public bool Active { get; set; }
     public bool Locked { get; set; }
 
-    public Vector3 GetWorldPosition()
+    public Vector3 GetInGameWorldPosition()
     {
-        return RigidBody.transform.position + RigidBody.transform.rotation * (InGameOffset + RealLifeOffset);
+        var rigidBodyTransform = RigidBody.transform;
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * InGameOffset;
+    }
+
+    public Vector3 GetAdjustedWorldPosition()
+    {
+        var rigidBodyTransform = RigidBody.transform;
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * (InGameOffset + RealLifeOffset);
     }
 
     public void Update()

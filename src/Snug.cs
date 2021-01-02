@@ -72,6 +72,8 @@ public class Snug : MVRScript, ISnug
                 return;
             }
 
+            CreateButton("Setup Wizard").button.onClick.AddListener(() => StartCoroutine(Wizard()));
+
             InitPossessHandsUI();
             InitVisualCuesUI();
             InitArmForRecordUI();
@@ -92,7 +94,232 @@ public class Snug : MVRScript, ISnug
         StartCoroutine(DeferredInit());
     }
 
-    private void AutoSetup()
+    private IEnumerator Wizard()
+    {
+        yield return 0;
+
+        var realLeftHand = SuperController.singleton.leftHand;
+        var realRightHand = SuperController.singleton.rightHand;
+        var headControl = containingAtom.freeControllers.First(fc => fc.name == "headControl");
+        var lFootControl = containingAtom.freeControllers.First(fc => fc.name == "lFootControl");
+        var rFootControl = containingAtom.freeControllers.First(fc => fc.name == "rFootControl");
+
+        SuperController.singleton.worldScale = 1f;
+
+        AutoSetup();
+
+        SuperController.singleton.helpText = "Welcome to Embody's Wizard! Stand straight, and press select when ready. Make sure the VR person is also standing straight.";
+        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
+
+        var realHeight = SuperController.singleton.heightAdjustTransform.InverseTransformPoint(SuperController.singleton.centerCameraTarget.transform.position).y;
+        // NOTE: Floor is more precise but foot allows to be at non-zero height for calibration
+        var gameHeight = headControl.transform.position.y - ((lFootControl.transform.position.y + rFootControl.transform.position.y) / 2f);
+        var scale = gameHeight / realHeight;
+        SuperController.singleton.worldScale = scale;
+        SuperController.LogMessage($"Player height: {realHeight}, model height: {gameHeight}, scale: {scale}");
+
+        SuperController.singleton.helpText = "World scale adjusted. Now put your hands together like you're praying, and press select when ready.";
+        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
+
+        var handsDistance = Vector3.Distance(realLeftHand.position, realRightHand.position);
+        SuperController.LogMessage($"Hand distance: {handsDistance}");
+
+        SuperController.singleton.helpText = "Hand distance recorded. We will now start possession. Press select when ready.";
+        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
+
+        HeadPossess(headControl, true, true, true);
+
+        SuperController.singleton.helpText = "Possession activated. Now put your hands on your real hips, and press select when ready.";
+        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
+
+        var hipsAnchorPoint = _anchorPoints.First(a => a.Label == "Hips");
+        var gameHipsCenter = hipsAnchorPoint.GetInGameWorldPosition();
+        // TODO: Check the forward size too, and the offset.
+        // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
+        var realHipsWidth = Vector3.Distance(realLeftHand.position, realRightHand.position) - handsDistance;
+        var realHipsCenter = (realLeftHand.position + realRightHand.position) / 2f;
+        hipsAnchorPoint.RealLifeSize = new Vector3(realHipsWidth, 0f, hipsAnchorPoint.InGameSize.z);
+        hipsAnchorPoint.RealLifeOffset = realHipsCenter - gameHipsCenter;
+        SuperController.LogMessage($"Real Hips height: {realHipsCenter.y}, Game Hips height: {gameHipsCenter}");
+        SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {hipsAnchorPoint.RealLifeSize.x}");
+        SuperController.LogMessage($"Real Hips center: {realHipsCenter}, Game Hips center: {gameHipsCenter}");
+
+        SuperController.singleton.helpText = "Now put your right hand at the same level as your hips but on the front, squeezed on you.";
+        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
+
+        realHipsCenter = hipsAnchorPoint.GetAdjustedWorldPosition();
+        hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realRightHand.position, gameHipsCenter) / 2f);
+
+        hipsAnchorPoint.Update();
+
+        SuperController.singleton.helpText = "All done! Select Possess with Snug in Embody to enable possession with body proportion adjustments.";
+        yield return new WaitForSeconds(3);
+        SuperController.singleton.helpText = "";
+    }
+
+    private static bool AreAnyStartRecordKeysDown()
+    {
+        var sctrl = SuperController.singleton;
+        if (sctrl.isOVR)
+        {
+            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.Touch)) return true;
+            if (OVRInput.GetDown(OVRInput.Button.Three, OVRInput.Controller.Touch)) return true;
+        }
+        if (sctrl.isOpenVR)
+        {
+            if (sctrl.selectAction.stateDown) return true;
+        }
+        if (Input.GetKeyDown(KeyCode.Space)) return true;
+        return false;
+    }
+
+    private void HeadPossess(FreeControllerV3 headPossess, bool alignRig = false, bool usePossessorSnapPoint = true, bool adjustSpring = true)
+    {
+        // TODO: New
+        var motionControllerHead = SuperController.singleton.centerCameraTarget.transform;
+        FreeControllerV3 headPossessedController;
+        var headPossessedActivateTransform = SuperController.singleton.headPossessedActivateTransform;
+        var headPossessedText = SuperController.singleton.headPossessedText;
+        var _allowPossessSpringAdjustment = true;
+        var _possessPositionSpring = 10000f;
+        var _possessRotationSpring = 1000f;
+
+        // TODO: Taken from VaM, to cleanup
+        if (!headPossess.canGrabPosition && !headPossess.canGrabRotation)
+        {
+            return;
+        }
+
+        Possessor component = motionControllerHead.GetComponent<Possessor>();
+        Rigidbody component2 = motionControllerHead.GetComponent<Rigidbody>();
+        headPossessedController = headPossess;
+        if (headPossessedActivateTransform != null)
+        {
+            headPossessedActivateTransform.gameObject.SetActive(true);
+        }
+
+        if (headPossessedText != null)
+        {
+            if (headPossessedController.containingAtom != null)
+            {
+                headPossessedText.text = headPossessedController.containingAtom.uid + ":" + headPossessedController.name;
+            }
+            else
+            {
+                headPossessedText.text = headPossessedController.name;
+            }
+        }
+
+        headPossessedController.possessed = true;
+        if (headPossessedController.canGrabPosition)
+        {
+            MotionAnimationControl component3 = headPossessedController.GetComponent<MotionAnimationControl>();
+            if (component3 != null)
+            {
+                component3.suspendPositionPlayback = true;
+            }
+
+            if (_allowPossessSpringAdjustment && adjustSpring)
+            {
+                headPossessedController.RBHoldPositionSpring = _possessPositionSpring;
+            }
+        }
+
+        if (headPossessedController.canGrabRotation)
+        {
+            MotionAnimationControl component4 = headPossessedController.GetComponent<MotionAnimationControl>();
+            if (component4 != null)
+            {
+                component4.suspendRotationPlayback = true;
+            }
+
+            if (_allowPossessSpringAdjustment && adjustSpring)
+            {
+                headPossessedController.RBHoldRotationSpring = _possessRotationSpring;
+            }
+        }
+
+        SuperController.singleton.SyncMonitorRigPosition();
+        if (alignRig)
+        {
+            AlignRigAndController(headPossessedController);
+        }
+        else if (component != null && component.autoSnapPoint != null && usePossessorSnapPoint)
+        {
+            headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
+        }
+
+        if (!(component2 != null))
+        {
+            return;
+        }
+
+        FreeControllerV3.SelectLinkState linkState = FreeControllerV3.SelectLinkState.Position;
+        if (headPossessedController.canGrabPosition)
+        {
+            if (headPossessedController.canGrabRotation)
+            {
+                linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
+            }
+        }
+        else if (headPossessedController.canGrabRotation)
+        {
+            linkState = FreeControllerV3.SelectLinkState.Rotation;
+        }
+
+        headPossessedController.SelectLinkToRigidbody(component2, linkState);
+    }
+
+    private void AlignRigAndController(FreeControllerV3 controller)
+        {
+            // TODO: New
+            var motionControllerHead = SuperController.singleton.centerCameraTarget.transform;
+            FreeControllerV3 headPossessedController;
+            var navigationRig = SuperController.singleton.navigationRig;
+            var MonitorCenterCamera = SuperController.singleton.MonitorCenterCamera;
+            var _allowPossessSpringAdjustment = true;
+            var _possessPositionSpring = 10000f;
+            var _possessRotationSpring = 1000f;
+
+            // TODO: Taken from VaM, to cleanup
+            Possessor component = motionControllerHead.GetComponent<Possessor>();
+            Vector3 forwardPossessAxis = controller.GetForwardPossessAxis();
+            Vector3 upPossessAxis = controller.GetUpPossessAxis();
+            Vector3 up = navigationRig.up;
+            Vector3 fromDirection = Vector3.ProjectOnPlane(motionControllerHead.forward, up);
+            Vector3 vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRig.up);
+            if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControllerHead.up, up) > 0f)
+            {
+                vector = -vector;
+            }
+
+            Quaternion lhs = Quaternion.FromToRotation(fromDirection, vector);
+            navigationRig.rotation = lhs * navigationRig.rotation;
+            if (controller.canGrabRotation)
+            {
+                controller.AlignTo(component.autoSnapPoint, true);
+            }
+
+            Vector3 a = (!(controller.possessPoint != null)) ? controller.control.position : controller.possessPoint.position;
+            Vector3 b = a - component.autoSnapPoint.position;
+            Vector3 vector2 = navigationRig.position + b;
+            float num = Vector3.Dot(vector2 - navigationRig.position, up);
+            vector2 += up * (0f - num);
+            navigationRig.position = vector2;
+            SuperController.singleton.playerHeightAdjust += num;
+            if (MonitorCenterCamera != null)
+            {
+                MonitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
+                Vector3 localEulerAngles = MonitorCenterCamera.transform.localEulerAngles;
+                localEulerAngles.y = 0f;
+                localEulerAngles.z = 0f;
+                MonitorCenterCamera.transform.localEulerAngles = localEulerAngles;
+            }
+
+            controller.PossessMoveAndAlignTo(component.autoSnapPoint);
+        }
+
+        private void AutoSetup()
     {
         // TODO: Recalculate when the y offset is changed
         // TODO: Check when the person scale changes
@@ -785,12 +1012,12 @@ public class Snug : MVRScript, ISnug
         foreach (var anchorPoint in _anchorPoints)
         {
             if (!anchorPoint.Active) continue;
-            var anchorPointPos = anchorPoint.GetWorldPosition();
-            if (position.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetWorldPosition().y))
+            var anchorPointPos = anchorPoint.GetAdjustedWorldPosition();
+            if (position.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetAdjustedWorldPosition().y))
             {
                 lower = anchorPoint;
             }
-            else if (position.y < anchorPointPos.y && (upper == null || anchorPointPos.y < upper.GetWorldPosition().y))
+            else if (position.y < anchorPointPos.y && (upper == null || anchorPointPos.y < upper.GetAdjustedWorldPosition().y))
             {
                 upper = anchorPoint;
             }
@@ -802,8 +1029,8 @@ public class Snug : MVRScript, ISnug
             upper = lower;
 
         // Find the weight of both anchors (closest = strongest effect)
-        var upperPosition = upper.GetWorldPosition();
-        var lowerPosition = lower.GetWorldPosition();
+        var upperPosition = upper.GetAdjustedWorldPosition();
+        var lowerPosition = lower.GetAdjustedWorldPosition();
         var yUpperDelta = upperPosition.y - position.y;
         var yLowerDelta = position.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;
