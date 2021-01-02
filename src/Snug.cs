@@ -85,6 +85,8 @@ public class Snug : MVRScript, ISnug
 
             InitAnchors();
             InitAnchorsUI();
+
+            // TODO: Auto move eye target against mirror (to make the model look at herself)
         }
         catch (Exception exc)
         {
@@ -108,6 +110,8 @@ public class Snug : MVRScript, ISnug
 
         AutoSetup();
 
+        // TODO: Use overlays instead
+        // TODO: Try and make the model stand straight, not sure how I can do that
         SuperController.singleton.helpText = "Welcome to Embody's Wizard! Stand straight, and press select when ready. Make sure the VR person is also standing straight.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
@@ -127,30 +131,34 @@ public class Snug : MVRScript, ISnug
         SuperController.singleton.helpText = "Hand distance recorded. We will now start possession. Press select when ready.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
+        // TODO: Replace this by home made possession
         HeadPossess(headControl, true, true, true);
 
         SuperController.singleton.helpText = "Possession activated. Now put your hands on your real hips, and press select when ready.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
+        // TODO: Highlight the ring where we want the hands to be.
         var hipsAnchorPoint = _anchorPoints.First(a => a.Label == "Hips");
         var gameHipsCenter = hipsAnchorPoint.GetInGameWorldPosition();
         // TODO: Check the forward size too, and the offset.
         // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
         var realHipsWidth = Vector3.Distance(realLeftHand.position, realRightHand.position) - handsDistance;
-        var realHipsCenter = (realLeftHand.position + realRightHand.position) / 2f;
+        var realHipsXCenter = (realLeftHand.position + realRightHand.position) / 2f;
         hipsAnchorPoint.RealLifeSize = new Vector3(realHipsWidth, 0f, hipsAnchorPoint.InGameSize.z);
-        hipsAnchorPoint.RealLifeOffset = realHipsCenter - gameHipsCenter;
-        SuperController.LogMessage($"Real Hips height: {realHipsCenter.y}, Game Hips height: {gameHipsCenter}");
+        hipsAnchorPoint.RealLifeOffset = realHipsXCenter - gameHipsCenter;
+        SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");
         SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {hipsAnchorPoint.RealLifeSize.x}");
-        SuperController.LogMessage($"Real Hips center: {realHipsCenter}, Game Hips center: {gameHipsCenter}");
+        SuperController.LogMessage($"Real Hips center: {realHipsXCenter}, Game Hips center: {gameHipsCenter}");
 
         SuperController.singleton.helpText = "Now put your right hand at the same level as your hips but on the front, squeezed on you.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
-        realHipsCenter = hipsAnchorPoint.GetAdjustedWorldPosition();
-        hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realRightHand.position, gameHipsCenter) / 2f);
+        var adjustedHipsCenter = hipsAnchorPoint.GetAdjustedWorldPosition();
+        var realHipsFront = Vector3.MoveTowards(realRightHand.position, adjustedHipsCenter, handsDistance / 2f);
+        hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realHipsFront, adjustedHipsCenter) * 2f);
 
         hipsAnchorPoint.Update();
+        _possessHandsJSON.val = true;
 
         SuperController.singleton.helpText = "All done! Select Possess with Snug in Embody to enable possession with body proportion adjustments.";
         yield return new WaitForSeconds(3);
