@@ -14,35 +14,29 @@ public class Embody : MVRScript
     private PassengerModule _passengerModule;
     private SnugModule _snugModule;
     private WorldScaleModule _worldScaleModule;
+    private GameObject _modules;
 
     public override void Init()
     {
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
 
-        // TODO: Just an array or keep this simple?
-        var modules = new GameObject();
-        modules.transform.SetParent(transform, false);
-        modules.SetActive(false);
-        _hideGeometryModule = modules.AddComponent<HideGeometryModule>();
-        _hideGeometryModule.enabled = false;
-        _hideGeometryModule.plugin = this;
-        _hideGeometryModule.Init();
-        _offsetCameraModule = modules.AddComponent<OffsetCameraModule>();
-        _offsetCameraModule.enabled = false;
-        _offsetCameraModule.plugin = this;
+        _modules = new GameObject();
+        _modules.transform.SetParent(transform, false);
+        _modules.SetActive(false);
+
+        _hideGeometryModule = CreateModule<HideGeometryModule>();
+        _offsetCameraModule = CreateModule<OffsetCameraModule>();
+        _passengerModule = CreateModule<PassengerModule>();
+        _snugModule = CreateModule<SnugModule>();
+        _worldScaleModule = CreateModule<WorldScaleModule>();
+
         _offsetCameraModule.Init();
-        _passengerModule = modules.AddComponent<PassengerModule>();
-        _passengerModule.enabled = false;
-        _passengerModule.plugin = this;
+        _hideGeometryModule.Init();
         _passengerModule.Init();
-        _snugModule = modules.AddComponent<SnugModule>();
-        _snugModule.enabled = false;
-        _snugModule.plugin = this;
         _snugModule.Init();
-        _worldScaleModule = modules.AddComponent<WorldScaleModule>();
-        _worldScaleModule.enabled = false;
-        _worldScaleModule.plugin = this;
         _worldScaleModule.Init();
+
+        _modules.SetActive(true);
 
         _passengerActiveJSON = new JSONStorableBool("Passenger Active", false, val =>
         {
@@ -118,6 +112,14 @@ public class Embody : MVRScript
         var configureSnugBtn = CreateButton("Configure Snug", true);
         configureSnugJSON.dynamicButton = configureSnugBtn;
         */
+    }
+
+    private T CreateModule<T>() where T : MonoBehaviour, IEmbodyModule
+    {
+        var module = _modules.AddComponent<T>();
+        module.enabled = false;
+        module.plugin = this;
+        return module;
     }
 
     public void Update()

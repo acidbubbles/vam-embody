@@ -17,6 +17,7 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 
     public override void Init()
     {
+        if (plugin == null) throw new Exception("test");
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
         activeJSON = new JSONStorableBool("Active", false, (bool val) => Refresh());

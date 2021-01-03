@@ -4,11 +4,12 @@ using UnityEngine;
 
 public interface IEmbodyModule
 {
+    MVRScript plugin { get; set; }
 }
 
 public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 {
-    public MVRScript plugin;
+    public MVRScript plugin { get; set; }
 
     protected Atom containingAtom => plugin.containingAtom;
 
