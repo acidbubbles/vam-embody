@@ -1,12 +1,14 @@
 ﻿using System;
-using Interop;
 using UnityEngine;
 
-public class OffsetCamera : MVRScript, ICameraOffset
+public interface IOffsetCamera : IEmbodyModule
+{
+}
+
+public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 {
     public JSONStorableBool activeJSON { get; set; }
 
-    private InteropProxy _interop;
     private Possessor _possessor;
     private JSONStorableFloat _cameraDepthJSON;
     private JSONStorableFloat _cameraHeightJSON;
@@ -15,9 +17,6 @@ public class OffsetCamera : MVRScript, ICameraOffset
 
     public override void Init()
     {
-        _interop = new InteropProxy(this, containingAtom);
-        _interop.Init();
-
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
         activeJSON = new JSONStorableBool("Active", false, (bool val) => Refresh());
@@ -43,23 +42,17 @@ public class OffsetCamera : MVRScript, ICameraOffset
 
     public void OnEnable()
     {
-        if (_interop?.ready != true) return;
-
         ApplyCameraPosition(true);
     }
 
     public void OnDisable()
     {
-        if (_interop?.ready != true) return;
-
         ApplyCameraPosition(false);
     }
 
     public void Refresh()
     {
-        if (_interop?.ready != true) return;
-
-        ApplyCameraPosition(enabledJSON.val);
+        ApplyCameraPosition(enabled);
     }
 
     private void ApplyCameraPosition(bool active)

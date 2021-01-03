@@ -7,19 +7,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Interop;
 using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
 
-/// <summary>
-/// Snug
-/// By Acidbubbles
-/// Adjust hand alignement and position to match your actual body
-/// Source: https://github.com/acidbubbles/vam-wrist
-/// Note: See FixedUpdate for the implementation of the algorithm
-/// </summary>
-public class Snug : MVRScript, ISnug
+public interface ISnug : IEmbodyModule
+{
+}
+
+public class SnugModule : EmbodyModuleBase, ISnug
 {
     private const string _saveExt = "snugprofile";
     private const string _saveFolder = "Saves\\snugprofiles";
@@ -49,7 +45,6 @@ public class Snug : MVRScript, ISnug
     private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
     private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
     private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
-    private InteropProxy _interop;
 
     private static class VisualCueLineIndices
     {
@@ -63,12 +58,10 @@ public class Snug : MVRScript, ISnug
     {
         try
         {
-            _interop = new InteropProxy(this, containingAtom);
-            _interop.Init();
-
+            // TODO: This should be driven by Embody instead
             if (containingAtom?.type != "Person")
             {
-                enabledJSON.val = false;
+                enabled = false;
                 return;
             }
 
@@ -90,7 +83,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(Init)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Init)}: {exc}");
         }
 
         StartCoroutine(DeferredInit());
@@ -762,7 +755,8 @@ public class Snug : MVRScript, ISnug
         yield return new WaitForEndOfFrame();
         try
         {
-            if (!_loaded) containingAtom.RestoreFromLast(this);
+            // TODO: Bring this back in Embody
+            // if (!_loaded) containingAtom.RestoreFromLast(this);
             OnEnable();
             SyncSelectedAnchorJSON("");
             SyncHandsOffset();
@@ -770,7 +764,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(DeferredInit)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(DeferredInit)}: {exc}");
         }
         // TODO: Not if already loaded
         while (SuperController.singleton.isLoading)
@@ -781,7 +775,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(DeferredInit)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(DeferredInit)}: {exc}");
         }
     }
 
@@ -816,7 +810,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(GetJSON)}:  {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(GetJSON)}:  {exc}");
         }
 
         return json;
@@ -865,7 +859,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(RestoreFromJSON)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(RestoreFromJSON)}: {exc}");
         }
     }
 
@@ -955,7 +949,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(Update)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Update)}: {exc}");
             OnDisable();
         }
     }
@@ -996,7 +990,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(FixedUpdate)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(FixedUpdate)}: {exc}");
             OnDisable();
         }
     }
@@ -1098,7 +1092,7 @@ public class Snug : MVRScript, ISnug
         if (containingAtom == null) return;
         if (containingAtom.type != "Person")
         {
-            enabledJSON.val = false;
+            enabled = false;
             return;
         }
 
@@ -1108,7 +1102,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(OnEnable)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(OnEnable)}: {exc}");
         }
     }
 
@@ -1121,7 +1115,7 @@ public class Snug : MVRScript, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(Snug)}.{nameof(OnDisable)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(OnDisable)}: {exc}");
         }
     }
 

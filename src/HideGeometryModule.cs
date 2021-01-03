@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Handlers;
-using Interop;
 using UnityEngine;
 using Object = System.Object;
 
-public class HideGeometry : MVRScript, IHideGeometry
+public interface IHideGeometry : IEmbodyModule
+{
+}
+
+public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
 {
     private Atom _person;
     private Possessor _possessor;
@@ -27,19 +30,15 @@ public class HideGeometry : MVRScript, IHideGeometry
     private bool _failedOnce;
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
-    private InteropProxy _interop;
 
     public override void Init()
     {
         try
         {
-            _interop = new InteropProxy(this, containingAtom);
-            _interop.Init();
-
             if (containingAtom?.type != "Person")
             {
                 // SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
-                enabledJSON.val = false;
+                enabled = false;
                 return;
             }
 
@@ -150,10 +149,9 @@ public class HideGeometry : MVRScript, IHideGeometry
 
     public void OnEnable()
     {
-        if (_interop?.ready != true) return;
         if (containingAtom.type != "Person")
         {
-            enabledJSON.val = false;
+            enabled = false;
             return;
         }
 
@@ -162,7 +160,6 @@ public class HideGeometry : MVRScript, IHideGeometry
 
     public void OnDisable()
     {
-        if (_interop?.ready != true) return;
         if (ReferenceEquals(_person, null)) return;
 
         _dirty = false;

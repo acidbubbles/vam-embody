@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Interop;
 using MeshVR;
 using UnityEngine;
 
-public class Passenger : MVRScript, IPassenger
+public interface IPassenger : IEmbodyModule
+{
+}
+
+public class PassengerModule : EmbodyModuleBase, IPassenger
 {
     private const string _targetNone = "none";
 
@@ -35,7 +38,6 @@ public class Passenger : MVRScript, IPassenger
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
-    private InteropProxy _interop;
     private JSONStorableBool _lookAtJSON;
     private JSONStorableFloat _lookAtWeightJSON;
     private FreeControllerV3 _lookAt;
@@ -45,8 +47,6 @@ public class Passenger : MVRScript, IPassenger
         const bool leftSide = false;
         const bool rightSide = true;
 
-        _interop = new InteropProxy(this, containingAtom);
-        _interop.Init();
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
@@ -163,18 +163,16 @@ public class Passenger : MVRScript, IPassenger
 
     private void Reapply()
     {
-        if (enabledJSON?.val != true) return;
-        enabledJSON.val = false;
+        if (!enabled) return;
+        enabled = false;
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
-        enabledJSON.val = true;
+        enabled = true;
         UpdateNavigationRig(true);
     }
 
     public void OnEnable()
     {
-        if (_interop?.ready != true) return;
-
         try
         {
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
@@ -185,7 +183,7 @@ public class Passenger : MVRScript, IPassenger
 
             if (!CanActivate() || !IsValid())
             {
-                enabledJSON.val = false;
+                enabled = false;
                 return;
             }
 
@@ -210,7 +208,7 @@ public class Passenger : MVRScript, IPassenger
         catch (Exception exc)
         {
             SuperController.LogError($"Embody: Failed to activate Passenger.\n{exc}");
-            enabledJSON.val = false;
+            enabled = false;
         }
     }
 
@@ -246,8 +244,6 @@ public class Passenger : MVRScript, IPassenger
 
     public void OnDisable()
     {
-        if (_interop?.ready != true) return;
-
         GlobalSceneOptions.singleton.disableNavigation = false;
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;
@@ -273,7 +269,7 @@ public class Passenger : MVRScript, IPassenger
         {
             if (!IsValid())
             {
-                enabledJSON.val = false;
+                enabled = false;
                 return;
             }
 
@@ -282,7 +278,7 @@ public class Passenger : MVRScript, IPassenger
         catch (Exception e)
         {
             SuperController.LogError($"Embody: Failed to apply Passenger.\n{e}");
-            enabledJSON.val = false;
+            enabled = false;
         }
     }
 

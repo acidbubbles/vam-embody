@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Linq;
-using Interop;
 using UnityEngine;
 
-public class WorldScale : MVRScript, IWorldScale
+// TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
+public interface IWorldScale : IEmbodyModule
+{
+}
+
+public class WorldScaleModule : EmbodyModuleBase, IWorldScale
 {
     public JSONStorableBool activeJSON { get; set; }
 
-    private InteropProxy _interop;
     private float _originalWorldScale;
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
 
     public override void Init()
     {
-        _interop = new InteropProxy(this, containingAtom);
-        _interop.Init();
-
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
 
@@ -25,16 +25,12 @@ public class WorldScale : MVRScript, IWorldScale
 
     public void OnEnable()
     {
-        if (_interop?.ready != true) return;
-
         // TODO: Disable the hologrid here? SuperController.singleton.showNavigationHologrid
         ApplyAutoWorldScale();
     }
 
     public void OnDisable()
     {
-        if (_interop?.ready != true) return;
-
         if (_originalWorldScale == 0f) return;
 
         SuperController.singleton.worldScale = _originalWorldScale;

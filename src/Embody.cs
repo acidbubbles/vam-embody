@@ -1,33 +1,63 @@
 ﻿using System;
-using Interop;
 using UnityEngine;
 
 public class Embody : MVRScript
 {
-    private InteropProxy _interop;
     private JSONStorableStringChooser _toggleKeyJSON;
     private KeyCode _toggleKey = KeyCode.None;
     private FreeControllerV3 _headControl;
     private JSONStorableBool _passengerActiveJSON;
     private JSONStorableBool _useWorldScaleJSON;
     private JSONStorableBool _possessionActiveJSON;
+    private HideGeometryModule _hideGeometryModule;
+    private OffsetCameraModule _offsetCameraModule;
+    private PassengerModule _passengerModule;
+    private SnugModule _snugModule;
+    private WorldScaleModule _worldScaleModule;
 
     public override void Init()
     {
-        _interop = new InteropProxy(this, containingAtom);
-        _interop.StartInitDeferred();
-
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
+
+        // TODO: Just an array or keep this simple?
+        var modules = new GameObject();
+        modules.transform.SetParent(transform, false);
+        modules.SetActive(false);
+        _hideGeometryModule = modules.AddComponent<HideGeometryModule>();
+        _hideGeometryModule.enabled = false;
+        _hideGeometryModule.plugin = this;
+        _hideGeometryModule.Init();
+        _offsetCameraModule = modules.AddComponent<OffsetCameraModule>();
+        _offsetCameraModule.enabled = false;
+        _offsetCameraModule.plugin = this;
+        _offsetCameraModule.Init();
+        _passengerModule = modules.AddComponent<PassengerModule>();
+        _passengerModule.enabled = false;
+        _passengerModule.plugin = this;
+        _passengerModule.Init();
+        _snugModule = modules.AddComponent<SnugModule>();
+        _snugModule.enabled = false;
+        _snugModule.plugin = this;
+        _snugModule.Init();
+        _worldScaleModule = modules.AddComponent<WorldScaleModule>();
+        _worldScaleModule.enabled = false;
+        _worldScaleModule.plugin = this;
+        _worldScaleModule.Init();
 
         _passengerActiveJSON = new JSONStorableBool("Passenger Active", false, val =>
         {
-            if (!_interop.ready || _possessionActiveJSON.val) return;
+            if (_possessionActiveJSON.val)
+            {
+                _passengerActiveJSON.valNoCallback = false;
+                return;
+            }
+
             if (val)
             {
                 if (_useWorldScaleJSON.val)
-                    ((MVRScript) _interop.worldScale).enabledJSON.val = true;
-                ((MVRScript) _interop.hideGeometry).enabledJSON.val = true;
-                ((MVRScript) _interop.passenger).enabledJSON.val = true;
+                    _worldScaleModule.enabled = true;
+                _hideGeometryModule.enabled = true;
+                _passengerModule.enabled = true;
             }
             else
             {
@@ -46,9 +76,9 @@ public class Embody : MVRScript
                 _passengerActiveJSON.val = false;
 
             if (_useWorldScaleJSON.val)
-                ((MVRScript) _interop.worldScale).enabledJSON.val = true;
-            ((MVRScript) _interop.hideGeometry).enabledJSON.val = true;
-            ((MVRScript) _interop.cameraOffset).enabledJSON.val = true;
+                _worldScaleModule.enabled = true;
+            _hideGeometryModule.enabled = true;
+            _offsetCameraModule.enabled = true;
         })
         {
             isStorable = false
@@ -66,6 +96,8 @@ public class Embody : MVRScript
         _useWorldScaleJSON = new JSONStorableBool("UseWorldScale", true, (bool val) => Refresh());
         CreateToggle(_useWorldScaleJSON, true).label = "Use world scale";
 
+        // TODO: Implement a dynamic UI
+        /*
         var configureWorldScaleJSON = new JSONStorableAction("ConfigureWorldScale", () => { _interop.SelectPlugin(_interop.worldScale); });
         var configureWorldScaleBtn = CreateButton("Configure world scale", true);
         configureWorldScaleJSON.dynamicButton = configureWorldScaleBtn;
@@ -85,6 +117,7 @@ public class Embody : MVRScript
         var configureSnugJSON = new JSONStorableAction("ConfigureSnug", () => { _interop.SelectPlugin(_interop.snug); });
         var configureSnugBtn = CreateButton("Configure Snug", true);
         configureSnugJSON.dynamicButton = configureSnugBtn;
+        */
     }
 
     public void Update()
@@ -129,9 +162,9 @@ public class Embody : MVRScript
 
     public void DeactivateAll()
     {
-        if (_interop.worldScale != null) ((MVRScript) _interop.worldScale).enabledJSON.val = false;
-        if (_interop.cameraOffset != null) ((MVRScript) _interop.cameraOffset).enabledJSON.val = false;
-        if (_interop.hideGeometry != null) ((MVRScript) _interop.hideGeometry).enabledJSON.val = false;
-        if (_interop.passenger != null) ((MVRScript) _interop.passenger).enabledJSON.val = false;
+        if (_worldScaleModule != null) _worldScaleModule.enabled = false;
+        if (_offsetCameraModule != null) _offsetCameraModule.enabled = false;
+        if (_hideGeometryModule != null) _hideGeometryModule.enabled = false;
+        if (_passengerModule != null) _passengerModule.enabled = false;
     }
 }
