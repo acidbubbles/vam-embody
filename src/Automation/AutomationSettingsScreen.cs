@@ -11,9 +11,9 @@
 
     public void Show()
     {
-            CreateToggle(_automation.possessionActiveJSON).toggle.interactable = false;
+        CreateToggle(_automation.possessionActiveJSON).toggle.interactable = false;
 
-            var toggleKeyPopup = CreateFilterablePopup(_automation.toggleKeyJSON);
-            toggleKeyPopup.popupPanelHeight = 600f;
+        var toggleKeyPopup = CreateFilterablePopup(_automation.toggleKeyJSON);
+        toggleKeyPopup.popupPanelHeight = 600f;
     }
 }

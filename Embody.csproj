@@ -71,6 +71,8 @@
     <Compile Include="src\Common\QuaternionExtensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
     <Compile Include="src\Embody.cs" />
+    <Compile Include="src\EyeTarget\EyeTargetModule.cs" />
+    <Compile Include="src\EyeTarget\EyeTargetSettingsScreen.cs" />
     <Compile Include="src\HideGeometry\Handlers\HairHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\HideGeometry\Handlers\IHandler.cs" />

@@ -170,6 +170,8 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
 
         try
         {
+            // TODO: Instead automatically offset from the eyes center (between both eye bones)
+
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == linkJSON.val);
             if (lookAtJSON.val)
                 _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");

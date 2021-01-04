@@ -10,13 +10,6 @@ public class Embody : MVRScript, IEmbody
 {
     public JSONStorableBool activeJSON { get; private set; }
 
-    private JSONStorableBool _useWorldScaleJSON;
-    private AutomationModule _automationModule;
-    private HideGeometryModule _hideGeometryModule;
-    private OffsetCameraModule _offsetCameraModule;
-    private PassengerModule _passengerModule;
-    private SnugModule _snugModule;
-    private WorldScaleModule _worldScaleModule;
     private GameObject _modules;
     private ScreensManager _screensManager;
 
@@ -28,39 +21,43 @@ public class Embody : MVRScript, IEmbody
             _modules.transform.SetParent(transform, false);
             _modules.SetActive(false);
 
-            _automationModule = CreateModule<AutomationModule>();
-            _hideGeometryModule = CreateModule<HideGeometryModule>();
-            _offsetCameraModule = CreateModule<OffsetCameraModule>();
-            _passengerModule = CreateModule<PassengerModule>();
-            _snugModule = CreateModule<SnugModule>();
-            _worldScaleModule = CreateModule<WorldScaleModule>();
+            var automationModule = CreateModule<AutomationModule>();
+            var hideGeometryModule = CreateModule<HideGeometryModule>();
+            var offsetCameraModule = CreateModule<OffsetCameraModule>();
+            var passengerModule = CreateModule<PassengerModule>();
+            var snugModule = CreateModule<SnugModule>();
+            var worldScaleModule = CreateModule<WorldScaleModule>();
+            var eyeTargetModule = CreateModule<EyeTargetModule>();
 
-            _automationModule.embody = this;
-            _automationModule.Init();
-            _hideGeometryModule.Init();
-            _offsetCameraModule.Init();
-            _passengerModule.Init();
-            _snugModule.Init();
-            _worldScaleModule.Init();
+            automationModule.embody = this;
+            automationModule.Init();
+            hideGeometryModule.Init();
+            offsetCameraModule.Init();
+            passengerModule.Init();
+            snugModule.Init();
+            worldScaleModule.Init();
+            eyeTargetModule.Init();
 
             _modules.SetActive(true);
 
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(this));
-            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, _passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, _snugModule));
-            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, _hideGeometryModule));
-            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(this, _offsetCameraModule));
+            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, passengerModule));
+            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule));
+            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, hideGeometryModule));
+            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(this, offsetCameraModule));
+            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(this));
+            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(this, eyeTargetModule));
             _screensManager.Add(PresetsScreen.ScreenName, new PresetsScreen(this));
-            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, _automationModule));
+
             _screensManager.Show(MainScreen.ScreenName);
             CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
 
             // TODO: Choose a mode (Snug, Passenger or Standard), now only Passenger is here...
             activeJSON = new JSONStorableBool("Active", false, val =>
             {
-                if (_automationModule.possessionActiveJSON.val)
+                if (automationModule.possessionActiveJSON.val)
                 {
                     activeJSON.valNoCallback = false;
                     return;
@@ -70,12 +67,15 @@ public class Embody : MVRScript, IEmbody
                 {
                     // if (_useWorldScaleJSON.val)
                     //     _worldScaleModule.enabled = true;
-                    _hideGeometryModule.enabled = true;
-                    _passengerModule.enabled = true;
+                    hideGeometryModule.enabled = true;
+                    passengerModule.enabled = true;
                 }
                 else
                 {
-                    DeactivateAll();
+                    if (worldScaleModule != null) worldScaleModule.enabled = false;
+                    if (offsetCameraModule != null) offsetCameraModule.enabled = false;
+                    if (hideGeometryModule != null) hideGeometryModule.enabled = false;
+                    if (passengerModule != null) passengerModule.enabled = false;
                 }
             })
             {
@@ -103,13 +103,5 @@ public class Embody : MVRScript, IEmbody
     public void OnDisable()
     {
         activeJSON.val = false;
-    }
-
-    public void DeactivateAll()
-    {
-        if (_worldScaleModule != null) _worldScaleModule.enabled = false;
-        if (_offsetCameraModule != null) _offsetCameraModule.enabled = false;
-        if (_hideGeometryModule != null) _hideGeometryModule.enabled = false;
-        if (_passengerModule != null) _passengerModule.enabled = false;
     }
 }
