@@ -51,9 +51,10 @@ public class Embody : MVRScript
 
             CreateScrollablePopup(_screensManager.screensJSON);
 
+            // TODO: Instead, chose a mode (Snug, Passenger or Standard) and have a single Active checkbox
             _passengerActiveJSON = new JSONStorableBool("Passenger Active", false, val =>
             {
-                if (_possessionActiveJSON.val)
+                if (_headControl != null && _headControl.possessed)
                 {
                     _passengerActiveJSON.valNoCallback = false;
                     return;
@@ -168,7 +169,7 @@ public class Embody : MVRScript
         }
         else if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
         {
-                _passengerActiveJSON.val = false;
+            _passengerActiveJSON.val = false;
         }
     }
 

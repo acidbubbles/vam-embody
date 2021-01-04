@@ -4,11 +4,13 @@ using UnityEngine;
 
 public interface IEmbodyModule
 {
+    JSONStorableBool enabledJSON { get; }
     MVRScript plugin { get; set; }
 }
 
 public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 {
+    public JSONStorableBool enabledJSON { get; private set; }
     public MVRScript plugin { get; set; }
 
     protected Atom containingAtom => plugin.containingAtom;
@@ -22,6 +24,17 @@ public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void Init()
     {
+        enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
+    }
+
+    public virtual void OnEnable()
+    {
+        enabledJSON.valNoCallback = true;
+    }
+
+    public virtual void OnDisable()
+    {
+        enabledJSON.valNoCallback = false;
     }
 
     [Obsolete]

@@ -17,20 +17,26 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScale
 
     public override void Init()
     {
+        base.Init();
+
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
 
         // TODO: Option for using eyes, vr height, or manual
     }
 
-    public void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
+
         // TODO: Disable the hologrid here? SuperController.singleton.showNavigationHologrid
         ApplyAutoWorldScale();
     }
 
-    public void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
+
         if (_originalWorldScale == 0f) return;
 
         SuperController.singleton.worldScale = _originalWorldScale;

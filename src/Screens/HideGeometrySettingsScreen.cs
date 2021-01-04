@@ -11,6 +11,7 @@
 
     public void Show()
     {
+        CreateToggle(_hideGeometry.enabledJSON, true);
         CreateToggle(_hideGeometry.hideFaceJSON, true);
         CreateToggle(_hideGeometry.hideHairJSON, true);
     }

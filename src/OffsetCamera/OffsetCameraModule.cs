@@ -19,6 +19,8 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 
     public override void Init()
     {
+        base.Init();
+
         if (plugin == null) throw new Exception("test");
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
@@ -28,13 +30,17 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
         clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, 0.01f, .2f, true);
     }
 
-    public void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
+
         ApplyCameraPosition(true);
     }
 
-    public void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
+
         ApplyCameraPosition(false);
     }
 

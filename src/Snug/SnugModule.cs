@@ -67,6 +67,8 @@ public class SnugModule : EmbodyModuleBase, ISnug
     {
         try
         {
+            base.Init();
+
             // TODO: This should be driven by Embody instead
             if (containingAtom?.type != "Person")
             {
@@ -915,8 +917,10 @@ public class SnugModule : EmbodyModuleBase, ISnug
 
     #region Lifecycle
 
-    public void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
+
         if (containingAtom == null) return;
         if (containingAtom.type != "Person")
         {
@@ -934,8 +938,10 @@ public class SnugModule : EmbodyModuleBase, ISnug
         }
     }
 
-    public void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
+
         try
         {
             _ready = false;

@@ -61,6 +61,8 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
 
     public override void Init()
     {
+        base.Init();
+
         const bool leftSide = false;
         const bool rightSide = true;
 
@@ -162,8 +164,10 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
         UpdateNavigationRig(true);
     }
 
-    public void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
+
         try
         {
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == linkJSON.val);
@@ -233,8 +237,10 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
         return true;
     }
 
-    public void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
+
         GlobalSceneOptions.singleton.disableNavigation = false;
 
         SuperController.singleton.navigationRig.rotation = _previousRotation;

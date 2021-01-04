@@ -17,7 +17,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
     private DAZCharacterSelector _selector;
     public JSONStorableBool hideFaceJSON { get; set; }
     public JSONStorableBool hideHairJSON { get; set; }
-    public JSONStorableBool activeJSON { get; set; }
 
     private SkinHandler _skinHandler;
     private List<HairHandler> _hairHandlers;
@@ -36,6 +35,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
     {
         try
         {
+            base.Init();
+
             if (containingAtom?.type != "Person")
             {
                 // SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
@@ -47,8 +48,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
 
-
             InitControls();
+            // TODO: Move to Enable/Disable
             Camera.onPreRender += OnPreRender;
             Camera.onPostRender += OnPostRender;
         }
@@ -131,8 +132,10 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
         }
     }
 
-    public void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
+
         if (containingAtom.type != "Person")
         {
             enabled = false;
@@ -142,8 +145,10 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
         ApplyAll(true);
     }
 
-    public void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
+
         if (ReferenceEquals(_person, null)) return;
 
         _dirty = false;
