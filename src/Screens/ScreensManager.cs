@@ -27,6 +27,7 @@ public class ScreensManager
             if (_screens.TryGetValue(_currentScreenName, out screen))
                 screen.Hide();
             _currentScreenName = null;
+            screensJSON.valNoCallback = screenName;
         }
 
         if (!string.IsNullOrEmpty(screenName))
@@ -34,6 +35,7 @@ public class ScreensManager
             if (_screens.TryGetValue(screenName, out screen))
                 screen.Show();
             _currentScreenName = screenName;
+            screensJSON.valNoCallback = screenName;
         }
     }
 }
