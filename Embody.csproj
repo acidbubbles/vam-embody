@@ -64,9 +64,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="src\Anchors\ControllerAnchorPoint.cs" />
-    <Compile Include="src\Anchors\ControllerAnchorPointVisualCue.cs" />
     <Compile Include="src\Common\EmbodyModuleBase.cs" />
+    <Compile Include="src\Common\ListExtensions.cs" />
     <Compile Include="src\Common\QuaternionExtensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
     <Compile Include="src\Embody.cs" />
@@ -77,6 +76,17 @@
     <Compile Include="src\HideGeometry\HideGeometryModule.cs" />
     <Compile Include="src\OffsetCamera\OffsetCameraModule.cs" />
     <Compile Include="src\Passenger\PassengerModule.cs" />
+    <Compile Include="src\Screens\HideGeometrySettingsScreen.cs" />
+    <Compile Include="src\Screens\MainScreen.cs" />
+    <Compile Include="src\Screens\OffsetCameraSettingsScreen.cs" />
+    <Compile Include="src\Screens\PassengerSettingsScreen.cs" />
+    <Compile Include="src\Screens\PresetsScreen.cs" />
+    <Compile Include="src\Screens\ScreenBase.cs" />
+    <Compile Include="src\Screens\ScreensManager.cs" />
+    <Compile Include="src\Screens\SnugSettingsScreen.cs" />
+    <Compile Include="src\Screens\WorldScaleSettingsScreen.cs" />
+    <Compile Include="src\Snug\Anchors\ControllerAnchorPoint.cs" />
+    <Compile Include="src\Snug\Anchors\ControllerAnchorPointVisualCue.cs" />
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />
   </ItemGroup>

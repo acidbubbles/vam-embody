@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Handlers;
 using UnityEngine;
-using Object = System.Object;
 
 public interface IHideGeometry : IEmbodyModule
 {
+    JSONStorableBool hideFaceJSON { get; }
+    JSONStorableBool hideHairJSON { get; }
 }
 
 public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
@@ -121,25 +122,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
     {
         try
         {
-            {
-                hideFaceJSON = new JSONStorableBool("Hide face", true);
-                RegisterBool(hideFaceJSON);
-                var hideFaceToggle = CreateToggle(hideFaceJSON, true);
-                hideFaceToggle.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    _dirty = true;
-                });
-            }
-
-            {
-                hideHairJSON = new JSONStorableBool("Hide hair", true);
-                RegisterBool(hideHairJSON);
-                var hideHairToggle = CreateToggle(hideHairJSON, true);
-                hideHairToggle.toggle.onValueChanged.AddListener(delegate (bool val)
-                {
-                    _dirty = true;
-                });
-            }
+            hideFaceJSON = new JSONStorableBool("Hide face", true, (bool _) => _dirty = true);
+            hideHairJSON = new JSONStorableBool("Hide hair", true, (bool _) => _dirty = true);
         }
         catch (Exception e)
         {

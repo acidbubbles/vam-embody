@@ -3,42 +3,29 @@ using UnityEngine;
 
 public interface IOffsetCamera : IEmbodyModule
 {
+    JSONStorableFloat cameraDepthJSON { get; }
+    JSONStorableFloat cameraHeightJSON { get; }
+    JSONStorableFloat cameraPitchJSON { get; }
+    JSONStorableFloat clipDistanceJSON { get; }
 }
 
 public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 {
-    public JSONStorableBool activeJSON { get; set; }
-
     private Possessor _possessor;
-    private JSONStorableFloat _cameraDepthJSON;
-    private JSONStorableFloat _cameraHeightJSON;
-    private JSONStorableFloat _cameraPitchJSON;
-    private JSONStorableFloat _clipDistanceJSON;
+    public JSONStorableFloat cameraDepthJSON { get; set; }
+    public JSONStorableFloat cameraHeightJSON { get; set; }
+    public JSONStorableFloat cameraPitchJSON { get; set; }
+    public JSONStorableFloat clipDistanceJSON { get; set; }
 
     public override void Init()
     {
         if (plugin == null) throw new Exception("test");
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
-        activeJSON = new JSONStorableBool("Active", false, (bool val) => Refresh());
-        RegisterBool(activeJSON);
-        CreateToggle(activeJSON, true);
-
-        _cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);
-        RegisterFloat(_cameraDepthJSON);
-        CreateSlider(_cameraDepthJSON, false).label = "Depth adjust";
-
-        _cameraHeightJSON = new JSONStorableFloat("CameraHeightAdjust", 0f, (float val) => Refresh(), -0.05f, 0.05f, false);
-        RegisterFloat(_cameraHeightJSON);
-        CreateSlider(_cameraHeightJSON, false).label = "Height adjust";
-
-        _cameraPitchJSON = new JSONStorableFloat("CameraPitchAdjust", 0f, (float val) => Refresh(), -135f, 45f, true);
-        RegisterFloat(_cameraPitchJSON);
-        CreateSlider(_cameraPitchJSON, false).label = "Pitch adjust";
-
-        _clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, 0.01f, .2f, true);
-        RegisterFloat(_clipDistanceJSON);
-        CreateSlider(_clipDistanceJSON, false).label = "Clip distance";
+        cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);
+        cameraHeightJSON = new JSONStorableFloat("CameraHeightAdjust", 0f, (float val) => Refresh(), -0.05f, 0.05f, false);
+        cameraPitchJSON = new JSONStorableFloat("CameraPitchAdjust", 0f, (float val) => Refresh(), -135f, 45f, true);
+        clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, 0.01f, .2f, true);
     }
 
     public void OnEnable()
@@ -61,11 +48,11 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
         try
         {
             var mainCamera = CameraTarget.centerTarget.targetCamera;
-            mainCamera.nearClipPlane = active ? _clipDistanceJSON.val : 0.01f;
+            mainCamera.nearClipPlane = active ? clipDistanceJSON.val : 0.01f;
             var mainCameraTransform = mainCamera.transform;
-            var cameraDepth = active ? _cameraDepthJSON.val : 0;
-            var cameraHeight = active ? _cameraHeightJSON.val : 0;
-            var cameraPitch = active ? _cameraPitchJSON.val : 0;
+            var cameraDepth = active ? cameraDepthJSON.val : 0;
+            var cameraHeight = active ? cameraHeightJSON.val : 0;
+            var cameraPitch = active ? cameraPitchJSON.val : 0;
 
             var possessorTransform = _possessor.transform;
             var pos = possessorTransform.position;

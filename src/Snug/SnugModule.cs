@@ -13,6 +13,14 @@ using UnityEngine;
 
 public interface ISnug : IEmbodyModule
 {
+    Vector3 palmToWristOffset { get; set; }
+    Vector3 handRotateOffset { get; set; }
+    List<ControllerAnchorPoint> anchorPoints { get; }
+    JSONStorableFloat falloffJSON { get; }
+    JSONStorableBool showVisualCuesJSON { get; }
+    JSONStorableBool possessHandsJSON { get; }
+    JSONStorableBool disableSelectionJSON { get; set; }
+    IEnumerator Wizard();
 }
 
 public class SnugModule : EmbodyModuleBase, ISnug
@@ -20,31 +28,32 @@ public class SnugModule : EmbodyModuleBase, ISnug
     private const string _saveExt = "snugprofile";
     private const string _saveFolder = "Saves\\snugprofiles";
 
+    public Vector3 palmToWristOffset { get; set; }
+    public Vector3 handRotateOffset { get; set; }
+    public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
+    // TODO: Oops, this was never saved!
+    public JSONStorableFloat falloffJSON { get; private set; }
+    public JSONStorableBool showVisualCuesJSON { get; private set; }
+    public JSONStorableBool possessHandsJSON { get; private set; }
+    public JSONStorableBool disableSelectionJSON { get; set; }
+
     private readonly List<GameObject> _cues = new List<GameObject>();
-    private readonly List<ControllerAnchorPoint> _anchorPoints = new List<ControllerAnchorPoint>();
     private bool _ready, _loaded;
     private bool _leftHandActive, _rightHandActive;
     private GameObject _leftHandTarget, _rightHandTarget;
-    private JSONStorableBool _possessHandsJSON;
-    private JSONStorableFloat _falloffJSON;
-    private JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
-    private JSONStorableFloat _handRotateXJSON, _handRotateYJSON, _handRotateZJSON;
     private FreeControllerV3 _personLHandController, _personRHandController;
     private Transform _leftAutoSnapPoint, _rightAutoSnapPoint;
-    private Vector3 _palmToWristOffset;
-    private Vector3 _handRotateOffset;
-    private JSONStorableBool _showVisualCuesJSON;
-    private JSONStorableStringChooser _selectedAnchorsJSON;
-    private JSONStorableFloat _anchorVirtSizeXJSON, _anchorVirtSizeZJSON;
-    private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
-    private JSONStorableFloat _anchorPhysOffsetXJSON, _anchorPhysOffsetYJSON, _anchorPhysOffsetZJSON;
-    private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
-    private JSONStorableBool _anchorActiveJSON;
     private readonly Vector3[] _lHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
     private readonly Vector3[] _rHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
     private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
     private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
     private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
+    private struct FreeControllerV3Snapshot
+    {
+        public bool canGrabPosition;
+        public bool canGrabRotation;
+    }
+    private readonly Dictionary<FreeControllerV3, FreeControllerV3Snapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3Snapshot>();
 
     private static class VisualCueLineIndices
     {
@@ -65,19 +74,12 @@ public class SnugModule : EmbodyModuleBase, ISnug
                 return;
             }
 
-            CreateButton("Setup Wizard").button.onClick.AddListener(() => StartCoroutine(Wizard()));
-
-            InitPossessHandsUI();
-            InitVisualCuesUI();
-            InitArmForRecordUI();
-            InitDisableSelectionUI();
-            CreateSpacer().height = 10f;
-            InitPresetUI();
-            CreateSpacer().height = 10f;
-            InitHandsSettingsUI();
-
             InitAnchors();
-            InitAnchorsUI();
+
+            InitHands();
+            InitVisualCues();
+            InitDisableSelection();
+            InitHandsSettings();
 
             // TODO: Auto move eye target against mirror (to make the model look at herself)
         }
@@ -89,7 +91,8 @@ public class SnugModule : EmbodyModuleBase, ISnug
         StartCoroutine(DeferredInit());
     }
 
-    private IEnumerator Wizard()
+    // TODO: This should be in it's own class
+    public IEnumerator Wizard()
     {
         yield return 0;
 
@@ -131,7 +134,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
         // TODO: Highlight the ring where we want the hands to be.
-        var hipsAnchorPoint = _anchorPoints.First(a => a.Label == "Hips");
+        var hipsAnchorPoint = anchorPoints.First(a => a.Label == "Hips");
         var gameHipsCenter = hipsAnchorPoint.GetInGameWorldPosition();
         // TODO: Check the forward size too, and the offset.
         // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
@@ -151,7 +154,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realHipsFront, adjustedHipsCenter) * 2f);
 
         hipsAnchorPoint.Update();
-        _possessHandsJSON.val = true;
+        possessHandsJSON.val = true;
 
         SuperController.singleton.helpText = "All done! Select Possess with Snug in Embody to enable possession with body proportion adjustments.";
         yield return new WaitForSeconds(3);
@@ -325,13 +328,13 @@ public class SnugModule : EmbodyModuleBase, ISnug
         // TODO: Recalculate when the y offset is changed
         // TODO: Check when the person scale changes
         var colliders = ScanBodyColliders().ToList();
-        foreach (var anchor in _anchorPoints)
+        foreach (var anchor in anchorPoints)
         {
             if (anchor.Locked) continue;
             // if (anchor.Label != "Abdomen") continue;
             AutoSetup(anchor.RigidBody, anchor, colliders);
         }
-        SyncSelectedAnchorJSON(null);
+        // TODO: If the UI is open, the sliders will be wrong. Determine when is the right time to do the auto-setup.
     }
 
     private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor, List<Collider> colliders)
@@ -422,7 +425,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         }
     }
 
-    private void InitPossessHandsUI()
+    private void InitHands()
     {
         var s = SuperController.singleton;
 
@@ -458,7 +461,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         rightHandRigidBody.isKinematic = true;
         rightHandRigidBody.detectCollisions = false;
 
-        _possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
+        possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
         {
             if (!_ready) return;
             if (val)
@@ -484,13 +487,12 @@ public class SnugModule : EmbodyModuleBase, ISnug
                 }
             }
         }) {isStorable = false};
-        RegisterBool(_possessHandsJSON);
-        CreateToggle(_possessHandsJSON);
+        RegisterBool(possessHandsJSON);
     }
 
-    private void InitVisualCuesUI()
+    private void InitVisualCues()
     {
-        _showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
+        showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
         {
             if (!_ready) return;
             if (val)
@@ -501,31 +503,12 @@ public class SnugModule : EmbodyModuleBase, ISnug
         {
             isStorable = false
         };
-        RegisterBool(_showVisualCuesJSON);
-        CreateToggle(_showVisualCuesJSON);
+        RegisterBool(showVisualCuesJSON);
     }
 
-    private void InitArmForRecordUI()
+    private void InitDisableSelection()
     {
-        CreateButton("Arm hands for record").button.onClick.AddListener(() =>
-        {
-            SuperController.singleton.ArmAllControlledControllersForRecord();
-            _personLHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
-            _personRHandController.GetComponent<MotionAnimationControl>().armedForRecord = true;
-        });
-    }
-
-    private struct FreeControllerV3Snapshot
-    {
-        public bool canGrabPosition;
-        public bool canGrabRotation;
-    }
-
-    private readonly Dictionary<FreeControllerV3, FreeControllerV3Snapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3Snapshot>();
-
-    private void InitDisableSelectionUI()
-    {
-        var disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, (bool val) =>
+        disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, (bool val) =>
         {
             if (val)
             {
@@ -550,78 +533,17 @@ public class SnugModule : EmbodyModuleBase, ISnug
                 _previousState.Clear();
             }
         });
-        CreateToggle(disableSelectionJSON);
     }
 
-    private void InitPresetUI()
+    private void InitHandsSettings()
     {
-        var loadPresetUI = CreateButton("Load Preset", false);
-        loadPresetUI.button.onClick.AddListener(() =>
-        {
-            FileManagerSecure.CreateDirectory(_saveFolder);
-            var shortcuts = FileManagerSecure.GetShortCutsForDirectory(_saveFolder);
-            SuperController.singleton.GetMediaPathDialog((string path) =>
-            {
-                if (string.IsNullOrEmpty(path)) return;
-                JSONClass jc = (JSONClass) LoadJSON(path);
-                RestoreFromJSON(jc);
-                SyncSelectedAnchorJSON("");
-                SyncHandsOffset();
-            }, _saveExt, _saveFolder, false, true, false, null, false, shortcuts);
-        });
-
-        var savePresetUI = CreateButton("Save Preset", false);
-        savePresetUI.button.onClick.AddListener(() =>
-        {
-            FileManagerSecure.CreateDirectory(_saveFolder);
-            var fileBrowserUI = SuperController.singleton.fileBrowserUI;
-            fileBrowserUI.SetTitle("Save colliders preset");
-            fileBrowserUI.fileRemovePrefix = null;
-            fileBrowserUI.hideExtension = false;
-            fileBrowserUI.keepOpen = false;
-            fileBrowserUI.fileFormat = _saveExt;
-            fileBrowserUI.defaultPath = _saveFolder;
-            fileBrowserUI.showDirs = true;
-            fileBrowserUI.shortCuts = null;
-            fileBrowserUI.browseVarFilesAsDirectories = false;
-            fileBrowserUI.SetTextEntry(true);
-            fileBrowserUI.Show((string path) =>
-            {
-                fileBrowserUI.fileFormat = null;
-                if (string.IsNullOrEmpty(path)) return;
-                if (!path.ToLower().EndsWith($".{_saveExt}")) path += $".{_saveExt}";
-                var jc = GetJSON();
-                jc.Remove("id");
-                SaveJSON(jc, path);
-            });
-            fileBrowserUI.ActivateFileNameField();
-        });
-    }
-
-    private void InitHandsSettingsUI()
-    {
-        _falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, UpdateHandsOffset, 0f, 5f, false) {isStorable = false};
-        CreateSlider(_falloffJSON, false);
-
-        _handOffsetXJSON = new JSONStorableFloat("Hand Offset X", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetXJSON, false);
-        _handOffsetYJSON = new JSONStorableFloat("Hand Offset Y", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetYJSON, false);
-        _handOffsetZJSON = new JSONStorableFloat("Hand Offset Z", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetZJSON, false);
-
-        _handRotateXJSON = new JSONStorableFloat("Hand Rotate X", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateXJSON, false);
-        _handRotateYJSON = new JSONStorableFloat("Hand Rotate Y", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateYJSON, false);
-        _handRotateZJSON = new JSONStorableFloat("Hand Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateZJSON, false);
+        falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, 0f, 5f, false) {isStorable = false};
     }
 
     private void InitAnchors()
     {
         var defaultSize = new Vector3(0.2f, 0.2f, 0.2f);
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Head",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
@@ -632,7 +554,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             Active = true,
             Locked = true
         });
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Lips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
@@ -642,7 +564,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             RealLifeSize = defaultSize,
             Active = true
         });
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Chest",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
@@ -652,7 +574,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             RealLifeSize = defaultSize,
             Active = true
         });
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Abdomen",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
@@ -662,7 +584,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             RealLifeSize = defaultSize,
             Active = true
         });
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Hips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
@@ -672,7 +594,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             RealLifeSize = defaultSize,
             Active = true
         });
-        _anchorPoints.Add(new ControllerAnchorPoint
+        anchorPoints.Add(new ControllerAnchorPoint
         {
             Label = "Ground (Control)",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
@@ -683,40 +605,6 @@ public class SnugModule : EmbodyModuleBase, ISnug
             Active = true,
             Locked = true
         });
-    }
-
-    private void InitAnchorsUI()
-    {
-        _selectedAnchorsJSON = new JSONStorableStringChooser("Selected Anchor", _anchorPoints.Select(a => a.Label).ToList(), "Chest", "Anchor", SyncSelectedAnchorJSON)
-            {isStorable = false};
-        CreateScrollablePopup(_selectedAnchorsJSON, true);
-
-        _anchorPhysSizeXJSON = new JSONStorableFloat("Real-Life Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorPhysSizeXJSON, true);
-        _anchorPhysSizeZJSON = new JSONStorableFloat("Real-Life Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorPhysSizeZJSON, true);
-
-        _anchorPhysOffsetXJSON = new JSONStorableFloat("Real-Life Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetXJSON, true);
-        _anchorPhysOffsetYJSON = new JSONStorableFloat("Real-Life Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetYJSON, true);
-        _anchorPhysOffsetZJSON = new JSONStorableFloat("Real-Life Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetZJSON, true);
-
-        _anchorVirtSizeXJSON = new JSONStorableFloat("In-Game Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorVirtSizeXJSON, true);
-        _anchorVirtSizeZJSON = new JSONStorableFloat("In-Game Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-
-        CreateSlider(_anchorVirtSizeZJSON, true);
-        _anchorVirtOffsetXJSON = new JSONStorableFloat("In-Game Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetXJSON, true);
-        _anchorVirtOffsetYJSON = new JSONStorableFloat("In-Game Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetYJSON, true);
-        _anchorVirtOffsetZJSON = new JSONStorableFloat("In-Game Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetZJSON, true);
-
-        _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
-        CreateToggle(_anchorActiveJSON, true);
     }
 
     private IEnumerator DeferredActivateHands()
@@ -758,9 +646,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
             // TODO: Bring this back in Embody
             // if (!_loaded) containingAtom.RestoreFromLast(this);
             OnEnable();
-            SyncSelectedAnchorJSON("");
-            SyncHandsOffset();
-            if (_showVisualCuesJSON.val) CreateVisualCues();
+            if (showVisualCuesJSON.val) CreateVisualCues();
         }
         catch (Exception exc)
         {
@@ -789,11 +675,11 @@ public class SnugModule : EmbodyModuleBase, ISnug
         {
             json["Hands"] = new JSONClass
             {
-                {"Offset", SerializeVector3(_palmToWristOffset)},
-                {"Rotation", SerializeVector3(_handRotateOffset)}
+                {"Offset", SerializeVector3(palmToWristOffset)},
+                {"Rotation", SerializeVector3(handRotateOffset)}
             };
             var anchors = new JSONClass();
-            foreach (var anchor in _anchorPoints)
+            foreach (var anchor in anchorPoints)
             {
                 anchors[anchor.Label] = new JSONClass
                 {
@@ -835,14 +721,14 @@ public class SnugModule : EmbodyModuleBase, ISnug
             var handsJSON = jc["Hands"];
             if (handsJSON != null)
             {
-                _palmToWristOffset = DeserializeVector3(handsJSON["Offset"], _palmToWristOffset);
-                _handRotateOffset = DeserializeVector3(handsJSON["Rotation"], _handRotateOffset);
+                palmToWristOffset = DeserializeVector3(handsJSON["Offset"], palmToWristOffset);
+                handRotateOffset = DeserializeVector3(handsJSON["Rotation"], handRotateOffset);
             }
 
             var anchorsJSON = jc["Anchors"];
             if (anchorsJSON != null)
             {
-                foreach (var anchor in _anchorPoints)
+                foreach (var anchor in anchorPoints)
                 {
                     var anchorJSON = anchorsJSON[anchor.Label];
                     if (anchorJSON == null) continue;
@@ -879,64 +765,6 @@ public class SnugModule : EmbodyModuleBase, ISnug
 
     #endregion
 
-    private void SyncSelectedAnchorJSON(string _)
-    {
-        if (!_ready) return;
-        var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
-        if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        _anchorVirtSizeXJSON.valNoCallback = anchor.InGameSize.x;
-        _anchorVirtSizeZJSON.valNoCallback = anchor.InGameSize.z;
-        _anchorVirtOffsetXJSON.valNoCallback = anchor.InGameOffset.x;
-        _anchorVirtOffsetYJSON.valNoCallback = anchor.InGameOffset.y;
-        _anchorVirtOffsetZJSON.valNoCallback = anchor.InGameOffset.z;
-        _anchorPhysSizeXJSON.valNoCallback = anchor.RealLifeSize.x;
-        _anchorPhysSizeZJSON.valNoCallback = anchor.RealLifeSize.z;
-        _anchorPhysOffsetXJSON.valNoCallback = anchor.RealLifeOffset.x;
-        _anchorPhysOffsetYJSON.valNoCallback = anchor.RealLifeOffset.y;
-        _anchorPhysOffsetZJSON.valNoCallback = anchor.RealLifeOffset.z;
-        _anchorActiveJSON.valNoCallback = anchor.Active;
-    }
-
-    private void UpdateAnchor(float _)
-    {
-        if (!_ready) return;
-        var anchor = _anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
-        if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        anchor.InGameSize = new Vector3(_anchorVirtSizeXJSON.val, 1f, _anchorVirtSizeZJSON.val);
-        anchor.InGameOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
-        anchor.RealLifeSize = new Vector3(_anchorPhysSizeXJSON.val, 1f, _anchorPhysSizeZJSON.val);
-        anchor.RealLifeOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
-        if (anchor.Locked && !_anchorActiveJSON.val)
-        {
-            _anchorActiveJSON.valNoCallback = true;
-        }
-        else if (anchor.Active != _anchorActiveJSON.val)
-        {
-            anchor.Active = _anchorActiveJSON.val;
-            anchor.Update();
-        }
-
-        anchor.Update();
-    }
-
-    private void SyncHandsOffset()
-    {
-        if (!_ready) return;
-        _handOffsetXJSON.valNoCallback = _palmToWristOffset.x;
-        _handOffsetYJSON.valNoCallback = _palmToWristOffset.y;
-        _handOffsetZJSON.valNoCallback = _palmToWristOffset.z;
-        _handRotateXJSON.valNoCallback = _handRotateOffset.x;
-        _handRotateYJSON.valNoCallback = _handRotateOffset.y;
-        _handRotateZJSON.valNoCallback = _handRotateOffset.z;
-    }
-
-    private void UpdateHandsOffset(float _)
-    {
-        if (!_ready) return;
-        _palmToWristOffset = new Vector3(_handOffsetXJSON.val, _handOffsetYJSON.val, _handOffsetZJSON.val);
-        _handRotateOffset = new Vector3(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
-    }
-
     #region Update
 
     public void Update()
@@ -969,22 +797,22 @@ public class SnugModule : EmbodyModuleBase, ISnug
         if (!_ready) return;
         try
         {
-            if (_leftHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
+            if (_leftHandActive || showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
                 ProcessHand(
                     _leftHandTarget,
                     SuperController.singleton.leftHand,
                     _leftAutoSnapPoint,
-                    new Vector3(_palmToWristOffset.x * -1f, _palmToWristOffset.y, _palmToWristOffset.z),
-                    new Vector3(_handRotateOffset.x, -_handRotateOffset.y, -_handRotateOffset.z),
+                    new Vector3(palmToWristOffset.x * -1f, palmToWristOffset.y, palmToWristOffset.z),
+                    new Vector3(handRotateOffset.x, -handRotateOffset.y, -handRotateOffset.z),
                     _lHandVisualCueLinePoints
                 );
-            if (_rightHandActive || _showVisualCuesJSON.val && !ReferenceEquals(_rightAutoSnapPoint, null) && !ReferenceEquals(_rightHandTarget, null))
+            if (_rightHandActive || showVisualCuesJSON.val && !ReferenceEquals(_rightAutoSnapPoint, null) && !ReferenceEquals(_rightHandTarget, null))
                 ProcessHand(
                     _rightHandTarget,
                     SuperController.singleton.rightHand,
                     _rightAutoSnapPoint,
-                    _palmToWristOffset,
-                    _handRotateOffset,
+                    palmToWristOffset,
+                    handRotateOffset,
                     _rHandVisualCueLinePoints
                 );
         }
@@ -1011,7 +839,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
-        foreach (var anchorPoint in _anchorPoints)
+        foreach (var anchorPoint in anchorPoints)
         {
             if (!anchorPoint.Active) continue;
             var anchorPointPos = anchorPoint.GetAdjustedWorldPosition();
@@ -1053,7 +881,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         var realLifeSize = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
         var realLifeDistanceFromCenter = Mathf.Max(realLifeSize.x, realLifeSize.z);
         // TODO: Check both x and z to determine a falloff relative to both distances
-        var falloff = _falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - realLifeDistanceFromCenter, 0, _falloffJSON.val) / _falloffJSON.val) : 1f;
+        var falloff = falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - realLifeDistanceFromCenter, 0, falloffJSON.val) / falloffJSON.val) : 1f;
 
         // Calculate the controller offset based on the physical scale/offset of anchors
         var realToGameScale = Vector3.Lerp(upper.GetRealToGameScale(), lower.GetRealToGameScale(), lowerWeight);
@@ -1137,7 +965,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
         _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
 
-        foreach (var anchorPoint in _anchorPoints)
+        foreach (var anchorPoint in anchorPoints)
         {
             if (anchorPoint.Locked) continue;
 
@@ -1182,7 +1010,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         }
 
         _cues.Clear();
-        foreach (var anchor in _anchorPoints)
+        foreach (var anchor in anchorPoints)
         {
             Destroy(anchor.VirtualCue?.gameObject);
             anchor.VirtualCue = null;

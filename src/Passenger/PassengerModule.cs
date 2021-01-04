@@ -6,29 +6,48 @@ using UnityEngine;
 
 public interface IPassenger : IEmbodyModule
 {
+    JSONStorableStringChooser linkJSON { get; }
+    JSONStorableStringChooser possessRotationLink { get; }
+    JSONStorableFloat eyesToHeadDistanceJSON { get; }
+    JSONStorableBool lookAtJSON { get; }
+    JSONStorableFloat lookAtWeightJSON { get; }
+    JSONStorableBool rotationLockJSON { get; }
+    JSONStorableBool rotationLockNoRollJSON { get; }
+    JSONStorableFloat rotationSmoothingJSON { get; }
+    JSONStorableFloat rotationOffsetXjson { get; }
+    JSONStorableFloat rotationOffsetYjson { get; }
+    JSONStorableFloat rotationOffsetZjson { get; }
+    JSONStorableBool positionLockJSON { get; }
+    JSONStorableFloat positionSmoothingJSON { get; }
+    JSONStorableFloat positionOffsetXjson { get; }
+    JSONStorableFloat positionOffsetYjson { get; }
+    JSONStorableFloat positionOffsetZjson { get; }
 }
 
 public class PassengerModule : EmbodyModuleBase, IPassenger
 {
     private const string _targetNone = "none";
 
+    public JSONStorableStringChooser linkJSON { get; set; }
+    public JSONStorableStringChooser possessRotationLink { get; set; }
+    public JSONStorableFloat eyesToHeadDistanceJSON { get; set; }
+    public JSONStorableBool lookAtJSON { get; set; }
+    public JSONStorableFloat lookAtWeightJSON { get; set; }
+    public JSONStorableBool rotationLockJSON { get; set; }
+    public JSONStorableBool rotationLockNoRollJSON { get; set; }
+    public JSONStorableFloat rotationSmoothingJSON { get; set; }
+    public JSONStorableFloat rotationOffsetXjson { get; set; }
+    public JSONStorableFloat rotationOffsetYjson { get; set; }
+    public JSONStorableFloat rotationOffsetZjson { get; set; }
+    public JSONStorableBool positionLockJSON { get; set; }
+    public JSONStorableFloat positionSmoothingJSON { get; set; }
+    public JSONStorableFloat positionOffsetXjson { get; set; }
+    public JSONStorableFloat positionOffsetYjson { get; set; }
+    public JSONStorableFloat positionOffsetZjson { get; set; }
+
     private Rigidbody _link;
     private Rigidbody _possessedLink;
     private Possessor _possessor;
-    private JSONStorableBool _rotationLockJSON;
-    private JSONStorableBool _rotationLockNoRollJSON;
-    private JSONStorableFloat _rotationSmoothingJSON;
-    private JSONStorableFloat _rotationOffsetXJSON;
-    private JSONStorableFloat _rotationOffsetYJSON;
-    private JSONStorableFloat _rotationOffsetZJSON;
-    private JSONStorableBool _positionLockJSON;
-    private JSONStorableFloat _positionSmoothingJSON;
-    private JSONStorableFloat _positionOffsetXJSON;
-    private JSONStorableFloat _positionOffsetYJSON;
-    private JSONStorableFloat _positionOffsetZJSON;
-    private JSONStorableStringChooser _linkJSON;
-    private JSONStorableStringChooser _possessRotationLink;
-    private JSONStorableFloat _eyesToHeadDistanceJSON;
     private Vector3 _positionOffset;
     private Quaternion _rotationOffset;
     private Vector3 _previousPosition;
@@ -38,8 +57,6 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
-    private JSONStorableBool _lookAtJSON;
-    private JSONStorableFloat _lookAtWeightJSON;
     private FreeControllerV3 _lookAt;
 
     public override void Init()
@@ -54,41 +71,30 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
 
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
-        _linkJSON = new JSONStorableStringChooser("Link", links, defaultLink, "Link to", (string val) => Reapply());
-        RegisterStringChooser(_linkJSON);
-        CreateFilterablePopup(_linkJSON).popupPanelHeight = 600f;
+        linkJSON = new JSONStorableStringChooser("Link", links, defaultLink, "Link to", (string val) => Reapply());
+        RegisterStringChooser(linkJSON);
 
-        _lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
+        lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
         if (containingAtom.type == "Person")
         {
-            RegisterBool(_lookAtJSON);
-            CreateToggle(_lookAtJSON).label = "Look at eye target";
-            CreateButton("Select eye target").button.onClick.AddListener(() =>
-            {
-                var eyeTarget = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-                if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
-            });
+            RegisterBool(lookAtJSON);
         }
 
-        _lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
-        RegisterFloat(_lookAtWeightJSON);
-        CreateSlider(_lookAtWeightJSON).label = "Look at weight";
+        lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
+        RegisterFloat(lookAtWeightJSON);
 
-        _positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_positionLockJSON);
-         CreateToggle(_positionLockJSON, leftSide).label = "Control camera position";
+        positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        RegisterBool(positionLockJSON);
 
-        _rotationLockJSON = new JSONStorableBool("ControlRotation", false, new JSONStorableBool.SetBoolCallback(v =>
+        rotationLockJSON = new JSONStorableBool("ControlRotation", false, new JSONStorableBool.SetBoolCallback(v =>
         {
-            _possessRotationLink.valNoCallback = null;
+            possessRotationLink.valNoCallback = null;
             Reapply();
         }));
-        RegisterBool(_rotationLockJSON);
-        CreateToggle(_rotationLockJSON, leftSide).label = "Control camera rotation";
+        RegisterBool(rotationLockJSON);
 
-        _rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
-        RegisterBool(_rotationLockNoRollJSON);
-        CreateToggle(_rotationLockNoRollJSON, leftSide).label = "Prevent camera roll";
+        rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        RegisterBool(rotationLockNoRollJSON);
 
         Func<List<string>> getPossessRotationChoices = () =>
         {
@@ -96,56 +102,41 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
             controllers.Insert(0, _targetNone);
             return controllers;
         };
-        _possessRotationLink = new JSONStorableStringChooser("PossessRotationLink", getPossessRotationChoices(), _targetNone, "Possess rotation of", (string val) =>
+        possessRotationLink = new JSONStorableStringChooser("PossessRotationLink", getPossessRotationChoices(), _targetNone, "Possess rotation of", (string val) =>
         {
-            _rotationLockJSON.valNoCallback = false;
+            rotationLockJSON.valNoCallback = false;
             Reapply();
         });
-        RegisterStringChooser(_possessRotationLink);
-        var followerPopup = CreateFilterablePopup(_possessRotationLink, leftSide);
-        followerPopup.popupPanelHeight = 600f;
-        followerPopup.popup.onOpenPopupHandlers += () =>
-        {
-            _possessRotationLink.choices = getPossessRotationChoices();
-        };
+        RegisterStringChooser(possessRotationLink);
 
         // Right Side
 
-        _rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
-        RegisterFloat(_rotationSmoothingJSON);
-        CreateSlider(_rotationSmoothingJSON, rightSide);
+        rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
+        RegisterFloat(rotationSmoothingJSON);
 
-        _rotationOffsetXJSON = new JSONStorableFloat("Rotation X", 0f, SyncRotationOffset, -180, 180, true, true);
-        RegisterFloat(_rotationOffsetXJSON);
-        CreateSlider(_rotationOffsetXJSON, rightSide);
+        rotationOffsetXjson = new JSONStorableFloat("Rotation X", 0f, SyncRotationOffset, -180, 180, true, true);
+        RegisterFloat(rotationOffsetXjson);
 
-        _rotationOffsetYJSON = new JSONStorableFloat("Rotation Y", 0f, SyncRotationOffset, -180, 180, true, true);
-        RegisterFloat(_rotationOffsetYJSON);
-        CreateSlider(_rotationOffsetYJSON, rightSide);
+        rotationOffsetYjson = new JSONStorableFloat("Rotation Y", 0f, SyncRotationOffset, -180, 180, true, true);
+        RegisterFloat(rotationOffsetYjson);
 
-        _rotationOffsetZJSON = new JSONStorableFloat("Rotation Z", 0f, SyncRotationOffset, -180, 180, true, true);
-        RegisterFloat(_rotationOffsetZJSON);
-        CreateSlider(_rotationOffsetZJSON, rightSide);
+        rotationOffsetZjson = new JSONStorableFloat("Rotation Z", 0f, SyncRotationOffset, -180, 180, true, true);
+        RegisterFloat(rotationOffsetZjson);
 
-        _positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
-        RegisterFloat(_positionSmoothingJSON);
-        CreateSlider(_positionSmoothingJSON, rightSide);
+        positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
+        RegisterFloat(positionSmoothingJSON);
 
-        _positionOffsetXJSON = new JSONStorableFloat("Position X", 0f,  SyncPositionOffset, -2f, 2f, false, true);
-        RegisterFloat(_positionOffsetXJSON);
-        CreateSlider(_positionOffsetXJSON, rightSide).valueFormat = "F4";
+        positionOffsetXjson = new JSONStorableFloat("Position X", 0f,  SyncPositionOffset, -2f, 2f, false, true);
+        RegisterFloat(positionOffsetXjson);
 
-        _positionOffsetYJSON = new JSONStorableFloat("Position Y", 0.08f, SyncPositionOffset, -2f, 2f, false, true);
-        RegisterFloat(_positionOffsetYJSON);
-        CreateSlider(_positionOffsetYJSON, rightSide).valueFormat = "F4";
+        positionOffsetYjson = new JSONStorableFloat("Position Y", 0.08f, SyncPositionOffset, -2f, 2f, false, true);
+        RegisterFloat(positionOffsetYjson);
 
-        _positionOffsetZJSON = new JSONStorableFloat("Position Z", 0f, SyncPositionOffset, -2f, 2f, false, true);
-        RegisterFloat(_positionOffsetZJSON);
-        CreateSlider(_positionOffsetZJSON, rightSide).valueFormat = "F4";
+        positionOffsetZjson = new JSONStorableFloat("Position Z", 0f, SyncPositionOffset, -2f, 2f, false, true);
+        RegisterFloat(positionOffsetZjson);
 
-        _eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
-        RegisterFloat(_eyesToHeadDistanceJSON);
-        CreateSlider(_eyesToHeadDistanceJSON, rightSide);
+        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
+        RegisterFloat(eyesToHeadDistanceJSON);
 
         SyncPositionOffset(0);
         SyncRotationOffset(0);
@@ -153,12 +144,12 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
 
     private void SyncRotationOffset(float _)
     {
-        _rotationOffset = Quaternion.Euler(_rotationOffsetXJSON.val, _rotationOffsetYJSON.val, _rotationOffsetZJSON.val);
+        _rotationOffset = Quaternion.Euler(rotationOffsetXjson.val, rotationOffsetYjson.val, rotationOffsetZjson.val);
     }
 
     private void SyncPositionOffset(float _)
     {
-        _positionOffset = new Vector3(_positionOffsetXJSON.val, _positionOffsetYJSON.val, _positionOffsetZJSON.val);
+        _positionOffset = new Vector3(positionOffsetXjson.val, positionOffsetYjson.val, positionOffsetZjson.val);
     }
 
     private void Reapply()
@@ -175,11 +166,11 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
     {
         try
         {
-            _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == _linkJSON.val);
-            if (_lookAtJSON.val)
+            _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == linkJSON.val);
+            if (lookAtJSON.val)
                 _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-            if (_possessRotationLink.val != _targetNone)
-                _possessedLink = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == _possessRotationLink.val);
+            if (possessRotationLink.val != _targetNone)
+                _possessedLink = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == possessRotationLink.val);
 
             if (!CanActivate() || !IsValid())
             {
@@ -285,10 +276,10 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
     private void UpdateNavigationRig(bool force)
     {
         // Context
-        var positionSmoothing = _positionSmoothingJSON.val;
-        var rotationSmoothing = _rotationSmoothingJSON.val;
+        var positionSmoothing = positionSmoothingJSON.val;
+        var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
-        var eyesToHeadOffset = new Vector3(0, 0, _eyesToHeadDistanceJSON.val);
+        var eyesToHeadOffset = new Vector3(0, 0, eyesToHeadDistanceJSON.val);
 
         var centerTargetTransform = CameraTarget.centerTarget.transform;
         var navigationRigTransform = navigationRig.transform;
@@ -299,15 +290,15 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
         var position = linkTransform.position;
         var rotation = linkTransform.rotation;
 
-        if (!ReferenceEquals(_lookAt, null) && _lookAtWeightJSON.val > 0)
+        if (!ReferenceEquals(_lookAt, null) && lookAtWeightJSON.val > 0)
         {
             var lookAtRotation = Quaternion.LookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
-            rotation = Quaternion.Slerp(rotation, lookAtRotation, _lookAtWeightJSON.val);
+            rotation = Quaternion.Slerp(rotation, lookAtRotation, lookAtWeightJSON.val);
         }
 
         rotation *= _rotationOffset;
 
-        if (_rotationLockNoRollJSON.val)
+        if (rotationLockNoRollJSON.val)
             rotation.SetLookRotation(rotation * Vector3.forward, Vector3.up);
 
         position += rotation * _positionOffset;
@@ -336,7 +327,7 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
                 navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
         }
 
-        if (force || _rotationLockJSON.val)
+        if (force || rotationLockJSON.val)
         {
             if (!ReferenceEquals(_possessedLink, null))
                 _possessedLink.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation * _rotationOffset;
@@ -344,7 +335,7 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
                 navigationRigTransform.rotation = navigationRigRotation;
         }
 
-        if (force || _positionLockJSON.val)
+        if (force || positionLockJSON.val)
         {
             navigationRigTransform.position = navigationRigPosition;
         }

@@ -24,16 +24,12 @@ public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     {
     }
 
+    [Obsolete]
     protected void RegisterBool(JSONStorableBool jsb) { plugin.RegisterBool(jsb); }
+    [Obsolete]
     protected void RegisterFloat(JSONStorableFloat jsf) { plugin.RegisterFloat(jsf); }
+    [Obsolete]
     protected void RegisterStringChooser(JSONStorableStringChooser jss) { plugin.RegisterStringChooser(jss); }
-
-    protected UIDynamicToggle CreateToggle(JSONStorableBool jsb, bool rightSide = false) { return plugin.CreateToggle(jsb, rightSide); }
-    protected UIDynamicSlider CreateSlider(JSONStorableFloat jsf, bool rightSide = false) { return plugin.CreateSlider(jsf, rightSide); }
-    protected UIDynamicPopup CreateScrollablePopup(JSONStorableStringChooser jss, bool rightSide = false) { return plugin.CreateScrollablePopup(jss, rightSide); }
-    protected UIDynamicPopup CreateFilterablePopup(JSONStorableStringChooser jss, bool rightSide = false) { return plugin.CreateFilterablePopup(jss, rightSide); }
-    protected UIDynamicButton CreateButton(string label, bool rightSide = false) { return plugin.CreateButton(label, rightSide); }
-    protected UIDynamic CreateSpacer(bool rightSide = false) { return plugin.CreateSpacer(rightSide); }
 
     [Obsolete]
     protected void SaveJSON(JSONClass jc, string saveName) => plugin.SaveJSON(jc, saveName);
