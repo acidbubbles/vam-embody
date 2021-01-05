@@ -1,7 +1,10 @@
+// TODO: Hide Hunting Succubus's eyes and cua hair
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Handlers;
+using SimpleJSON;
 using UnityEngine;
 
 public interface IHideGeometry : IEmbodyModule
@@ -12,6 +15,8 @@ public interface IHideGeometry : IEmbodyModule
 
 public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
 {
+    public override string storeId => "HideGeometry";
+
     private Atom _person;
     private Possessor _possessor;
     private DAZCharacterSelector _selector;
@@ -295,5 +300,21 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
         {
             SuperController.LogError("Failed to update possessor mesh visibility: " + e);
         }
+    }
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        hideFaceJSON.StoreJSON(jc);
+        hideHairJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        hideFaceJSON.RestoreFromJSON(jc);
+        hideHairJSON.RestoreFromJSON(jc);
     }
 }

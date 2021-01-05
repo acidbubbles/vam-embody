@@ -5,9 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
 
@@ -27,6 +25,8 @@ public class SnugModule : EmbodyModuleBase, ISnug
 {
     private const string _saveExt = "snugprofile";
     private const string _saveFolder = "Saves\\snugprofiles";
+
+    public override string storeId => "Snug";
 
     public Vector3 palmToWristOffset { get; set; }
     public Vector3 handRotateOffset { get; set; }
@@ -547,7 +547,8 @@ public class SnugModule : EmbodyModuleBase, ISnug
         var defaultSize = new Vector3(0.2f, 0.2f, 0.2f);
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            Label = "Head",
+            Id = "Crown",
+            Label = "Crown",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
             InGameOffset = new Vector3(0, 0.2f, 0),
             InGameSize = defaultSize,
@@ -558,6 +559,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            Id = "Lips",
             Label = "Lips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
             InGameOffset = new Vector3(0, 0, -0.07113313f),
@@ -568,6 +570,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            Id = "Chest",
             Label = "Chest",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
             InGameOffset = new Vector3(0, 0.0682705f, 0.04585214f),
@@ -578,6 +581,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            Id = "Abdomen",
             Label = "Abdomen",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
             InGameOffset = new Vector3(0, 0.0770329f, 0.04218798f),
@@ -588,6 +592,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            Id = "Hips",
             Label = "Hips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
             InGameOffset = new Vector3(0, -0.08762675f, -0.009161186f),
@@ -598,7 +603,9 @@ public class SnugModule : EmbodyModuleBase, ISnug
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            Label = "Ground (Control)",
+            Id = "Feet",
+            Label = "Feet",
+            // TODO: We could try and average this instead, OR define an absolute value
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
             InGameOffset = new Vector3(0, 0, 0),
             InGameSize = defaultSize,
@@ -669,101 +676,62 @@ public class SnugModule : EmbodyModuleBase, ISnug
 
     #region Load / Save
 
-    public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
+    public override void StoreJSON(JSONClass jc)
     {
-        var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
+        base.StoreJSON(jc);
 
-        try
+        jc["Hands"] = new JSONClass
         {
-            json["Hands"] = new JSONClass
+            {"Offset", palmToWristOffset.ToJSON()},
+            {"Rotation", handRotateOffset.ToJSON()}
+        };
+        var anchors = new JSONClass();
+        foreach (var anchor in anchorPoints)
+        {
+            anchors[anchor.Id] = new JSONClass
             {
-                {"Offset", SerializeVector3(palmToWristOffset)},
-                {"Rotation", SerializeVector3(handRotateOffset)}
+                {"InGameOffset", anchor.InGameOffset.ToJSON()},
+                {"InGameSize", anchor.InGameSize.ToJSON()},
+                {"RealLifeOffset", anchor.RealLifeOffset.ToJSON()},
+                {"RealLifeScale", anchor.RealLifeSize.ToJSON()},
+                {"Active", anchor.Active ? "true" : "false"},
             };
-            var anchors = new JSONClass();
+        }
+
+        jc["Anchors"] = anchors;
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        var handsJSON = jc["Hands"];
+        if (handsJSON != null)
+        {
+            palmToWristOffset = handsJSON["Offset"].ToVector3(palmToWristOffset);
+            handRotateOffset = handsJSON["Rotation"].ToVector3(handRotateOffset);
+        }
+
+        var anchorsJSON = jc["Anchors"];
+        if (anchorsJSON != null)
+        {
             foreach (var anchor in anchorPoints)
             {
-                anchors[anchor.Label] = new JSONClass
-                {
-                    {"InGameOffset", SerializeVector3(anchor.InGameOffset)},
-                    {"InGameSize", SerializeVector2(new Vector3(anchor.InGameSize.x, anchor.InGameSize.z))},
-                    {"RealLifeOffset", SerializeVector3(anchor.RealLifeOffset)},
-                    {"RealLifeScale", SerializeVector2(new Vector2(anchor.RealLifeSize.x, anchor.RealLifeSize.z))},
-                    {"Active", anchor.Active ? "true" : "false"},
-                };
+                var anchorJSON = anchorsJSON[anchor.Id];
+                if (anchorJSON == null) continue;
+                anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
+                anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
+                anchor.RealLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.RealLifeOffset);
+                anchor.RealLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.RealLifeSize);
+                anchor.Active = anchorJSON["Active"]?.Value != "false";
+                anchor.Update();
             }
-
-            json["Anchors"] = anchors;
-            needsStore = true;
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(GetJSON)}:  {exc}");
         }
 
-        return json;
+        // TODO: Still useful?
+        _loaded = true;
     }
 
-    private static string SerializeVector3(Vector3 v)
-    {
-        return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)},{v.z.ToString(CultureInfo.InvariantCulture)}";
-    }
-
-    private static string SerializeVector2(Vector2 v)
-    {
-        return $"{v.x.ToString(CultureInfo.InvariantCulture)},{v.y.ToString(CultureInfo.InvariantCulture)}";
-    }
-
-    public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
-    {
-        base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
-
-        try
-        {
-            var handsJSON = jc["Hands"];
-            if (handsJSON != null)
-            {
-                palmToWristOffset = DeserializeVector3(handsJSON["Offset"], palmToWristOffset);
-                handRotateOffset = DeserializeVector3(handsJSON["Rotation"], handRotateOffset);
-            }
-
-            var anchorsJSON = jc["Anchors"];
-            if (anchorsJSON != null)
-            {
-                foreach (var anchor in anchorPoints)
-                {
-                    var anchorJSON = anchorsJSON[anchor.Label];
-                    if (anchorJSON == null) continue;
-                    anchor.InGameOffset = DeserializeVector3(anchorJSON["InGameOffset"], anchor.InGameOffset);
-                    anchor.InGameSize = DeserializeVector2AsFlatScale(anchorJSON["InGameSize"], anchor.InGameSize);
-                    anchor.RealLifeOffset = DeserializeVector3(anchorJSON["RealLifeOffset"], anchor.RealLifeOffset);
-                    anchor.RealLifeSize = DeserializeVector2AsFlatScale(anchorJSON["RealLifeScale"], anchor.RealLifeSize);
-                    anchor.Active = anchorJSON["Active"]?.Value != "false";
-                    anchor.Update();
-                }
-            }
-
-            _loaded = true;
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(RestoreFromJSON)}: {exc}");
-        }
-    }
-
-    private static Vector3 DeserializeVector3(string v, Vector3 defaultValue)
-    {
-        if (string.IsNullOrEmpty(v)) return defaultValue;
-        var s = v.Split(',');
-        return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), float.Parse(s[1], CultureInfo.InvariantCulture), float.Parse(s[2], CultureInfo.InvariantCulture));
-    }
-
-    private static Vector3 DeserializeVector2AsFlatScale(string v, Vector3 defaultValue)
-    {
-        if (string.IsNullOrEmpty(v)) return defaultValue;
-        var s = v.Split(',');
-        return new Vector3(float.Parse(s[0], CultureInfo.InvariantCulture), 1f, float.Parse(s[1], CultureInfo.InvariantCulture));
-    }
 
     #endregion
 
@@ -797,6 +765,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
     public void FixedUpdate()
     {
         if (!_ready) return;
+        // TODO: The hand should rotate around it's axis, the offset makes the hand rotates
         try
         {
             if (_leftHandActive || showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
@@ -821,7 +790,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         catch (Exception exc)
         {
             SuperController.LogError($"{nameof(SnugModule)}.{nameof(FixedUpdate)}: {exc}");
-            OnDisable();
+            enabled = false;
         }
     }
 
@@ -860,6 +829,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         else if (upper == null)
             upper = lower;
 
+        // TODO: If an anchor is higher than one that should be higher, ignore it
         // Find the weight of both anchors (closest = strongest effect)
         var upperPosition = upper.GetAdjustedWorldPosition();
         var lowerPosition = lower.GetAdjustedWorldPosition();

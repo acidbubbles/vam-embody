@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleJSON;
 using UnityEngine;
 
 public interface IOffsetCamera : IEmbodyModule
@@ -11,11 +12,13 @@ public interface IOffsetCamera : IEmbodyModule
 
 public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 {
-    private Possessor _possessor;
+    public override string storeId => "OffsetCamera";
     public JSONStorableFloat cameraDepthJSON { get; set; }
     public JSONStorableFloat cameraHeightJSON { get; set; }
     public JSONStorableFloat cameraPitchJSON { get; set; }
     public JSONStorableFloat clipDistanceJSON { get; set; }
+
+    private Possessor _possessor;
 
     public override void Init()
     {
@@ -71,5 +74,25 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
         {
             SuperController.LogError("Failed to update camera position: " + e);
         }
+    }
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        cameraDepthJSON.StoreJSON(jc);
+        cameraHeightJSON.StoreJSON(jc);
+        cameraPitchJSON.StoreJSON(jc);
+        clipDistanceJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        cameraDepthJSON.RestoreFromJSON(jc);
+        cameraHeightJSON.RestoreFromJSON(jc);
+        cameraPitchJSON.RestoreFromJSON(jc);
+        clipDistanceJSON.RestoreFromJSON(jc);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleJSON;
 using UnityEngine;
 
 public interface IEmbody
@@ -103,5 +104,26 @@ public class Embody : MVRScript, IEmbody
     public void OnDisable()
     {
         activeJSON.val = false;
+    }
+
+    public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
+    {
+        var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
+        foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
+        {
+            var jc = new JSONClass();
+            c.StoreJSON(jc);
+            json[c.storeId] = jc;
+        }
+
+        needsStore = true;
+        return json;
+    }
+
+    public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
+    {
+        base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+        foreach(var c in _modules.GetComponents<EmbodyModuleBase>())
+            c.RestoreFromJSON(jc[c.storeId].AsObject);
     }
 }

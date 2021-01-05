@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 
 // TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
@@ -9,7 +10,7 @@ public interface IWorldScale : IEmbodyModule
 
 public class WorldScaleModule : EmbodyModuleBase, IWorldScale
 {
-    public JSONStorableBool activeJSON { get; set; }
+    public override string storeId => "WorldScale";
 
     private float _originalWorldScale;
     private Possessor _possessor;
@@ -45,6 +46,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScale
 
     private void ApplyAutoWorldScale()
     {
+        // TODO: Instead, measure the rigidbody distance from head to chest, abdomen2, abdomen, hip, pelvis, knee and foot, and consider that "standing".
+
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
         var rEye = eyes.FirstOrDefault(eye => eye.name == "rEye");
@@ -78,5 +81,16 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScale
         if (rig == null)
             return 0;
         return Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
+    }
+
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
     }
 }

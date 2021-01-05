@@ -2,6 +2,7 @@
 
 public class ControllerAnchorPoint
 {
+    public string Id { get; set; }
     public string Label { get; set; }
     public Rigidbody RigidBody { get; set; }
     public Vector3 RealLifeOffset { get; set; }

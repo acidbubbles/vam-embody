@@ -8,22 +8,19 @@ public interface IEmbodyModule
     MVRScript plugin { get; set; }
 }
 
-public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
+public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 {
+    public abstract string storeId { get; }
+    public JSONStorableBool includedJSON { get; private set; }
     public JSONStorableBool enabledJSON { get; private set; }
     public MVRScript plugin { get; set; }
 
     protected Atom containingAtom => plugin.containingAtom;
 
-    [Obsolete]
-    protected bool needsStore
-    {
-        get { return plugin.needsStore; }
-        set { plugin.needsStore = value; }
-    }
-
     public virtual void Init()
     {
+        // TODO: When changed, it should disable and re-enable Embody (use a Unity event or go through plugin)
+        includedJSON = new JSONStorableBool("Included", false, val => enabled = val);
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }
 
@@ -49,14 +46,13 @@ public class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     [Obsolete]
     protected JSONNode LoadJSON(string saveName) => plugin.LoadJSON(saveName);
 
-    [Obsolete]
-    public virtual JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
+    public virtual void StoreJSON(JSONClass jc)
     {
-        return plugin.GetJSON(includePhysical, includeAppearance, forceStore);
+        includedJSON.StoreJSON(jc);
     }
 
-    public virtual void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
+    public virtual void RestoreFromJSON(JSONClass jc)
     {
-        plugin.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+        includedJSON.RestoreFromJSON(jc);
     }
 }

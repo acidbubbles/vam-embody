@@ -3,7 +3,10 @@ src\Automation\AutomationSettingsScreen.cs
 src\Common\EmbodyModuleBase.cs
 src\Common\ListExtensions.cs
 src\Common\QuaternionExtensions.cs
+src\Common\Vector3Extensions.cs
 src\Common\VisualCuesHelper.cs
+src\EyeTarget\EyeTargetModule.cs
+src\EyeTarget\EyeTargetSettingsScreen.cs
 src\HideGeometry\Handlers\HairHandler.cs
 src\HideGeometry\Handlers\HandlerConfigurationResult.cs
 src\HideGeometry\Handlers\IHandler.cs

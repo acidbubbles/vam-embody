@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MeshVR;
+using SimpleJSON;
 using UnityEngine;
 
 public interface IPassenger : IEmbodyModule
@@ -27,6 +28,8 @@ public interface IPassenger : IEmbodyModule
 public class PassengerModule : EmbodyModuleBase, IPassenger
 {
     private const string _targetNone = "none";
+
+    public override string storeId => "Passenger";
 
     public JSONStorableStringChooser linkJSON { get; set; }
     public JSONStorableStringChooser possessRotationLink { get; set; }
@@ -352,5 +355,19 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
 
         // TODO: Re-position the main menu and the hud anchors (ovr) if that's possible
         // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positioning
+    }
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        // TODO: Store Vector3 instead
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        // TODO: Store Vector3 instead
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleJSON;
 using UnityEngine;
 
 // TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
@@ -10,6 +11,8 @@ public interface IAutomation : IEmbodyModule
 
 public class AutomationModule : EmbodyModuleBase, IAutomation
 {
+    public override string storeId => "Automation";
+
     public IEmbody embody { get; set; }
     public JSONStorableBool possessionActiveJSON { get; private set; }
     public JSONStorableStringChooser toggleKeyJSON { get; set; }
@@ -20,21 +23,20 @@ public class AutomationModule : EmbodyModuleBase, IAutomation
     {
         base.Init();
 
-            _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
+        _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
 
-            possessionActiveJSON = new JSONStorableBool("Possession Active (Auto)", false, (bool val) =>
-            {
-                if (embody.activeJSON.val)
-                    embody.activeJSON.val = false;
-            });
+        possessionActiveJSON = new JSONStorableBool("Possession Active (Auto)", false, (bool val) =>
+        {
+            if (embody.activeJSON.val)
+                embody.activeJSON.val = false;
+        });
 
-            var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-            keys.Remove(KeyCode.None.ToString());
-            keys.Insert(0, KeyCode.None.ToString());
-            toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.None.ToString(), "Toggle Key",
-                val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        var keys = Enum.GetNames(typeof(KeyCode)).ToList();
+        keys.Remove(KeyCode.None.ToString());
+        keys.Insert(0, KeyCode.None.ToString());
+        toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.None.ToString(), "Toggle Key",
+            val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
     }
-
 
     public override void OnEnable()
     {
@@ -74,5 +76,19 @@ public class AutomationModule : EmbodyModuleBase, IAutomation
         {
             embody.activeJSON.val = false;
         }
+    }
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        toggleKeyJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        toggleKeyJSON.RestoreFromJSON(jc);
     }
 }
