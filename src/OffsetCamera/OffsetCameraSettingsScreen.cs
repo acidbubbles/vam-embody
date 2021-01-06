@@ -11,6 +11,8 @@
 
     public void Show()
     {
+        CreateToggle(_offsetCamera.enabledJSON, true);
+
         CreateSlider(_offsetCamera.cameraDepthJSON, false).label = "Depth adjust";
         CreateSlider(_offsetCamera.cameraHeightJSON, false).label = "Height adjust";
         CreateSlider(_offsetCamera.cameraPitchJSON, false).label = "Pitch adjust";

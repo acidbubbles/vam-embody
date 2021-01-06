@@ -11,6 +11,8 @@
 
     public void Show()
     {
+        CreateToggle(_automation.enabledJSON, true);
+
         CreateToggle(_automation.possessionActiveJSON).toggle.interactable = false;
 
         var toggleKeyPopup = CreateFilterablePopup(_automation.toggleKeyJSON);

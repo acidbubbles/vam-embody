@@ -26,6 +26,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTarget
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
 
         // TODO: Get the eye bones center
+        enabled = true;
     }
 
     public override void OnEnable()
@@ -48,11 +49,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTarget
 
     public void Update()
     {
-        // TODO: Update the eye target position so it's behind the mirror in a straight line, at the same distance behind it. Find the first mirror the model is looking at (closest to lookat ray)
         var eyesCenter = (_lEye.position + _rEye.position) / 2f;
+        // TODO: check all mirrors
         var mirror = _mirrors[0];
-        var mirrorPosition = mirror.mainController.transform.position;
-        var reflectPosition = mirrorPosition + (eyesCenter - mirrorPosition); // TODO: Reflect with rotated mirrors: Vector3.Reflect()
+        var mirrorTransform = mirror.mainController.transform;
+        var mirrorPosition = mirrorTransform.position;
+        var mirrorNormal = mirrorTransform.up;
+        var plane = new Plane(mirrorNormal, mirrorPosition);
+        var planePoint = plane.ClosestPointOnPlane(eyesCenter);
+        var reflectPosition = planePoint - (eyesCenter - planePoint);
         _eyeTarget.control.position = reflectPosition;
     }
 

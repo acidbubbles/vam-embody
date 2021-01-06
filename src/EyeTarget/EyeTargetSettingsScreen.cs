@@ -1,7 +1,7 @@
 ﻿public class EyeTargetSettingsScreen : ScreenBase, IScreen
 {
     private readonly IEyeTarget _eyeTarget;
-    public const string ScreenName = "EyeTarget";
+    public const string ScreenName = "Eye Target";
 
     public EyeTargetSettingsScreen(MVRScript plugin, IEyeTarget eyeTarget)
         : base(plugin)
@@ -11,6 +11,7 @@
 
     public void Show()
     {
+        CreateToggle(_eyeTarget.enabledJSON, true);
         // TODO: Enable or disable
     }
 }

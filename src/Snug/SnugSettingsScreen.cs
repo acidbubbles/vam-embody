@@ -24,6 +24,9 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        // TODO: This should become the "Active hands"
+        CreateToggle(_snug.enabledJSON, true);
+
         CreateButton("Setup Wizard").button.onClick.AddListener(() => plugin.StartCoroutine(_snug.Wizard()));
         CreateToggle(_snug.possessHandsJSON);
         CreateToggle(_snug.showVisualCuesJSON);

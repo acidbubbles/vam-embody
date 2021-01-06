@@ -13,6 +13,8 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateToggle(_passenger.enabledJSON, true);
+
         CreateFilterablePopup(_passenger.linkJSON).popupPanelHeight = 600f;
         if (plugin.containingAtom.type == "Person")
         {
