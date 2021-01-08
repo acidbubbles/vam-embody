@@ -2,7 +2,7 @@
 
 public interface IScreensManager
 {
-    void Show(string screenName);
+    bool Show(string screenName);
 }
 
 public class ScreensManager : IScreensManager
@@ -15,7 +15,10 @@ public class ScreensManager : IScreensManager
 
     public ScreensManager()
     {
-        screensJSON = new JSONStorableStringChooser("Screens", _screenNames, "", "Screen", Show);
+        screensJSON = new JSONStorableStringChooser("Screens", _screenNames, "", "Screen", val =>
+        {
+            if (!Show(val)) screensJSON.valNoCallback = _currentScreenName;
+        });
     }
 
     public void Add(string screenName, IScreen screen)
@@ -25,9 +28,9 @@ public class ScreensManager : IScreensManager
         _screens.Add(screenName, screen);
     }
 
-    public void Show(string screenName)
+    public bool Show(string screenName)
     {
-        if (screenName == _currentScreenName) return;
+        if (screenName == _currentScreenName || string.IsNullOrEmpty(screenName)) return false;
 
         IScreen screen;
         if (_currentScreenName != null)
@@ -38,12 +41,12 @@ public class ScreensManager : IScreensManager
             screensJSON.valNoCallback = screenName;
         }
 
-        if (!string.IsNullOrEmpty(screenName))
-        {
-            if (_screens.TryGetValue(screenName, out screen))
-                screen.Show();
-            _currentScreenName = screenName;
-            screensJSON.valNoCallback = screenName;
-        }
+        if (!_screens.TryGetValue(screenName, out screen))
+            return false;
+
+        screen.Show();
+        _currentScreenName = screenName;
+        screensJSON.valNoCallback = screenName;
+        return true;
     }
 }

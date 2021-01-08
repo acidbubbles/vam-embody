@@ -2,11 +2,10 @@
 using SimpleJSON;
 using UnityEngine;
 
-// TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
 public interface IAutomationModule : IEmbodyModule
 {
     JSONStorableBool possessionActiveJSON { get; }
-    JSONStorableStringChooser toggleKeyJSON { get; }
+    KeyCode toggleKey { get; set; }
 }
 
 public class AutomationModule : EmbodyModuleBase, IAutomationModule
@@ -19,7 +18,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public JSONStorableBool possessionActiveJSON { get; private set; }
     public JSONStorableStringChooser toggleKeyJSON { get; set; }
     private FreeControllerV3 _headControl;
-    private KeyCode _toggleKey = KeyCode.None;
+    public KeyCode toggleKey { get; set; } = KeyCode.None;
 
     public override void Awake()
     {
@@ -31,11 +30,6 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 embody.activeJSON.val = false;
         });
 
-        var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        keys.Remove(KeyCode.None.ToString());
-        keys.Insert(0, KeyCode.None.ToString());
-        toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.None.ToString(), "Toggle Key",
-            val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
 
         enabled = true;
     }
@@ -76,10 +70,10 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
 
         if (!embody.activeJSON.val)
         {
-            if (!LookInputModule.singleton.inputFieldActive && _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+            if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
                 embody.activeJSON.val = true;
         }
-        else if (Input.GetKeyDown(KeyCode.Escape) || _toggleKey != KeyCode.None && Input.GetKeyDown(_toggleKey))
+        else if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
         {
             embody.activeJSON.val = false;
         }
@@ -89,13 +83,15 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.StoreJSON(jc);
 
-        toggleKeyJSON.StoreJSON(jc);
+        jc["ToggleKey"] = toggleKey.ToString();
     }
 
     public override void RestoreFromJSON(JSONClass jc)
     {
         base.RestoreFromJSON(jc);
 
-        toggleKeyJSON.RestoreFromJSON(jc);
+        var toggleKeyString = jc["ToggleKey"].Value;
+        if (!string.IsNullOrEmpty(toggleKeyString))
+            toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString);
     }
 }

@@ -27,8 +27,6 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
         CreateButton("Setup Wizard").button.onClick.AddListener(() => plugin.StartCoroutine(_snug.Wizard()));
-        // TODO: This should just activate whenever the module is enabled
-        CreateToggle(_snug.possessHandsJSON);
         CreateToggle(_snug.showVisualCuesJSON);
         CreateButton("Arm hands for record").button.onClick.AddListener(() =>
         {

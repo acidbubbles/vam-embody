@@ -62,10 +62,4 @@
         protected UIDynamicButton CreateButton(string label, bool rightSide = false) { return _buttons.AddAndReturn(plugin.CreateButton(label, rightSide)); }
         protected UIDynamicTextField CreateText(JSONStorableString jss, bool rightSide = false) { return _textFields.AddAndReturn(plugin.CreateTextField(jss, rightSide)); }
         protected UIDynamic CreateSpacer(bool rightSide = false) { return _spacers.AddAndReturn(plugin.CreateSpacer(rightSide)); }
-
-        protected void CreateModuleUI(IEmbodyModule module)
-        {
-            var enabledToggle = CreateToggle(module.enabledJSON);
-            enabledToggle.label = "Active";
-        }
     }

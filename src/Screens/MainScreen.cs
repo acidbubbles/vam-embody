@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class MainScreen : ScreenBase, IScreen
 {
@@ -16,7 +15,7 @@ public class MainScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateSpacer().height = 50f;
+        CreateSpacer().height = 10f;
         CreateButton($"Import / Export Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
 
         CreateText(new JSONStorableString("", @"
@@ -59,7 +58,7 @@ Configure each module option in the Screen menu.
                     break;
             }
         });
-        var sc = CreateScrollablePopup(presetsJSON, true);
+        CreateScrollablePopup(presetsJSON, true);
 
         foreach (var module in _modules)
         {

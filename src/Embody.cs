@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using SimpleJSON;
 using UnityEngine;
 
@@ -13,6 +14,7 @@ public class Embody : MVRScript, IEmbody
 
     private GameObject _modules;
     private ScreensManager _screensManager;
+    private bool _restored;
 
     public override void Init()
     {
@@ -78,12 +80,24 @@ public class Embody : MVRScript, IEmbody
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
             CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
+
+            SuperController.singleton.StartCoroutine(DeferredInit());
         }
         catch (Exception)
         {
             enabledJSON.val = false;
             if (_modules != null) Destroy(_modules);
             throw;
+        }
+    }
+
+    private IEnumerator DeferredInit()
+    {
+        yield return new WaitForEndOfFrame();
+        if (!_restored)
+        {
+            containingAtom.RestoreFromLast(this);
+            _restored = true;
         }
     }
 
@@ -128,5 +142,6 @@ public class Embody : MVRScript, IEmbody
         foreach(var c in _modules.GetComponents<EmbodyModuleBase>())
             c.RestoreFromJSON(jc[c.storeId].AsObject);
         _screensManager.screensJSON.RestoreFromJSON(jc);
+        _restored = true;
     }
 }

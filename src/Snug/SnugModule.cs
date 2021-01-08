@@ -16,7 +16,6 @@ public interface ISnugModule : IEmbodyModule
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
     JSONStorableBool showVisualCuesJSON { get; }
-    JSONStorableBool possessHandsJSON { get; }
     JSONStorableBool disableSelectionJSON { get; set; }
     IEnumerator Wizard();
 }
@@ -34,11 +33,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     // TODO: Oops, this was never saved!
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool showVisualCuesJSON { get; private set; }
-    public JSONStorableBool possessHandsJSON { get; private set; }
     public JSONStorableBool disableSelectionJSON { get; set; }
 
     private readonly List<GameObject> _cues = new List<GameObject>();
-    private bool _ready, _loaded;
     private bool _leftHandActive, _rightHandActive;
     private GameObject _leftHandTarget, _rightHandTarget;
     private FreeControllerV3 _personLHandController, _personRHandController;
@@ -156,9 +153,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realHipsFront, adjustedHipsCenter) * 2f);
 
         hipsAnchorPoint.Update();
-        possessHandsJSON.val = true;
 
-        SuperController.singleton.helpText = "All done! Select Possess with Snug in Embody to enable possession with body proportion adjustments.";
+        SuperController.singleton.helpText = "All done! You can now activate Embody.";
         yield return new WaitForSeconds(3);
         SuperController.singleton.helpText = "";
     }
@@ -462,41 +458,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var rightHandRigidBody = _rightHandTarget.AddComponent<Rigidbody>();
         rightHandRigidBody.isKinematic = true;
         rightHandRigidBody.detectCollisions = false;
-
-        possessHandsJSON = new JSONStorableBool("Possess Hands", false, (bool val) =>
-        {
-            if (!_ready) return;
-            if (val)
-            {
-                if (_leftAutoSnapPoint != null)
-                    _leftHandActive = true;
-                if (_rightAutoSnapPoint != null)
-                    _rightHandActive = true;
-                StartCoroutine(DeferredActivateHands());
-            }
-            else
-            {
-                if (_leftHandActive)
-                {
-                    CustomReleaseHand(_personLHandController);
-                    _leftHandActive = false;
-                }
-
-                if (_rightHandActive)
-                {
-                    CustomReleaseHand(_personRHandController);
-                    _rightHandActive = false;
-                }
-            }
-        }) {isStorable = false};
-        RegisterBool(possessHandsJSON);
     }
 
     private void InitVisualCues()
     {
         showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
         {
-            if (!_ready) return;
             if (val)
                 CreateVisualCues();
             else
@@ -649,29 +616,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private IEnumerator DeferredInit()
     {
-        yield return new WaitForEndOfFrame();
-        try
-        {
-            // TODO: Bring this back in Embody
-            // if (!_loaded) containingAtom.RestoreFromLast(this);
-            OnEnable();
-            if (showVisualCuesJSON.val) CreateVisualCues();
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(DeferredInit)}: {exc}");
-        }
-        // TODO: Not if already loaded
         while (SuperController.singleton.isLoading)
             yield return 0;
-        try
-        {
-            AutoSetup();
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(DeferredInit)}: {exc}");
-        }
+        // TODO: Do this when doing wizard, showing cues, or enabling
+        AutoSetup();
     }
 
     #region Load / Save
@@ -727,9 +675,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 anchor.Update();
             }
         }
-
-        // TODO: Still useful?
-        _loaded = true;
     }
 
 
@@ -739,7 +684,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public void Update()
     {
-        if (!_ready) return;
         try
         {
             UpdateCueLine(_lHandVisualCueLine, _lHandVisualCueLinePoints, _lHandVisualCueLinePointIndicators);
@@ -764,7 +708,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public void FixedUpdate()
     {
-        if (!_ready) return;
         // TODO: The hand should rotate around it's axis, the offset makes the hand rotates
         try
         {
@@ -891,41 +834,34 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnEnable();
 
-        if (containingAtom == null) return;
-        if (containingAtom.type != "Person")
-        {
-            enabled = false;
-            return;
-        }
-
-        try
-        {
-            _ready = true;
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(OnEnable)}: {exc}");
-        }
+        if (_leftAutoSnapPoint != null)
+            _leftHandActive = true;
+        if (_rightAutoSnapPoint != null)
+            _rightHandActive = true;
+        StartCoroutine(DeferredActivateHands());
     }
 
     public override void OnDisable()
     {
         base.OnDisable();
 
-        try
+        if (_leftHandActive)
         {
-            _ready = false;
-            DestroyVisualCues();
+            CustomReleaseHand(_personLHandController);
+            _leftHandActive = false;
         }
-        catch (Exception exc)
+
+        if (_rightHandActive)
         {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(OnDisable)}: {exc}");
+            CustomReleaseHand(_personRHandController);
+            _rightHandActive = false;
         }
     }
 
     public void OnDestroy()
     {
         OnDisable();
+        DestroyVisualCues();
         Destroy(_leftHandTarget);
         Destroy(_rightHandTarget);
     }
