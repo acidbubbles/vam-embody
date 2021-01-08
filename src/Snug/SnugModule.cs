@@ -25,9 +25,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 {
     public const string Label = "Snug";
 
-    private const string _saveExt = "snugprofile";
-    private const string _saveFolder = "Saves\\snugprofiles";
-
     public override string storeId => "Snug";
     public override string label => Label;
 

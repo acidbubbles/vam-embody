@@ -42,7 +42,7 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(this, worldScaleModule));
             _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(this, eyeTargetModule));
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
-            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(this));
+            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(this, this));
 
             // TODO: Choose a mode (Snug, Passenger or Standard), now only Passenger is here...
             activeJSON = new JSONStorableBool("Active", false, val =>

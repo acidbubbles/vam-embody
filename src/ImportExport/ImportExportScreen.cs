@@ -1,22 +1,25 @@
-﻿public class ImportExportScreen : ScreenBase, IScreen
+﻿using MVR.FileManagementSecure;
+using SimpleJSON;
+
+public class ImportExportScreen : ScreenBase, IScreen
 {
+    private readonly IEmbody _embody;
     public const string ScreenName = "Import / Export";
 
-    public ImportExportScreen(MVRScript plugin)
+    private const string _saveExt = "embodyprofile";
+    private const string _saveFolder = "Saves\\embodyprofiles";
+
+    public ImportExportScreen(MVRScript plugin, IEmbody embody)
         : base(plugin)
     {
+        _embody = embody;
     }
 
     public void Show()
     {
         CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms."), true);
-        // InitPresetUI();
-    }
 
-    /*
-    private void InitPresetUI()
-    {
-        var loadPresetUI = CreateButton("Load Preset", false);
+        var loadPresetUI = CreateButton("Import", true);
         loadPresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(_saveFolder);
@@ -24,14 +27,13 @@
             SuperController.singleton.GetMediaPathDialog((string path) =>
             {
                 if (string.IsNullOrEmpty(path)) return;
-                JSONClass jc = (JSONClass) LoadJSON(path);
-                RestoreFromJSON(jc);
-                SyncSelectedAnchorJSON("");
-                SyncHandsOffset();
+                _embody.activeJSON.val = false;
+                var jc = (JSONClass) plugin.LoadJSON(path);
+                plugin.RestoreFromJSON(jc);
             }, _saveExt, _saveFolder, false, true, false, null, false, shortcuts);
         });
 
-        var savePresetUI = CreateButton("Save Preset", false);
+        var savePresetUI = CreateButton("Export", true);
         savePresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(_saveFolder);
@@ -51,12 +53,11 @@
                 fileBrowserUI.fileFormat = null;
                 if (string.IsNullOrEmpty(path)) return;
                 if (!path.ToLower().EndsWith($".{_saveExt}")) path += $".{_saveExt}";
-                var jc = GetJSON();
+                var jc = plugin.GetJSON();
                 jc.Remove("id");
-                SaveJSON(jc, path);
+                plugin.SaveJSON(jc, path);
             });
             fileBrowserUI.ActivateFileNameField();
         });
     }
-    */
 }
