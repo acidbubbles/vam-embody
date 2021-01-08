@@ -28,6 +28,7 @@ public class Embody : MVRScript, IEmbody
 
             var automationModule = CreateModule<AutomationModule>();
             automationModule.embody = this;
+            var trackersModule = CreateModule<TrackersModule>();
             var hideGeometryModule = CreateModule<HideGeometryModule>();
             var offsetCameraModule = CreateModule<OffsetCameraModule>();
             var passengerModule = CreateModule<PassengerModule>();
@@ -39,6 +40,7 @@ public class Embody : MVRScript, IEmbody
 
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(this, _modules.GetComponents<IEmbodyModule>()));
+            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(this, trackersModule));
             _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, passengerModule));
             _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule));
             _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, hideGeometryModule));

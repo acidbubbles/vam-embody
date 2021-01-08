@@ -92,6 +92,8 @@
     <Compile Include="src\Snug\Anchors\ControllerAnchorPointVisualCue.cs" />
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
+    <Compile Include="src\Trackers\TrackersModule.cs" />
+    <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />
     <Compile Include="src\WorldScale\WorldScaleSettingsScreen.cs" />
   </ItemGroup>

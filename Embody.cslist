@@ -25,6 +25,8 @@ src\Snug\Anchors\ControllerAnchorPoint.cs
 src\Snug\Anchors\ControllerAnchorPointVisualCue.cs
 src\Snug\SnugModule.cs
 src\Snug\SnugSettingsScreen.cs
+src\Trackers\TrackersModule.cs
+src\Trackers\TrackersSettingsScreen.cs
 src\WorldScale\WorldScaleModule.cs
 src\WorldScale\WorldScaleSettingsScreen.cs
 src\Embody.cs
