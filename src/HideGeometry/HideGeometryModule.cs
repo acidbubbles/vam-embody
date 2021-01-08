@@ -7,15 +7,18 @@ using Handlers;
 using SimpleJSON;
 using UnityEngine;
 
-public interface IHideGeometry : IEmbodyModule
+public interface IHideGeometryModule : IEmbodyModule
 {
     JSONStorableBool hideFaceJSON { get; }
     JSONStorableBool hideHairJSON { get; }
 }
 
-public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
+public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 {
+    public const string Label = "Hide Geometry";
     public override string storeId => "HideGeometry";
+    public override string label => Label;
+    protected override bool shouldBeSelectedByDefault => true;
 
     private Atom _person;
     private Possessor _possessor;
@@ -36,11 +39,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometry
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
 
-    public override void Init()
+    public override void Awake()
     {
         try
         {
-            base.Init();
+            base.Awake();
 
             if (containingAtom?.type != "Person")
             {

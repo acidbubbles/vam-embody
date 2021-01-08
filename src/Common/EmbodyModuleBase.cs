@@ -4,23 +4,32 @@ using UnityEngine;
 
 public interface IEmbodyModule
 {
+    string storeId { get; }
+    string label { get; }
     JSONStorableBool enabledJSON { get; }
+    JSONStorableBool selectedJSON { get; }
     MVRScript plugin { get; set; }
 }
 
 public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 {
     public abstract string storeId { get; }
-    public JSONStorableBool includedJSON { get; private set; }
+    public abstract string label { get; }
+    public JSONStorableBool selectedJSON { get; private set; }
     public JSONStorableBool enabledJSON { get; private set; }
     public MVRScript plugin { get; set; }
 
     protected Atom containingAtom => plugin.containingAtom;
+    protected virtual bool shouldBeSelectedByDefault => false;
 
-    public virtual void Init()
+    public virtual void Awake()
     {
-        // TODO: When changed, it should disable and re-enable Embody (use a Unity event or go through plugin)
-        includedJSON = new JSONStorableBool("Included", false, val => enabled = val);
+        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, (bool val) =>
+        {
+            if (!enabled) return;
+            enabled = false;
+            enabled = true;
+        });
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }
 
@@ -48,11 +57,11 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void StoreJSON(JSONClass jc)
     {
-        includedJSON.StoreJSON(jc);
+        selectedJSON.StoreJSON(jc);
     }
 
     public virtual void RestoreFromJSON(JSONClass jc)
     {
-        includedJSON.RestoreFromJSON(jc);
+        selectedJSON.RestoreFromJSON(jc);
     }
 }

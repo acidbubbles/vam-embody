@@ -4,21 +4,25 @@ using SimpleJSON;
 using UnityEngine;
 
 // TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
-public interface IWorldScale : IEmbodyModule
+public interface IWorldScaleModule : IEmbodyModule
 {
 }
 
-public class WorldScaleModule : EmbodyModuleBase, IWorldScale
+public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 {
+    public const string Label = "World Scale";
+
     public override string storeId => "WorldScale";
+    public override string label => Label;
+    protected override bool shouldBeSelectedByDefault => true;
 
     private float _originalWorldScale;
     private Possessor _possessor;
     private FreeControllerV3 _headControl;
 
-    public override void Init()
+    public override void Awake()
     {
-        base.Init();
+        base.Awake();
 
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");

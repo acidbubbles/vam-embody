@@ -1,6 +1,11 @@
 ﻿using System.Collections.Generic;
 
-public class ScreensManager
+public interface IScreensManager
+{
+    void Show(string screenName);
+}
+
+public class ScreensManager : IScreensManager
 {
     public JSONStorableStringChooser screensJSON { get; }
 
@@ -15,12 +20,15 @@ public class ScreensManager
 
     public void Add(string screenName, IScreen screen)
     {
+        screen.screensManager = this;
         _screenNames.Add(screenName);
         _screens.Add(screenName, screen);
     }
 
     public void Show(string screenName)
     {
+        if (screenName == _currentScreenName) return;
+
         IScreen screen;
         if (_currentScreenName != null)
         {

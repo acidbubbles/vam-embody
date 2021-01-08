@@ -3,12 +3,13 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
-public interface IEyeTarget : IEmbodyModule
+public interface IEyeTargetModule : IEmbodyModule
 {
 }
 
-public class EyeTargetModule : EmbodyModuleBase, IEyeTarget
+public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 {
+    public const string Label = "Eye Target";
     private static readonly HashSet<string> _mirrorAtomTypes = new HashSet<string>(new[]
     {
         "Glass",
@@ -16,6 +17,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTarget
         "ReflectiveSlate",
         "ReflectiveWoodPanel",
     });
+
+    public override string storeId => "EyeTarget";
+    public override string label => Label;
+    protected override bool shouldBeSelectedByDefault => true;
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -25,11 +30,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTarget
     private List<BoxCollider> _mirrors;
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
-    public override string storeId => "EyeTarget";
 
-    public override void Init()
+    public override void Awake()
     {
-        base.Init();
+        base.Awake();
 
         _eyeBehavior = (EyesControl) containingAtom.GetStorableByID("Eyes");
         _head = containingAtom.rigidbodies.First(fc => fc.name == "head").transform;

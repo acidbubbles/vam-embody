@@ -1,9 +1,9 @@
 ﻿public class HideGeometrySettingsScreen : ScreenBase, IScreen
 {
-    private readonly IHideGeometry _hideGeometry;
-    public const string ScreenName = "Hide Geometry";
+    private readonly IHideGeometryModule _hideGeometry;
+    public const string ScreenName = HideGeometryModule.Label;
 
-    public HideGeometrySettingsScreen(MVRScript plugin, IHideGeometry hideGeometry)
+    public HideGeometrySettingsScreen(MVRScript plugin, IHideGeometryModule hideGeometry)
         : base(plugin)
     {
         _hideGeometry = hideGeometry;
@@ -11,7 +11,10 @@
 
     public void Show()
     {
-        CreateToggle(_hideGeometry.enabledJSON, true);
+        if (ShowNotSelected(_hideGeometry.selectedJSON.val)) return;
+
+        CreateText(new JSONStorableString("", "Hides the face and hair when possessing a model, except in mirrors."), true);
+
         CreateToggle(_hideGeometry.hideFaceJSON, true);
         CreateToggle(_hideGeometry.hideHairJSON, true);
     }

@@ -9,7 +9,7 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
-public interface ISnug : IEmbodyModule
+public interface ISnugModule : IEmbodyModule
 {
     Vector3 palmToWristOffset { get; set; }
     Vector3 handRotateOffset { get; set; }
@@ -21,12 +21,15 @@ public interface ISnug : IEmbodyModule
     IEnumerator Wizard();
 }
 
-public class SnugModule : EmbodyModuleBase, ISnug
+public class SnugModule : EmbodyModuleBase, ISnugModule
 {
+    public const string Label = "Snug";
+
     private const string _saveExt = "snugprofile";
     private const string _saveFolder = "Saves\\snugprofiles";
 
     public override string storeId => "Snug";
+    public override string label => Label;
 
     public Vector3 palmToWristOffset { get; set; }
     public Vector3 handRotateOffset { get; set; }
@@ -63,11 +66,11 @@ public class SnugModule : EmbodyModuleBase, ISnug
         public static int Count = 3;
     }
 
-    public override void Init()
+    public override void Awake()
     {
         try
         {
-            base.Init();
+            base.Awake();
 
             // TODO: This should be driven by Embody instead
             if (containingAtom?.type != "Person")
@@ -87,7 +90,7 @@ public class SnugModule : EmbodyModuleBase, ISnug
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Init)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Awake)}: {exc}");
         }
 
         StartCoroutine(DeferredInit());

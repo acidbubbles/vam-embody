@@ -2,7 +2,7 @@
 using SimpleJSON;
 using UnityEngine;
 
-public interface IOffsetCamera : IEmbodyModule
+public interface IOffsetCameraModule : IEmbodyModule
 {
     JSONStorableFloat cameraDepthJSON { get; }
     JSONStorableFloat cameraHeightJSON { get; }
@@ -10,9 +10,13 @@ public interface IOffsetCamera : IEmbodyModule
     JSONStorableFloat clipDistanceJSON { get; }
 }
 
-public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
+public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
 {
+    public const string Label = "Offset Camera";
     public override string storeId => "OffsetCamera";
+    public override string label => Label;
+    protected override bool shouldBeSelectedByDefault => true;
+
     public JSONStorableFloat cameraDepthJSON { get; set; }
     public JSONStorableFloat cameraHeightJSON { get; set; }
     public JSONStorableFloat cameraPitchJSON { get; set; }
@@ -20,9 +24,9 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCamera
 
     private Possessor _possessor;
 
-    public override void Init()
+    public override void Awake()
     {
-        base.Init();
+        base.Awake();
 
         if (plugin == null) throw new Exception("test");
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();

@@ -84,7 +84,7 @@
     <Compile Include="src\OffsetCamera\OffsetCameraSettingsScreen.cs" />
     <Compile Include="src\Passenger\PassengerModule.cs" />
     <Compile Include="src\Passenger\PassengerSettingsScreen.cs" />
-    <Compile Include="src\Presets\PresetsScreen.cs" />
+    <Compile Include="src\ImportExport\ImportExportScreen.cs" />
     <Compile Include="src\Screens\MainScreen.cs" />
     <Compile Include="src\Screens\ScreenBase.cs" />
     <Compile Include="src\Screens\ScreensManager.cs" />

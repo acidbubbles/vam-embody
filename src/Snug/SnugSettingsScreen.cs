@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class SnugSettingsScreen : ScreenBase, IScreen
 {
-    private readonly ISnug _snug;
-    public const string ScreenName = "Snug";
+    private readonly ISnugModule _snug;
+    public const string ScreenName = SnugModule.Label;
 
     private JSONStorableStringChooser _selectedAnchorsJSON;
     private JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
@@ -16,7 +16,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
     private JSONStorableBool _anchorActiveJSON;
 
-    public SnugSettingsScreen(MVRScript plugin, ISnug snug)
+    public SnugSettingsScreen(MVRScript plugin, ISnugModule snug)
         : base(plugin)
     {
         _snug = snug;
@@ -24,10 +24,10 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        // TODO: This should become the "Active hands"
-        CreateToggle(_snug.enabledJSON, true);
+        if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
         CreateButton("Setup Wizard").button.onClick.AddListener(() => plugin.StartCoroutine(_snug.Wizard()));
+        // TODO: This should just activate whenever the module is enabled
         CreateToggle(_snug.possessHandsJSON);
         CreateToggle(_snug.showVisualCuesJSON);
         CreateButton("Arm hands for record").button.onClick.AddListener(() =>

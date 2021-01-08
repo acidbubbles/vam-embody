@@ -1,15 +1,15 @@
-﻿public class PresetsScreen : ScreenBase, IScreen
+﻿public class ImportExportScreen : ScreenBase, IScreen
 {
-    public const string ScreenName = "Presets";
+    public const string ScreenName = "Import / Export";
 
-    public PresetsScreen(MVRScript plugin)
+    public ImportExportScreen(MVRScript plugin)
         : base(plugin)
     {
     }
 
     public void Show()
     {
-        // TODO: Bring back presets but for the whole plugin
+        CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms."), true);
         // InitPresetUI();
     }
 

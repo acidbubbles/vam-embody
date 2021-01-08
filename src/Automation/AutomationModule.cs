@@ -3,15 +3,17 @@ using SimpleJSON;
 using UnityEngine;
 
 // TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
-public interface IAutomation : IEmbodyModule
+public interface IAutomationModule : IEmbodyModule
 {
     JSONStorableBool possessionActiveJSON { get; }
     JSONStorableStringChooser toggleKeyJSON { get; }
 }
 
-public class AutomationModule : EmbodyModuleBase, IAutomation
+public class AutomationModule : EmbodyModuleBase, IAutomationModule
 {
+    public const string Label = "Automation";
     public override string storeId => "Automation";
+    public override string label => Label;
 
     public IEmbody embody { get; set; }
     public JSONStorableBool possessionActiveJSON { get; private set; }
@@ -19,11 +21,9 @@ public class AutomationModule : EmbodyModuleBase, IAutomation
     private FreeControllerV3 _headControl;
     private KeyCode _toggleKey = KeyCode.None;
 
-    public override void Init()
+    public override void Awake()
     {
-        base.Init();
-
-        _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
+        base.Awake();
 
         possessionActiveJSON = new JSONStorableBool("Possession Active (Auto)", false, (bool val) =>
         {
@@ -36,6 +36,13 @@ public class AutomationModule : EmbodyModuleBase, IAutomation
         keys.Insert(0, KeyCode.None.ToString());
         toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", keys, KeyCode.None.ToString(), "Toggle Key",
             val => { _toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+
+        enabled = true;
+    }
+
+    public void Start()
+    {
+        _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
     }
 
     public override void OnEnable()

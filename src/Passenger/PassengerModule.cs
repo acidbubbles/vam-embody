@@ -5,7 +5,7 @@ using MeshVR;
 using SimpleJSON;
 using UnityEngine;
 
-public interface IPassenger : IEmbodyModule
+public interface IPassengerModule : IEmbodyModule
 {
     JSONStorableStringChooser linkJSON { get; }
     JSONStorableStringChooser possessRotationLink { get; }
@@ -25,11 +25,14 @@ public interface IPassenger : IEmbodyModule
     JSONStorableFloat positionOffsetZjson { get; }
 }
 
-public class PassengerModule : EmbodyModuleBase, IPassenger
+public class PassengerModule : EmbodyModuleBase, IPassengerModule
 {
+    public const string Label = "Passenger";
+
     private const string _targetNone = "none";
 
     public override string storeId => "Passenger";
+    public override string label => Label;
 
     public JSONStorableStringChooser linkJSON { get; set; }
     public JSONStorableStringChooser possessRotationLink { get; set; }
@@ -62,9 +65,9 @@ public class PassengerModule : EmbodyModuleBase, IPassenger
     private RigidbodyInterpolation _previousInterpolation;
     private FreeControllerV3 _lookAt;
 
-    public override void Init()
+    public override void Awake()
     {
-        base.Init();
+        base.Awake();
 
         const bool leftSide = false;
         const bool rightSide = true;

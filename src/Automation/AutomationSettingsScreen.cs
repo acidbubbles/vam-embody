@@ -1,9 +1,9 @@
 ﻿public class AutomationSettingsScreen : ScreenBase, IScreen
 {
-    private readonly IAutomation _automation;
-    public const string ScreenName = "Automation";
+    private readonly IAutomationModule _automation;
+    public const string ScreenName = AutomationModule.Label;
 
-    public AutomationSettingsScreen(MVRScript plugin, IAutomation automation)
+    public AutomationSettingsScreen(MVRScript plugin, IAutomationModule automation)
         : base(plugin)
     {
         _automation = automation;
@@ -11,9 +11,12 @@
 
     public void Show()
     {
-        CreateToggle(_automation.enabledJSON, true);
+        base.CreateModuleUI(_automation);
 
-        CreateToggle(_automation.possessionActiveJSON).toggle.interactable = false;
+        CreateText(new JSONStorableString("", "This module automatically enables/disabled Embody when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
+        CreateToggle(_automation.possessionActiveJSON, true).toggle.interactable = false;
+
+        CreateSpacer(true);
 
         var toggleKeyPopup = CreateFilterablePopup(_automation.toggleKeyJSON);
         toggleKeyPopup.popupPanelHeight = 600f;

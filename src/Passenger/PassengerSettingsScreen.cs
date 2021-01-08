@@ -2,10 +2,10 @@
 
 public class PassengerSettingsScreen : ScreenBase, IScreen
 {
-    private readonly IPassenger _passenger;
-    public const string ScreenName = "Passenger";
+    private readonly IPassengerModule _passenger;
+    public const string ScreenName = PassengerModule.Label;
 
-    public PassengerSettingsScreen(MVRScript plugin, IPassenger passenger)
+    public PassengerSettingsScreen(MVRScript plugin, IPassengerModule passenger)
         : base(plugin)
     {
         _passenger = passenger;
@@ -13,7 +13,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateToggle(_passenger.enabledJSON, true);
+        if (ShowNotSelected(_passenger.selectedJSON.val)) return;
 
         CreateFilterablePopup(_passenger.linkJSON).popupPanelHeight = 600f;
         if (plugin.containingAtom.type == "Person")
@@ -40,14 +40,14 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         //     possessRotationLink.choices = getPossessRotationChoices();
         // };
 
-        CreateSlider(_passenger.rotationSmoothingJSON);
-        CreateSlider(_passenger.rotationOffsetXjson);
-        CreateSlider(_passenger.rotationOffsetYjson);
-        CreateSlider(_passenger.rotationOffsetZjson);
-        CreateSlider(_passenger.positionSmoothingJSON);
-        CreateSlider(_passenger.positionOffsetXjson).valueFormat = "F4";
-        CreateSlider(_passenger.positionOffsetYjson).valueFormat = "F4";
-        CreateSlider(_passenger.positionOffsetZjson).valueFormat = "F4";
-        CreateSlider(_passenger.eyesToHeadDistanceJSON);
+        CreateSlider(_passenger.rotationSmoothingJSON, true);
+        CreateSlider(_passenger.rotationOffsetXjson, true);
+        CreateSlider(_passenger.rotationOffsetYjson, true);
+        CreateSlider(_passenger.rotationOffsetZjson, true);
+        CreateSlider(_passenger.positionSmoothingJSON, true);
+        CreateSlider(_passenger.positionOffsetXjson, true).valueFormat = "F4";
+        CreateSlider(_passenger.positionOffsetYjson, true).valueFormat = "F4";
+        CreateSlider(_passenger.positionOffsetZjson, true).valueFormat = "F4";
+        CreateSlider(_passenger.eyesToHeadDistanceJSON, true);
     }
 }

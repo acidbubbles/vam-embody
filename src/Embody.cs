@@ -23,6 +23,7 @@ public class Embody : MVRScript, IEmbody
             _modules.SetActive(false);
 
             var automationModule = CreateModule<AutomationModule>();
+            automationModule.embody = this;
             var hideGeometryModule = CreateModule<HideGeometryModule>();
             var offsetCameraModule = CreateModule<OffsetCameraModule>();
             var passengerModule = CreateModule<PassengerModule>();
@@ -30,30 +31,18 @@ public class Embody : MVRScript, IEmbody
             var worldScaleModule = CreateModule<WorldScaleModule>();
             var eyeTargetModule = CreateModule<EyeTargetModule>();
 
-            automationModule.embody = this;
-            automationModule.Init();
-            hideGeometryModule.Init();
-            offsetCameraModule.Init();
-            passengerModule.Init();
-            snugModule.Init();
-            worldScaleModule.Init();
-            eyeTargetModule.Init();
-
             _modules.SetActive(true);
 
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(this));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(this, _modules.GetComponents<IEmbodyModule>()));
             _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, passengerModule));
             _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule));
             _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, hideGeometryModule));
             _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(this, offsetCameraModule));
-            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(this, worldScaleModule));
             _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(this, eyeTargetModule));
-            _screensManager.Add(PresetsScreen.ScreenName, new PresetsScreen(this));
-
-            _screensManager.Show(MainScreen.ScreenName);
-            CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
+            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
+            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(this));
 
             // TODO: Choose a mode (Snug, Passenger or Standard), now only Passenger is here...
             activeJSON = new JSONStorableBool("Active", false, val =>
@@ -83,8 +72,12 @@ public class Embody : MVRScript, IEmbody
                 isStorable = false
             };
             RegisterBool(activeJSON);
-            // TODO: Colorize to make it stand out more
-            CreateToggle(activeJSON, true);
+
+            var activeToggle = CreateToggle(activeJSON, false);
+            activeToggle.label = "Active (selected modules)";
+            activeToggle.backgroundColor = Color.cyan;
+            activeToggle.labelText.fontStyle = FontStyle.Bold;
+            CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
         }
         catch (Exception)
         {
@@ -92,6 +85,13 @@ public class Embody : MVRScript, IEmbody
             if (_modules != null) Destroy(_modules);
             throw;
         }
+    }
+
+    public override void InitUI()
+    {
+        base.InitUI();
+        if (UITransform == null) return;
+        _screensManager.Show(MainScreen.ScreenName);
     }
 
     private T CreateModule<T>() where T : MonoBehaviour, IEmbodyModule

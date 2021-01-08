@@ -1,9 +1,9 @@
 ﻿public class EyeTargetSettingsScreen : ScreenBase, IScreen
 {
-    private readonly IEyeTarget _eyeTarget;
-    public const string ScreenName = "Eye Target";
+    private readonly IEyeTargetModule _eyeTarget;
+    public const string ScreenName = EyeTargetModule.Label;
 
-    public EyeTargetSettingsScreen(MVRScript plugin, IEyeTarget eyeTarget)
+    public EyeTargetSettingsScreen(MVRScript plugin, IEyeTargetModule eyeTarget)
         : base(plugin)
     {
         _eyeTarget = eyeTarget;
@@ -11,7 +11,8 @@
 
     public void Show()
     {
-        CreateToggle(_eyeTarget.enabledJSON, true);
-        // TODO: Enable or disable
+        if (ShowNotSelected(_eyeTarget.selectedJSON.val)) return;
+
+        CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors."), true);
     }
 }
