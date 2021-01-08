@@ -4,7 +4,6 @@ using UnityEngine;
 
 public interface IAutomationModule : IEmbodyModule
 {
-    JSONStorableBool possessionActiveJSON { get; }
     KeyCode toggleKey { get; set; }
 }
 
@@ -15,21 +14,14 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public override string label => Label;
 
     public IEmbody embody { get; set; }
-    public JSONStorableBool possessionActiveJSON { get; private set; }
-    public JSONStorableStringChooser toggleKeyJSON { get; set; }
-    private FreeControllerV3 _headControl;
+    public bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
     public KeyCode toggleKey { get; set; } = KeyCode.None;
+    private FreeControllerV3 _headControl;
+    private bool _activatedByVam;
 
     public override void Awake()
     {
         base.Awake();
-
-        possessionActiveJSON = new JSONStorableBool("Possession Active (Auto)", false, (bool val) =>
-        {
-            if (embody.activeJSON.val)
-                embody.activeJSON.val = false;
-        });
-
 
         enabled = true;
     }
@@ -39,43 +31,34 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
     }
 
-    public override void OnEnable()
-    {
-        base.OnEnable();
-
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-    }
-
     public void Update()
     {
-        // TODO: Extract this into another module, with it's own config screen
-        if (_headControl != null)
-        {
-            if (_headControl.possessed)
-            {
-                possessionActiveJSON.val = true;
-                return;
-            }
-
-            if (possessionActiveJSON.val && !_headControl.possessed)
-            {
-                possessionActiveJSON.val = false;
-                return;
-            }
-        }
-
         if (!embody.activeJSON.val)
         {
-            if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
+            if (headPossessedInVam)
+            {
                 embody.activeJSON.val = true;
+                _activatedByVam = true;
+                return;
+            }
+
+            if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
+            {
+                embody.activeJSON.val = true;
+                return;
+            }
         }
-        else if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
+
+        if (_activatedByVam && embody.activeJSON.val && !_headControl.possessed)
         {
             embody.activeJSON.val = false;
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
+        {
+            embody.activeJSON.val = false;
+            return;
         }
     }
 
@@ -93,5 +76,10 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         var toggleKeyString = jc["ToggleKey"].Value;
         if (!string.IsNullOrEmpty(toggleKeyString))
             toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString);
+    }
+
+    public void Reset()
+    {
+        _activatedByVam = false;
     }
 }

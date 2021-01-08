@@ -21,9 +21,6 @@ public class AutomationSettingsScreen : ScreenBase, IScreen
         CreateText(
             new JSONStorableString("",
                 "This module automatically enables/disabled Embody when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
-        CreateToggle(_automation.possessionActiveJSON, true).toggle.interactable = false;
-
-        CreateSpacer(true).height = 10f;
 
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
             val => { _automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
@@ -35,11 +32,11 @@ public class AutomationSettingsScreen : ScreenBase, IScreen
     {
         if (_keys != null) return _keys;
 
-        var keys = Enum.GetNames(typeof(KeyCode)).ToList();
-        keys.Remove(KeyCode.Mouse0.ToString());
-        keys.Remove(KeyCode.Escape.ToString());
-        keys.Remove(KeyCode.None.ToString());
-        keys.Insert(0, KeyCode.None.ToString());
-        return keys;
+        _keys = Enum.GetNames(typeof(KeyCode)).ToList();
+        _keys.Remove(KeyCode.Mouse0.ToString());
+        _keys.Remove(KeyCode.Escape.ToString());
+        _keys.Remove(KeyCode.None.ToString());
+        _keys.Insert(0, KeyCode.None.ToString());
+        return _keys;
     }
 }

@@ -9,6 +9,7 @@ public interface IEmbodyModule
     JSONStorableBool enabledJSON { get; }
     JSONStorableBool selectedJSON { get; }
     MVRScript plugin { get; set; }
+    JSONStorableBool activeJSON { get; set; }
 }
 
 public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
@@ -18,17 +19,17 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     public JSONStorableBool selectedJSON { get; private set; }
     public JSONStorableBool enabledJSON { get; private set; }
     public MVRScript plugin { get; set; }
+    public JSONStorableBool activeJSON { get; set; }
 
     protected Atom containingAtom => plugin.containingAtom;
     protected virtual bool shouldBeSelectedByDefault => false;
 
     public virtual void Awake()
     {
-        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, (bool val) =>
+        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, val =>
         {
-            if (!enabled) return;
-            enabled = false;
-            enabled = true;
+            if (activeJSON.val)
+                enabledJSON.val = val;
         });
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }

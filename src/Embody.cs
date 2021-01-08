@@ -20,6 +20,8 @@ public class Embody : MVRScript, IEmbody
     {
         try
         {
+            activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
+
             _modules = new GameObject();
             _modules.transform.SetParent(transform, false);
             _modules.SetActive(false);
@@ -46,37 +48,28 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
             _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(this, this));
 
-            // TODO: Choose a mode (Snug, Passenger or Standard), now only Passenger is here...
-            activeJSON = new JSONStorableBool("Active", false, val =>
+            activeJSON.setCallbackFunction = val =>
             {
-                if (automationModule.possessionActiveJSON.val)
-                {
-                    activeJSON.valNoCallback = false;
-                    return;
-                }
-
                 if (val)
                 {
-                    // if (_useWorldScaleJSON.val)
-                    //     _worldScaleModule.enabled = true;
-                    hideGeometryModule.enabled = true;
-                    passengerModule.enabled = true;
+                    foreach (var module in _modules.GetComponents<IEmbodyModule>())
+                    {
+                        module.enabledJSON.val = module.selectedJSON.val;
+                    }
                 }
                 else
                 {
-                    if (worldScaleModule != null) worldScaleModule.enabled = false;
-                    if (offsetCameraModule != null) offsetCameraModule.enabled = false;
-                    if (hideGeometryModule != null) hideGeometryModule.enabled = false;
-                    if (passengerModule != null) passengerModule.enabled = false;
+                    automationModule.Reset();
+                    foreach (var module in _modules.GetComponents<IEmbodyModule>())
+                    {
+                        module.enabledJSON.val = false;
+                    }
                 }
-            })
-            {
-                isStorable = false
             };
             RegisterBool(activeJSON);
 
             var activeToggle = CreateToggle(activeJSON, false);
-            activeToggle.label = "Active (selected modules)";
+            activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
             CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
@@ -113,6 +106,7 @@ public class Embody : MVRScript, IEmbody
         var module = _modules.AddComponent<T>();
         module.enabled = false;
         module.plugin = this;
+        module.activeJSON = activeJSON;
         return module;
     }
 
