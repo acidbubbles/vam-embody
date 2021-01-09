@@ -41,7 +41,6 @@ public class ControllerAnchorPointVisualCue : IDisposable
         _leftHandle.transform.localPosition = Vector3.left * size.x / 2;
         _rightHandle.localScale = new Vector3(_width * 3, _width * 3, _width * 3);
         _rightHandle.transform.localPosition = Vector3.right * size.x / 2;
-        if (_ellipse == null) throw new NullReferenceException("Bam");
         VisualCuesHelper.DrawEllipse(_ellipse, new Vector2(size.x / 2f, size.z / 2f));
     }
 

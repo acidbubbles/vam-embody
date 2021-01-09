@@ -44,18 +44,6 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
         enabledJSON.valNoCallback = false;
     }
 
-    [Obsolete]
-    protected void RegisterBool(JSONStorableBool jsb) { plugin.RegisterBool(jsb); }
-    [Obsolete]
-    protected void RegisterFloat(JSONStorableFloat jsf) { plugin.RegisterFloat(jsf); }
-    [Obsolete]
-    protected void RegisterStringChooser(JSONStorableStringChooser jss) { plugin.RegisterStringChooser(jss); }
-
-    [Obsolete]
-    protected void SaveJSON(JSONClass jc, string saveName) => plugin.SaveJSON(jc, saveName);
-    [Obsolete]
-    protected JSONNode LoadJSON(string saveName) => plugin.LoadJSON(saveName);
-
     public virtual void StoreJSON(JSONClass jc)
     {
         selectedJSON.StoreJSON(jc);

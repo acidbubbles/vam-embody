@@ -34,6 +34,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool showVisualCuesJSON { get; private set; }
     public JSONStorableBool disableSelectionJSON { get; set; }
+    public ITrackersModule trackers { get; set; }
 
     private readonly List<GameObject> _cues = new List<GameObject>();
     private bool _leftHandActive, _rightHandActive;
@@ -65,13 +66,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         try
         {
             base.Awake();
-
-            // TODO: This should be driven by Embody instead
-            if (containingAtom?.type != "Person")
-            {
-                enabled = false;
-                return;
-            }
 
             InitAnchors();
 
@@ -126,8 +120,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         SuperController.singleton.helpText = "Hand distance recorded. We will now start possession. Press select when ready.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
 
-        // TODO: Replace this by home made possession
-        HeadPossess(headControl, true, true, true);
+        // TODO: We should technically enable Embody. Review this.
+        trackers.enabledJSON.val = true;
 
         SuperController.singleton.helpText = "Possession activated. Now put your hands on your real hips, and press select when ready.";
         while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
@@ -161,167 +155,21 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private static bool AreAnyStartRecordKeysDown()
     {
-        var sctrl = SuperController.singleton;
-        if (sctrl.isOVR)
+        var sc = SuperController.singleton;
+        if (sc.isOVR)
         {
             if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.Touch)) return true;
             if (OVRInput.GetDown(OVRInput.Button.Three, OVRInput.Controller.Touch)) return true;
         }
-        if (sctrl.isOpenVR)
+        if (sc.isOpenVR)
         {
-            if (sctrl.selectAction.stateDown) return true;
+            if (sc.selectAction.stateDown) return true;
         }
         if (Input.GetKeyDown(KeyCode.Space)) return true;
         return false;
     }
 
-    private void HeadPossess(FreeControllerV3 headPossess, bool alignRig = false, bool usePossessorSnapPoint = true, bool adjustSpring = true)
-    {
-        // TODO: New
-        var motionControllerHead = SuperController.singleton.centerCameraTarget.transform;
-        FreeControllerV3 headPossessedController;
-        var headPossessedActivateTransform = SuperController.singleton.headPossessedActivateTransform;
-        var headPossessedText = SuperController.singleton.headPossessedText;
-        var _allowPossessSpringAdjustment = true;
-        var _possessPositionSpring = 10000f;
-        var _possessRotationSpring = 1000f;
-
-        // TODO: Taken from VaM, to cleanup
-        if (!headPossess.canGrabPosition && !headPossess.canGrabRotation)
-        {
-            return;
-        }
-
-        Possessor component = motionControllerHead.GetComponent<Possessor>();
-        Rigidbody component2 = motionControllerHead.GetComponent<Rigidbody>();
-        headPossessedController = headPossess;
-        if (headPossessedActivateTransform != null)
-        {
-            headPossessedActivateTransform.gameObject.SetActive(true);
-        }
-
-        if (headPossessedText != null)
-        {
-            if (headPossessedController.containingAtom != null)
-            {
-                headPossessedText.text = headPossessedController.containingAtom.uid + ":" + headPossessedController.name;
-            }
-            else
-            {
-                headPossessedText.text = headPossessedController.name;
-            }
-        }
-
-        headPossessedController.possessed = true;
-        if (headPossessedController.canGrabPosition)
-        {
-            MotionAnimationControl component3 = headPossessedController.GetComponent<MotionAnimationControl>();
-            if (component3 != null)
-            {
-                component3.suspendPositionPlayback = true;
-            }
-
-            if (_allowPossessSpringAdjustment && adjustSpring)
-            {
-                headPossessedController.RBHoldPositionSpring = _possessPositionSpring;
-            }
-        }
-
-        if (headPossessedController.canGrabRotation)
-        {
-            MotionAnimationControl component4 = headPossessedController.GetComponent<MotionAnimationControl>();
-            if (component4 != null)
-            {
-                component4.suspendRotationPlayback = true;
-            }
-
-            if (_allowPossessSpringAdjustment && adjustSpring)
-            {
-                headPossessedController.RBHoldRotationSpring = _possessRotationSpring;
-            }
-        }
-
-        SuperController.singleton.SyncMonitorRigPosition();
-        if (alignRig)
-        {
-            AlignRigAndController(headPossessedController);
-        }
-        else if (component != null && component.autoSnapPoint != null && usePossessorSnapPoint)
-        {
-            headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
-        }
-
-        if (!(component2 != null))
-        {
-            return;
-        }
-
-        FreeControllerV3.SelectLinkState linkState = FreeControllerV3.SelectLinkState.Position;
-        if (headPossessedController.canGrabPosition)
-        {
-            if (headPossessedController.canGrabRotation)
-            {
-                linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
-            }
-        }
-        else if (headPossessedController.canGrabRotation)
-        {
-            linkState = FreeControllerV3.SelectLinkState.Rotation;
-        }
-
-        headPossessedController.SelectLinkToRigidbody(component2, linkState);
-    }
-
-    private void AlignRigAndController(FreeControllerV3 controller)
-        {
-            // TODO: New
-            var motionControllerHead = SuperController.singleton.centerCameraTarget.transform;
-            FreeControllerV3 headPossessedController;
-            var navigationRig = SuperController.singleton.navigationRig;
-            var MonitorCenterCamera = SuperController.singleton.MonitorCenterCamera;
-            var _allowPossessSpringAdjustment = true;
-            var _possessPositionSpring = 10000f;
-            var _possessRotationSpring = 1000f;
-
-            // TODO: Taken from VaM, to cleanup
-            Possessor component = motionControllerHead.GetComponent<Possessor>();
-            Vector3 forwardPossessAxis = controller.GetForwardPossessAxis();
-            Vector3 upPossessAxis = controller.GetUpPossessAxis();
-            Vector3 up = navigationRig.up;
-            Vector3 fromDirection = Vector3.ProjectOnPlane(motionControllerHead.forward, up);
-            Vector3 vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRig.up);
-            if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControllerHead.up, up) > 0f)
-            {
-                vector = -vector;
-            }
-
-            Quaternion lhs = Quaternion.FromToRotation(fromDirection, vector);
-            navigationRig.rotation = lhs * navigationRig.rotation;
-            if (controller.canGrabRotation)
-            {
-                controller.AlignTo(component.autoSnapPoint, true);
-            }
-
-            Vector3 a = (!(controller.possessPoint != null)) ? controller.control.position : controller.possessPoint.position;
-            Vector3 b = a - component.autoSnapPoint.position;
-            Vector3 vector2 = navigationRig.position + b;
-            float num = Vector3.Dot(vector2 - navigationRig.position, up);
-            vector2 += up * (0f - num);
-            navigationRig.position = vector2;
-            SuperController.singleton.playerHeightAdjust += num;
-            if (MonitorCenterCamera != null)
-            {
-                MonitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
-                Vector3 localEulerAngles = MonitorCenterCamera.transform.localEulerAngles;
-                localEulerAngles.y = 0f;
-                localEulerAngles.z = 0f;
-                MonitorCenterCamera.transform.localEulerAngles = localEulerAngles;
-            }
-
-            controller.PossessMoveAndAlignTo(component.autoSnapPoint);
-        }
-
-        private void AutoSetup()
+    private void AutoSetup()
     {
         // TODO: Recalculate when the y offset is changed
         // TODO: Check when the person scale changes
@@ -462,7 +310,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitVisualCues()
     {
-        showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, (bool val) =>
+        showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, val =>
         {
             if (val)
                 CreateVisualCues();
@@ -472,12 +320,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             isStorable = false
         };
-        RegisterBool(showVisualCuesJSON);
     }
 
     private void InitDisableSelection()
     {
-        disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, (bool val) =>
+        disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, val =>
         {
             if (val)
             {
@@ -819,11 +666,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         rb.MoveRotation(resultRotation);
 
         visualCueLinePoints[VisualCueLineIndices.Controller] = realHand.transform.position;
-
-        // SuperController.singleton.ClearMessages();
-        // SuperController.LogMessage($"y {position.y:0.00} btwn {lower.RigidBody.name} y {yLowerDelta:0.00} w {lowerWeight:0.00} and {upper.RigidBody.name} y {yUpperDelta:0.00} w {upperWeight: 0.00}");
-        // SuperController.LogMessage($"dist {distance:0.00}/{physicalCueDistanceFromCenter:0.00} falloff {falloff:0.00}");
-        // SuperController.LogMessage($"rot {upperRotation.eulerAngles} psca {physicalScale} poff {physicalOffset} base {baseOffset} res {resultOffset}");
     }
 
     #endregion

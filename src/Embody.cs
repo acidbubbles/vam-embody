@@ -26,6 +26,8 @@ public class Embody : MVRScript, IEmbody
             _modules.transform.SetParent(transform, false);
             _modules.SetActive(false);
 
+            // TODO: Filter based on whether it's a person atom
+
             var automationModule = CreateModule<AutomationModule>();
             automationModule.embody = this;
             var trackersModule = CreateModule<TrackersModule>();
@@ -33,8 +35,11 @@ public class Embody : MVRScript, IEmbody
             var offsetCameraModule = CreateModule<OffsetCameraModule>();
             var passengerModule = CreateModule<PassengerModule>();
             var snugModule = CreateModule<SnugModule>();
+            snugModule.trackers = trackersModule;
             var worldScaleModule = CreateModule<WorldScaleModule>();
             var eyeTargetModule = CreateModule<EyeTargetModule>();
+
+            // TODO: Once awaken, register the useful storables so they can be modified by scripts
 
             _modules.SetActive(true);
 

@@ -33,6 +33,8 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
 
     public void Update()
     {
+        // ReSharper disable once RedundantJumpStatement
+
         if (!embody.activeJSON.val)
         {
             if (headPossessedInVam)

@@ -45,19 +45,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         {
             base.Awake();
 
-            if (containingAtom?.type != "Person")
-            {
-                // SuperController.LogError($"Please apply the HideGeometry plugin to the 'Person' atom you wish to possess. Currently applied on '{containingAtom.type}'.");
-                enabled = false;
-                return;
-            }
-
             _person = containingAtom;
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
 
             InitControls();
-            // TODO: Move to Enable/Disable
         }
         catch (Exception e)
         {
@@ -65,20 +57,17 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    private void OnPreRender(Camera cam)
+    private void OnGeometryPreRender(Camera cam)
     {
         if (!IsPovCamera(cam)) return;
 
         try
         {
-            if (_skinHandler != null)
-                _skinHandler.BeforeRender();
-            if (_hairHandlers != null)
-                _hairHandlers.ForEach(x =>
-                {
-                    if (x != null)
-                        x.BeforeRender();
-                });
+            _skinHandler?.BeforeRender();
+            _hairHandlers?.ForEach(x =>
+            {
+                x?.BeforeRender();
+            });
         }
         catch (Exception e)
         {
@@ -88,20 +77,18 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    private void OnPostRender(Camera cam)
+    private void OnGeometryPostRender(Camera cam)
     {
+        // TODO: Instead only register on cameras we need on enable?
         if (!IsPovCamera(cam)) return;
 
         try
         {
-            if (_skinHandler != null)
-                _skinHandler.AfterRender();
-            if (_hairHandlers != null)
-                _hairHandlers.ForEach(x =>
-                {
-                    if (x != null)
-                        x.AfterRender();
-                });
+            _skinHandler?.AfterRender();
+            _hairHandlers?.ForEach(x =>
+            {
+                x?.AfterRender();
+            });
         }
         catch (Exception e)
         {
@@ -142,8 +129,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.OnEnable();
 
-        Camera.onPreRender += OnPreRender;
-        Camera.onPostRender += OnPostRender;
+        Camera.onPreRender += OnGeometryPreRender;
+        Camera.onPostRender += OnGeometryPostRender;
 
         ApplyAll(true);
     }
@@ -152,8 +139,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.OnDisable();
 
-        Camera.onPreRender -= OnPreRender;
-        Camera.onPostRender -= OnPostRender;
+        Camera.onPreRender -= OnGeometryPreRender;
+        Camera.onPostRender -= OnGeometryPostRender;
 
         if (ReferenceEquals(_person, null)) return;
 
@@ -183,8 +170,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
                 {
                     _hairHandlers.ForEach(x =>
                     {
-                        if (x != null)
-                            x.Restore();
+                        x?.Restore();
                     });
                     _hairHandlers = null;
                 }
@@ -202,7 +188,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private void ApplyAll(bool active)
     {
         // Try again next frame
-        if (_selector.selectedCharacter?.skin == null)
+        // ReSharper disable once Unity.NoNullPropagation
+        if (ReferenceEquals(_selector.selectedCharacter?.skin, null))
         {
             MakeDirty("Skin not yet loaded.");
             return;
