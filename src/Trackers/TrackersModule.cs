@@ -15,9 +15,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     protected override bool shouldBeSelectedByDefault => true;
 
     private FreeControllerV3 _headControl;
-    private FreeControllerV3 headPossessedController;
-    private Transform motionControllerHead => SuperController.singleton.centerCameraTarget.transform;
-
+    private FreeControllerV3 _headPossessedController;
 
     public override void Awake()
     {
@@ -33,8 +31,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (_headControl.possessed || _headControl.startedPossess)
             SuperController.singleton.ClearPossess();
 
+
         // TODO: Do the parenting, see how vam does it (however we might want to allow offsets)
-        HeadPossess(containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "headControl"), true, true, true);
+        HeadPossess(containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "headControl"));
     }
 
     public override void OnDisable()
@@ -44,152 +43,104 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         ClearPossess();
     }
 
-    private void HeadPossess(FreeControllerV3 headPossess, bool alignRig = false, bool usePossessorSnapPoint = true, bool adjustSpring = true)
+    private void HeadPossess(FreeControllerV3 headPossess)
     {
         if (!headPossess.canGrabPosition && !headPossess.canGrabRotation)
-        {
             return;
-        }
 
-        var component = motionControllerHead.GetComponent<Possessor>();
-        var component2 = motionControllerHead.GetComponent<Rigidbody>();
-        headPossessedController = headPossess;
-        if (SuperController.singleton.headPossessedActivateTransform != null)
+        _headPossessedController = headPossess;
+        headPossess.possessed = true;
+
+        var sc = SuperController.singleton;
+        var motionControllerHead = sc.centerCameraTarget.transform;
+        var motionControllerHeadRigidbody = motionControllerHead.GetComponent<Rigidbody>();
+
+        if (_headPossessedController.canGrabPosition)
         {
-            SuperController.singleton.headPossessedActivateTransform.gameObject.SetActive(true);
+            _headPossessedController.GetComponent<MotionAnimationControl>().suspendPositionPlayback = true;
+            _headPossessedController.RBHoldPositionSpring = sc.possessPositionSpring;
         }
 
-        if (SuperController.singleton.headPossessedText != null)
+        if (_headPossessedController.canGrabRotation)
         {
-            if (headPossessedController.containingAtom != null)
-            {
-                SuperController.singleton.headPossessedText.text = headPossessedController.containingAtom.uid + ":" + headPossessedController.name;
-            }
-            else
-            {
-                SuperController.singleton.headPossessedText.text = headPossessedController.name;
-            }
+             _headPossessedController.GetComponent<MotionAnimationControl>().suspendRotationPlayback = true;
+            _headPossessedController.RBHoldRotationSpring = sc.possessRotationSpring;
         }
 
-        headPossessedController.possessed = true;
-        if (headPossessedController.canGrabPosition)
-        {
-            var component3 = headPossessedController.GetComponent<MotionAnimationControl>();
-            if (component3 != null)
-            {
-                component3.suspendPositionPlayback = true;
-            }
+        sc.SyncMonitorRigPosition();
+        AlignRigAndController(_headPossessedController);
+        // _headPossessedController.PossessMoveAndAlignTo(possessor.autoSnapPoint);
 
-            if (SuperController.singleton.allowPossessSpringAdjustment && adjustSpring)
-            {
-                headPossessedController.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
-            }
-        }
-
-        if (headPossessedController.canGrabRotation)
-        {
-            var component4 = headPossessedController.GetComponent<MotionAnimationControl>();
-            if (component4 != null)
-            {
-                component4.suspendRotationPlayback = true;
-            }
-
-            if (SuperController.singleton.allowPossessSpringAdjustment && adjustSpring)
-            {
-                headPossessedController.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
-            }
-        }
-
-        SuperController.singleton.SyncMonitorRigPosition();
-        if (alignRig)
-        {
-            AlignRigAndController(headPossessedController);
-        }
-        else if (component != null && component.autoSnapPoint != null && usePossessorSnapPoint)
-        {
-            headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
-        }
-
-        if (!(component2 != null))
+        if (!(motionControllerHeadRigidbody != null))
         {
             return;
         }
 
         var linkState = FreeControllerV3.SelectLinkState.Position;
-        if (headPossessedController.canGrabPosition)
+        if (_headPossessedController.canGrabPosition)
         {
-            if (headPossessedController.canGrabRotation)
-            {
+            if (_headPossessedController.canGrabRotation)
                 linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
-            }
         }
-        else if (headPossessedController.canGrabRotation)
+        else if (_headPossessedController.canGrabRotation)
         {
             linkState = FreeControllerV3.SelectLinkState.Rotation;
         }
 
-        headPossessedController.SelectLinkToRigidbody(component2, linkState);
+        _headPossessedController.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
     private void AlignRigAndController(FreeControllerV3 controller)
     {
-        var navigationRig = SuperController.singleton.navigationRig;
+        var sc = SuperController.singleton;
+        var navigationRig = sc.navigationRig;
+        var motionControllerHead = sc.centerCameraTarget.transform;
         var component = motionControllerHead.GetComponent<Possessor>();
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();
         var up = navigationRig.up;
         var fromDirection = Vector3.ProjectOnPlane(motionControllerHead.forward, up);
-        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRig.up);
+        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, up);
         if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControllerHead.up, up) > 0f)
-        {
             vector = -vector;
-        }
 
-        var lhs = Quaternion.FromToRotation(fromDirection, vector);
-        navigationRig.rotation = lhs * navigationRig.rotation;
+        var rotation = Quaternion.FromToRotation(fromDirection, vector);
+        navigationRig.rotation = rotation * navigationRig.rotation;
         if (controller.canGrabRotation)
-        {
             controller.AlignTo(component.autoSnapPoint, true);
-        }
 
         var a = (!(controller.possessPoint != null)) ? controller.control.position : controller.possessPoint.position;
         var b = a - component.autoSnapPoint.position;
-        var vector2 = navigationRig.position + b;
-        var num = Vector3.Dot(vector2 - navigationRig.position, up);
+        var navigationRigPosition = navigationRig.position;
+        var vector2 = navigationRigPosition + b;
+        var num = Vector3.Dot(vector2 - navigationRigPosition, up);
         vector2 += up * (0f - num);
         navigationRig.position = vector2;
-        SuperController.singleton.playerHeightAdjust += num;
-        if (SuperController.singleton.MonitorCenterCamera != null)
+        sc.playerHeightAdjust += num;
+        if (sc.MonitorCenterCamera != null)
         {
-            SuperController.singleton.MonitorCenterCamera.transform.LookAt(controller.transform.position + forwardPossessAxis);
-            Vector3 localEulerAngles = SuperController.singleton.MonitorCenterCamera.transform.localEulerAngles;
+            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
+            monitorCenterCameraTransform.LookAt(controller.transform.position + forwardPossessAxis);
+            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
             localEulerAngles.y = 0f;
             localEulerAngles.z = 0f;
-            SuperController.singleton.MonitorCenterCamera.transform.localEulerAngles = localEulerAngles;
+            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
         }
 
-        headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
+        _headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
     }
 
     public void ClearPossess()
     {
-        if (headPossessedController != null)
-        {
-            headPossessedController.RestorePreLinkState();
-            headPossessedController.possessed = false;
-            var component13 = headPossessedController.GetComponent<MotionAnimationControl>();
-            if (component13 != null)
-            {
-                component13.suspendPositionPlayback = false;
-                component13.suspendRotationPlayback = false;
-            }
+        if (_headPossessedController == null) return;
 
-            headPossessedController = null;
-            if (SuperController.singleton.headPossessedActivateTransform != null)
-            {
-                SuperController.singleton.headPossessedActivateTransform.gameObject.SetActive(false);
-            }
-        }
+        _headPossessedController.RestorePreLinkState();
+        _headPossessedController.possessed = false;
+        var mac = _headPossessedController.GetComponent<MotionAnimationControl>();
+        mac.suspendPositionPlayback = false;
+        mac.suspendRotationPlayback = false;
+
+        _headPossessedController = null;
     }
 
     public override void StoreJSON(JSONClass jc)
