@@ -217,7 +217,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
 
         _character = _selector.selectedCharacter;
-        _hair = _selector.hairItems.Where(h => h.active).Where(h => h.tagsArray.Length == 0 || h.tagsArray.Contains("head") || h.tagsArray.Contains("face")).ToArray();
+        _hair = _selector.hairItems
+            .Where(h => h != null)
+            .Where(h => h.active)
+            .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || h.tagsArray.Contains("head") || h.tagsArray.Contains("face"))
+            .ToArray();
 
         ApplyPossessorMeshVisibility(active);
         if (UpdateHandler(ref _skinHandler, active && hideFaceJSON.val))
