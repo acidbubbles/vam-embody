@@ -58,8 +58,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
             InitControls();
             // TODO: Move to Enable/Disable
-            Camera.onPreRender += OnPreRender;
-            Camera.onPostRender += OnPostRender;
         }
         catch (Exception e)
         {
@@ -144,11 +142,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.OnEnable();
 
-        if (containingAtom.type != "Person")
-        {
-            enabled = false;
-            return;
-        }
+        Camera.onPreRender += OnPreRender;
+        Camera.onPostRender += OnPostRender;
 
         ApplyAll(true);
     }
@@ -157,16 +152,13 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.OnDisable();
 
+        Camera.onPreRender -= OnPreRender;
+        Camera.onPostRender -= OnPostRender;
+
         if (ReferenceEquals(_person, null)) return;
 
         _dirty = false;
         ApplyAll(false);
-    }
-
-    public void OnDestroy()
-    {
-        Camera.onPreRender -= OnPreRender;
-        Camera.onPostRender -= OnPostRender;
     }
 
     public void Update()
