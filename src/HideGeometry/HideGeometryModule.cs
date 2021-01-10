@@ -26,11 +26,9 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public JSONStorableBool hideFaceJSON { get; set; }
     public JSONStorableBool hideHairJSON { get; set; }
 
-    private SkinHandler _skinHandler;
-    private List<HairHandler> _hairHandlers;
+    private readonly List<IHandler> _handlers = new List<IHandler>();
     // For change detection purposes
     private DAZCharacter _character;
-    private DAZHairGroup[] _hair;
 
     // Requires re-generating all shaders and materials, either because last frame was not ready or because something changed
     private bool _dirty;
@@ -38,6 +36,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private bool _failedOnce;
     // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
+    private int _hairHashSum;
+    private int _clothingHashSum;
 
     public override void Awake()
     {
@@ -63,9 +63,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         try
         {
-            _skinHandler.BeforeRender();
-            for (var i = 0; i < _hairHandlers.Count; i++)
-                _hairHandlers[i].BeforeRender();
+            for (var i = 0; i < _handlers.Count; i++)
+                _handlers[i].BeforeRender();
         }
         catch (Exception e)
         {
@@ -82,9 +81,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         try
         {
-            _skinHandler.AfterRender();
-            for (var i = 0; i < _hairHandlers.Count; i++)
-                _hairHandlers[i].AfterRender();
+            for (var i = 0; i < _handlers.Count; i++)
+                _handlers[i].AfterRender();
         }
         catch (Exception e)
         {
@@ -125,10 +123,12 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.OnEnable();
 
+        ApplyPossessorMeshVisibility(false);
+
+        RegisterHandlers();
+
         Camera.onPreRender += OnGeometryPreRender;
         Camera.onPostRender += OnGeometryPostRender;
-
-        ApplyAll(true);
     }
 
     public override void OnDisable()
@@ -138,52 +138,26 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         Camera.onPreRender -= OnGeometryPreRender;
         Camera.onPostRender -= OnGeometryPostRender;
 
-        if (ReferenceEquals(_person, null)) return;
+        ApplyPossessorMeshVisibility(true);
 
+        ClearHandlers();
+    }
+
+    public void ClearHandlers()
+    {
+        foreach (var handler in _handlers)
+            handler.Restore();
+        _handlers.Clear();
+        _character = null;
+        _hairHashSum = 0;
+        _clothingHashSum = 0;
         _dirty = false;
-        ApplyAll(false);
     }
 
-    public void Update()
+    public void RegisterHandlers()
     {
-        try
-        {
-            if (_dirty)
-            {
-                _dirty = false;
-                ApplyAll(true);
-            }
-            else if (_selector.selectedCharacter != _character)
-            {
-                _skinHandler?.Restore();
-                _skinHandler = null;
-                ApplyAll(true);
-            }
-            else if (!_selector.hairItems.Where(h => h.active).SequenceEqual(_hair))
-            {
-                // Note: This only checks if the first hair changed. It'll be good enough for most purposes, but imperfect.
-                if (_hairHandlers != null)
-                {
-                    _hairHandlers.ForEach(x =>
-                    {
-                        x?.Restore();
-                    });
-                    _hairHandlers = null;
-                }
-                ApplyAll(true);
-            }
-        }
-        catch (Exception e)
-        {
-            if (_failedOnce) return;
-            _failedOnce = true;
-            SuperController.LogError("Failed to update HideGeometry: " + e);
-        }
-    }
+        _dirty = false;
 
-    private void ApplyAll(bool active)
-    {
-        // Try again next frame
         // ReSharper disable once Unity.NoNullPropagation
         if (ReferenceEquals(_selector.selectedCharacter?.skin, null))
         {
@@ -192,26 +166,93 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
 
         _character = _selector.selectedCharacter;
-        _hair = _selector.hairItems
+        if (_character == null)
+        {
+            enabled = false;
+            return;
+        }
+
+        if (!RegisterHandler(new SkinHandler(_character.skin)))
+            return;
+
+        _hairHashSum = _selector.hairItems.Where(h => h.active).Aggregate(0, (s, h) => s ^ h.GetHashCode());
+        var hair = _selector.hairItems
             .Where(h => h != null)
             .Where(h => h.active)
-            .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || h.tagsArray.Contains("head") || h.tagsArray.Contains("face"))
+            .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || Array.IndexOf(h.tagsArray, "head") > -1 || Array.IndexOf(h.tagsArray, "face") > -1)
+            .Where(HairHandler.Supports)
             .ToArray();
-
-        ApplyPossessorMeshVisibility(active);
-        if (UpdateHandler(ref _skinHandler, active && hideFaceJSON.val))
-            ConfigureHandler("Skin", ref _skinHandler, _skinHandler.Configure(_character.skin));
-        if (_hairHandlers == null)
-            _hairHandlers = new List<HairHandler>(new HairHandler[_hair.Length]);
-        for (var i = 0; i < _hairHandlers.Count; i++)
+        foreach (var h in hair)
         {
-            var hairHandler = _hairHandlers[i];
-            if (UpdateHandler(ref hairHandler, active && hideHairJSON.val))
-                ConfigureHandler("Hair", ref hairHandler, hairHandler.Configure(_hair[i]));
-            _hairHandlers[i] = hairHandler;
+            if (!RegisterHandler(new HairHandler(h)))
+                return;
+        }
+
+        _clothingHashSum = _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode());
+        var clothes = _selector.clothingItems
+            .Where(c => c.active)
+            .Where(c => c.tagsArray != null && Array.IndexOf(c.tagsArray, "head") > -1)
+            .ToArray();
+        foreach (var c in clothes)
+        {
+            if (!RegisterHandler(new ClothingHandler(c)))
+                return;
         }
 
         if (!_dirty) _tryAgainAttempts = 0;
+    }
+
+    private bool RegisterHandler(IHandler handler)
+    {
+        _handlers.Add(handler);
+        var configured = handler.Configure();
+        if (!configured)
+        {
+            ClearHandlers();
+            return false;
+        }
+        return true;
+    }
+
+    public void RefreshHandlers()
+    {
+        ClearHandlers();
+        RegisterHandlers();
+    }
+
+    public void Update()
+    {
+        try
+        {
+            if (_dirty)
+            {
+                RegisterHandlers();
+                return;
+            }
+
+            if (_selector.selectedCharacter != _character)
+            {
+                RefreshHandlers();
+                return;
+            }
+            // TODO: Validate if this actually works, and if it does use loop instead of linq
+            if (_hairHashSum != _selector.hairItems.Where(h => h.active).Aggregate(0, (s, h) => s ^ h.GetHashCode()))
+            {
+                RefreshHandlers();
+                return;
+            }
+            if (_clothingHashSum != _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode()))
+            {
+                RefreshHandlers();
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            if (_failedOnce) return;
+            _failedOnce = true;
+            SuperController.LogError("Failed to update HideGeometry: " + e);
+        }
     }
 
     private void MakeDirty(string what, string reason)
@@ -225,58 +266,14 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    private void ConfigureHandler<T>(string what, ref T handler, int result)
-     where T : IHandler, new()
-    {
-        switch (result)
-        {
-            case HandlerConfigurationResult.Success:
-                break;
-            case HandlerConfigurationResult.CannotApply:
-                handler = default(T);
-                break;
-            case HandlerConfigurationResult.TryAgainLater:
-                handler = default(T);
-                MakeDirty(what, "is still waiting for assets to be ready.");
-                break;
-        }
-    }
-
-    private bool UpdateHandler<T>(ref T handler, bool active)
-     where T : IHandler, new()
-    {
-        if (handler == null && active)
-        {
-            handler = new T();
-            return true;
-        }
-
-        if (handler != null && active)
-        {
-            handler.Restore();
-            handler = new T();
-            return true;
-        }
-
-        if (handler != null && !active)
-        {
-            handler.Restore();
-            handler = default(T);
-        }
-
-        return false;
-    }
-
-
     private void ApplyPossessorMeshVisibility(bool active)
     {
         try
         {
-            var meshActive = !active;
-
-            _possessor.gameObject.transform.Find("Capsule")?.gameObject.SetActive(meshActive);
-            _possessor.gameObject.transform.Find("Sphere1")?.gameObject.SetActive(meshActive);
-            _possessor.gameObject.transform.Find("Sphere2")?.gameObject.SetActive(meshActive);
+            var possessorTransform = _possessor.gameObject.transform;
+            possessorTransform.Find("Capsule")?.gameObject.SetActive(active);
+            possessorTransform.Find("Sphere1")?.gameObject.SetActive(active);
+            possessorTransform.Find("Sphere2")?.gameObject.SetActive(active);
         }
         catch (Exception e)
         {

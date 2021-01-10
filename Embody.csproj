@@ -74,6 +74,7 @@
     <Compile Include="src\Embody.cs" />
     <Compile Include="src\EyeTarget\EyeTargetModule.cs" />
     <Compile Include="src\EyeTarget\EyeTargetSettingsScreen.cs" />
+    <Compile Include="src\HideGeometry\Handlers\ClothingHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\HairHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\HideGeometry\Handlers\IHandler.cs" />

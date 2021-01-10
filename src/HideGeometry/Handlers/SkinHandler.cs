@@ -92,12 +92,16 @@ namespace Handlers
         private DAZSkinV2 _skin;
         private List<SkinShaderMaterialReference> _materialRefs;
 
-        public int Configure(DAZSkinV2 skin)
+        public SkinHandler(DAZSkinV2 skin)
         {
             _skin = skin;
+        }
+
+        public bool Configure()
+        {
             _materialRefs = new List<SkinShaderMaterialReference>();
 
-            foreach (var material in GetMaterialsToHide(skin))
+            foreach (var material in GetMaterialsToHide(_skin))
             {
 #if (IMPROVED_POV)
                 if(material == null)
@@ -119,8 +123,8 @@ namespace Handlers
             }
 
             // This is a hack to force a refresh of the shaders cache
-            skin.BroadcastMessage("OnApplicationFocus", true);
-            return HandlerConfigurationResult.Success;
+            _skin.BroadcastMessage("OnApplicationFocus", true);
+            return true;
         }
 
         public void Restore()

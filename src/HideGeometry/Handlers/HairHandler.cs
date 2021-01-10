@@ -12,48 +12,54 @@ namespace Handlers
             public float originalAlphaAdjust;
         }
 
+        private readonly DAZHairGroup _hair;
         private Material _hairMaterial;
         private string _hairShaderProperty;
         private float _hairShaderHiddenValue;
         private float _hairShaderOriginalValue;
         private List<MaterialReference> _materialRefs;
 
-        public int Configure(DAZHairGroup hair)
+        public HairHandler(DAZHairGroup hair)
         {
-            if (hair == null || hair.name == "NoHair")
-                return HandlerConfigurationResult.CannotApply;
-
-            if (hair.name == "Sim2Hair" || hair.name == "Sim2HairMale" || hair.name == "CustomHairItem")
-                return ConfigureSimV2Hair(hair);
-            else if (hair.name == "SimHairGroup" || hair.name == "SimHairGroup2")
-                return ConfigureSimHair(hair);
-            else
-                return ConfigureSimpleHair(hair);
+            _hair = hair;
         }
 
-        private int ConfigureSimV2Hair(DAZHairGroup hair)
+        public static bool Supports(DAZHairGroup hair)
+        {
+            if (hair == null || hair.name == "NoHair")
+                return false;
+
+            if (hair.name == "SimHairGroup" || hair.name == "SimHairGroup2")
+                return false;
+
+            return true;
+        }
+
+        public bool Configure()
+        {
+            if (_hair.name == "Sim2Hair" || _hair.name == "Sim2HairMale" || _hair.name == "CustomHairItem")
+                return ConfigureSimV2Hair(_hair);
+
+            return ConfigureSimpleHair(_hair);
+        }
+
+        private bool ConfigureSimV2Hair(DAZHairGroup hair)
         {
             var materialRefs = new List<MaterialReference>(GetScalpMaterialReferences(hair));
             if (materialRefs.Count != 0) _materialRefs = materialRefs;
 
             var hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
             if (hairMaterial == null)
-                return HandlerConfigurationResult.TryAgainLater;
+                return false;
 
             _hairMaterial = hairMaterial;
             _hairShaderProperty = "_StandWidth";
             _hairShaderHiddenValue = 0f;
             _hairShaderOriginalValue = _hairMaterial.GetFloat(_hairShaderProperty);
-            return HandlerConfigurationResult.Success;
+            return true;
         }
 
-        private int ConfigureSimHair(DAZHairGroup hair)
-        {
-            SuperController.LogError("Hair " + hair.name + " is not supported!");
-            return HandlerConfigurationResult.CannotApply;
-        }
-
-        private int ConfigureSimpleHair(DAZHairGroup hair)
+        private bool ConfigureSimpleHair(DAZHairGroup hair)
         {
             var materialRefs = hair.GetComponentsInChildren<DAZMesh>()
                 .SelectMany(m => m.materials)
@@ -66,13 +72,13 @@ namespace Handlers
                 .ToList();
 
             if (materialRefs.Count == 0)
-                return HandlerConfigurationResult.TryAgainLater;
+                return false;
 
             materialRefs.AddRange(GetScalpMaterialReferences(hair));
 
             _materialRefs = materialRefs;
 
-            return HandlerConfigurationResult.Success;
+            return true;
         }
 
         private IEnumerable<MaterialReference> GetScalpMaterialReferences(DAZHairGroup hair)
