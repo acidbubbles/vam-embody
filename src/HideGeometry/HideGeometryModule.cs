@@ -146,7 +146,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public void ClearHandlers()
     {
         foreach (var handler in _handlers)
-            handler.Restore();
+            handler.Dispose();
         _handlers.Clear();
         _character = null;
         _hairHashSum = 0;
@@ -205,7 +205,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private bool RegisterHandler(IHandler handler)
     {
         _handlers.Add(handler);
-        var configured = handler.Configure();
+        var configured = handler.Prepare();
         if (!configured)
         {
             ClearHandlers();

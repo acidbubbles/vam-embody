@@ -6,18 +6,12 @@ namespace Handlers
 {
     public class HairHandler : IHandler
     {
-        public class MaterialReference
-        {
-            public Material material;
-            public float originalAlphaAdjust;
-        }
-
         private readonly DAZHairGroup _hair;
         private Material _hairMaterial;
         private string _hairShaderProperty;
         private float _hairShaderHiddenValue;
         private float _hairShaderOriginalValue;
-        private List<MaterialReference> _materialRefs;
+        private List<MaterialAlphaSnapshot> _materialRefs;
 
         public HairHandler(DAZHairGroup hair)
         {
@@ -35,20 +29,20 @@ namespace Handlers
             return true;
         }
 
-        public bool Configure()
+        public bool Prepare()
         {
             if (_hair.name == "Sim2Hair" || _hair.name == "Sim2HairMale" || _hair.name == "CustomHairItem")
-                return ConfigureSimV2Hair(_hair);
+                return ConfigureSimV2Hair();
 
-            return ConfigureSimpleHair(_hair);
+            return ConfigureSimpleHair();
         }
 
-        private bool ConfigureSimV2Hair(DAZHairGroup hair)
+        private bool ConfigureSimV2Hair()
         {
-            var materialRefs = new List<MaterialReference>(GetScalpMaterialReferences(hair));
+            var materialRefs = new List<MaterialAlphaSnapshot>(GetScalpMaterialReferences(_hair));
             if (materialRefs.Count != 0) _materialRefs = materialRefs;
 
-            var hairMaterial = hair.GetComponentInChildren<MeshRenderer>()?.material;
+            var hairMaterial = _hair.GetComponentInChildren<MeshRenderer>()?.material;
             if (hairMaterial == null)
                 return false;
 
@@ -59,12 +53,12 @@ namespace Handlers
             return true;
         }
 
-        private bool ConfigureSimpleHair(DAZHairGroup hair)
+        private bool ConfigureSimpleHair()
         {
-            var materialRefs = hair.GetComponentsInChildren<DAZMesh>()
+            var materialRefs = _hair.GetComponentsInChildren<DAZMesh>()
                 .SelectMany(m => m.materials)
                 .Distinct()
-                .Select(m => new MaterialReference
+                .Select(m => new MaterialAlphaSnapshot
                 {
                     material = m,
                     originalAlphaAdjust = m.GetFloat("_AlphaAdjust")
@@ -74,47 +68,49 @@ namespace Handlers
             if (materialRefs.Count == 0)
                 return false;
 
-            materialRefs.AddRange(GetScalpMaterialReferences(hair));
+            materialRefs.AddRange(GetScalpMaterialReferences(_hair));
 
             _materialRefs = materialRefs;
 
             return true;
         }
 
-        private IEnumerable<MaterialReference> GetScalpMaterialReferences(DAZHairGroup hair)
+        private static IEnumerable<MaterialAlphaSnapshot> GetScalpMaterialReferences(DAZHairGroup hair)
         {
             return hair.GetComponentsInChildren<DAZSkinWrap>()
                 .SelectMany(m => m.GPUmaterials)
                 .Distinct()
-                .Select(m => new MaterialReference
+                .Select(m => new MaterialAlphaSnapshot
                 {
                     material = m,
                     originalAlphaAdjust = m.GetFloat("_AlphaAdjust")
                 });
         }
 
-        public void Restore()
+        public void Dispose()
         {
-            _hairMaterial = null;
-            _materialRefs = null;
         }
 
         public void BeforeRender()
         {
-            if (_hairMaterial != null)
-                _hairMaterial.SetFloat(_hairShaderProperty, _hairShaderHiddenValue);
-            if (_materialRefs != null)
-                foreach (var materialRef in _materialRefs)
-                    materialRef.material.SetFloat("_AlphaAdjust", -1f);
+            // ReSharper disable once Unity.NoNullPropagation
+            _hairMaterial?.SetFloat(_hairShaderProperty, _hairShaderHiddenValue);
+            for (var i = 0; i < _materialRefs.Count; i++)
+            {
+                var materialRef = _materialRefs[i];
+                materialRef.material.SetFloat("_AlphaAdjust", -1f);
+            }
         }
 
         public void AfterRender()
         {
-            if (_hairMaterial != null)
-                _hairMaterial.SetFloat(_hairShaderProperty, _hairShaderOriginalValue);
-            if (_materialRefs != null)
-                foreach (var materialRef in _materialRefs)
-                    materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+            // ReSharper disable once Unity.NoNullPropagation
+            _hairMaterial?.SetFloat(_hairShaderProperty, _hairShaderOriginalValue);
+            for (var i = 0; i < _materialRefs.Count; i++)
+            {
+                var materialRef = _materialRefs[i];
+                materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+            }
         }
     }
 }

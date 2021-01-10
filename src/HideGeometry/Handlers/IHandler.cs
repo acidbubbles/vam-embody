@@ -1,9 +1,10 @@
+using System;
+
 namespace Handlers
 {
-    public interface IHandler
+    public interface IHandler : IDisposable
     {
-        bool Configure();
-        void Restore();
+        bool Prepare();
         void BeforeRender();
         void AfterRender();
     }

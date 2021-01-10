@@ -78,7 +78,11 @@
     <Compile Include="src\HideGeometry\Handlers\HairHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\HandlerConfigurationResult.cs" />
     <Compile Include="src\HideGeometry\Handlers\IHandler.cs" />
+    <Compile Include="src\HideGeometry\Handlers\KnownMaterials.cs" />
+    <Compile Include="src\HideGeometry\Handlers\MaterialAlphaSnapshot.cs" />
+    <Compile Include="src\HideGeometry\Handlers\ReplacementShaders.cs" />
     <Compile Include="src\HideGeometry\Handlers\SkinHandler.cs" />
+    <Compile Include="src\HideGeometry\Handlers\SkinShaderMaterialSnapshot.cs" />
     <Compile Include="src\HideGeometry\HideGeometryModule.cs" />
     <Compile Include="src\HideGeometry\HideGeometrySettingsScreen.cs" />
     <Compile Include="src\OffsetCamera\OffsetCameraModule.cs" />

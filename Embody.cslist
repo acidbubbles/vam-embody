@@ -11,7 +11,11 @@ src\HideGeometry\Handlers\ClothingHandler.cs
 src\HideGeometry\Handlers\HairHandler.cs
 src\HideGeometry\Handlers\HandlerConfigurationResult.cs
 src\HideGeometry\Handlers\IHandler.cs
+src\HideGeometry\Handlers\KnownMaterials.cs
+src\HideGeometry\Handlers\MaterialAlphaSnapshot.cs
+src\HideGeometry\Handlers\ReplacementShaders.cs
 src\HideGeometry\Handlers\SkinHandler.cs
+src\HideGeometry\Handlers\SkinShaderMaterialSnapshot.cs
 src\HideGeometry\HideGeometryModule.cs
 src\HideGeometry\HideGeometrySettingsScreen.cs
 src\ImportExport\ImportExportScreen.cs

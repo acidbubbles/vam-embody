@@ -9,12 +9,12 @@
             _clothing = clothing;
         }
 
-        public bool Configure()
+        public bool Prepare()
         {
             return true;
         }
 
-        public void Restore()
+        public void Dispose()
         {
         }
 
