@@ -6,6 +6,57 @@ public interface ITrackersModule : IEmbodyModule
 {
 }
 
+public class NavigationRigSnapshot
+{
+    private float _playerHeightAdjust;
+    private Quaternion _rotation;
+    private Vector3 _position;
+
+    public static NavigationRigSnapshot Snap()
+    {
+        var navigationRig = SuperController.singleton.navigationRig;
+        return new NavigationRigSnapshot
+        {
+            _position = navigationRig.position,
+            _rotation = navigationRig.rotation,
+            _playerHeightAdjust = SuperController.singleton.playerHeightAdjust
+        };
+    }
+
+    public void Restore()
+    {
+        var navigationRig = SuperController.singleton.navigationRig;
+        navigationRig.position = _position;
+        navigationRig.rotation = _rotation;
+        SuperController.singleton.playerHeightAdjust = _playerHeightAdjust;
+    }
+}
+
+public class FreeControllerV3Snapshot
+{
+    public FreeControllerV3 controller;
+    private Vector3 _position;
+    private Quaternion _rotation;
+
+    public static FreeControllerV3Snapshot Snap(FreeControllerV3 controller)
+    {
+        var controlTransform = controller.control.transform;
+        return new FreeControllerV3Snapshot
+        {
+            controller = controller,
+            _position = controlTransform.position,
+            _rotation = controlTransform.rotation
+        };
+    }
+
+    public void Restore()
+    {
+        var controlTransform = controller.control.transform;
+        controlTransform.position = _position;
+        controlTransform.rotation = _rotation;
+    }
+}
+
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
 {
     public const string Label = "Trackers";
@@ -15,7 +66,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     protected override bool shouldBeSelectedByDefault => true;
 
     private FreeControllerV3 _headControl;
-    private FreeControllerV3 _headPossessedController;
+    private FreeControllerV3Snapshot _possessedHeadSnapshot;
+    private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Awake()
     {
@@ -28,12 +80,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.OnEnable();
 
-        if (_headControl.possessed || _headControl.startedPossess)
-            SuperController.singleton.ClearPossess();
+        SuperController.singleton.ClearPossess();
 
-
-        // TODO: Do the parenting, see how vam does it (however we might want to allow offsets)
-        HeadPossess(containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "headControl"));
+        HeadPossess(_headControl);
     }
 
     public override void OnDisable()
@@ -43,32 +92,34 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         ClearPossess();
     }
 
-    private void HeadPossess(FreeControllerV3 headPossess)
+    private void HeadPossess(FreeControllerV3 controller)
     {
-        if (!headPossess.canGrabPosition && !headPossess.canGrabRotation)
+        if (!controller.canGrabPosition && !controller.canGrabRotation)
             return;
 
-        _headPossessedController = headPossess;
-        headPossess.possessed = true;
+        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        _possessedHeadSnapshot = FreeControllerV3Snapshot.Snap(controller);
+
+        controller.possessed = true;
 
         var sc = SuperController.singleton;
         var motionControllerHead = sc.centerCameraTarget.transform;
         var motionControllerHeadRigidbody = motionControllerHead.GetComponent<Rigidbody>();
 
-        if (_headPossessedController.canGrabPosition)
+        if (controller.canGrabPosition)
         {
-            _headPossessedController.GetComponent<MotionAnimationControl>().suspendPositionPlayback = true;
-            _headPossessedController.RBHoldPositionSpring = sc.possessPositionSpring;
+            controller.GetComponent<MotionAnimationControl>().suspendPositionPlayback = true;
+            controller.RBHoldPositionSpring = sc.possessPositionSpring;
         }
 
-        if (_headPossessedController.canGrabRotation)
+        if (controller.canGrabRotation)
         {
-             _headPossessedController.GetComponent<MotionAnimationControl>().suspendRotationPlayback = true;
-            _headPossessedController.RBHoldRotationSpring = sc.possessRotationSpring;
+             controller.GetComponent<MotionAnimationControl>().suspendRotationPlayback = true;
+            controller.RBHoldRotationSpring = sc.possessRotationSpring;
         }
 
         sc.SyncMonitorRigPosition();
-        AlignRigAndController(_headPossessedController);
+        AlignRigAndController(controller);
         // _headPossessedController.PossessMoveAndAlignTo(possessor.autoSnapPoint);
 
         if (!(motionControllerHeadRigidbody != null))
@@ -77,17 +128,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
 
         var linkState = FreeControllerV3.SelectLinkState.Position;
-        if (_headPossessedController.canGrabPosition)
+        if (controller.canGrabPosition)
         {
-            if (_headPossessedController.canGrabRotation)
+            if (controller.canGrabRotation)
                 linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
         }
-        else if (_headPossessedController.canGrabRotation)
+        else if (controller.canGrabRotation)
         {
             linkState = FreeControllerV3.SelectLinkState.Rotation;
         }
 
-        _headPossessedController.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
+        controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
     private void AlignRigAndController(FreeControllerV3 controller)
@@ -127,20 +178,24 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
         }
 
-        _headPossessedController.PossessMoveAndAlignTo(component.autoSnapPoint);
+        controller.PossessMoveAndAlignTo(component.autoSnapPoint);
     }
 
     public void ClearPossess()
     {
-        if (_headPossessedController == null) return;
+        if (_possessedHeadSnapshot == null) return;
 
-        _headPossessedController.RestorePreLinkState();
-        _headPossessedController.possessed = false;
-        var mac = _headPossessedController.GetComponent<MotionAnimationControl>();
+        _possessedHeadSnapshot.controller.RestorePreLinkState();
+        _possessedHeadSnapshot.controller.possessed = false;
+        var mac = _possessedHeadSnapshot.controller.GetComponent<MotionAnimationControl>();
         mac.suspendPositionPlayback = false;
         mac.suspendRotationPlayback = false;
 
-        _headPossessedController = null;
+        _possessedHeadSnapshot.Restore();
+        _possessedHeadSnapshot = null;
+
+        _navigationRigSnapshot.Restore();
+        _navigationRigSnapshot = null;
     }
 
     public override void StoreJSON(JSONClass jc)
