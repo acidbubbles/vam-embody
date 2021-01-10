@@ -63,17 +63,15 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         try
         {
-            _skinHandler?.BeforeRender();
-            _hairHandlers?.ForEach(x =>
-            {
-                x?.BeforeRender();
-            });
+            _skinHandler.BeforeRender();
+            for (var i = 0; i < _hairHandlers.Count; i++)
+                _hairHandlers[i].BeforeRender();
         }
         catch (Exception e)
         {
             if (_failedOnce) return;
             _failedOnce = true;
-            SuperController.LogError("Failed to execute pre render HideGeometry: " + e);
+            SuperController.LogError($"Embody: Failed to execute {nameof(OnGeometryPreRender)}: {e}");
         }
     }
 
@@ -84,21 +82,19 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         try
         {
-            _skinHandler?.AfterRender();
-            _hairHandlers?.ForEach(x =>
-            {
-                x?.AfterRender();
-            });
+            _skinHandler.AfterRender();
+            for (var i = 0; i < _hairHandlers.Count; i++)
+                _hairHandlers[i].AfterRender();
         }
         catch (Exception e)
         {
             if (_failedOnce) return;
             _failedOnce = true;
-            SuperController.LogError("Failed to execute post render HideGeometry: " + e);
+            SuperController.LogError($"Embody: Failed to execute {nameof(OnGeometryPostRender)}: {e}");
         }
     }
 
-    private bool IsPovCamera(Camera cam)
+    private static bool IsPovCamera(Camera cam)
     {
         return
             // Oculus Rift
@@ -191,7 +187,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         // ReSharper disable once Unity.NoNullPropagation
         if (ReferenceEquals(_selector.selectedCharacter?.skin, null))
         {
-            MakeDirty("Skin not yet loaded.");
+            MakeDirty("skin", "is not yet loaded.");
             return;
         }
 
@@ -218,13 +214,13 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         if (!_dirty) _tryAgainAttempts = 0;
     }
 
-    private void MakeDirty(string reason)
+    private void MakeDirty(string what, string reason)
     {
         _dirty = true;
         _tryAgainAttempts++;
         if (_tryAgainAttempts > 90 * 20) // Approximately 20 to 40 seconds
         {
-            SuperController.LogError("Failed to apply HideGeometry. Reason: " + reason + ". Try reloading the plugin, or report the issue to @Acidbubbles.");
+            SuperController.LogError($"Failed to apply HideGeometry. Reason: {what} {reason}. Try reloading the plugin, or report the issue to @Acidbubbles.");
             enabled = false;
         }
     }
@@ -241,7 +237,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
                 break;
             case HandlerConfigurationResult.TryAgainLater:
                 handler = default(T);
-                MakeDirty(what + " is still waiting for assets to be ready.");
+                MakeDirty(what, "is still waiting for assets to be ready.");
                 break;
         }
     }

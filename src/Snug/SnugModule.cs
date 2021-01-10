@@ -1,5 +1,7 @@
 /* TODO
 - Remove sliders for in-game size, or make them "advanced"
+- Run auto setup whenever enabled or visual helpers shown
+- When loading a preset, overwrite with autosetup immediately
 */
 
 using System;
@@ -17,7 +19,6 @@ public interface ISnugModule : IEmbodyModule
     JSONStorableFloat falloffJSON { get; }
     JSONStorableBool showVisualCuesJSON { get; }
     JSONStorableBool disableSelectionJSON { get; set; }
-    IEnumerator Wizard();
 }
 
 public class SnugModule : EmbodyModuleBase, ISnugModule
@@ -34,7 +35,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool showVisualCuesJSON { get; private set; }
     public JSONStorableBool disableSelectionJSON { get; set; }
-    public ITrackersModule trackers { get; set; }
 
     private readonly List<GameObject> _cues = new List<GameObject>();
     private bool _leftHandActive, _rightHandActive;
@@ -79,195 +79,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         catch (Exception exc)
         {
             SuperController.LogError($"{nameof(SnugModule)}.{nameof(Awake)}: {exc}");
-        }
-
-        StartCoroutine(DeferredInit());
-    }
-
-    // TODO: This should be in it's own class
-    public IEnumerator Wizard()
-    {
-        yield return 0;
-
-        var realLeftHand = SuperController.singleton.leftHand;
-        var realRightHand = SuperController.singleton.rightHand;
-        var headControl = containingAtom.freeControllers.First(fc => fc.name == "headControl");
-        var lFootControl = containingAtom.freeControllers.First(fc => fc.name == "lFootControl");
-        var rFootControl = containingAtom.freeControllers.First(fc => fc.name == "rFootControl");
-
-        SuperController.singleton.worldScale = 1f;
-
-        AutoSetup();
-
-        // TODO: Use overlays instead
-        // TODO: Try and make the model stand straight, not sure how I can do that
-        SuperController.singleton.helpText = "Welcome to Embody's Wizard! Stand straight, and press select when ready. Make sure the VR person is also standing straight.";
-        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
-
-        var realHeight = SuperController.singleton.heightAdjustTransform.InverseTransformPoint(SuperController.singleton.centerCameraTarget.transform.position).y;
-        // NOTE: Floor is more precise but foot allows to be at non-zero height for calibration
-        var gameHeight = headControl.transform.position.y - ((lFootControl.transform.position.y + rFootControl.transform.position.y) / 2f);
-        var scale = gameHeight / realHeight;
-        SuperController.singleton.worldScale = scale;
-        SuperController.LogMessage($"Player height: {realHeight}, model height: {gameHeight}, scale: {scale}");
-
-        SuperController.singleton.helpText = "World scale adjusted. Now put your hands together like you're praying, and press select when ready.";
-        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
-
-        var handsDistance = Vector3.Distance(realLeftHand.position, realRightHand.position);
-        SuperController.LogMessage($"Hand distance: {handsDistance}");
-
-        SuperController.singleton.helpText = "Hand distance recorded. We will now start possession. Press select when ready.";
-        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
-
-        // TODO: We should technically enable Embody. Review this.
-        trackers.enabledJSON.val = true;
-
-        SuperController.singleton.helpText = "Possession activated. Now put your hands on your real hips, and press select when ready.";
-        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
-
-        // TODO: Highlight the ring where we want the hands to be.
-        var hipsAnchorPoint = anchorPoints.First(a => a.Label == "Hips");
-        var gameHipsCenter = hipsAnchorPoint.GetInGameWorldPosition();
-        // TODO: Check the forward size too, and the offset.
-        // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
-        var realHipsWidth = Vector3.Distance(realLeftHand.position, realRightHand.position) - handsDistance;
-        var realHipsXCenter = (realLeftHand.position + realRightHand.position) / 2f;
-        hipsAnchorPoint.RealLifeSize = new Vector3(realHipsWidth, 0f, hipsAnchorPoint.InGameSize.z);
-        hipsAnchorPoint.RealLifeOffset = realHipsXCenter - gameHipsCenter;
-        SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");
-        SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {hipsAnchorPoint.RealLifeSize.x}");
-        SuperController.LogMessage($"Real Hips center: {realHipsXCenter}, Game Hips center: {gameHipsCenter}");
-
-        SuperController.singleton.helpText = "Now put your right hand at the same level as your hips but on the front, squeezed on you.";
-        while (!AreAnyStartRecordKeysDown()) yield return 0; yield return 0;
-
-        var adjustedHipsCenter = hipsAnchorPoint.GetAdjustedWorldPosition();
-        var realHipsFront = Vector3.MoveTowards(realRightHand.position, adjustedHipsCenter, handsDistance / 2f);
-        hipsAnchorPoint.RealLifeSize = new Vector3(hipsAnchorPoint.RealLifeSize.x, 0f, Vector3.Distance(realHipsFront, adjustedHipsCenter) * 2f);
-
-        hipsAnchorPoint.Update();
-
-        SuperController.singleton.helpText = "All done! You can now activate Embody.";
-        yield return new WaitForSeconds(3);
-        SuperController.singleton.helpText = "";
-    }
-
-    private static bool AreAnyStartRecordKeysDown()
-    {
-        var sc = SuperController.singleton;
-        if (sc.isOVR)
-        {
-            if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.Touch)) return true;
-            if (OVRInput.GetDown(OVRInput.Button.Three, OVRInput.Controller.Touch)) return true;
-        }
-        if (sc.isOpenVR)
-        {
-            if (sc.selectAction.stateDown) return true;
-        }
-        if (Input.GetKeyDown(KeyCode.Space)) return true;
-        return false;
-    }
-
-    private void AutoSetup()
-    {
-        // TODO: Recalculate when the y offset is changed
-        // TODO: Check when the person scale changes
-        var colliders = ScanBodyColliders().ToList();
-        foreach (var anchor in anchorPoints)
-        {
-            if (anchor.Locked) continue;
-            // if (anchor.Label != "Abdomen") continue;
-            AutoSetup(anchor.RigidBody, anchor, colliders);
-        }
-        // TODO: If the UI is open, the sliders will be wrong. Determine when is the right time to do the auto-setup.
-    }
-
-    private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor, List<Collider> colliders)
-    {
-        const float raycastDistance = 100f;
-        var rbTransform = rb.transform;
-        var rbUp = rbTransform.up;
-        var rbOffsetPosition = rbTransform.position + rbUp * anchor.InGameOffset.y;
-        var rbRotation = rbTransform.rotation;
-        var rbForward = rbTransform.forward;
-
-        var rays = new List<Ray>();
-        for (var i = 0; i < 360; i += 5)
-        {
-            var rotation = Quaternion.AngleAxis(i, rbUp);
-            var origin = rbOffsetPosition + rotation * (rbForward * raycastDistance);
-            rays.Add(new Ray(origin, rbOffsetPosition - origin));
-        }
-
-        var min = Vector3.positiveInfinity;
-        var max = Vector3.negativeInfinity;
-        var isHit = false;
-        foreach (var collider in colliders)
-        {
-            foreach (var ray in rays)
-            {
-                RaycastHit hit;
-                if (!collider.Raycast(ray, out hit, raycastDistance)) continue;
-                isHit = true;
-                min = Vector3.Min(min, hit.point);
-                max = Vector3.Max(max, hit.point);
-
-                // var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
-                // _cues.Add(hitCue);
-                // hitCue.transform.localScale = Vector3.one * 0.002f;
-                // hitCue.transform.position = hit.point;
-            }
-        }
-
-        if (!isHit) return;
-
-        var size = Quaternion.Inverse(rbRotation) * (max - min);
-        var center = min + (max - min) / 2f;
-        // TODO: Why add virtual offset here?
-        var offset = center - rbTransform.position; //* + rbUp * anchor.VirtualOffset.y;
-
-        // var cue = VisualCuesHelper.Cross(Color.red);
-        // _cues.Add(cue);
-        // cue.transform.localScale = Vector3.one * 2f;
-        // cue.transform.position = center;
-
-        // TODO: Adjust padding for scale?
-        var padding = new Vector3(0.02f, 0f, 0.02f);
-
-        anchor.InGameSize = size + padding;
-        anchor.InGameOffset = offset;
-        anchor.RealLifeSize = anchor.InGameSize;
-        anchor.RealLifeOffset = Vector3.zero;
-        anchor.Update();
-    }
-
-    private IEnumerable<Collider> ScanBodyColliders()
-    {
-        var personRoot = containingAtom.transform.Find("rescale2");
-        // Those are the ones where colliders can actually be found for female:
-        //.Find("geometry").Find("FemaleMorphers")
-        //.Find("PhysicsModel").Find("Genesis2Female")
-        return ScanBodyColliders(personRoot);
-    }
-
-    private IEnumerable<Collider> ScanBodyColliders(Transform root)
-    {
-        if(root.name == "lCollar" || root.name == "rCollar") yield break;
-        if(root.name == "lShin" || root.name == "rShin") yield break;
-
-        foreach (var collider in root.GetComponents<Collider>())
-        {
-            if (!collider.enabled) continue;
-            yield return collider;
-        }
-
-        for (var i = 0; i < root.childCount; i++)
-        {
-            var child = root.GetChild(i);
-            if (!child.gameObject.activeSelf) continue;
-            foreach (var collider in ScanBodyColliders(child))
-                yield return collider;
         }
     }
 
@@ -461,14 +272,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = false;
     }
 
-    private IEnumerator DeferredInit()
-    {
-        while (SuperController.singleton.isLoading)
-            yield return 0;
-        // TODO: Do this when doing wizard, showing cues, or enabling
-        AutoSetup();
-    }
-
     #region Load / Save
 
     public override void StoreJSON(JSONClass jc)
@@ -621,7 +424,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         // TODO: If an anchor is higher than one that should be higher, ignore it
         // Find the weight of both anchors (closest = strongest effect)
+        // ReSharper disable once PossibleNullReferenceException
         var upperPosition = upper.GetAdjustedWorldPosition();
+        // ReSharper disable once PossibleNullReferenceException
         var lowerPosition = lower.GetAdjustedWorldPosition();
         var yUpperDelta = upperPosition.y - position.y;
         var yLowerDelta = position.y - lowerPosition.y;

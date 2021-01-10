@@ -35,7 +35,6 @@ public class Embody : MVRScript, IEmbody
             var offsetCameraModule = CreateModule<OffsetCameraModule>();
             var passengerModule = CreateModule<PassengerModule>();
             var snugModule = CreateModule<SnugModule>();
-            snugModule.trackers = trackersModule;
             var worldScaleModule = CreateModule<WorldScaleModule>();
             var eyeTargetModule = CreateModule<EyeTargetModule>();
 
@@ -43,11 +42,15 @@ public class Embody : MVRScript, IEmbody
 
             _modules.SetActive(true);
 
+            // TODO: This is weird structure wise. Review architecture so those modules have their place.
+            var snugAutoSetup = new SnugAutoSetup(containingAtom, snugModule);
+            var snugWizard = new SnugWizard(containingAtom, snugModule, snugAutoSetup, trackersModule);
+
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(this, _modules.GetComponents<IEmbodyModule>()));
             _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(this, trackersModule));
             _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule));
+            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule, snugWizard));
             _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, hideGeometryModule));
             _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(this, offsetCameraModule));
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(this, worldScaleModule));
