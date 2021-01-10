@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
@@ -30,12 +31,12 @@ public class Embody : MVRScript, IEmbody
 
             var automationModule = CreateModule<AutomationModule>();
             automationModule.embody = this;
+            var worldScaleModule = CreateModule<WorldScaleModule>();
             var trackersModule = CreateModule<TrackersModule>();
             var hideGeometryModule = CreateModule<HideGeometryModule>();
             var offsetCameraModule = CreateModule<OffsetCameraModule>();
             var passengerModule = CreateModule<PassengerModule>();
             var snugModule = CreateModule<SnugModule>();
-            var worldScaleModule = CreateModule<WorldScaleModule>();
             var eyeTargetModule = CreateModule<EyeTargetModule>();
 
             // TODO: Once awaken, register the useful storables so they can be modified by scripts
@@ -70,7 +71,7 @@ public class Embody : MVRScript, IEmbody
                 else
                 {
                     automationModule.Reset();
-                    foreach (var module in _modules.GetComponents<IEmbodyModule>())
+                    foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
                     {
                         module.enabledJSON.val = false;
                     }

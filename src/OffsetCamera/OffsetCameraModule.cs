@@ -10,6 +10,7 @@ public interface IOffsetCameraModule : IEmbodyModule
     JSONStorableFloat clipDistanceJSON { get; }
 }
 
+// TODO: This is only required if we cannot offset the controller. Disable when we offset in Trackers.
 public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
 {
     public const string Label = "Offset Camera";

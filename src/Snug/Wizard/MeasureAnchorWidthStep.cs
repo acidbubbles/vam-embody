@@ -16,6 +16,7 @@ public class MeasureAnchorWidthStep : IWizardStep
     public void Run(SnugWizardContext context)
     {
         // TODO: Highlight the ring where we want the hands to be.
+        // TODO: Make the model move their hand in the right position.
         var gameHipsCenter = _anchor.GetInGameWorldPosition();
         // TODO: Check the forward size too, and the offset.
         // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
