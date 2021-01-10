@@ -6,57 +6,6 @@ public interface ITrackersModule : IEmbodyModule
 {
 }
 
-public class NavigationRigSnapshot
-{
-    private float _playerHeightAdjust;
-    private Quaternion _rotation;
-    private Vector3 _position;
-
-    public static NavigationRigSnapshot Snap()
-    {
-        var navigationRig = SuperController.singleton.navigationRig;
-        return new NavigationRigSnapshot
-        {
-            _position = navigationRig.position,
-            _rotation = navigationRig.rotation,
-            _playerHeightAdjust = SuperController.singleton.playerHeightAdjust
-        };
-    }
-
-    public void Restore()
-    {
-        var navigationRig = SuperController.singleton.navigationRig;
-        navigationRig.position = _position;
-        navigationRig.rotation = _rotation;
-        SuperController.singleton.playerHeightAdjust = _playerHeightAdjust;
-    }
-}
-
-public class FreeControllerV3Snapshot
-{
-    public FreeControllerV3 controller;
-    private Vector3 _position;
-    private Quaternion _rotation;
-
-    public static FreeControllerV3Snapshot Snap(FreeControllerV3 controller)
-    {
-        var controlTransform = controller.control.transform;
-        return new FreeControllerV3Snapshot
-        {
-            controller = controller,
-            _position = controlTransform.position,
-            _rotation = controlTransform.rotation
-        };
-    }
-
-    public void Restore()
-    {
-        var controlTransform = controller.control.transform;
-        controlTransform.position = _position;
-        controlTransform.rotation = _rotation;
-    }
-}
-
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
 {
     public const string Label = "Trackers";

@@ -27,6 +27,8 @@ src\Snug\SnugModule.cs
 src\Snug\SnugRingsSetup.cs
 src\Snug\SnugSettingsScreen.cs
 src\Snug\SnugWizard.cs
+src\Trackers\FreeControllerV3Snapshot.cs
+src\Trackers\NavigationRigSnapshot.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\WorldScale\WorldScaleModule.cs
