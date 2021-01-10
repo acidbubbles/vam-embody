@@ -14,7 +14,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     public override string storeId => "WorldScale";
     public override string label => Label;
-    protected override bool shouldBeSelectedByDefault => true;
+    // TODO: Trackers and this both move the player height, breaking restore.
+    // protected override bool shouldBeSelectedByDefault => true;
 
     private float _originalWorldScale;
     private Possessor _possessor;

@@ -110,8 +110,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         try
         {
-            hideFaceJSON = new JSONStorableBool("Hide face", true, (bool _) => _dirty = true);
-            hideHairJSON = new JSONStorableBool("Hide hair", true, (bool _) => _dirty = true);
+            hideFaceJSON = new JSONStorableBool("Hide face", true, (bool _) => RefreshHandlers());
+            hideHairJSON = new JSONStorableBool("Hide hair", true, (bool _) => RefreshHandlers());
         }
         catch (Exception e)
         {
@@ -168,7 +168,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         _character = _selector.selectedCharacter;
         if (_character == null)
         {
-            enabled = false;
+            MakeDirty("character", "is not yet loaded.");
             return;
         }
 
@@ -216,6 +216,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
     public void RefreshHandlers()
     {
+        if (!enabled) return;
         ClearHandlers();
         RegisterHandlers();
     }
