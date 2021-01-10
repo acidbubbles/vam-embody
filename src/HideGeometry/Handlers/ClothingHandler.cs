@@ -1,6 +1,4 @@
 ﻿using System.Linq;
-using MeshVR;
-using UnityEngine;
 
 namespace Handlers
 {

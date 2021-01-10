@@ -98,7 +98,14 @@
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\Snug\SnugRingsSetup.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
-    <Compile Include="src\Snug\SnugWizard.cs" />
+    <Compile Include="src\Snug\Wizard\IWizardStep.cs" />
+    <Compile Include="src\Snug\Wizard\MeasureAnchorDepthAndOffsetStep.cs" />
+    <Compile Include="src\Snug\Wizard\MeasureAnchorWidthStep.cs" />
+    <Compile Include="src\Snug\Wizard\MeasureHandsPaddingStep.cs" />
+    <Compile Include="src\Snug\Wizard\SetupWorldScaleFromRealHeightStep.cs" />
+    <Compile Include="src\Snug\Wizard\SnugWizard.cs" />
+    <Compile Include="src\Snug\Wizard\SnugWizardContext.cs" />
+    <Compile Include="src\Snug\Wizard\StartPossessionStep.cs" />
     <Compile Include="src\Trackers\FreeControllerV3Snapshot.cs" />
     <Compile Include="src\Trackers\NavigationRigSnapshot.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
