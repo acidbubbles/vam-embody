@@ -11,6 +11,7 @@ public interface IHideGeometryModule : IEmbodyModule
 {
     JSONStorableBool hideFaceJSON { get; }
     JSONStorableBool hideHairJSON { get; }
+    JSONStorableBool hideClothingJSON { get; }
 }
 
 public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
@@ -25,6 +26,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private DAZCharacterSelector _selector;
     public JSONStorableBool hideFaceJSON { get; set; }
     public JSONStorableBool hideHairJSON { get; set; }
+    public JSONStorableBool hideClothingJSON { get; set; }
 
     private readonly List<IHandler> _handlers = new List<IHandler>();
     // For change detection purposes
@@ -110,8 +112,9 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         try
         {
-            hideFaceJSON = new JSONStorableBool("Hide face", true, (bool _) => RefreshHandlers());
-            hideHairJSON = new JSONStorableBool("Hide hair", true, (bool _) => RefreshHandlers());
+            hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
+            hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());
+            hideClothingJSON = new JSONStorableBool("HideClothing", true, (bool _) => RefreshHandlers());
         }
         catch (Exception e)
         {
@@ -172,31 +175,40 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             return;
         }
 
-        if (!RegisterHandler(new SkinHandler(_character.skin)))
-            return;
-
-        _hairHashSum = _selector.hairItems.Where(h => h.active).Aggregate(0, (s, h) => s ^ h.GetHashCode());
-        var hair = _selector.hairItems
-            .Where(h => h != null)
-            .Where(h => h.active)
-            .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || Array.IndexOf(h.tagsArray, "head") > -1 || Array.IndexOf(h.tagsArray, "face") > -1)
-            .Where(HairHandler.Supports)
-            .ToArray();
-        foreach (var h in hair)
+        if (hideFaceJSON.val)
         {
-            if (!RegisterHandler(new HairHandler(h)))
+            if (!RegisterHandler(new SkinHandler(_character.skin)))
                 return;
         }
 
-        _clothingHashSum = _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode());
-        var clothes = _selector.clothingItems
-            .Where(c => c.active)
-            .Where(c => c.tagsArray != null && Array.IndexOf(c.tagsArray, "head") > -1)
-            .ToArray();
-        foreach (var c in clothes)
+        _hairHashSum = _selector.hairItems.Where(h => h.active).Aggregate(0, (s, h) => s ^ h.GetHashCode());
+        if (hideHairJSON.val)
         {
-            if (!RegisterHandler(new ClothingHandler(c)))
-                return;
+            var hair = _selector.hairItems
+                .Where(h => h != null)
+                .Where(h => h.active)
+                .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || Array.IndexOf(h.tagsArray, "head") > -1 || Array.IndexOf(h.tagsArray, "face") > -1)
+                .Where(HairHandler.Supports)
+                .ToArray();
+            foreach (var h in hair)
+            {
+                if (!RegisterHandler(new HairHandler(h)))
+                    return;
+            }
+        }
+
+        if (hideClothingJSON.val)
+        {
+            _clothingHashSum = _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode());
+            var clothes = _selector.clothingItems
+                .Where(c => c.active)
+                .Where(c => c.tagsArray != null ? Array.IndexOf(c.tagsArray, "head") > -1 : c.displayName.Contains("Eyes"))
+                .ToArray();
+            foreach (var c in clothes)
+            {
+                if (!RegisterHandler(new ClothingHandler(c)))
+                    return;
+            }
         }
 
         if (!_dirty) _tryAgainAttempts = 0;
@@ -288,6 +300,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         hideFaceJSON.StoreJSON(jc);
         hideHairJSON.StoreJSON(jc);
+        hideClothingJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc)
@@ -296,5 +309,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         hideFaceJSON.RestoreFromJSON(jc);
         hideHairJSON.RestoreFromJSON(jc);
+        hideClothingJSON.RestoreFromJSON(jc);
     }
 }

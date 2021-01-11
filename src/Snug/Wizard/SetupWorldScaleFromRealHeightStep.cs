@@ -13,6 +13,7 @@ public class SetupWorldScaleFromRealHeightStep : IWizardStep
 
     public void Run(SnugWizardContext context)
     {
+        // TODO: Replace by the WorldScaleModule setup (same as the WorldScaleScreen)
         var headControl = _containingAtom.freeControllers.First(fc => fc.name == "headControl");
         var lFootControl = _containingAtom.freeControllers.First(fc => fc.name == "lFootControl");
         var rFootControl = _containingAtom.freeControllers.First(fc => fc.name == "rFootControl");

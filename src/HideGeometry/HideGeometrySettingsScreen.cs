@@ -15,7 +15,8 @@
 
         CreateText(new JSONStorableString("", "Hides the face and hair when possessing a model, except in mirrors."), true);
 
-        CreateToggle(_hideGeometry.hideFaceJSON, true);
-        CreateToggle(_hideGeometry.hideHairJSON, true);
+        CreateToggle(_hideGeometry.hideFaceJSON, true).label = "Hide face (skin, eyes, eyelashes)";
+        CreateToggle(_hideGeometry.hideHairJSON, true).label = "Hide hair";
+        CreateToggle(_hideGeometry.hideClothingJSON, true).label = "Hide clothing (improved eyes, glasses)";
     }
 }
