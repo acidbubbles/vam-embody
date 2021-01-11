@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="src\Automation\AutomationModule.cs" />
     <Compile Include="src\Automation\AutomationSettingsScreen.cs" />
+    <Compile Include="src\Common\EmbodyContext.cs" />
     <Compile Include="src\Common\EmbodyModuleBase.cs" />
     <Compile Include="src\Common\ListExtensions.cs" />
     <Compile Include="src\Common\QuaternionExtensions.cs" />

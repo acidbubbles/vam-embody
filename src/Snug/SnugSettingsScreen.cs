@@ -17,8 +17,8 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
     private JSONStorableBool _anchorActiveJSON;
 
-    public SnugSettingsScreen(MVRScript plugin, ISnugModule snug, SnugWizard snugWizard)
-        : base(plugin)
+    public SnugSettingsScreen(EmbodyContext context, ISnugModule snug, SnugWizard snugWizard)
+        : base(context)
     {
         _snug = snug;
         _snugWizard = snugWizard;
@@ -28,13 +28,13 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     {
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
-        CreateButton("Setup Wizard").button.onClick.AddListener(() => plugin.StartCoroutine(_snugWizard.Wizard()));
+        CreateButton("Setup Wizard").button.onClick.AddListener(() => context.StartCoroutine(_snugWizard.Wizard()));
         CreateToggle(_snug.showVisualCuesJSON);
         CreateButton("Arm hands for record").button.onClick.AddListener(() =>
         {
             SuperController.singleton.ArmAllControlledControllersForRecord();
-            plugin.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
-            plugin.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
+            context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
+            context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
         });
         CreateToggle(_snug.disableSelectionJSON);
         CreateSpacer().height = 10f;

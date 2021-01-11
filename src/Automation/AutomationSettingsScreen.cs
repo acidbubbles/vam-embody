@@ -10,8 +10,8 @@ public class AutomationSettingsScreen : ScreenBase, IScreen
 
     private readonly IAutomationModule _automation;
 
-    public AutomationSettingsScreen(MVRScript plugin, IAutomationModule automation)
-        : base(plugin)
+    public AutomationSettingsScreen(EmbodyContext context, IAutomationModule automation)
+        : base(context)
     {
         _automation = automation;
     }

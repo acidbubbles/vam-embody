@@ -3,8 +3,8 @@
     private readonly ITrackersModule _trackers;
     public const string ScreenName = TrackersModule.Label;
 
-    public TrackersSettingsScreen(MVRScript plugin, ITrackersModule trackers)
-        : base(plugin)
+    public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
+        : base(context)
     {
         _trackers = trackers;
     }

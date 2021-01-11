@@ -29,15 +29,16 @@ public class Embody : MVRScript, IEmbody
 
             // TODO: Filter based on whether it's a person atom
 
-            var automationModule = CreateModule<AutomationModule>();
+            var context = new EmbodyContext(this);
+            var automationModule = CreateModule<AutomationModule>(context);
             automationModule.embody = this;
-            var worldScaleModule = CreateModule<WorldScaleModule>();
-            var trackersModule = CreateModule<TrackersModule>();
-            var hideGeometryModule = CreateModule<HideGeometryModule>();
-            var offsetCameraModule = CreateModule<OffsetCameraModule>();
-            var passengerModule = CreateModule<PassengerModule>();
-            var snugModule = CreateModule<SnugModule>();
-            var eyeTargetModule = CreateModule<EyeTargetModule>();
+            var worldScaleModule = CreateModule<WorldScaleModule>(context);
+            var trackersModule = CreateModule<TrackersModule>(context);
+            var hideGeometryModule = CreateModule<HideGeometryModule>(context);
+            var offsetCameraModule = CreateModule<OffsetCameraModule>(context);
+            var passengerModule = CreateModule<PassengerModule>(context);
+            var snugModule = CreateModule<SnugModule>(context);
+            var eyeTargetModule = CreateModule<EyeTargetModule>(context);
 
             // TODO: Once awaken, register the useful storables so they can be modified by scripts
 
@@ -48,16 +49,16 @@ public class Embody : MVRScript, IEmbody
             var snugWizard = new SnugWizard(containingAtom, snugModule, snugAutoSetup, trackersModule);
 
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(this, _modules.GetComponents<IEmbodyModule>()));
-            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(this, trackersModule));
-            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(this, passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(this, snugModule, snugWizard));
-            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(this, hideGeometryModule));
-            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(this, offsetCameraModule));
-            _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(this, worldScaleModule));
-            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(this, eyeTargetModule));
-            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(this, automationModule));
-            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(this, this));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>()));
+            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(context, trackersModule));
+            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(context, passengerModule));
+            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(context, snugModule, snugWizard));
+            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(context, hideGeometryModule));
+            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(context, offsetCameraModule));
+            _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(context, worldScaleModule));
+            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(context, eyeTargetModule));
+            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(context, automationModule));
+            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(context, this));
 
             activeJSON.setCallbackFunction = val =>
             {
@@ -112,11 +113,11 @@ public class Embody : MVRScript, IEmbody
         _screensManager.Show(MainScreen.ScreenName);
     }
 
-    private T CreateModule<T>() where T : MonoBehaviour, IEmbodyModule
+    private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
     {
         var module = _modules.AddComponent<T>();
         module.enabled = false;
-        module.plugin = this;
+        module.context = context;
         module.activeJSON = activeJSON;
         return module;
     }

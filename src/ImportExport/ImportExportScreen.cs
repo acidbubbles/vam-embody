@@ -9,8 +9,8 @@ public class ImportExportScreen : ScreenBase, IScreen
     private const string _saveExt = "embodyprofile";
     private const string _saveFolder = "Saves\\embodyprofiles";
 
-    public ImportExportScreen(MVRScript plugin, IEmbody embody)
-        : base(plugin)
+    public ImportExportScreen(EmbodyContext context, IEmbody embody)
+        : base(context)
     {
         _embody = embody;
     }
@@ -24,12 +24,12 @@ public class ImportExportScreen : ScreenBase, IScreen
         {
             FileManagerSecure.CreateDirectory(_saveFolder);
             var shortcuts = FileManagerSecure.GetShortCutsForDirectory(_saveFolder);
-            SuperController.singleton.GetMediaPathDialog((string path) =>
+            SuperController.singleton.GetMediaPathDialog(path =>
             {
                 if (string.IsNullOrEmpty(path)) return;
                 _embody.activeJSON.val = false;
-                var jc = (JSONClass) plugin.LoadJSON(path);
-                plugin.RestoreFromJSON(jc);
+                var jc = (JSONClass) context.plugin.LoadJSON(path);
+                context.plugin.RestoreFromJSON(jc);
             }, _saveExt, _saveFolder, false, true, false, null, false, shortcuts);
         });
 
@@ -48,14 +48,14 @@ public class ImportExportScreen : ScreenBase, IScreen
             fileBrowserUI.shortCuts = null;
             fileBrowserUI.browseVarFilesAsDirectories = false;
             fileBrowserUI.SetTextEntry(true);
-            fileBrowserUI.Show((string path) =>
+            fileBrowserUI.Show(path =>
             {
                 fileBrowserUI.fileFormat = null;
                 if (string.IsNullOrEmpty(path)) return;
                 if (!path.ToLower().EndsWith($".{_saveExt}")) path += $".{_saveExt}";
-                var jc = plugin.GetJSON();
+                var jc = context.plugin.GetJSON();
                 jc.Remove("id");
-                plugin.SaveJSON(jc, path);
+                context.plugin.SaveJSON(jc, path);
             });
             fileBrowserUI.ActivateFileNameField();
         });

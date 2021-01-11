@@ -3,8 +3,8 @@
     private readonly IEyeTargetModule _eyeTarget;
     public const string ScreenName = EyeTargetModule.Label;
 
-    public EyeTargetSettingsScreen(MVRScript plugin, IEyeTargetModule eyeTarget)
-        : base(plugin)
+    public EyeTargetSettingsScreen(EmbodyContext context, IEyeTargetModule eyeTarget)
+        : base(context)
     {
         _eyeTarget = eyeTarget;
     }

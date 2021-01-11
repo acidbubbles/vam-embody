@@ -7,8 +7,8 @@ public class MainScreen : ScreenBase, IScreen
     private readonly IEmbodyModule[] _modules;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(MVRScript plugin, IEmbodyModule[] modules)
-        : base(plugin)
+    public MainScreen(EmbodyContext context, IEmbodyModule[] modules)
+        : base(context)
     {
         _modules = modules;
     }

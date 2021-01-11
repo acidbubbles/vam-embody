@@ -5,8 +5,8 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
     private readonly IPassengerModule _passenger;
     public const string ScreenName = PassengerModule.Label;
 
-    public PassengerSettingsScreen(MVRScript plugin, IPassengerModule passenger)
-        : base(plugin)
+    public PassengerSettingsScreen(EmbodyContext context, IPassengerModule passenger)
+        : base(context)
     {
         _passenger = passenger;
     }
@@ -16,12 +16,12 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         if (ShowNotSelected(_passenger.selectedJSON.val)) return;
 
         CreateFilterablePopup(_passenger.linkJSON).popupPanelHeight = 600f;
-        if (plugin.containingAtom.type == "Person")
+        if (context.containingAtom.type == "Person")
         {
             CreateToggle(_passenger.lookAtJSON).label = "Look at eye target";
             CreateButton("Select eye target").button.onClick.AddListener(() =>
             {
-                var eyeTarget = plugin.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
+                var eyeTarget = context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
                 if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
             });
 

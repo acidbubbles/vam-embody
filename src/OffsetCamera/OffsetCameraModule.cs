@@ -29,7 +29,6 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
     {
         base.Awake();
 
-        if (plugin == null) throw new Exception("test");
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
         cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);

@@ -3,8 +3,8 @@
     private readonly IOffsetCameraModule _offsetCamera;
     public const string ScreenName = OffsetCameraModule.Label;
 
-    public OffsetCameraSettingsScreen(MVRScript plugin, IOffsetCameraModule offsetCamera)
-        : base(plugin)
+    public OffsetCameraSettingsScreen(EmbodyContext context, IOffsetCameraModule offsetCamera)
+        : base(context)
     {
         _offsetCamera = offsetCamera;
     }

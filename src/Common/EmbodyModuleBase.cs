@@ -1,5 +1,4 @@
-﻿using System;
-using SimpleJSON;
+﻿using SimpleJSON;
 using UnityEngine;
 
 public interface IEmbodyModule
@@ -8,7 +7,7 @@ public interface IEmbodyModule
     string label { get; }
     JSONStorableBool enabledJSON { get; }
     JSONStorableBool selectedJSON { get; }
-    MVRScript plugin { get; set; }
+    EmbodyContext context { get; set; }
     JSONStorableBool activeJSON { get; set; }
 }
 
@@ -18,10 +17,10 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     public abstract string label { get; }
     public JSONStorableBool selectedJSON { get; private set; }
     public JSONStorableBool enabledJSON { get; private set; }
-    public MVRScript plugin { get; set; }
+    public EmbodyContext context { get; set; }
     public JSONStorableBool activeJSON { get; set; }
 
-    protected Atom containingAtom => plugin.containingAtom;
+    protected Atom containingAtom => context.plugin.containingAtom;
     protected virtual bool shouldBeSelectedByDefault => false;
 
     public virtual void Awake()

@@ -1,5 +1,6 @@
 src\Automation\AutomationModule.cs
 src\Automation\AutomationSettingsScreen.cs
+src\Common\EmbodyContext.cs
 src\Common\EmbodyModuleBase.cs
 src\Common\ListExtensions.cs
 src\Common\QuaternionExtensions.cs

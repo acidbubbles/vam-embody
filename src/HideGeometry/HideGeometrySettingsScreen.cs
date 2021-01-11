@@ -3,8 +3,8 @@
     private readonly IHideGeometryModule _hideGeometry;
     public const string ScreenName = HideGeometryModule.Label;
 
-    public HideGeometrySettingsScreen(MVRScript plugin, IHideGeometryModule hideGeometry)
-        : base(plugin)
+    public HideGeometrySettingsScreen(EmbodyContext context, IHideGeometryModule hideGeometry)
+        : base(context)
     {
         _hideGeometry = hideGeometry;
     }

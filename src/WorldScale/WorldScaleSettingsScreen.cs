@@ -3,8 +3,8 @@
     private readonly IWorldScaleModule _worldScale;
     public const string ScreenName = WorldScaleModule.Label;
 
-    public WorldScaleSettingsScreen(MVRScript plugin, IWorldScaleModule worldScale)
-        : base(plugin)
+    public WorldScaleSettingsScreen(EmbodyContext context, IWorldScaleModule worldScale)
+        : base(context)
     {
         _worldScale = worldScale;
     }
