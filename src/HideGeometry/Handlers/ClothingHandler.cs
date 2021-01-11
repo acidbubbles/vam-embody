@@ -24,7 +24,6 @@ namespace Handlers
             {
                 foreach (var mat in wrap.GPUmaterials)
                 {
-                    SuperController.LogMessage(mat.name);
                     AddMaterial(mat);
                 }
             }
