@@ -22,7 +22,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        _headControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "headControl");
+        _headControl = context.headControl;
     }
 
     public override void OnEnable()

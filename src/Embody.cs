@@ -30,6 +30,8 @@ public class Embody : MVRScript, IEmbody
             // TODO: Filter based on whether it's a person atom
 
             var context = new EmbodyContext(this);
+            context.Initialize();
+
             var automationModule = CreateModule<AutomationModule>(context);
             automationModule.embody = this;
             var worldScaleModule = CreateModule<WorldScaleModule>(context);
