@@ -202,7 +202,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             _clothingHashSum = _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode());
             var clothes = _selector.clothingItems
                 .Where(c => c.active)
-                .Where(c => c.tagsArray != null ? Array.IndexOf(c.tagsArray, "head") > -1 : c.displayName.Contains("Eyes"))
+                .Where(c => c.tagsArray != null && c.tagsArray.Length > 0 ? Array.IndexOf(c.tagsArray, "head") > -1 : c.displayName.Contains("Eyes"))
                 .ToArray();
             foreach (var c in clothes)
             {
