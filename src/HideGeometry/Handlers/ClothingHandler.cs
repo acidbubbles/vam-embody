@@ -1,37 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Handlers
 {
-    public class MaterialOptionsSnapshot
-    {
-        public MaterialOptions options;
-        private float _alpha;
-
-        public static bool Supports(MaterialOptions arg)
-        {
-            // TODO: Delete this once I re-created the slider7 behavior...
-            return arg.param7Slider != null;
-        }
-
-        public static MaterialOptionsSnapshot Snap(MaterialOptions options)
-        {
-            return new MaterialOptionsSnapshot
-            {
-                options = options,
-                _alpha = options.param7Slider.value
-            };
-        }
-
-        public void Restore()
-        {
-            options.param7Slider.value = _alpha;
-        }
-    }
-
     public class ClothingHandler : IHandler
     {
         private readonly DAZClothingItem _clothing;
-        private MaterialOptionsSnapshot[] _materials;
+        private readonly List<MaterialAlphaSnapshot> _materials = new List<MaterialAlphaSnapshot>();
 
         public ClothingHandler(DAZClothingItem clothing)
         {
@@ -40,10 +15,31 @@ namespace Handlers
 
         public bool Prepare()
         {
-            var materialOptions = _clothing.GetComponentsInChildren<MaterialOptions>();
-            if (materialOptions.Length == 0) return false;
-            _materials = materialOptions.Where(MaterialOptionsSnapshot.Supports).Select(MaterialOptionsSnapshot.Snap).ToArray();
-            return true;
+            var wrap = _clothing.GetComponentInChildren<DAZSkinWrap>();
+            if (wrap.GPUuseSimpleMaterial)
+            {
+                AddMaterial(wrap.GPUsimpleMaterial);
+            }
+            else
+            {
+                foreach (var mat in wrap.GPUmaterials)
+                {
+                    SuperController.LogMessage(mat.name);
+                    AddMaterial(mat);
+                }
+            }
+            return _materials.Count != 0;
+        }
+
+        private void AddMaterial(Material mat)
+        {
+            if (mat == null) return;
+            if (!mat.HasProperty("_AlphaAdjust")) return;
+            _materials.Add(new MaterialAlphaSnapshot
+            {
+                material = mat,
+                originalAlphaAdjust = mat.GetFloat("_AlphaAdjust")
+            });
         }
 
         public void Dispose()
@@ -52,19 +48,17 @@ namespace Handlers
 
         public void BeforeRender()
         {
-            // TODO: for instead of foreach
-            foreach (var material in _materials)
+            for (var i = 0; i < _materials.Count; i++)
             {
-                // TODO: This is WAY too expensive for something to run on every camera on every frame!
-                material.options.param7Slider.value = -1f;
+                _materials[i].material.SetFloat("_AlphaAdjust", -1f);
             }
         }
 
         public void AfterRender()
         {
-            foreach (var material in _materials)
+            for (var i = 0; i < _materials.Count; i++)
             {
-                material.Restore();
+                _materials[i].material.SetFloat("_AlphaAdjust", _materials[i].originalAlphaAdjust);
             }
         }
     }
