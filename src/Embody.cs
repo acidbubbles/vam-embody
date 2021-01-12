@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
@@ -106,6 +107,7 @@ public class Embody : MVRScript, IEmbody
             containingAtom.RestoreFromLast(this);
             _restored = true;
         }
+        SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
     }
 
     public override void InitUI()
@@ -113,6 +115,16 @@ public class Embody : MVRScript, IEmbody
         base.InitUI();
         if (UITransform == null) return;
         _screensManager.Show(MainScreen.ScreenName);
+    }
+
+    public void OnBindingsListRequested(List<object> bindings)
+    {
+        bindings.Add(new Dictionary<string, string>
+        {
+            {"Namespace", "Embody"}
+        });
+        bindings.Add(activeJSON);
+        bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
@@ -124,9 +136,39 @@ public class Embody : MVRScript, IEmbody
         return module;
     }
 
+    private void SelectAndOpenUI()
+    {
+        #if (VAM_GT_1_20)
+        SuperController.singleton.SelectController(containingAtom.mainController, false, false, true);
+        #else
+        SuperController.singleton.SelectController(containingAtom.mainController);
+        #endif
+        StartCoroutine(WaitForUI());
+    }
+
+    private IEnumerator WaitForUI()
+    {
+        var expiration = Time.unscaledTime + 1f;
+        while (Time.unscaledTime < expiration)
+        {
+            yield return 0;
+            var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
+            if(selector == null) continue;
+            selector.SetActiveTab("Plugins");
+            if (UITransform == null) SuperController.LogError("Timeline: No UI");
+            UITransform.gameObject.SetActive(true);
+            yield break;
+        }
+    }
+
     public void OnDisable()
     {
         activeJSON.val = false;
+    }
+
+    public void OnDestroy()
+    {
+        SuperController.singleton.BroadcastMessage("OnActionsProviderDestroyed", this, SendMessageOptions.DontRequireReceiver);
     }
 
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
