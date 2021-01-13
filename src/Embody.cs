@@ -123,7 +123,7 @@ public class Embody : MVRScript, IEmbody
         {
             {"Namespace", "Embody"}
         });
-        bindings.Add(activeJSON);
+        bindings.Add(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
     }
 

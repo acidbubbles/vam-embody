@@ -29,8 +29,8 @@ src\Screens\ScreenBase.cs
 src\Screens\ScreensManager.cs
 src\Snug\Anchors\ControllerAnchorPoint.cs
 src\Snug\Anchors\ControllerAnchorPointVisualCue.cs
+src\Snug\SnugAutoSetup.cs
 src\Snug\SnugModule.cs
-src\Snug\SnugRingsSetup.cs
 src\Snug\SnugSettingsScreen.cs
 src\Trackers\FreeControllerV3Snapshot.cs
 src\Trackers\NavigationRigSnapshot.cs

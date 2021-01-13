@@ -16,7 +16,6 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
     public const string Label = "Offset Camera";
     public override string storeId => "OffsetCamera";
     public override string label => Label;
-    protected override bool shouldBeSelectedByDefault => true;
 
     public JSONStorableFloat cameraDepthJSON { get; set; }
     public JSONStorableFloat cameraHeightJSON { get; set; }

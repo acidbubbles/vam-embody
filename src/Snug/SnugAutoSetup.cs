@@ -26,7 +26,7 @@ public class SnugAutoSetup
         // TODO: If the UI is open, the sliders will be wrong. Determine when is the right time to do the auto-setup.
     }
 
-    private void AutoSetup(Rigidbody rb, ControllerAnchorPoint anchor, List<Collider> colliders)
+    private static void AutoSetup(Component rb, ControllerAnchorPoint anchor, IEnumerable<Collider> colliders)
     {
         const float raycastDistance = 100f;
         var rbTransform = rb.transform;
