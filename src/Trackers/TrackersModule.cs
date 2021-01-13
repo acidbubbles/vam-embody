@@ -69,7 +69,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         sc.SyncMonitorRigPosition();
         AlignRigAndController(controller);
-        // _headPossessedController.PossessMoveAndAlignTo(possessor.autoSnapPoint);
 
         if (!(motionControllerHeadRigidbody != null))
         {
@@ -90,33 +89,49 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
-    private void AlignRigAndController(FreeControllerV3 controller)
+    private static void AlignRigAndController(FreeControllerV3 controller)
     {
+        // NOTE: This code comes from VaM
         var sc = SuperController.singleton;
         var navigationRig = sc.navigationRig;
         var motionControllerHead = sc.centerCameraTarget.transform;
-        var component = motionControllerHead.GetComponent<Possessor>();
+        var possessor = motionControllerHead.GetComponent<Possessor>();
+
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();
-        var up = navigationRig.up;
-        var fromDirection = Vector3.ProjectOnPlane(motionControllerHead.forward, up);
-        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, up);
-        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControllerHead.up, up) > 0f)
+        var navigationRigUp = navigationRig.up;
+
+        var fromDirection = Vector3.ProjectOnPlane(motionControllerHead.forward, navigationRigUp);
+        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRigUp);
+        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControllerHead.up, navigationRigUp) > 0f)
             vector = -vector;
 
         var rotation = Quaternion.FromToRotation(fromDirection, vector);
         navigationRig.rotation = rotation * navigationRig.rotation;
-        if (controller.canGrabRotation)
-            controller.AlignTo(component.autoSnapPoint, true);
 
-        var a = (!(controller.possessPoint != null)) ? controller.control.position : controller.possessPoint.position;
-        var b = a - component.autoSnapPoint.position;
+        var followWhenOffPosition = Vector3.zero;
+        var followWhenOffRotation = Quaternion.identity;
+        var followWhenOff = controller.followWhenOff;
+        if (controller.possessPoint != null && followWhenOff != null)
+        {
+            followWhenOffPosition = followWhenOff.position;
+            followWhenOffRotation = followWhenOff.rotation;
+            followWhenOff.position = controller.control.position;
+            followWhenOff.rotation = controller.control.rotation;
+        }
+
+        if (controller.canGrabRotation)
+            controller.AlignTo(possessor.autoSnapPoint, true);
+
+        var possessPointPosition = controller.possessPoint == null ? controller.control.position : controller.possessPoint.position;
+        var possessPointDelta = possessPointPosition - possessor.autoSnapPoint.position;
         var navigationRigPosition = navigationRig.position;
-        var vector2 = navigationRigPosition + b;
-        var num = Vector3.Dot(vector2 - navigationRigPosition, up);
-        vector2 += up * (0f - num);
-        navigationRig.position = vector2;
-        sc.playerHeightAdjust += num;
+        var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
+        var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
+        navigationRigPositionDelta += navigationRigUp * (0f - navigationRigUpDelta);
+        navigationRig.position = navigationRigPositionDelta;
+        sc.playerHeightAdjust += navigationRigUpDelta;
+
         if (sc.MonitorCenterCamera != null)
         {
             var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
@@ -127,7 +142,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
         }
 
-        controller.PossessMoveAndAlignTo(component.autoSnapPoint);
+        controller.PossessMoveAndAlignTo(possessor.autoSnapPoint);
+        if (controller.possessPoint != null && followWhenOff != null)
+        {
+            followWhenOff.position = followWhenOffPosition;
+            followWhenOff.rotation = followWhenOffRotation;
+        }
     }
 
     public void ClearPossess()
