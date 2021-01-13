@@ -43,6 +43,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
+        // TODO: This actually changes from MonitorCamera to the actual VR headset when switching monitor mode. We can make a func, but then we'd need to switch the possess point's parent. SetParent(x, false) should keep local position.
+        // TODO: Determine some reasonable offset value
         AddMotionControl("Head", SuperController.singleton.centerCameraTarget.transform);
         AddMotionControl("LeftHand", SuperController.singleton.leftHand);
         AddMotionControl("RightHand", SuperController.singleton.rightHand);
@@ -116,6 +118,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                     break;
                 // TODO: Handle hands differently so that we can control leap fingers
                 // TODO: If Snug is selected, do not possess hands
+                case null:
+                    continue;
                 default:
                     Possess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
                     break;

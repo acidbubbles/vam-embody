@@ -39,6 +39,8 @@ public class EmbodyWizard
             autoSetup.AutoSetup();
         }
 
+        // TODO: Add headControl to eyes center offset to the _trackers configuration so the head-to-eyes is perfect
+
         var steps = new List<IWizardStep>();
 
         if (_worldScale.selectedJSON.val)
@@ -73,6 +75,7 @@ public class EmbodyWizard
             step.Run(context);
         }
 
+        // TODO: Instead use the edit screen OR an overlay, prefer the overlay
         SuperController.singleton.helpText = "All done! You can now activate Embody.";
         yield return new WaitForSeconds(3);
         SuperController.singleton.helpText = "";
