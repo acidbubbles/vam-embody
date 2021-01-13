@@ -34,7 +34,7 @@
             return true;
         }
 
-        public void Hide()
+        public virtual void Hide()
         {
             foreach (var toggle in _toggles) context.plugin.RemoveToggle(toggle);
             _toggles.Clear();

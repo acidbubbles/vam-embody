@@ -1,7 +1,10 @@
-﻿public class WizardScreen : ScreenBase, IScreen
+﻿using UnityEngine.Events;
+
+public class WizardScreen : ScreenBase, IScreen
 {
-    private readonly IWizard _wizard;
     public const string ScreenName = WizardModule.Label;
+    private readonly IWizard _wizard;
+    private UnityAction<bool> _onStatusChanged;
 
     public WizardScreen(EmbodyContext context, IWizard wizard)
         : base(context)
@@ -13,15 +16,32 @@
     {
         CreateText(new JSONStorableString("", "Automatically configures optimal settings for the current person and the selected modules."), true);
 
-        var setupButton = CreateButton("Setup Wizard");
-        setupButton.button.onClick.AddListener(() => _wizard.StartWizard());
+        var startButton = CreateButton("Start Wizard", true);
+        startButton.button.onClick.AddListener(() => _wizard.StartWizard());
 
-        var stopButton = CreateButton("Stop Wizard");
-        stopButton.button.onClick.AddListener(() =>
+        var stopButton = CreateButton("Stop Wizard", true);
+        stopButton.button.onClick.AddListener(() => _wizard.StopWizard("Stopped"));
+
+        var statusText = CreateText(_wizard.statusJSON, true);
+        statusText.height = 600;
+
+        var nextButton = CreateButton("Next", true);
+        nextButton.button.onClick.AddListener(() => _wizard.Next());
+
+        _onStatusChanged = isRunning =>
         {
-            _wizard.StopWizard();
-        } );
+            startButton.button.interactable = !isRunning;
+            stopButton.button.interactable = isRunning;
+            nextButton.button.interactable = isRunning;
+        };
+        _wizard.statusChanged.AddListener(_onStatusChanged);
+        _onStatusChanged(_wizard.isRunning);
+    }
 
-        CreateText(new JSONStorableString("", "Automatically configures optimal settings for the current person and the selected modules."), true);
+    public override void Hide()
+    {
+        base.Hide();
+
+        _wizard.statusChanged.RemoveListener(_onStatusChanged);
     }
 }

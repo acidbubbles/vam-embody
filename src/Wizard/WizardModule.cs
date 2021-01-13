@@ -2,18 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 
 public interface IWizard : IEmbodyModule
 {
-    IWorldScaleModule worldScale { get; set; }
-    ISnugModule snug { get; set; }
-    ITrackersModule trackers { get; set; }
+    WizardStatusChangedEvent statusChanged { get; }
+    JSONStorableString statusJSON { get; }
+    bool isRunning { get; }
     void StartWizard();
-    void StopWizard();
+    void StopWizard(string message);
+    void Next();
 }
+
+public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
+
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
     public override string label => Label;
@@ -22,24 +27,46 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public IWorldScaleModule worldScale { get; set; }
     public ISnugModule snug { get; set; }
     public ITrackersModule trackers { get; set; }
+    public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
+    public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
+    public bool isRunning => _coroutine != null;
+
     private Coroutine _coroutine;
+    private bool _next;
+
+    public override void Awake()
+    {
+        base.Awake();
+
+        statusJSON.val = "";
+    }
 
     public void StartWizard()
     {
-        if (_coroutine != null) context.StopCoroutine(_coroutine);
+        if (_coroutine != null) StopWizard("");
         _coroutine = StartCoroutine(StartWizardCo());
+        statusChanged.Invoke(true);
     }
 
-    public void StopWizard()
+    public void StopWizard(string message)
     {
         if (_coroutine != null)
         {
             StopCoroutine(_coroutine);
             _coroutine = null;
         }
+
+        statusJSON.val = message;
+        _next = false;
+        statusChanged.Invoke(false);
     }
 
-    public IEnumerator StartWizardCo()
+    public void Next()
+    {
+        _next = true;
+    }
+
+    private IEnumerator StartWizardCo()
     {
         yield return 0;
 
@@ -82,12 +109,12 @@ public class WizardModule : EmbodyModuleBase, IWizard
         foreach (var step in steps)
         {
             // TODO: Use overlays instead
-            SuperController.singleton.helpText = step.helpText;
+            statusJSON.val = step.helpText;
             while (!AreAnyStartRecordKeysDown())
             {
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
-                    SuperController.singleton.helpText = "";
+                    StopWizard("Wizard canceled");
                     yield break;
                 }
 
@@ -97,17 +124,13 @@ public class WizardModule : EmbodyModuleBase, IWizard
             step.Run(wizardContext);
         }
 
-        // TODO: Instead use the edit screen OR an overlay, prefer the overlay
-        SuperController.singleton.helpText = "All done! You can now activate Embody.";
-        yield return new WaitForSeconds(3);
-        SuperController.singleton.helpText = "";
-
-        StopWizard();
+        StopWizard("All done! You can now activate Embody.");
     }
 
 
-    private static bool AreAnyStartRecordKeysDown()
+    private bool AreAnyStartRecordKeysDown()
     {
+        if (_next) return true;
         var sc = SuperController.singleton;
         if (sc.isOVR)
         {
