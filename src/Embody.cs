@@ -42,17 +42,18 @@ public class Embody : MVRScript, IEmbody
             var passengerModule = CreateModule<PassengerModule>(context);
             var snugModule = CreateModule<SnugModule>(context);
             var eyeTargetModule = CreateModule<EyeTargetModule>(context);
+            var wizardModule = CreateModule<EmbodyWizardModule>(context);
+            wizardModule.worldScale = worldScaleModule;
+            wizardModule.snug = snugModule;
+            wizardModule.trackers = trackersModule;
 
             // TODO: Once awaken, register the useful storables so they can be modified by scripts
 
             _modules.SetActive(true);
 
             // TODO: This is weird structure wise. Review architecture so those modules have their place.
-            var snugAutoSetup = new SnugAutoSetup(containingAtom, snugModule);
-            var wizard = new EmbodyWizard(containingAtom, worldScaleModule, snugModule, trackersModule);
-
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>(), wizard));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
             _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(context, trackersModule));
             _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(context, passengerModule));
             _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(context, snugModule));
@@ -61,6 +62,7 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(context, worldScaleModule));
             _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(context, eyeTargetModule));
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(context, automationModule));
+            _screensManager.Add(EmbodyWizardSettingsScreen.ScreenName, new EmbodyWizardSettingsScreen(context, wizardModule));
             _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(context, this));
 
             activeJSON.setCallbackFunction = val =>
@@ -69,6 +71,7 @@ public class Embody : MVRScript, IEmbody
                 {
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
+                        if (module.alwaysEnabled) continue;
                         module.enabledJSON.val = module.selectedJSON.val;
                     }
                 }
@@ -77,6 +80,7 @@ public class Embody : MVRScript, IEmbody
                     automationModule.Reset();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
                     {
+                        if (module.alwaysEnabled) continue;
                         module.enabledJSON.val = false;
                     }
                 }
@@ -130,7 +134,7 @@ public class Embody : MVRScript, IEmbody
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
     {
         var module = _modules.AddComponent<T>();
-        module.enabled = false;
+        module.enabled = module.alwaysEnabled;
         module.context = context;
         module.activeJSON = activeJSON;
         return module;
@@ -168,6 +172,7 @@ public class Embody : MVRScript, IEmbody
 
     public void OnDestroy()
     {
+        Destroy(_modules);
         SuperController.singleton.BroadcastMessage("OnActionsProviderDestroyed", this, SendMessageOptions.DontRequireReceiver);
     }
 

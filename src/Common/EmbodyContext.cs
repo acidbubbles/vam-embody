@@ -6,7 +6,6 @@ public class EmbodyContext
 {
     public readonly MVRScript plugin;
     public Atom containingAtom => plugin.containingAtom;
-    public FreeControllerV3 headControl;
 
     public EmbodyContext(MVRScript plugin)
     {
@@ -15,11 +14,15 @@ public class EmbodyContext
 
     public void Initialize()
     {
-        headControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "headControl");
     }
 
     public Coroutine StartCoroutine(IEnumerator routine)
     {
         return plugin.StartCoroutine(routine);
+    }
+
+    public void StopCoroutine(Coroutine routine)
+    {
+        plugin.StopCoroutine(routine);
     }
 }

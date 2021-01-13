@@ -5,10 +5,10 @@ using UnityEngine;
 public class MainScreen : ScreenBase, IScreen
 {
     private readonly IEmbodyModule[] _modules;
-    private readonly EmbodyWizard _embodyWizard;
+    private readonly EmbodyWizardModule _embodyWizard;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(EmbodyContext context, IEmbodyModule[] modules, EmbodyWizard embodyWizard)
+    public MainScreen(EmbodyContext context, IEmbodyModule[] modules, EmbodyWizardModule embodyWizard)
         : base(context)
     {
         _modules = modules;
@@ -19,7 +19,7 @@ public class MainScreen : ScreenBase, IScreen
     {
         CreateSpacer().height = 10f;
         CreateButton($"Import / Export Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
-        CreateButton("Setup Wizard").button.onClick.AddListener(() => context.StartCoroutine(_embodyWizard.Wizard()));
+        CreateButton("Setup Wizard").button.onClick.AddListener(() => _embodyWizard.StartWizard());
 
         CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!

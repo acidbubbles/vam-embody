@@ -3,39 +3,61 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class EmbodyWizard
+public interface IEmbodyWizard : IEmbodyModule
 {
-    private readonly Atom _containingAtom;
-    private readonly IWorldScaleModule _worldScale;
-    private readonly ISnugModule _snug;
-    private readonly ITrackersModule _trackers;
+    IWorldScaleModule worldScale { get; set; }
+    ISnugModule snug { get; set; }
+    ITrackersModule trackers { get; set; }
+    void StartWizard();
+    void StopWizard();
+}
 
-    public EmbodyWizard(Atom containingAtom, IWorldScaleModule worldScale, ISnugModule snug, ITrackersModule trackers)
+public class EmbodyWizardModule : EmbodyModuleBase, IEmbodyWizard
+{
+    public const string Label = "Wizard";
+    public override string storeId => "Wizard";
+    public override string label => Label;
+    public override bool alwaysEnabled => true;
+
+    public IWorldScaleModule worldScale { get; set; }
+    public ISnugModule snug { get; set; }
+    public ITrackersModule trackers { get; set; }
+    private Coroutine _coroutine;
+
+    public void StartWizard()
     {
-        _containingAtom = containingAtom;
-        _worldScale = worldScale;
-        _snug = snug;
-        _trackers = trackers;
+        if (_coroutine != null) context.StopCoroutine(_coroutine);
+        _coroutine = StartCoroutine(StartWizardCo());
     }
-    public IEnumerator Wizard()
+
+    public void StopWizard()
+    {
+        if (_coroutine != null)
+        {
+            StopCoroutine(_coroutine);
+            _coroutine = null;
+        }
+    }
+
+    public IEnumerator StartWizardCo()
     {
         yield return 0;
 
-        var context = new EmbodyWizardContext
+        var wizardContext = new EmbodyWizardContext
         {
             realLeftHand = SuperController.singleton.leftHand,
             realRightHand = SuperController.singleton.rightHand,
-            trackers = _trackers
+            trackers = trackers
         };
 
-        if (_worldScale.selectedJSON.val)
+        if (worldScale.selectedJSON.val)
         {
             SuperController.singleton.worldScale = 1f;
         }
 
-        if (_snug.selectedJSON.val)
+        if (snug.selectedJSON.val)
         {
-            var autoSetup = new SnugAutoSetup(_containingAtom, _snug);
+            var autoSetup = new SnugAutoSetup(context.containingAtom, snug);
             autoSetup.AutoSetup();
         }
 
@@ -43,16 +65,16 @@ public class EmbodyWizard
 
         var steps = new List<IWizardStep>();
 
-        if (_worldScale.selectedJSON.val)
+        if (worldScale.selectedJSON.val)
         {
-            steps.Add(new SetupWorldScaleFromRealHeightStep(_containingAtom));
+            steps.Add(new SetupWorldScaleFromRealHeightStep(context.containingAtom));
         }
 
-        if (_snug.selectedJSON.val)
+        if (snug.selectedJSON.val)
         {
-            var hipsAnchor = _snug.anchorPoints.First(a => a.Label == "Hips");
             steps.Add(new MeasureHandsPaddingStep());
             steps.Add(new StartPossessionStep());
+            var hipsAnchor = snug.anchorPoints.First(a => a.Label == "Hips");
             steps.Add(new MeasureAnchorWidthStep("hips", hipsAnchor));
             steps.Add(new MeasureAnchorDepthAndOffsetStep("hips", hipsAnchor));
         }
@@ -72,13 +94,15 @@ public class EmbodyWizard
                 yield return 0;
             }
             yield return 0;
-            step.Run(context);
+            step.Run(wizardContext);
         }
 
         // TODO: Instead use the edit screen OR an overlay, prefer the overlay
         SuperController.singleton.helpText = "All done! You can now activate Embody.";
         yield return new WaitForSeconds(3);
         SuperController.singleton.helpText = "";
+
+        StopWizard();
     }
 
 

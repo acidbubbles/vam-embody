@@ -12,6 +12,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public const string Label = "Automation";
     public override string storeId => "Automation";
     public override string label => Label;
+    public override bool alwaysEnabled => true;
 
     public IEmbody embody { get; set; }
     public bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;

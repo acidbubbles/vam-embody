@@ -104,13 +104,14 @@
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />
-    <Compile Include="src\Wizard\EmbodyWizard.cs" />
+    <Compile Include="src\Wizard\EmbodyWizardModule.cs" />
     <Compile Include="src\Wizard\EmbodyWizardContext.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorWidthStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureHandsPaddingStep.cs" />
     <Compile Include="src\Wizard\Steps\SetupWorldScaleFromRealHeightStep.cs" />
     <Compile Include="src\Wizard\Steps\StartPossessionStep.cs" />
+    <Compile Include="src\Wizard\EmbodyWizardScreen.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />
     <Compile Include="src\WorldScale\WorldScaleSettingsScreen.cs" />
   </ItemGroup>
