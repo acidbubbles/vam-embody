@@ -94,7 +94,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         if (worldScale.selectedJSON.val)
         {
-            steps.Add(new SetupWorldScaleFromRealHeightStep(context.containingAtom));
+            steps.Add(new RecordPlayerHeightStep(worldScale));
         }
 
         if (snug.selectedJSON.val)

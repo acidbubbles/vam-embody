@@ -39,7 +39,7 @@ src\Trackers\TrackersSettingsScreen.cs
 src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
-src\Wizard\Steps\SetupWorldScaleFromRealHeightStep.cs
+src\Wizard\Steps\RecordPlayerHeightStep.cs
 src\Wizard\Steps\StartPossessionStep.cs
 src\Wizard\IWizardStep.cs
 src\Wizard\WizardContext.cs

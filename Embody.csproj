@@ -109,7 +109,7 @@
     <Compile Include="src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorWidthStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureHandsPaddingStep.cs" />
-    <Compile Include="src\Wizard\Steps\SetupWorldScaleFromRealHeightStep.cs" />
+    <Compile Include="src\Wizard\Steps\RecordPlayerHeightStep.cs" />
     <Compile Include="src\Wizard\Steps\StartPossessionStep.cs" />
     <Compile Include="src\Wizard\WizardScreen.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />

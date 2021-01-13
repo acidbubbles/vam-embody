@@ -22,7 +22,7 @@
 
     private void RecordPlayerHeight()
     {
-        _worldScale.playerHeight.val = SuperController.singleton.heightAdjustTransform.InverseTransformPoint(SuperController.singleton.centerCameraTarget.transform.position).y;
+        _worldScale.playerHeight.val = RecordPlayerHeightStep.GetPlayerHeight();
         _worldScale.worldScaleMethod.val = WorldScaleModule.PlayerHeightMethod;
     }
 }
