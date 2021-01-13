@@ -63,6 +63,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 case "headControl":
                     mappedMotionControl = "Head";
                     break;
+                // TODO: Once we have conditional for Snug, automatically map hands to hands
                 default:
                     mappedMotionControl = null;
                     break;
@@ -112,6 +113,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             {
                 case "Head":
                     HeadPossess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
+                    break;
+                // TODO: Handle hands differently so that we can control leap fingers
+                // TODO: If Snug is selected, do not possess hands
+                default:
+                    Possess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
                     break;
             }
         }
@@ -236,6 +242,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             followWhenOff.position = followWhenOffPosition;
             followWhenOff.rotation = followWhenOffRotation;
         }
+    }
+
+    private void Possess(FreeControllerV3WithCustomPossessPoint customized, MotionControllerWithCustomPossessPoint motionControl)
+    {
+        throw new System.NotImplementedException();
     }
 
     public void ClearPossess()
