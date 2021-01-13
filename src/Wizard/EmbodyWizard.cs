@@ -1,45 +1,59 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class SnugWizard
+public class EmbodyWizard
 {
     private readonly Atom _containingAtom;
+    private readonly IWorldScaleModule _worldScale;
     private readonly ISnugModule _snug;
-    private readonly SnugAutoSetup _autoSetup;
     private readonly ITrackersModule _trackers;
 
-    public SnugWizard(Atom containingAtom, ISnugModule snug, SnugAutoSetup autoSetup, ITrackersModule trackers)
+    public EmbodyWizard(Atom containingAtom, IWorldScaleModule worldScale, ISnugModule snug, ITrackersModule trackers)
     {
         _containingAtom = containingAtom;
+        _worldScale = worldScale;
         _snug = snug;
-        _autoSetup = autoSetup;
         _trackers = trackers;
     }
     public IEnumerator Wizard()
     {
         yield return 0;
 
-        // TODO: Helper?
-        var hipsAnchor = _snug.anchorPoints.First(a => a.Label == "Hips");
-        var context = new SnugWizardContext
+        var context = new EmbodyWizardContext
         {
             realLeftHand = SuperController.singleton.leftHand,
             realRightHand = SuperController.singleton.rightHand,
             trackers = _trackers
         };
 
-        SuperController.singleton.worldScale = 1f;
-        _autoSetup.AutoSetup();
-
-        var steps = new IWizardStep[]
+        if (_worldScale.selectedJSON.val)
         {
-            new SetupWorldScaleFromRealHeightStep(_containingAtom),
-            new MeasureHandsPaddingStep(),
-            new StartPossessionStep(),
-            new MeasureAnchorWidthStep("hips", hipsAnchor),
-            new MeasureAnchorDepthAndOffsetStep("hips", hipsAnchor)
-        };
+            SuperController.singleton.worldScale = 1f;
+        }
+
+        if (_snug.selectedJSON.val)
+        {
+            var autoSetup = new SnugAutoSetup(_containingAtom, _snug);
+            autoSetup.AutoSetup();
+        }
+
+        var steps = new List<IWizardStep>();
+
+        if (_worldScale.selectedJSON.val)
+        {
+            steps.Add(new SetupWorldScaleFromRealHeightStep(_containingAtom));
+        }
+
+        if (_snug.selectedJSON.val)
+        {
+            var hipsAnchor = _snug.anchorPoints.First(a => a.Label == "Hips");
+            steps.Add(new MeasureHandsPaddingStep());
+            steps.Add(new StartPossessionStep());
+            steps.Add(new MeasureAnchorWidthStep("hips", hipsAnchor));
+            steps.Add(new MeasureAnchorDepthAndOffsetStep("hips", hipsAnchor));
+        }
 
         foreach (var step in steps)
         {

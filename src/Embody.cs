@@ -49,13 +49,13 @@ public class Embody : MVRScript, IEmbody
 
             // TODO: This is weird structure wise. Review architecture so those modules have their place.
             var snugAutoSetup = new SnugAutoSetup(containingAtom, snugModule);
-            var snugWizard = new SnugWizard(containingAtom, snugModule, snugAutoSetup, trackersModule);
+            var wizard = new EmbodyWizard(containingAtom, worldScaleModule, snugModule, trackersModule);
 
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>()));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>(), wizard));
             _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(context, trackersModule));
             _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(context, passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(context, snugModule, snugWizard));
+            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(context, snugModule));
             _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(context, hideGeometryModule));
             _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(context, offsetCameraModule));
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(context, worldScaleModule));

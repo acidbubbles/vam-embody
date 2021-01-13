@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class SnugWizardContext
+public class EmbodyWizardContext
 {
     public Transform realLeftHand;
     public Transform realRightHand;

@@ -11,7 +11,7 @@ public class SetupWorldScaleFromRealHeightStep : IWizardStep
         _containingAtom = containingAtom;
     }
 
-    public void Run(SnugWizardContext context)
+    public void Run(EmbodyWizardContext context)
     {
         // TODO: Replace by the WorldScaleModule setup (same as the WorldScaleScreen)
         var headControl = _containingAtom.freeControllers.First(fc => fc.name == "headControl");

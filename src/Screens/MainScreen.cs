@@ -5,18 +5,21 @@ using UnityEngine;
 public class MainScreen : ScreenBase, IScreen
 {
     private readonly IEmbodyModule[] _modules;
+    private readonly EmbodyWizard _embodyWizard;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(EmbodyContext context, IEmbodyModule[] modules)
+    public MainScreen(EmbodyContext context, IEmbodyModule[] modules, EmbodyWizard embodyWizard)
         : base(context)
     {
         _modules = modules;
+        _embodyWizard = embodyWizard;
     }
 
     public void Show()
     {
         CreateSpacer().height = 10f;
         CreateButton($"Import / Export Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
+        CreateButton("Setup Wizard").button.onClick.AddListener(() => context.StartCoroutine(_embodyWizard.Wizard()));
 
         CreateText(new JSONStorableString("", @"
 Select modules you want to activate when Embody is activated.

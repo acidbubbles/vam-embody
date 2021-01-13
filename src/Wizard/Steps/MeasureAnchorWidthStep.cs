@@ -13,7 +13,7 @@ public class MeasureAnchorWidthStep : IWizardStep
         _anchor = anchor;
     }
 
-    public void Run(SnugWizardContext context)
+    public void Run(EmbodyWizardContext context)
     {
         // TODO: Highlight the ring where we want the hands to be.
         // TODO: Make the model move their hand in the right position.

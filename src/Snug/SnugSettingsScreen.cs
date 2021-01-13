@@ -5,7 +5,6 @@ using UnityEngine;
 public class SnugSettingsScreen : ScreenBase, IScreen
 {
     private readonly ISnugModule _snug;
-    private readonly SnugWizard _snugWizard;
     public const string ScreenName = SnugModule.Label;
 
     private JSONStorableStringChooser _selectedAnchorsJSON;
@@ -17,18 +16,16 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
     private JSONStorableBool _anchorActiveJSON;
 
-    public SnugSettingsScreen(EmbodyContext context, ISnugModule snug, SnugWizard snugWizard)
+    public SnugSettingsScreen(EmbodyContext context, ISnugModule snug)
         : base(context)
     {
         _snug = snug;
-        _snugWizard = snugWizard;
     }
 
     public void Show()
     {
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
-        CreateButton("Setup Wizard").button.onClick.AddListener(() => context.StartCoroutine(_snugWizard.Wizard()));
         CreateToggle(_snug.showVisualCuesJSON);
         CreateButton("Arm hands for record").button.onClick.AddListener(() =>
         {

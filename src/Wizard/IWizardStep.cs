@@ -1,5 +1,5 @@
 ﻿public interface IWizardStep
 {
     string helpText { get; }
-    void Run(SnugWizardContext context);
+    void Run(EmbodyWizardContext context);
 }
