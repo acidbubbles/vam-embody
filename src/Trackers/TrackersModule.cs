@@ -10,11 +10,13 @@ public interface ITrackersModule : IEmbodyModule
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
 {
-    public class FreeControllerV3WithSnapPoint
+    public class FreeControllerV3WithCustomPossessPoint
     {
         public FreeControllerV3 controller;
-        public Transform snapPoint;
+        public Transform possessPoint;
         public FreeControllerV3Snapshot snapshot;
+        public bool possessed = false;
+        public string mappedMotionControl;
     }
 
     public const string Label = "Trackers";
@@ -24,7 +26,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     protected override bool shouldBeSelectedByDefault => true;
 
-    public readonly List<FreeControllerV3WithSnapPoint> map = new List<FreeControllerV3WithSnapPoint>();
+    public readonly List<FreeControllerV3WithCustomPossessPoint> customizedControllers = new List<FreeControllerV3WithCustomPossessPoint>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
@@ -34,9 +36,31 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
-            map.Add(new FreeControllerV3WithSnapPoint
+            var possessPointGameObject = new GameObject($"EmbodySnapPointFor{controller.name}");
+            possessPointGameObject.transform.SetParent(controller.transform, false);
+            if (controller.possessPoint != null)
+            {
+                possessPointGameObject.transform.localPosition = controller.possessPoint.localPosition;
+                possessPointGameObject.transform.localRotation = controller.possessPoint.localRotation;
+            }
+            var rb = possessPointGameObject.AddComponent<Rigidbody>();
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.isKinematic = true;
+            string mappedMotionControl;
+            switch (controller.name)
+            {
+                case "headControl":
+                    mappedMotionControl = "head";
+                    break;
+                default:
+                    mappedMotionControl = null;
+                    break;
+            }
+            customizedControllers.Add(new FreeControllerV3WithCustomPossessPoint
             {
                 controller = controller,
+                possessPoint = possessPointGameObject.transform,
+                mappedMotionControl =  mappedMotionControl
             });
         }
     }
@@ -49,13 +73,21 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         if (restorePoseAfterPossessJSON.val)
         {
-            foreach (var c in map)
+            foreach (var c in customizedControllers)
             {
                 c.snapshot = FreeControllerV3Snapshot.Snap(c.controller);
             }
         }
 
-        HeadPossess(map.First(c => c.controller.name == "headControl").controller);
+        foreach (var c in customizedControllers)
+        {
+            switch (c.mappedMotionControl)
+            {
+                case "head":
+                    HeadPossess(c);
+                    break;
+            }
+        }
     }
 
     public override void OnDisable()
@@ -65,13 +97,24 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         ClearPossess();
     }
 
-    private void HeadPossess(FreeControllerV3 controller)
+    public void OnDestroy()
     {
+        foreach (var c in customizedControllers)
+        {
+            Destroy(c.possessPoint);
+        }
+    }
+
+    private void HeadPossess(FreeControllerV3WithCustomPossessPoint customized)
+    {
+        var controller = customized.controller;
+
         if (!controller.canGrabPosition && !controller.canGrabRotation)
             return;
 
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
+        customized.possessed = true;
         controller.possessed = true;
 
         var sc = SuperController.singleton;
@@ -91,12 +134,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
 
         sc.SyncMonitorRigPosition();
-        AlignRigAndController(controller);
-
-        if (!(motionControllerHeadRigidbody != null))
-        {
-            return;
-        }
+        AlignRigAndController(customized);
 
         var linkState = FreeControllerV3.SelectLinkState.Position;
         if (controller.canGrabPosition)
@@ -112,12 +150,13 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
-    private static void AlignRigAndController(FreeControllerV3 controller)
+    private static void AlignRigAndController(FreeControllerV3WithCustomPossessPoint customized)
     {
-        // NOTE: This code comes from VaM
+        var controller = customized.controller;
         var sc = SuperController.singleton;
         var navigationRig = sc.navigationRig;
         var motionControllerHead = sc.centerCameraTarget.transform;
+        // NOTE: This code comes from VaM
         var possessor = motionControllerHead.GetComponent<Possessor>();
 
         var forwardPossessAxis = controller.GetForwardPossessAxis();
@@ -147,8 +186,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (controller.canGrabRotation)
             controller.AlignTo(possessor.autoSnapPoint, true);
 
-        var possessPointPosition = controller.possessPoint == null ? controller.control.position : controller.possessPoint.position;
-        var possessPointDelta = possessPointPosition - possessor.autoSnapPoint.position;
+        var possessPointDelta = customized.possessPoint.position - possessor.autoSnapPoint.position;
         var navigationRigPosition = navigationRig.position;
         var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
         var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
@@ -177,9 +215,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void ClearPossess()
     {
-        foreach (var c in map)
+        foreach (var c in customizedControllers)
         {
             if (c.snapshot == null) continue;
+            if (!c.possessed) continue;
             if (!c.controller.possessed) continue;
 
             c.controller.RestorePreLinkState();
@@ -200,10 +239,38 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public override void StoreJSON(JSONClass jc)
     {
         base.StoreJSON(jc);
+
+        restorePoseAfterPossessJSON.StoreJSON(jc);
+
+        var controllersJSON = new JSONClass();
+        foreach (var customized in customizedControllers)
+        {
+            var controllerJSON = new JSONClass
+            {
+                {"MotionControl", customized.mappedMotionControl},
+                {"Position", customized.possessPoint.localPosition.ToJSON()},
+                {"Rotation", customized.possessPoint.localEulerAngles.ToJSON()}
+            };
+            controllersJSON[customized.controller.name] = controllerJSON;
+        }
+        jc["Controllers"] = controllersJSON;
     }
 
     public override void RestoreFromJSON(JSONClass jc)
     {
         base.RestoreFromJSON(jc);
+
+        restorePoseAfterPossessJSON.RestoreFromJSON(jc);
+
+        var controllersJSON = jc["Controllers"].AsObject;
+        foreach (var controllerName in controllersJSON.Keys)
+        {
+            var controllerJSON = controllersJSON[controllerName];
+            var customized = customizedControllers.FirstOrDefault(fc => fc.controller.name == controllerName);
+            if (customized == null) continue;
+            customized.mappedMotionControl = controllerJSON["MotionControl"];
+            customized.possessPoint.localPosition = controllerJSON["Position"].AsObject.ToVector3(Vector3.zero);
+            customized.possessPoint.localEulerAngles = controllerJSON["MotionControl"].AsObject.ToVector3(Vector3.zero);
+        }
     }
 }
