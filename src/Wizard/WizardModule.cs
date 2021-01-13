@@ -106,10 +106,17 @@ public class WizardModule : EmbodyModuleBase, IWizard
             steps.Add(new MeasureAnchorDepthAndOffsetStep("hips", hipsAnchor));
         }
 
-        foreach (var step in steps)
+        if (steps.Count == 0)
         {
+            StopWizard("None of the selected modules use the wizard.\n\nNothing to setup, moving on!");
+            yield break;
+        }
+
+        for (var i = 0; i < steps.Count; i++)
+        {
+            var step = steps[i];
             // TODO: Use overlays instead
-            statusJSON.val = step.helpText;
+            statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{step.helpText}";
             while (!AreAnyStartRecordKeysDown())
             {
                 if (Input.GetKeyDown(KeyCode.Escape))
@@ -120,6 +127,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
                 yield return 0;
             }
+
             yield return 0;
             step.Run(wizardContext);
         }
