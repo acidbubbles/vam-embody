@@ -41,10 +41,10 @@ src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\SetupWorldScaleFromRealHeightStep.cs
 src\Wizard\Steps\StartPossessionStep.cs
-src\Wizard\EmbodyWizardContext.cs
-src\Wizard\EmbodyWizardModule.cs
-src\Wizard\EmbodyWizardScreen.cs
 src\Wizard\IWizardStep.cs
+src\Wizard\WizardContext.cs
+src\Wizard\WizardModule.cs
+src\Wizard\WizardScreen.cs
 src\WorldScale\WorldScaleModule.cs
 src\WorldScale\WorldScaleSettingsScreen.cs
 src\Embody.cs

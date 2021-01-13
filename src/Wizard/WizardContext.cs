@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class EmbodyWizardContext
+public class WizardContext
 {
     public Transform realLeftHand;
     public Transform realRightHand;

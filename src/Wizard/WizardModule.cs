@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public interface IEmbodyWizard : IEmbodyModule
+public interface IWizard : IEmbodyModule
 {
     IWorldScaleModule worldScale { get; set; }
     ISnugModule snug { get; set; }
@@ -12,7 +12,7 @@ public interface IEmbodyWizard : IEmbodyModule
     void StopWizard();
 }
 
-public class EmbodyWizardModule : EmbodyModuleBase, IEmbodyWizard
+public class WizardModule : EmbodyModuleBase, IWizard
 {
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
@@ -43,7 +43,7 @@ public class EmbodyWizardModule : EmbodyModuleBase, IEmbodyWizard
     {
         yield return 0;
 
-        var wizardContext = new EmbodyWizardContext
+        var wizardContext = new WizardContext
         {
             realLeftHand = SuperController.singleton.leftHand,
             realRightHand = SuperController.singleton.rightHand,

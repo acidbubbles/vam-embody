@@ -1,9 +1,9 @@
-﻿public class EmbodyWizardSettingsScreen : ScreenBase, IScreen
+﻿public class WizardScreen : ScreenBase, IScreen
 {
-    private readonly IEmbodyWizard _wizard;
-    public const string ScreenName = EmbodyWizardModule.Label;
+    private readonly IWizard _wizard;
+    public const string ScreenName = WizardModule.Label;
 
-    public EmbodyWizardSettingsScreen(EmbodyContext context, IEmbodyWizard wizard)
+    public WizardScreen(EmbodyContext context, IWizard wizard)
         : base(context)
     {
         _wizard = wizard;

@@ -42,7 +42,7 @@ public class Embody : MVRScript, IEmbody
             var passengerModule = CreateModule<PassengerModule>(context);
             var snugModule = CreateModule<SnugModule>(context);
             var eyeTargetModule = CreateModule<EyeTargetModule>(context);
-            var wizardModule = CreateModule<EmbodyWizardModule>(context);
+            var wizardModule = CreateModule<WizardModule>(context);
             wizardModule.worldScale = worldScaleModule;
             wizardModule.snug = snugModule;
             wizardModule.trackers = trackersModule;
@@ -62,7 +62,7 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(context, worldScaleModule));
             _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(context, eyeTargetModule));
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(context, automationModule));
-            _screensManager.Add(EmbodyWizardSettingsScreen.ScreenName, new EmbodyWizardSettingsScreen(context, wizardModule));
+            _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(context, wizardModule));
             _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(context, this));
 
             activeJSON.setCallbackFunction = val =>

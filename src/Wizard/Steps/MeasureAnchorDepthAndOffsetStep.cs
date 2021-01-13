@@ -13,7 +13,7 @@ public class MeasureAnchorDepthAndOffsetStep : IWizardStep
         _anchor = anchor;
     }
 
-    public void Run(EmbodyWizardContext context)
+    public void Run(WizardContext context)
     {
         var adjustedHipsCenter = _anchor.GetAdjustedWorldPosition();
         var realHipsFront = Vector3.MoveTowards(context.realRightHand.position, adjustedHipsCenter, context.handsDistance / 2f);
