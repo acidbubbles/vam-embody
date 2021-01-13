@@ -3,29 +3,30 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
+public class MotionControllerWithCustomPossessPoint
+{
+    public string name;
+    public Transform customPossessPoint;
+    public Rigidbody customRigidbody;
+}
+
+public class FreeControllerV3WithCustomPossessPoint
+{
+    public FreeControllerV3 controller;
+    public FreeControllerV3Snapshot snapshot;
+    public bool possessed;
+    public string mappedMotionControl;
+}
+
 public interface ITrackersModule : IEmbodyModule
 {
     JSONStorableBool restorePoseAfterPossessJSON { get; }
+    List<MotionControllerWithCustomPossessPoint> customizedMotionControls { get; }
+    List<FreeControllerV3WithCustomPossessPoint> customizedControllers { get; }
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
 {
-    public class MotionControllerWithCustomPossessPoint
-    {
-        public string name;
-        public Transform motionControl;
-        public Transform customPossessPoint;
-        public Rigidbody customRigidbody;
-    }
-
-    public class FreeControllerV3WithCustomPossessPoint
-    {
-        public FreeControllerV3 controller;
-        public FreeControllerV3Snapshot snapshot;
-        public bool possessed = false;
-        public string mappedMotionControl;
-    }
-
     public const string Label = "Trackers";
 
     public override string storeId => "Trackers";
@@ -33,8 +34,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     protected override bool shouldBeSelectedByDefault => true;
 
-    public readonly List<MotionControllerWithCustomPossessPoint> customizedMotionControls = new List<MotionControllerWithCustomPossessPoint>();
-    public readonly List<FreeControllerV3WithCustomPossessPoint> customizedControllers = new List<FreeControllerV3WithCustomPossessPoint>();
+    public List<MotionControllerWithCustomPossessPoint> customizedMotionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
+    public List<FreeControllerV3WithCustomPossessPoint> customizedControllers { get; } = new List<FreeControllerV3WithCustomPossessPoint>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
@@ -42,7 +43,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        AddMotionControl("head", SuperController.singleton.centerCameraTarget.transform);
+        AddMotionControl("Head", SuperController.singleton.centerCameraTarget.transform);
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
@@ -50,7 +51,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             switch (controller.name)
             {
                 case "headControl":
-                    mappedMotionControl = "head";
+                    mappedMotionControl = "Head";
                     break;
                 default:
                     mappedMotionControl = null;
@@ -76,7 +77,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         this.customizedMotionControls.Add(new MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
-            motionControl = motionControlTransform,
             customPossessPoint = possessPointGameObject.transform,
             customRigidbody = rb
         });
