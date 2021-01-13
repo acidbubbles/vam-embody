@@ -44,6 +44,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.Awake();
 
         AddMotionControl("Head", SuperController.singleton.centerCameraTarget.transform);
+        AddMotionControl("LeftHand", SuperController.singleton.leftHand);
+        AddMotionControl("RightHand", SuperController.singleton.rightHand);
+        AddMotionControl("ViveTracker1", SuperController.singleton.viveTracker1);
+        AddMotionControl("ViveTracker2", SuperController.singleton.viveTracker2);
+        AddMotionControl("ViveTracker3", SuperController.singleton.viveTracker3);
+        AddMotionControl("ViveTracker4", SuperController.singleton.viveTracker4);
+        AddMotionControl("ViveTracker5", SuperController.singleton.viveTracker5);
+        AddMotionControl("ViveTracker6", SuperController.singleton.viveTracker6);
+        AddMotionControl("ViveTracker7", SuperController.singleton.viveTracker7);
+        AddMotionControl("ViveTracker8", SuperController.singleton.viveTracker8);
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
@@ -100,7 +110,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             switch (c.mappedMotionControl)
             {
-                case "head":
+                case "Head":
                     HeadPossess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
                     break;
             }
