@@ -18,7 +18,6 @@ public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
-
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
     public override string label => Label;

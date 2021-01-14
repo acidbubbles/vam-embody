@@ -37,8 +37,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
 
-        // TODO: Option for using eyes, vr height, or manual
-
         enabled = true;
     }
 
