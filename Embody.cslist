@@ -36,11 +36,14 @@ src\Trackers\FreeControllerV3Snapshot.cs
 src\Trackers\NavigationRigSnapshot.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
+src\Wizard\Steps\ActivateStep.cs
+src\Wizard\Steps\ActivateWithoutSnugStep.cs
+src\Wizard\Steps\EnableSnugStep.cs
+src\Wizard\Steps\IWizardUpdate.cs
 src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
-src\Wizard\Steps\StartPossessionStep.cs
 src\Wizard\IWizardStep.cs
 src\Wizard\WizardContext.cs
 src\Wizard\WizardModule.cs

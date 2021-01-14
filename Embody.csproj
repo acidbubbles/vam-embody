@@ -104,13 +104,16 @@
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />
+    <Compile Include="src\Wizard\Steps\ActivateStep.cs" />
+    <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
+    <Compile Include="src\Wizard\Steps\IWizardUpdate.cs" />
     <Compile Include="src\Wizard\WizardModule.cs" />
     <Compile Include="src\Wizard\WizardContext.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorWidthStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureHandsPaddingStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordPlayerHeightStep.cs" />
-    <Compile Include="src\Wizard\Steps\StartPossessionStep.cs" />
+    <Compile Include="src\Wizard\Steps\ActivateWithoutSnugStep.cs" />
     <Compile Include="src\Wizard\WizardScreen.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />
     <Compile Include="src\WorldScale\WorldScaleSettingsScreen.cs" />

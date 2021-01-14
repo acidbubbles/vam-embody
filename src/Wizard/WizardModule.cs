@@ -23,6 +23,8 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public override string label => Label;
     public override bool alwaysEnabled => true;
 
+    public IEmbody embody { get; set; }
+    public IPassengerModule passenger { get; set; }
     public IWorldScaleModule worldScale { get; set; }
     public ISnugModule snug { get; set; }
     public ITrackersModule trackers { get; set; }
@@ -71,9 +73,11 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         var wizardContext = new WizardContext
         {
+            embody = embody,
+            trackers = trackers,
+            containingAtom = context.containingAtom,
             realLeftHand = SuperController.singleton.leftHand,
             realRightHand = SuperController.singleton.rightHand,
-            trackers = trackers
         };
 
         if (worldScale.selectedJSON.val)
@@ -83,6 +87,12 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         if (snug.selectedJSON.val)
         {
+            if (passenger.selectedJSON.val)
+            {
+                StopWizard("You cannot run the wizard with Passenger selected.");
+                yield break;
+            }
+
             var autoSetup = new SnugAutoSetup(context.containingAtom, snug);
             autoSetup.AutoSetup();
         }
@@ -98,11 +108,16 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         if (snug.selectedJSON.val)
         {
-            steps.Add(new MeasureHandsPaddingStep());
-            steps.Add(new StartPossessionStep());
+            steps.Add(new MeasureHandsPaddingStep(wizardContext));
+            steps.Add(new ActivateWithoutSnugStep(embody, snug));
             var hipsAnchor = snug.anchorPoints.First(a => a.Label == "Hips");
-            steps.Add(new MeasureAnchorWidthStep("hips", hipsAnchor));
-            steps.Add(new MeasureAnchorDepthAndOffsetStep("hips", hipsAnchor));
+            steps.Add(new MeasureAnchorWidthStep(wizardContext, "hips", hipsAnchor));
+            steps.Add(new MeasureAnchorDepthAndOffsetStep(wizardContext, "hips", hipsAnchor));
+            steps.Add(new EnableSnugStep(embody, snug));
+        }
+        else
+        {
+            steps.Add(new ActivateStep(embody));
         }
 
         if (steps.Count == 0)
@@ -114,6 +129,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
         for (var i = 0; i < steps.Count; i++)
         {
             var step = steps[i];
+            var stepUpdate = step as IWizardUpdate;
             // TODO: Use overlays instead
             statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{step.helpText}";
             while (!AreAnyStartRecordKeysDown())
@@ -125,10 +141,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
                 }
 
                 yield return 0;
+                stepUpdate?.Update();
             }
 
-            yield return 0;
-            step.Run(wizardContext);
+            step.Run();
         }
 
         StopWizard("All done! You can now activate Embody.");
@@ -137,7 +153,11 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
     private bool AreAnyStartRecordKeysDown()
     {
-        if (_next) return true;
+        if (_next)
+        {
+            _next = false;
+            return true;
+        }
         var sc = SuperController.singleton;
         if (sc.isOVR)
         {

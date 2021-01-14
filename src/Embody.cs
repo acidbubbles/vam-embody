@@ -43,6 +43,8 @@ public class Embody : MVRScript, IEmbody
             var snugModule = CreateModule<SnugModule>(context);
             var eyeTargetModule = CreateModule<EyeTargetModule>(context);
             var wizardModule = CreateModule<WizardModule>(context);
+            wizardModule.embody = this;
+            wizardModule.passenger = passengerModule;
             wizardModule.worldScale = worldScaleModule;
             wizardModule.snug = snugModule;
             wizardModule.trackers = trackersModule;

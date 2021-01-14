@@ -9,7 +9,7 @@
         _worldScale = worldScale;
     }
 
-    public void Run(WizardContext context)
+    public void Run()
     {
         _worldScale.playerHeight.val = GetPlayerHeight();
         _worldScale.worldScaleMethod.val = WorldScaleModule.PlayerHeightMethod;
