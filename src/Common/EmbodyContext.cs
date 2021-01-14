@@ -1,28 +1,16 @@
-﻿using System.Collections;
-using System.Linq;
-using UnityEngine;
-
-public class EmbodyContext
+﻿public class EmbodyContext
 {
     public readonly MVRScript plugin;
+    public readonly IEmbody embody;
     public Atom containingAtom => plugin.containingAtom;
 
-    public EmbodyContext(MVRScript plugin)
+    public EmbodyContext(MVRScript plugin, IEmbody embody)
     {
         this.plugin = plugin;
+        this.embody = embody;
     }
 
     public void Initialize()
     {
-    }
-
-    public Coroutine StartCoroutine(IEnumerator routine)
-    {
-        return plugin.StartCoroutine(routine);
-    }
-
-    public void StopCoroutine(Coroutine routine)
-    {
-        plugin.StopCoroutine(routine);
     }
 }

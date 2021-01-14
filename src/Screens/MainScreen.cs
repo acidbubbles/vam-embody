@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -102,6 +103,26 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             configureButton.button.interactable = module.selectedJSON.val;
             selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
         }
+
+        #warning For debugging purposes
+        context.plugin.StartCoroutine(DebugCo());
+    }
+
+    private IEnumerator DebugCo()
+    {
+        yield return new WaitForSecondsRealtime(0.2f);
+        _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
+        _modules.First(m => m.storeId == "Trackers").selectedJSON.val = false;
+        _modules.First(m => m.storeId == "WorldScale").selectedJSON.val = false;
+        _modules.First(m => m.storeId == "HideGeometry").selectedJSON.val = false;
+        yield return new WaitForSecondsRealtime(0.2f);
+        screensManager.Show(WizardScreen.ScreenName);
+        yield return new WaitForSecondsRealtime(0.2f);
+        _wizard.StartWizard();
+        yield return new WaitForSecondsRealtime(0.2f);
+        _wizard.Next();
+        yield return new WaitForSecondsRealtime(0.2f);
+        _wizard.Next();
     }
 
     private void SelectModule(string storeId, bool selected)

@@ -69,6 +69,8 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
     private IEnumerator StartWizardCo()
     {
+        embody.activeJSON.val = false;
+
         yield return 0;
 
         var wizardContext = new WizardContext
@@ -108,6 +110,8 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         if (snug.selectedJSON.val)
         {
+            // TODO: Load pose
+            SuperController.LogMessage("ok");
             steps.Add(new MeasureHandsPaddingStep(wizardContext));
             steps.Add(new ActivateWithoutSnugStep(embody, snug));
             var hipsAnchor = snug.anchorPoints.First(a => a.Label == "Hips");

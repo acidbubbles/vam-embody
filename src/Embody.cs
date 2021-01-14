@@ -30,7 +30,7 @@ public class Embody : MVRScript, IEmbody
 
             // TODO: Filter based on whether it's a person atom
 
-            var context = new EmbodyContext(this);
+            var context = new EmbodyContext(this, this);
             context.Initialize();
 
             var automationModule = CreateModule<AutomationModule>(context);
@@ -175,6 +175,8 @@ public class Embody : MVRScript, IEmbody
     public void OnDestroy()
     {
         Destroy(_modules);
+        foreach(var cue in VisualCuesHelper.Cues)
+            Destroy(cue);
         SuperController.singleton.BroadcastMessage("OnActionsProviderDestroyed", this, SendMessageOptions.DontRequireReceiver);
     }
 

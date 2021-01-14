@@ -1,12 +1,16 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public static class VisualCuesHelper
 {
+    public static List<GameObject> Cues = new List<GameObject>();
+
     public static GameObject Cross(Color color)
     {
         var go = new GameObject();
-        var size = 0.2f;
-        var width = 0.005f;
+        Cues.Add(go);
+        const float size = 0.2f;
+        const float width = 0.005f;
         CreatePrimitive(go.transform, PrimitiveType.Cube, Color.red).transform.localScale = new Vector3(size, width, width);
         CreatePrimitive(go.transform, PrimitiveType.Cube, Color.green).transform.localScale = new Vector3(width, size, width);
         CreatePrimitive(go.transform, PrimitiveType.Cube, Color.blue).transform.localScale = new Vector3(width, width, size);
@@ -18,6 +22,7 @@ public static class VisualCuesHelper
     public static GameObject CreatePrimitive(Transform parent, PrimitiveType type, Color color)
     {
         var go = GameObject.CreatePrimitive(type);
+        Cues.Add(go);
         go.GetComponent<Renderer>().material = new Material(Shader.Find("Sprites/Default")) {color = color, renderQueue = 4000};
         foreach (var c in go.GetComponents<Collider>())
         {
@@ -27,6 +32,13 @@ public static class VisualCuesHelper
 
         go.transform.parent = parent;
         return go;
+    }
+
+    public static LineRenderer CreateLine(Color color, float width, int points, bool useWorldSpace)
+    {
+        var go = new GameObject();
+        Cues.Add(go);
+        return CreateLine(go, color, width, points, useWorldSpace);
     }
 
     public static LineRenderer CreateLine(GameObject go, Color color, float width, int points, bool useWorldSpace)

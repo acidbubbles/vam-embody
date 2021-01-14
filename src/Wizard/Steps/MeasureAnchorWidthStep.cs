@@ -17,12 +17,20 @@ public class MeasureAnchorWidthStep : IWizardStep, IWizardUpdate
         _part = part;
         _anchor = anchor;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
-        _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
+        _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
     }
 
     public void Update()
     {
-        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.RigidBody.rotation * (Vector3.right * _anchor.InGameSize.x / 2f));
+        // VisualCuesHelper.Cross(Color.green).transform.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
+        // TODO: Cancel out the hand size, whatever that is. Figure out if we should compute it or just hardcode it.
+        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
+        _leftHandControl.control.eulerAngles = _anchor.RigidBody.rotation.eulerAngles;
+        _leftHandControl.control.Rotate(new Vector3(0, 0, 90));
+
+        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
+        _rightHandControl.control.eulerAngles = _anchor.RigidBody.rotation.eulerAngles;
+        _rightHandControl.control.Rotate(new Vector3(0, 0, -90));
     }
 
     public void Run()
