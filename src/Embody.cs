@@ -17,6 +17,7 @@ public class Embody : MVRScript, IEmbody
     private GameObject _modules;
     private ScreensManager _screensManager;
     private bool _restored;
+    private EmbodyContext _context;
 
     public override void Init()
     {
@@ -30,24 +31,23 @@ public class Embody : MVRScript, IEmbody
 
             // TODO: Filter based on whether it's a person atom
 
-            var context = new EmbodyContext(this, this);
-            context.Initialize();
+            _context = new EmbodyContext(this, this);
+            _context.Initialize();
 
-            var automationModule = CreateModule<AutomationModule>(context);
+            var automationModule = CreateModule<AutomationModule>(_context);
             automationModule.embody = this;
-            var worldScaleModule = CreateModule<WorldScaleModule>(context);
-            var trackersModule = CreateModule<TrackersModule>(context);
-            var hideGeometryModule = CreateModule<HideGeometryModule>(context);
-            var offsetCameraModule = CreateModule<OffsetCameraModule>(context);
-            var passengerModule = CreateModule<PassengerModule>(context);
-            var snugModule = CreateModule<SnugModule>(context);
-            var eyeTargetModule = CreateModule<EyeTargetModule>(context);
-            var wizardModule = CreateModule<WizardModule>(context);
+            var worldScaleModule = CreateModule<WorldScaleModule>(_context);
+            var trackersModule = CreateModule<TrackersModule>(_context);
+            var hideGeometryModule = CreateModule<HideGeometryModule>(_context);
+            var offsetCameraModule = CreateModule<OffsetCameraModule>(_context);
+            var passengerModule = CreateModule<PassengerModule>(_context);
+            var snugModule = CreateModule<SnugModule>(_context);
+            var eyeTargetModule = CreateModule<EyeTargetModule>(_context);
+            var wizardModule = CreateModule<WizardModule>(_context);
             wizardModule.embody = this;
             wizardModule.passenger = passengerModule;
             wizardModule.worldScale = worldScaleModule;
             wizardModule.snug = snugModule;
-            wizardModule.trackers = trackersModule;
 
             // TODO: Once awaken, register the useful storables so they can be modified by scripts
 
@@ -55,22 +55,23 @@ public class Embody : MVRScript, IEmbody
 
             // TODO: This is weird structure wise. Review architecture so those modules have their place.
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
-            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(context, trackersModule));
-            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(context, passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(context, snugModule));
-            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(context, hideGeometryModule));
-            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(context, offsetCameraModule));
-            _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(context, worldScaleModule));
-            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(context, eyeTargetModule));
-            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(context, automationModule));
-            _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(context, wizardModule));
-            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(context, this));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
+            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
+            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
+            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(_context, snugModule));
+            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(_context, hideGeometryModule));
+            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(_context, offsetCameraModule));
+            _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
+            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
+            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
+            _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
+            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this));
 
             activeJSON.setCallbackFunction = val =>
             {
                 if (val)
                 {
+                    _context.Initialize();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
                         if (module.alwaysEnabled) continue;

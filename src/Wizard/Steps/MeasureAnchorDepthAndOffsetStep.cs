@@ -18,7 +18,7 @@ public class MeasureAnchorDepthAndOffsetStep : IWizardStep
     public void Run()
     {
         var adjustedHipsCenter = _anchor.GetAdjustedWorldPosition();
-        var realHipsFront = Vector3.MoveTowards(_context.realRightHand.position, adjustedHipsCenter, _context.handsDistance / 2f);
+        var realHipsFront = Vector3.MoveTowards(_context.context.rightHand.position, adjustedHipsCenter, _context.handsDistance / 2f);
         _anchor.RealLifeSize = new Vector3(_anchor.RealLifeSize.x, 0f, Vector3.Distance(realHipsFront, adjustedHipsCenter) * 2f);
 
         _anchor.Update();

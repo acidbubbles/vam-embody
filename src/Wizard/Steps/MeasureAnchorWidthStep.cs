@@ -40,8 +40,8 @@ public class MeasureAnchorWidthStep : IWizardStep, IWizardUpdate
         var gameHipsCenter = _anchor.GetInGameWorldPosition();
         // TODO: Check the forward size too, and the offset.
         // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
-        var realHipsWidth = Vector3.Distance(_context.realLeftHand.position, _context.realRightHand.position) - _context.handsDistance;
-        var realHipsXCenter = (_context.realLeftHand.position + _context.realRightHand.position) / 2f;
+        var realHipsWidth = Vector3.Distance(_context.context.leftHand.position, _context.context.rightHand.position) - _context.handsDistance;
+        var realHipsXCenter = (_context.context.leftHand.position + _context.context.rightHand.position) / 2f;
         _anchor.RealLifeSize = new Vector3(realHipsWidth, 0f, _anchor.InGameSize.z);
         _anchor.RealLifeOffset = realHipsXCenter - gameHipsCenter;
         SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");

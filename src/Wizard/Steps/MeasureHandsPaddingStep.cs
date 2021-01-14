@@ -31,7 +31,7 @@ public class MeasureHandsPaddingStep : IWizardStep, IWizardUpdate
 
     public void Run()
     {
-        _context.handsDistance = Vector3.Distance(_context.realLeftHand.position, _context.realRightHand.position);
+        _context.handsDistance = Vector3.Distance(_context.context.leftHand.position, _context.context.rightHand.position);
         // TODO: Measure hand center?
         #warning Debug
         _context.handsDistance = 0.03f;

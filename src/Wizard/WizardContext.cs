@@ -1,13 +1,8 @@
-﻿using UnityEngine;
-
-public class WizardContext
+﻿public class WizardContext
 {
-    public Atom containingAtom { get; set; }
+    public EmbodyContext context;
+    public Atom containingAtom => context.containingAtom;
     public IEmbody embody { get; set; }
-    public ITrackersModule trackers;
-
-    public Transform realLeftHand;
-    public Transform realRightHand;
 
     public float handsDistance;
 }

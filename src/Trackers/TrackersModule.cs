@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
@@ -8,6 +9,16 @@ public class MotionControllerWithCustomPossessPoint
     public string name;
     public Transform customPossessPoint;
     public Rigidbody customRigidbody;
+    public Func<Transform> getMotionControl;
+    public Transform currentMotionControl { get; private set; }
+
+    public bool Connect()
+    {
+        currentMotionControl = getMotionControl();
+        if (currentMotionControl == null) return false;
+        customPossessPoint.SetParent(currentMotionControl, false);
+        return true;
+    }
 }
 
 public class FreeControllerV3WithCustomPossessPoint
@@ -45,17 +56,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         // TODO: This actually changes from MonitorCamera to the actual VR headset when switching monitor mode. We can make a func, but then we'd need to switch the possess point's parent. SetParent(x, false) should keep local position.
         // TODO: Determine some reasonable offset value
-        AddMotionControl("Head", SuperController.singleton.centerCameraTarget.transform);
-        AddMotionControl("LeftHand", SuperController.singleton.leftHand);
-        AddMotionControl("RightHand", SuperController.singleton.rightHand);
-        AddMotionControl("ViveTracker1", SuperController.singleton.viveTracker1);
-        AddMotionControl("ViveTracker2", SuperController.singleton.viveTracker2);
-        AddMotionControl("ViveTracker3", SuperController.singleton.viveTracker3);
-        AddMotionControl("ViveTracker4", SuperController.singleton.viveTracker4);
-        AddMotionControl("ViveTracker5", SuperController.singleton.viveTracker5);
-        AddMotionControl("ViveTracker6", SuperController.singleton.viveTracker6);
-        AddMotionControl("ViveTracker7", SuperController.singleton.viveTracker7);
-        AddMotionControl("ViveTracker8", SuperController.singleton.viveTracker8);
+        AddMotionControl("Head", () => context.head);
+        AddMotionControl("LeftHand", () => context.leftHand);
+        AddMotionControl("RightHand", () => context.rightHand);
+        AddMotionControl("ViveTracker1", () => context.viveTracker1);
+        AddMotionControl("ViveTracker2", () => context.viveTracker2);
+        AddMotionControl("ViveTracker3", () => context.viveTracker3);
+        AddMotionControl("ViveTracker4", () => context.viveTracker4);
+        AddMotionControl("ViveTracker5", () => context.viveTracker5);
+        AddMotionControl("ViveTracker6", () => context.viveTracker6);
+        AddMotionControl("ViveTracker7", () => context.viveTracker7);
+        AddMotionControl("ViveTracker8", () => context.viveTracker8);
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
@@ -78,18 +89,18 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
-    private void AddMotionControl(string motionControlName, Transform motionControlTransform)
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl)
     {
-        if (motionControlTransform == null) return;
+        if (getMotionControl == null) return;
 
         var possessPointGameObject = new GameObject($"EmbodyPossessPoint_{motionControlName}");
-        possessPointGameObject.transform.SetParent(motionControlTransform, false);
         var rb = possessPointGameObject.AddComponent<Rigidbody>();
         rb.interpolation = RigidbodyInterpolation.None;
         rb.isKinematic = true;
         this.customizedMotionControls.Add(new MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
+            getMotionControl = getMotionControl,
             customPossessPoint = possessPointGameObject.transform,
             customRigidbody = rb
         });
@@ -111,17 +122,22 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var c in customizedControllers)
         {
+            if (c.mappedMotionControl == null) continue;
+            var motionControl = customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl);
+            if (motionControl == null) continue;
+            if(!motionControl.Connect()) continue;
+
             switch (c.mappedMotionControl)
             {
                 case "Head":
-                    HeadPossess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
+                    HeadPossess(c, motionControl);
                     break;
                 // TODO: Handle hands differently so that we can control leap fingers
                 // TODO: If Snug is selected, do not possess hands
                 case null:
                     continue;
                 default:
-                    Possess(c, customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl));
+                    Possess(c, motionControl);
                     break;
             }
         }
@@ -138,7 +154,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         foreach (var c in customizedMotionControls)
         {
-            Destroy(c.customPossessPoint);
+            if (c.customPossessPoint != null)
+                Destroy(c.customPossessPoint.gameObject);
         }
     }
 
@@ -169,8 +186,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             controller.RBHoldRotationSpring = sc.possessRotationSpring;
         }
 
-        sc.SyncMonitorRigPosition();
-        AlignRigAndController(customized, motionControl);
+        // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
+        // sc.SyncMonitorRigPosition();
+        if (motionControl.currentMotionControl == sc.centerCameraTarget.transform)
+            AlignRigAndController(customized, motionControl);
 
         var linkState = FreeControllerV3.SelectLinkState.Position;
         if (controller.canGrabPosition)

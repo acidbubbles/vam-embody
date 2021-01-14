@@ -27,7 +27,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public IPassengerModule passenger { get; set; }
     public IWorldScaleModule worldScale { get; set; }
     public ISnugModule snug { get; set; }
-    public ITrackersModule trackers { get; set; }
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
     public bool isRunning => _coroutine != null;
@@ -70,16 +69,14 @@ public class WizardModule : EmbodyModuleBase, IWizard
     private IEnumerator StartWizardCo()
     {
         embody.activeJSON.val = false;
+        context.Initialize();
 
         yield return 0;
 
         var wizardContext = new WizardContext
         {
             embody = embody,
-            trackers = trackers,
-            containingAtom = context.containingAtom,
-            realLeftHand = SuperController.singleton.leftHand,
-            realRightHand = SuperController.singleton.rightHand,
+            context = context
         };
 
         if (worldScale.selectedJSON.val)
