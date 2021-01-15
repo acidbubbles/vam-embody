@@ -68,6 +68,7 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
             _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
             _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this));
+            _screensManager.Add(UtilitiesScreen.ScreenName, new UtilitiesScreen(_context));
 
             activeJSON.setCallbackFunction = val =>
             {
@@ -134,6 +135,7 @@ public class Embody : MVRScript, IEmbody
         });
         bindings.Add(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
+        bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(containingAtom))));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule

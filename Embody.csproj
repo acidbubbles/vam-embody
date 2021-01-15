@@ -106,6 +106,8 @@
     <Compile Include="src\Trackers\NavigationRigSnapshot.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
+    <Compile Include="src\Utilities\Utilities.cs" />
+    <Compile Include="src\Utilities\UtilitiesScreen.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />
     <Compile Include="src\Wizard\Steps\ActivateStep.cs" />
     <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
