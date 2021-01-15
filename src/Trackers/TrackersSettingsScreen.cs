@@ -18,7 +18,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     {
         if (ShowNotSelected(_trackers.selectedJSON.val)) return;
 
-        CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers."), true);
+        CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers.\n\nHands have no effect when Snug is enabled, and Head has no effect when Passenger is enabled."), true);
 
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
 
@@ -50,87 +50,78 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             {
                 motionControl.mappedControllerName = val;
                 context.Refresh();
-            }));
+            }), false);
 
-        var offsetX = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset X",
             motionControl.customOffset.x,
             val => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
             -0.5f,
             0.5f,
-            false);
-        _section.CreateSlider(offsetX);
+            false), false);
 
-        var offsetY = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset Y",
             motionControl.customOffset.x,
             val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
             -0.5f,
             0.5f,
-            false);
-        _section.CreateSlider(offsetY);
+            false), false);
 
-        var offsetZ = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset Z",
             motionControl.customOffset.x,
             val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
             -0.5f,
             0.5f,
-            false);
-        _section.CreateSlider(offsetZ);
+            false), false);
 
-        var offsetRotateX = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate X",
             motionControl.offsetRotation.x,
             val => motionControl.offsetRotation = new Vector3(val, motionControl.offsetRotation.y, motionControl.offsetRotation.z),
             -180,
             180,
-            false);
-        _section.CreateSlider(offsetRotateX);
+            false), false);
 
-        var offsetRotateY = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Y",
             motionControl.offsetRotation.x,
             val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, val, motionControl.offsetRotation.z),
             -180,
             180,
-            false);
-        _section.CreateSlider(offsetRotateY);
+            false), false);
 
-        var offsetRotateZ = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Z",
             motionControl.offsetRotation.x,
             val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, motionControl.offsetRotation.y, val),
             -180,
             180,
-            false);
-        _section.CreateSlider(offsetRotateZ);
+            false), false);
 
-        var pointRotateX = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Point rotate X",
             motionControl.possessPointRotation.x,
             val => motionControl.possessPointRotation = new Vector3(val, motionControl.possessPointRotation.y, motionControl.possessPointRotation.z),
             -180,
             180,
-            false);
-        _section.CreateSlider(pointRotateX);
+            false), false);
 
-        var pointRotateY = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Point rotate Y",
             motionControl.possessPointRotation.x,
             val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, val, motionControl.possessPointRotation.z),
             -180,
             180,
-            false);
-        _section.CreateSlider(pointRotateY);
+            false), false);
 
-        var pointRotateZ = new JSONStorableFloat(
+        _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Point rotate Z",
             motionControl.possessPointRotation.x,
             val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, motionControl.possessPointRotation.y, val),
             -180,
             180,
-            false);
-        _section.CreateSlider(pointRotateZ);
+            false), false);
     }
 }

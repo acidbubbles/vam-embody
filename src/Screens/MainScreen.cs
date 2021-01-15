@@ -93,6 +93,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         foreach (var module in _modules)
         {
             if (module.storeId == "Automation") continue;
+            if (module.storeId == "Wizard") continue;
             var selectToggle = CreateToggle(module.selectedJSON, false);
             selectToggle.label = $"Select {module.label}";
             var configureButton = CreateButton($"Configure {module.label}...", true);
