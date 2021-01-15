@@ -33,6 +33,8 @@ src\Snug\SnugAutoSetup.cs
 src\Snug\SnugModule.cs
 src\Snug\SnugSettingsScreen.cs
 src\Trackers\FreeControllerV3Snapshot.cs
+src\Trackers\FreeControllerV3WithSnapshot.cs
+src\Trackers\MotionControllerWithCustomPossessPoint.cs
 src\Trackers\NavigationRigSnapshot.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs

@@ -105,12 +105,16 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         }
 
         #warning For debugging purposes
-        // context.plugin.StartCoroutine(DebugCo());
+        context.plugin.StartCoroutine(DebugCo());
     }
 
     private IEnumerator DebugCo()
     {
         yield return new WaitForSecondsRealtime(0.2f);
+        // Activate
+        context.embody.activeJSON.val = true;
+        /*
+         // Wizard
         _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
         _modules.First(m => m.storeId == "Trackers").selectedJSON.val = false;
         _modules.First(m => m.storeId == "WorldScale").selectedJSON.val = false;
@@ -123,6 +127,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         _wizard.Next();
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.Next();
+        */
     }
 
     private void SelectModule(string storeId, bool selected)

@@ -22,7 +22,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         // TODO: Bind controllers to a specific tracker, hands, head and vive tracker 1..8
 
         // Prototype:
-        foreach (var customizedMotionControl in _trackers.customizedMotionControls)
+        foreach (var customizedMotionControl in _trackers.motionControls)
         {
             ShowMotionControl(customizedMotionControl);
         }
@@ -31,12 +31,10 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
     private void ShowMotionControl(MotionControllerWithCustomPossessPoint motionControl)
     {
-        var possessPoint = motionControl.customPossessPoint;
-
         var offsetX = new JSONStorableFloat(
             $"{motionControl.name} Offset X",
-            possessPoint.localPosition.x,
-            (float val) => possessPoint.localPosition = new Vector3(val, possessPoint.localPosition.y, possessPoint.localPosition.z),
+            motionControl.localPosition.x,
+            (float val) => motionControl.localPosition = new Vector3(val, motionControl.localPosition.y, motionControl.localPosition.z),
             -0.5f,
             0.5f,
             false);
@@ -44,8 +42,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var offsetY = new JSONStorableFloat(
             $"{motionControl.name} Offset Y",
-            possessPoint.localPosition.x,
-            (float val) => possessPoint.localPosition = new Vector3(possessPoint.localPosition.x, val, possessPoint.localPosition.z),
+            motionControl.localPosition.x,
+            (float val) => motionControl.localPosition = new Vector3(motionControl.localPosition.x, val, motionControl.localPosition.z),
             -0.5f,
             0.5f,
             false);
@@ -53,8 +51,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var offsetZ = new JSONStorableFloat(
             $"{motionControl.name} Offset Z",
-            possessPoint.localPosition.x,
-            (float val) => possessPoint.localPosition = new Vector3(possessPoint.localPosition.x, possessPoint.localPosition.y, val),
+            motionControl.localPosition.x,
+            (float val) => motionControl.localPosition = new Vector3(motionControl.localPosition.x, motionControl.localPosition.y, val),
             -0.5f,
             0.5f,
             false);
@@ -62,8 +60,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var rotateX = new JSONStorableFloat(
             $"{motionControl.name} Rotate X",
-            possessPoint.localEulerAngles.x,
-            (float val) => possessPoint.localEulerAngles = new Vector3(val, possessPoint.localEulerAngles.y, possessPoint.localEulerAngles.z),
+            motionControl.localEulerAngles.x,
+            (float val) => motionControl.localEulerAngles = new Vector3(val, motionControl.localEulerAngles.y, motionControl.localEulerAngles.z),
             -180,
             180,
             false);
@@ -71,8 +69,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var rotateY = new JSONStorableFloat(
             $"{motionControl.name} Rotate Y",
-            possessPoint.localEulerAngles.x,
-            (float val) => possessPoint.localEulerAngles = new Vector3(possessPoint.localEulerAngles.x, val, possessPoint.localEulerAngles.z),
+            motionControl.localEulerAngles.x,
+            (float val) => motionControl.localEulerAngles = new Vector3(motionControl.localEulerAngles.x, val, motionControl.localEulerAngles.z),
             -180,
             180,
             false);
@@ -80,8 +78,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var rotateZ = new JSONStorableFloat(
             $"{motionControl.name} Rotate Z",
-            possessPoint.localEulerAngles.x,
-            (float val) => possessPoint.localEulerAngles = new Vector3(possessPoint.localEulerAngles.x, possessPoint.localEulerAngles.y, val),
+            motionControl.localEulerAngles.x,
+            (float val) => motionControl.localEulerAngles = new Vector3(motionControl.localEulerAngles.x, motionControl.localEulerAngles.y, val),
             -180,
             180,
             false);

@@ -41,16 +41,28 @@ public static class VisualCuesHelper
         return CreateLine(go, color, width, points, useWorldSpace);
     }
 
-    public static LineRenderer CreateLine(GameObject go, Color color, float width, int points, bool useWorldSpace)
+    public static LineRenderer CreateLine(GameObject go, Color color, float width, int points, bool useWorldSpace, bool seeThrough = false)
     {
         var line = go.AddComponent<LineRenderer>();
         line.useWorldSpace = useWorldSpace;
-        line.material = new Material(Shader.Find("Sprites/Default")) {renderQueue = 4000};
-        line.widthMultiplier = width;
-        line.colorGradient = new Gradient
+        if (seeThrough)
         {
-            colorKeys = new[] {new GradientColorKey(color, 0f), new GradientColorKey(color, 1f)}
-        };
+            var material = new Material(Shader.Find("Battlehub/RTGizmos/Handles"));
+            material.SetFloat("_Offset", 1f);
+            material.SetFloat("_MinAlpha", 1f);
+            material.color = color;
+            line.material = material;
+
+        }
+        else
+        {
+            line.material = new Material(Shader.Find("Sprites/Default")) {renderQueue = 4000};
+            line.colorGradient = new Gradient
+            {
+                colorKeys = new[] {new GradientColorKey(color, 0f), new GradientColorKey(color, 1f)}
+            };
+        }
+        line.widthMultiplier = width;
         line.positionCount = points;
         return line;
     }

@@ -4,36 +4,11 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
-public class MotionControllerWithCustomPossessPoint
-{
-    public string name;
-    public Transform customPossessPoint;
-    public Rigidbody customRigidbody;
-    public Func<Transform> getMotionControl;
-    public Transform currentMotionControl { get; private set; }
-
-    public bool Connect()
-    {
-        currentMotionControl = getMotionControl();
-        if (currentMotionControl == null) return false;
-        customPossessPoint.SetParent(currentMotionControl, false);
-        return true;
-    }
-}
-
-public class FreeControllerV3WithCustomPossessPoint
-{
-    public FreeControllerV3 controller;
-    public FreeControllerV3Snapshot snapshot;
-    public bool possessed;
-    public string mappedMotionControl;
-}
-
 public interface ITrackersModule : IEmbodyModule
 {
     JSONStorableBool restorePoseAfterPossessJSON { get; }
-    List<MotionControllerWithCustomPossessPoint> customizedMotionControls { get; }
-    List<FreeControllerV3WithCustomPossessPoint> customizedControllers { get; }
+    List<MotionControllerWithCustomPossessPoint> motionControls { get; }
+    List<FreeControllerV3WithSnapshot> controllers { get; }
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -45,8 +20,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     protected override bool shouldBeSelectedByDefault => true;
 
-    public List<MotionControllerWithCustomPossessPoint> customizedMotionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
-    public List<FreeControllerV3WithCustomPossessPoint> customizedControllers { get; } = new List<FreeControllerV3WithCustomPossessPoint>();
+    public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
+    public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
@@ -56,9 +31,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         // TODO: This actually changes from MonitorCamera to the actual VR headset when switching monitor mode. We can make a func, but then we'd need to switch the possess point's parent. SetParent(x, false) should keep local position.
         // TODO: Determine some reasonable offset value
-        AddMotionControl("Head", () => context.head);
-        AddMotionControl("LeftHand", () => context.leftHand);
-        AddMotionControl("RightHand", () => context.rightHand);
+        AddMotionControl("Head", () => context.head, "headControl");
+        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl");
+        AddMotionControl("RightHand", () => context.rightHand, "rHandControl");
         AddMotionControl("ViveTracker1", () => context.viveTracker1);
         AddMotionControl("ViveTracker2", () => context.viveTracker2);
         AddMotionControl("ViveTracker3", () => context.viveTracker3);
@@ -70,40 +45,18 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
-            string mappedMotionControl;
-            switch (controller.name)
-            {
-                case "headControl":
-                    mappedMotionControl = "Head";
-                    break;
-                // TODO: Once we have conditional for Snug, automatically map hands to hands
-                default:
-                    mappedMotionControl = null;
-                    break;
-            }
-            customizedControllers.Add(new FreeControllerV3WithCustomPossessPoint
+            controllers.Add(new FreeControllerV3WithSnapshot
             {
                 controller = controller,
-                mappedMotionControl =  mappedMotionControl
             });
         }
     }
 
-    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl)
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null)
     {
-        if (getMotionControl == null) return;
-
-        var possessPointGameObject = new GameObject($"EmbodyPossessPoint_{motionControlName}");
-        var rb = possessPointGameObject.AddComponent<Rigidbody>();
-        rb.interpolation = RigidbodyInterpolation.None;
-        rb.isKinematic = true;
-        this.customizedMotionControls.Add(new MotionControllerWithCustomPossessPoint
-        {
-            name = motionControlName,
-            getMotionControl = getMotionControl,
-            customPossessPoint = possessPointGameObject.transform,
-            customRigidbody = rb
-        });
+        var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl);
+        motionControl.mappedControllerName = mappedControllerName;
+        motionControls.Add(motionControl);
     }
 
     public override void OnEnable()
@@ -112,34 +65,38 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         SuperController.singleton.ClearPossess();
 
-        if (restorePoseAfterPossessJSON.val)
+        foreach (var motionControl in motionControls)
         {
-            foreach (var c in customizedControllers)
-            {
-                c.snapshot = FreeControllerV3Snapshot.Snap(c.controller);
-            }
-        }
-
-        foreach (var c in customizedControllers)
-        {
-            if (c.mappedMotionControl == null) continue;
-            var motionControl = customizedMotionControls.FirstOrDefault(x => x.name == c.mappedMotionControl);
-            if (motionControl == null) continue;
+            if (motionControl.mappedControllerName == null) continue;
+            var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
+            if (controllerWithSnapshot == null) continue;
+            var controller = controllerWithSnapshot.controller;
+            if (controller.possessed) continue;
+            if (restorePoseAfterPossessJSON.val)
+                controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
             if(!motionControl.Connect()) continue;
 
-            switch (c.mappedMotionControl)
+            if (motionControl.name == "Head")
             {
-                case "Head":
-                    HeadPossess(c, motionControl);
-                    break;
-                // TODO: Handle hands differently so that we can control leap fingers
-                // TODO: If Snug is selected, do not possess hands
-                case null:
-                    continue;
-                default:
-                    Possess(c, motionControl);
-                    break;
+                // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
+                // sc.SyncMonitorRigPosition();
+                if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
+                {
+                    _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+                    AlignRigAndController(controllerWithSnapshot, motionControl);
+                }
+                else
+                {
+                    // TODO: Cancel out the customPossessPoint
+                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position, controller.control.rotation);
+                }
             }
+            else
+            {
+                controller.control.SetPositionAndRotation(motionControl.customPossessPoint.position, motionControl.customPossessPoint.rotation);
+            }
+
+            Possess(controllerWithSnapshot, motionControl);
         }
     }
 
@@ -152,24 +109,22 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void OnDestroy()
     {
-        foreach (var c in customizedMotionControls)
+        foreach (var c in motionControls)
         {
             if (c.customPossessPoint != null)
                 Destroy(c.customPossessPoint.gameObject);
         }
     }
 
-    private void HeadPossess(FreeControllerV3WithCustomPossessPoint customized, MotionControllerWithCustomPossessPoint motionControl)
+    private void Possess(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
     {
+        SuperController.LogMessage("Do Possess " + customized.controller.name);
         var sc = SuperController.singleton;
         var controller = customized.controller;
 
         if (!controller.canGrabPosition && !controller.canGrabRotation)
             return;
 
-        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
-
-        customized.possessed = true;
         controller.possessed = true;
 
         var motionControllerHeadRigidbody = motionControl.customRigidbody;
@@ -186,11 +141,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             controller.RBHoldRotationSpring = sc.possessRotationSpring;
         }
 
-        // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
-        // sc.SyncMonitorRigPosition();
-        if (motionControl.currentMotionControl == sc.centerCameraTarget.transform)
-            AlignRigAndController(customized, motionControl);
-
         var linkState = FreeControllerV3.SelectLinkState.Position;
         if (controller.canGrabPosition)
         {
@@ -205,7 +155,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
-    private static void AlignRigAndController(FreeControllerV3WithCustomPossessPoint customized, MotionControllerWithCustomPossessPoint motionControl)
+    private static void AlignRigAndController(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
     {
         var controller = customized.controller;
         var sc = SuperController.singleton;
@@ -267,32 +217,34 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
-    private void Possess(FreeControllerV3WithCustomPossessPoint customized, MotionControllerWithCustomPossessPoint motionControl)
-    {
-        throw new System.NotImplementedException();
-    }
-
     public void ClearPossess()
     {
-        foreach (var c in customizedControllers)
+        foreach (var c in controllers)
         {
-            if (c.snapshot == null) continue;
-            if (!c.possessed) continue;
             if (!c.controller.possessed) continue;
 
             c.controller.RestorePreLinkState();
             c.controller.possessed = false;
-            var mac = c.controller.GetComponent<MotionAnimationControl>();
-            mac.suspendPositionPlayback = false;
-            mac.suspendRotationPlayback = false;
 
-            if (restorePoseAfterPossessJSON.val)
+            var mac = c.controller.GetComponent<MotionAnimationControl>();
+            if (mac != null)
+            {
+                mac.suspendPositionPlayback = false;
+                mac.suspendRotationPlayback = false;
+            }
+
+            if (restorePoseAfterPossessJSON.val && c.snapshot != null)
+            {
                 c.snapshot.Restore();
-            c.snapshot = null;
+                c.snapshot = null;
+            }
         }
 
-        _navigationRigSnapshot.Restore();
-        _navigationRigSnapshot = null;
+        if (_navigationRigSnapshot != null)
+        {
+            _navigationRigSnapshot.Restore();
+            _navigationRigSnapshot = null;
+        }
     }
 
     public override void StoreJSON(JSONClass jc)
@@ -301,28 +253,18 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         restorePoseAfterPossessJSON.StoreJSON(jc);
 
-        var controllersJSON = new JSONClass();
-        foreach (var customized in customizedControllers)
-        {
-            var controllerJSON = new JSONClass
-            {
-                {"MotionControl", customized.mappedMotionControl}
-            };
-            controllersJSON[customized.controller.name] = controllerJSON;
-        }
-        jc["Controllers"] = controllersJSON;
-
         var motionControlsJSON = new JSONClass();
-        foreach (var customized in customizedMotionControls)
+        foreach (var customized in motionControls)
         {
             var motionControlJSON = new JSONClass
             {
                 {"OffsetPosition", customized.customPossessPoint.localPosition.ToJSON()},
-                {"OffsetRotation", customized.customPossessPoint.localEulerAngles.ToJSON()}
+                {"OffsetRotation", customized.customPossessPoint.localEulerAngles.ToJSON()},
+                {"Controller", customized.mappedControllerName}
             };
             motionControlsJSON[customized.name] = motionControlJSON;
         }
-        jc["MotionControl"] = motionControlsJSON;
+        jc["MotionControls"] = motionControlsJSON;
     }
 
     public override void RestoreFromJSON(JSONClass jc)
@@ -331,23 +273,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         restorePoseAfterPossessJSON.RestoreFromJSON(jc);
 
-        var controllersJSON = jc["Controllers"].AsObject;
-        foreach (var controllerName in controllersJSON.Keys)
-        {
-            var controllerJSON = controllersJSON[controllerName];
-            var customized = customizedControllers.FirstOrDefault(fc => fc.controller.name == controllerName);
-            if (customized == null) continue;
-            customized.mappedMotionControl = controllerJSON["MotionControl"].Value;
-        }
-
         var motionControlsJSON = jc["MotionControls"].AsObject;
         foreach (var motionControlName in motionControlsJSON.Keys)
         {
             var controllerJSON = motionControlsJSON[motionControlName];
-            var customized = customizedMotionControls.FirstOrDefault(fc => fc.name == motionControlName);
+            var customized = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
             if (customized == null) continue;
-            customized.customPossessPoint.localPosition = controllerJSON["Position"].AsObject.ToVector3(Vector3.zero);
-            customized.customPossessPoint.localEulerAngles = controllerJSON["MotionControl"].AsObject.ToVector3(Vector3.zero);
+            customized.customPossessPoint.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+            customized.customPossessPoint.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            customized.mappedControllerName = controllerJSON["Controller"].Value;
+            if (customized.mappedControllerName == "") customized.mappedControllerName = null;
         }
     }
 }

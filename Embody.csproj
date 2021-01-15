@@ -100,6 +100,8 @@
     <Compile Include="src\Snug\SnugAutoSetup.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
     <Compile Include="src\Trackers\FreeControllerV3Snapshot.cs" />
+    <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
+    <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
     <Compile Include="src\Trackers\NavigationRigSnapshot.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
