@@ -33,8 +33,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     {
         var offsetX = new JSONStorableFloat(
             $"{motionControl.name} Offset X",
-            motionControl.localPosition.x,
-            (float val) => motionControl.localPosition = new Vector3(val, motionControl.localPosition.y, motionControl.localPosition.z),
+            motionControl.customOffset.x,
+            (float val) => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
             -0.5f,
             0.5f,
             false);
@@ -42,8 +42,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var offsetY = new JSONStorableFloat(
             $"{motionControl.name} Offset Y",
-            motionControl.localPosition.x,
-            (float val) => motionControl.localPosition = new Vector3(motionControl.localPosition.x, val, motionControl.localPosition.z),
+            motionControl.customOffset.x,
+            (float val) => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
             -0.5f,
             0.5f,
             false);
@@ -51,8 +51,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         var offsetZ = new JSONStorableFloat(
             $"{motionControl.name} Offset Z",
-            motionControl.localPosition.x,
-            (float val) => motionControl.localPosition = new Vector3(motionControl.localPosition.x, motionControl.localPosition.y, val),
+            motionControl.customOffset.x,
+            (float val) => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
             -0.5f,
             0.5f,
             false);

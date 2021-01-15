@@ -8,16 +8,29 @@ public class MotionControllerWithCustomPossessPoint
     public Rigidbody customRigidbody;
     public Transform currentMotionControl { get; private set; }
     public string mappedControllerName { get; set; }
+    private Func<Transform> _getMotionControl;
     private LineRenderer _lineRenderer;
+    private Vector3 _baseOffset;
+    private Vector3 _customOffset;
 
-    public Vector3 localPosition
+    public Vector3 baseOffset
     {
-        get { return customPossessPoint.localPosition; }
-        set
-        {
-            customPossessPoint.localPosition = value;
-            UpdateLineRenderer();
-        }
+        get { return _baseOffset; }
+        set { _baseOffset = value; SyncOffset(); }
+    }
+
+    public Vector3 customOffset
+    {
+        get { return _customOffset; }
+        set { _customOffset = value; SyncOffset(); }
+    }
+
+    public Vector3 offset => _baseOffset + _customOffset;
+
+    private void SyncOffset()
+    {
+        customPossessPoint.localPosition = offset;
+        UpdateLineRenderer();
     }
 
     public Vector3 localEulerAngles
@@ -30,18 +43,17 @@ public class MotionControllerWithCustomPossessPoint
         }
     }
 
-    private Func<Transform> _getMotionControl;
-    private Vector3 _localPosition;
-    private Vector3 _localEulerAngles;
+
 
     public bool Connect()
     {
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null) return false;
         customPossessPoint.SetParent(currentMotionControl, false);
-        UpdateLineRenderer();
+        SyncOffset();
         return true;
     }
+
 
     private void UpdateLineRenderer()
     {

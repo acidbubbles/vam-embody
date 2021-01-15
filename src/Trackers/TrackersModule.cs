@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
+using UnityEngine.Animations;
 
 public interface ITrackersModule : IEmbodyModule
 {
@@ -32,8 +33,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         // TODO: This actually changes from MonitorCamera to the actual VR headset when switching monitor mode. We can make a func, but then we'd need to switch the possess point's parent. SetParent(x, false) should keep local position.
         // TODO: Determine some reasonable offset value
         AddMotionControl("Head", () => context.head, "headControl");
-        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl");
-        AddMotionControl("RightHand", () => context.rightHand, "rHandControl");
+        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl", new Vector3(0.04120696f, 0, -0.0057684838f));
+        AddMotionControl("RightHand", () => context.rightHand, "rHandControl", new Vector3(-0.04120696f, 0, -0.0057684838f));
         AddMotionControl("ViveTracker1", () => context.viveTracker1);
         AddMotionControl("ViveTracker2", () => context.viveTracker2);
         AddMotionControl("ViveTracker3", () => context.viveTracker3);
@@ -52,10 +53,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
-    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null)
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 baseOffset = new Vector3())
     {
         var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl);
         motionControl.mappedControllerName = mappedControllerName;
+        motionControl.baseOffset = baseOffset;
         motionControls.Add(motionControl);
     }
 
@@ -78,8 +80,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == "Head")
             {
+                // TODO: Find the eyes center and offset from this point instead. in the case of hands, find the possessPoint if it's available and use that as the base offset.
                 // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
                 // sc.SyncMonitorRigPosition();
+                var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
+                var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
+                motionControl.baseOffset = -controller.transform.InverseTransformPoint(eyesCenter);
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
@@ -88,15 +94,18 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 else
                 {
                     // TODO: Cancel out the customPossessPoint
-                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position, controller.control.rotation);
+                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controller.control.rotation * -motionControl.offset, controller.control.rotation);
                 }
             }
             else
             {
                 controller.control.SetPositionAndRotation(motionControl.customPossessPoint.position, motionControl.customPossessPoint.rotation);
+                // TODO: Rotate around the "new" center and update in the UI
+                // controller.control.RotateAround(motionControl.customPossessPoint.position, motionControl.customPossessPoint.up, 45f);
             }
 
             Possess(controllerWithSnapshot, motionControl);
+            // SuperController.LogMessage($"{controller.transform.localRotation}");
         }
     }
 
@@ -118,7 +127,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private void Possess(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
     {
-        SuperController.LogMessage("Do Possess " + customized.controller.name);
         var sc = SuperController.singleton;
         var controller = customized.controller;
 
