@@ -20,6 +20,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     protected override bool shouldBeSelectedByDefault => true;
 
+    public IPassengerModule passenger { get; set; }
+    public ISnugModule snug { get; set; }
+
     public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
@@ -69,6 +72,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         foreach (var motionControl in motionControls)
         {
             if (motionControl.mappedControllerName == null) continue;
+            // TODO: Lines not tested
+            if (passenger.selectedJSON.val && motionControl.name == "Head") continue;
+            if (snug.selectedJSON.val && (motionControl.name == "LeftHand" || motionControl.name == "RightHand")) return;
+
             var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
             if (controllerWithSnapshot == null) continue;
             var controller = controllerWithSnapshot.controller;
@@ -79,8 +86,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == "Head")
             {
-                // TODO: If Passenger is selected, skip
-                // TODO: Find the eyes center and offset from this point instead. in the case of hands, find the possessPoint if it's available and use that as the base offset.
                 // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
                 // sc.SyncMonitorRigPosition();
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
@@ -93,20 +98,15 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 }
                 else
                 {
-                    // TODO: Cancel out the customPossessPoint
                     motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controller.control.rotation * -motionControl.combinedOffset, controller.control.rotation);
                 }
             }
             else
             {
-                // TODO: If Snug is selected, skip LeftHand and RightHand
                 controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
-                // TODO: Rotate around the "new" center and update in the UI
-                // controller.control.RotateAround(motionControl.customPossessPoint.position, motionControl.customPossessPoint.up, 45f);
             }
 
             Possess(motionControl, controllerWithSnapshot.controller);
-            // SuperController.LogMessage($"{controller.transform.localRotation}");
         }
     }
 
