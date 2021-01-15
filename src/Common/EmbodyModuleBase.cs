@@ -27,10 +27,11 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void Awake()
     {
-        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, val =>
+        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, (bool val) =>
         {
-            if (activeJSON.val)
-                enabledJSON.val = val;
+            if (!activeJSON.val) return;
+            activeJSON.val = false;
+            activeJSON.val = true;
         });
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }
