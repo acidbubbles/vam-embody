@@ -37,19 +37,26 @@ namespace Handlers
             _materials.Add(new MaterialAlphaSnapshot
             {
                 material = mat,
-                originalAlphaAdjust = mat.GetFloat("_AlphaAdjust")
+                originalAlphaAdjust = mat.GetFloat("_AlphaAdjust"),
+                renderQueue = mat.renderQueue
             });
+            mat.renderQueue = 2500;
         }
 
         public void Dispose()
         {
+            foreach (var snapshot in _materials)
+            {
+                snapshot.material.renderQueue = snapshot.renderQueue;
+            }
         }
 
         public void BeforeRender()
         {
             for (var i = 0; i < _materials.Count; i++)
             {
-                _materials[i].material.SetFloat("_AlphaAdjust", -1f);
+                var material = _materials[i].material;
+                material.SetFloat("_AlphaAdjust", -1f);
             }
         }
 
@@ -57,7 +64,9 @@ namespace Handlers
         {
             for (var i = 0; i < _materials.Count; i++)
             {
-                _materials[i].material.SetFloat("_AlphaAdjust", _materials[i].originalAlphaAdjust);
+                var snapshot = _materials[i];
+                var material = snapshot.material;
+                material.SetFloat("_AlphaAdjust", snapshot.originalAlphaAdjust);
             }
         }
     }

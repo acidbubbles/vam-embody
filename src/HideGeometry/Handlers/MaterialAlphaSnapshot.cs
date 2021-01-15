@@ -6,5 +6,6 @@ namespace Handlers
     {
         public Material material;
         public float originalAlphaAdjust;
+        public int renderQueue;
     }
 }

@@ -99,7 +99,6 @@ You should now be able to interact with your own body, and have the virtual mode
 ### Known issues
 
 - There is a slight jitter; this is because VaM does all updates in Update, including drawing the lasers and updating the camera position. This means we are always one frame late.
-- The `Enhanced Eyes Realastic` by Hunting Succubus will make the eyes transparent for some reason. I could not figure out why (yet). Other eye reflection clothing work.
 
 ## License
 
