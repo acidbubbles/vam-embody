@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
-using UnityEngine.Animations;
 
 public interface ITrackersModule : IEmbodyModule
 {
@@ -94,17 +93,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 else
                 {
                     // TODO: Cancel out the customPossessPoint
-                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controller.control.rotation * -motionControl.offset, controller.control.rotation);
+                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controller.control.rotation * -motionControl.combinedOffset, controller.control.rotation);
                 }
             }
             else
             {
-                controller.control.SetPositionAndRotation(motionControl.customPossessPoint.position, motionControl.customPossessPoint.rotation);
+                controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
                 // TODO: Rotate around the "new" center and update in the UI
                 // controller.control.RotateAround(motionControl.customPossessPoint.position, motionControl.customPossessPoint.up, 45f);
             }
 
-            Possess(controllerWithSnapshot, motionControl);
+            Possess(motionControl, controllerWithSnapshot.controller);
             // SuperController.LogMessage($"{controller.transform.localRotation}");
         }
     }
@@ -120,15 +119,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         foreach (var c in motionControls)
         {
-            if (c.customPossessPoint != null)
-                Destroy(c.customPossessPoint.gameObject);
+            if (c.offsetTransform != null)
+                Destroy(c.offsetTransform.gameObject);
+            if (c.possessPointTransform != null)
+                Destroy(c.possessPointTransform.gameObject);
         }
     }
 
-    private void Possess(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
+    private static void Possess(MotionControllerWithCustomPossessPoint motionControl, FreeControllerV3 controller)
     {
         var sc = SuperController.singleton;
-        var controller = customized.controller;
 
         if (!controller.canGrabPosition && !controller.canGrabRotation)
             return;
@@ -163,68 +163,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
-    private static void AlignRigAndController(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
-    {
-        var controller = customized.controller;
-        var sc = SuperController.singleton;
-        var navigationRig = sc.navigationRig;
-        // NOTE: This code comes from VaM
-
-        var forwardPossessAxis = controller.GetForwardPossessAxis();
-        var upPossessAxis = controller.GetUpPossessAxis();
-        var navigationRigUp = navigationRig.up;
-
-        var fromDirection = Vector3.ProjectOnPlane(motionControl.customPossessPoint.forward, navigationRigUp);
-        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRigUp);
-        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControl.customPossessPoint.up, navigationRigUp) > 0f)
-            vector = -vector;
-
-        var rotation = Quaternion.FromToRotation(fromDirection, vector);
-        navigationRig.rotation = rotation * navigationRig.rotation;
-
-        var followWhenOffPosition = Vector3.zero;
-        var followWhenOffRotation = Quaternion.identity;
-        var followWhenOff = controller.followWhenOff;
-        var useFollowWhenOffAndPossessPoint = controller.possessPoint != null && followWhenOff != null;
-        if (useFollowWhenOffAndPossessPoint)
-        {
-            followWhenOffPosition = followWhenOff.position;
-            followWhenOffRotation = followWhenOff.rotation;
-            followWhenOff.position = controller.control.position;
-            followWhenOff.rotation = controller.control.rotation;
-        }
-
-        if (controller.canGrabRotation)
-            controller.AlignTo(motionControl.customPossessPoint, true);
-
-        var possessPointPosition = controller.possessPoint == null ? controller.control.position : controller.possessPoint.position;
-        var possessPointDelta = possessPointPosition - motionControl.customPossessPoint.position;
-        var navigationRigPosition = navigationRig.position;
-        var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
-        var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
-        navigationRigPositionDelta += navigationRigUp * (0f - navigationRigUpDelta);
-        navigationRig.position = navigationRigPositionDelta;
-        sc.playerHeightAdjust += navigationRigUpDelta;
-
-        if (sc.MonitorCenterCamera != null)
-        {
-            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
-            monitorCenterCameraTransform.LookAt(controller.transform.position + forwardPossessAxis);
-            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
-            localEulerAngles.y = 0f;
-            localEulerAngles.z = 0f;
-            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
-        }
-
-        controller.PossessMoveAndAlignTo(motionControl.customPossessPoint);
-
-        if (useFollowWhenOffAndPossessPoint)
-        {
-            followWhenOff.position = followWhenOffPosition;
-            followWhenOff.rotation = followWhenOffRotation;
-        }
-    }
-
     public void ClearPossess()
     {
         foreach (var c in controllers)
@@ -255,6 +193,68 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
+    private static void AlignRigAndController(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
+    {
+        var controller = customized.controller;
+        var sc = SuperController.singleton;
+        var navigationRig = sc.navigationRig;
+        // NOTE: This code comes from VaM
+
+        var forwardPossessAxis = controller.GetForwardPossessAxis();
+        var upPossessAxis = controller.GetUpPossessAxis();
+        var navigationRigUp = navigationRig.up;
+
+        var fromDirection = Vector3.ProjectOnPlane(motionControl.possessPointTransform.forward, navigationRigUp);
+        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRigUp);
+        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControl.possessPointTransform.up, navigationRigUp) > 0f)
+            vector = -vector;
+
+        var rotation = Quaternion.FromToRotation(fromDirection, vector);
+        navigationRig.rotation = rotation * navigationRig.rotation;
+
+        var followWhenOffPosition = Vector3.zero;
+        var followWhenOffRotation = Quaternion.identity;
+        var followWhenOff = controller.followWhenOff;
+        var useFollowWhenOffAndPossessPoint = controller.possessPoint != null && followWhenOff != null;
+        if (useFollowWhenOffAndPossessPoint)
+        {
+            followWhenOffPosition = followWhenOff.position;
+            followWhenOffRotation = followWhenOff.rotation;
+            followWhenOff.position = controller.control.position;
+            followWhenOff.rotation = controller.control.rotation;
+        }
+
+        if (controller.canGrabRotation)
+            controller.AlignTo(motionControl.possessPointTransform, true);
+
+        var possessPointPosition = controller.possessPoint == null ? controller.control.position : controller.possessPoint.position;
+        var possessPointDelta = possessPointPosition - motionControl.possessPointTransform.position;
+        var navigationRigPosition = navigationRig.position;
+        var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
+        var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
+        navigationRigPositionDelta += navigationRigUp * (0f - navigationRigUpDelta);
+        navigationRig.position = navigationRigPositionDelta;
+        sc.playerHeightAdjust += navigationRigUpDelta;
+
+        if (sc.MonitorCenterCamera != null)
+        {
+            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
+            monitorCenterCameraTransform.LookAt(controller.transform.position + forwardPossessAxis);
+            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
+            localEulerAngles.y = 0f;
+            localEulerAngles.z = 0f;
+            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
+        }
+
+        controller.PossessMoveAndAlignTo(motionControl.possessPointTransform);
+
+        if (useFollowWhenOffAndPossessPoint)
+        {
+            followWhenOff.position = followWhenOffPosition;
+            followWhenOff.rotation = followWhenOffRotation;
+        }
+    }
+
     public override void StoreJSON(JSONClass jc)
     {
         base.StoreJSON(jc);
@@ -266,8 +266,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             var motionControlJSON = new JSONClass
             {
-                {"OffsetPosition", customized.customPossessPoint.localPosition.ToJSON()},
-                {"OffsetRotation", customized.customPossessPoint.localEulerAngles.ToJSON()},
+                {"OffsetPosition", customized.possessPointTransform.localPosition.ToJSON()},
+                {"OffsetRotation", customized.possessPointTransform.localEulerAngles.ToJSON()},
                 {"Controller", customized.mappedControllerName}
             };
             motionControlsJSON[customized.name] = motionControlJSON;
@@ -287,8 +287,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             var controllerJSON = motionControlsJSON[motionControlName];
             var customized = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
             if (customized == null) continue;
-            customized.customPossessPoint.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
-            customized.customPossessPoint.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            customized.possessPointTransform.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+            customized.possessPointTransform.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
             customized.mappedControllerName = controllerJSON["Controller"].Value;
             if (customized.mappedControllerName == "") customized.mappedControllerName = null;
         }

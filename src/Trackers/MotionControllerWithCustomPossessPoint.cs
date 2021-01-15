@@ -4,7 +4,8 @@ using UnityEngine;
 public class MotionControllerWithCustomPossessPoint
 {
     public string name;
-    public Transform customPossessPoint;
+    public Transform offsetTransform;
+    public Transform possessPointTransform;
     public Rigidbody customRigidbody;
     public Transform currentMotionControl { get; private set; }
     public string mappedControllerName { get; set; }
@@ -12,6 +13,8 @@ public class MotionControllerWithCustomPossessPoint
     private LineRenderer _lineRenderer;
     private Vector3 _baseOffset;
     private Vector3 _customOffset;
+    private Vector3 _offsetRotation;
+    private Vector3 _pointRotatio;
 
     public Vector3 baseOffset
     {
@@ -25,31 +28,35 @@ public class MotionControllerWithCustomPossessPoint
         set { _customOffset = value; SyncOffset(); }
     }
 
-    public Vector3 offset => _baseOffset + _customOffset;
+    public Vector3 offsetRotation
+    {
+        get { return _offsetRotation; }
+        set { _offsetRotation = value; SyncOffset(); }
+    }
+
+    public Vector3 possessPointRotation
+    {
+        get { return _pointRotatio; }
+        set { _pointRotatio = value; SyncOffset(); }
+    }
+
+    public Vector3 combinedOffset => _baseOffset + _customOffset;
 
     private void SyncOffset()
     {
-        customPossessPoint.localPosition = offset;
+        if (currentMotionControl == null) return;
+        offsetTransform.localPosition = combinedOffset;
+        offsetTransform.localEulerAngles = _offsetRotation;
+        possessPointTransform.localPosition = Quaternion.Euler(possessPointRotation) * combinedOffset - combinedOffset;
+        possessPointTransform.localEulerAngles = possessPointRotation;
         UpdateLineRenderer();
     }
-
-    public Vector3 localEulerAngles
-    {
-        get { return customPossessPoint.localEulerAngles; }
-        set
-        {
-            customPossessPoint.localEulerAngles = value;
-            UpdateLineRenderer();
-        }
-    }
-
-
 
     public bool Connect()
     {
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null) return false;
-        customPossessPoint.SetParent(currentMotionControl, false);
+        offsetTransform.SetParent(currentMotionControl, false);
         SyncOffset();
         return true;
     }
@@ -61,26 +68,34 @@ public class MotionControllerWithCustomPossessPoint
         _lineRenderer.SetPositions(new[]
         {
             Vector3.zero,
-            customPossessPoint.InverseTransformPoint(currentMotionControl.position)
+            offsetTransform.InverseTransformPoint(currentMotionControl.position),
+            possessPointTransform.InverseTransformPoint(currentMotionControl.position),
         });
     }
 
     public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl)
     {
+        var offsetPointGameObject = new GameObject($"EmbodyPossessOffsetPoint_{motionControlName}");
         var possessPointGameObject = new GameObject($"EmbodyPossessPoint_{motionControlName}");
+
+        // VisualCuesHelper.Cross(Color.green).transform.SetParent(offsetPointGameObject.transform, false);
+        // VisualCuesHelper.Cross(Color.blue).transform.SetParent(possessPointGameObject.transform, false);
 
         var rb = possessPointGameObject.AddComponent<Rigidbody>();
         rb.interpolation = RigidbodyInterpolation.None;
         rb.isKinematic = true;
 
+        possessPointGameObject.transform.SetParent(offsetPointGameObject.transform, false);
+
         // TODO: Optional
-        var lineRenderer = VisualCuesHelper.CreateLine(possessPointGameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 2, false, true);
+        var lineRenderer = VisualCuesHelper.CreateLine(possessPointGameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 3, false, true);
 
         return new MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
             _getMotionControl = getMotionControl,
-            customPossessPoint = possessPointGameObject.transform,
+            offsetTransform = offsetPointGameObject.transform,
+            possessPointTransform = possessPointGameObject.transform,
             customRigidbody = rb,
             _lineRenderer = lineRenderer
         };

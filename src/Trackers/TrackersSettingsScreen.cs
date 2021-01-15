@@ -24,6 +24,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         // Prototype:
         foreach (var customizedMotionControl in _trackers.motionControls)
         {
+            #warning Temporary
+            if (customizedMotionControl.name != "LeftHand") continue;
             ShowMotionControl(customizedMotionControl);
         }
     }
@@ -34,7 +36,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         var offsetX = new JSONStorableFloat(
             $"{motionControl.name} Offset X",
             motionControl.customOffset.x,
-            (float val) => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
+            val => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
             -0.5f,
             0.5f,
             false);
@@ -43,7 +45,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         var offsetY = new JSONStorableFloat(
             $"{motionControl.name} Offset Y",
             motionControl.customOffset.x,
-            (float val) => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
+            val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
             -0.5f,
             0.5f,
             false);
@@ -52,37 +54,64 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         var offsetZ = new JSONStorableFloat(
             $"{motionControl.name} Offset Z",
             motionControl.customOffset.x,
-            (float val) => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
+            val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
             -0.5f,
             0.5f,
             false);
         CreateSlider(offsetZ);
 
-        var rotateX = new JSONStorableFloat(
-            $"{motionControl.name} Rotate X",
-            motionControl.localEulerAngles.x,
-            (float val) => motionControl.localEulerAngles = new Vector3(val, motionControl.localEulerAngles.y, motionControl.localEulerAngles.z),
+        var offsetRotateX = new JSONStorableFloat(
+            $"{motionControl.name} Offset rotate X",
+            motionControl.offsetRotation.x,
+            val => motionControl.offsetRotation = new Vector3(val, motionControl.offsetRotation.y, motionControl.offsetRotation.z),
             -180,
             180,
             false);
-        CreateSlider(rotateX);
+        CreateSlider(offsetRotateX);
 
-        var rotateY = new JSONStorableFloat(
-            $"{motionControl.name} Rotate Y",
-            motionControl.localEulerAngles.x,
-            (float val) => motionControl.localEulerAngles = new Vector3(motionControl.localEulerAngles.x, val, motionControl.localEulerAngles.z),
+        var offsetRotateY = new JSONStorableFloat(
+            $"{motionControl.name} Offset rotate Y",
+            motionControl.offsetRotation.x,
+            val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, val, motionControl.offsetRotation.z),
             -180,
             180,
             false);
-        CreateSlider(rotateY);
+        CreateSlider(offsetRotateY);
 
-        var rotateZ = new JSONStorableFloat(
-            $"{motionControl.name} Rotate Z",
-            motionControl.localEulerAngles.x,
-            (float val) => motionControl.localEulerAngles = new Vector3(motionControl.localEulerAngles.x, motionControl.localEulerAngles.y, val),
+        var offsetRotateZ = new JSONStorableFloat(
+            $"{motionControl.name} Offset rotate Z",
+            motionControl.offsetRotation.x,
+            val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, motionControl.offsetRotation.y, val),
             -180,
             180,
             false);
-        CreateSlider(rotateZ);
+        CreateSlider(offsetRotateZ);
+
+        var pointRotateX = new JSONStorableFloat(
+            $"{motionControl.name} Point rotate X",
+            motionControl.possessPointRotation.x,
+            val => motionControl.possessPointRotation = new Vector3(val, motionControl.possessPointRotation.y, motionControl.possessPointRotation.z),
+            -180,
+            180,
+            false);
+        CreateSlider(pointRotateX);
+
+        var pointRotateY = new JSONStorableFloat(
+            $"{motionControl.name} Point rotate Y",
+            motionControl.possessPointRotation.x,
+            val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, val, motionControl.possessPointRotation.z),
+            -180,
+            180,
+            false);
+        CreateSlider(pointRotateY);
+
+        var pointRotateZ = new JSONStorableFloat(
+            $"{motionControl.name} Point rotate Z",
+            motionControl.possessPointRotation.x,
+            val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, motionControl.possessPointRotation.y, val),
+            -180,
+            180,
+            false);
+        CreateSlider(pointRotateZ);
     }
 }
