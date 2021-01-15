@@ -45,4 +45,10 @@ public class EmbodyContext
         viveTracker8 = sc.viveTracker8;
     }
 
+    public void Refresh()
+    {
+        if (!embody.activeJSON.val) return;
+        embody.activeJSON.val = false;
+        embody.activeJSON.val = true;
+    }
 }

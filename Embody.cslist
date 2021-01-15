@@ -24,6 +24,7 @@ src\OffsetCamera\OffsetCameraModule.cs
 src\OffsetCamera\OffsetCameraSettingsScreen.cs
 src\Passenger\PassengerModule.cs
 src\Passenger\PassengerSettingsScreen.cs
+src\Screens\CollapsibleSection.cs
 src\Screens\MainScreen.cs
 src\Screens\ScreenBase.cs
 src\Screens\ScreensManager.cs

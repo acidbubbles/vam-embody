@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using UnityEngine;
 
 public class TrackersSettingsScreen : ScreenBase, IScreen
 {
     private readonly ITrackersModule _trackers;
     public const string ScreenName = TrackersModule.Label;
+    private CollapsibleSection _section;
 
     public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
         : base(context)
@@ -19,20 +21,37 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers."), true);
 
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
-        // TODO: Bind controllers to a specific tracker, hands, head and vive tracker 1..8
 
-        // Prototype:
-        foreach (var customizedMotionControl in _trackers.motionControls)
-        {
-            #warning Temporary
-            if (customizedMotionControl.name != "LeftHand") continue;
-            ShowMotionControl(customizedMotionControl);
-        }
+        CreateFilterablePopup(new JSONStorableStringChooser(
+            "",
+            _trackers.motionControls.Select(mc => mc.name).ToList(),
+            _trackers.motionControls[0].name,
+            "Motion control",
+            (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
+        ));
+
+        ShowMotionControl(_trackers.motionControls[0]);
     }
 
     [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
     private void ShowMotionControl(MotionControllerWithCustomPossessPoint motionControl)
     {
+        if (_section == null) _section = CreateSection();
+        _section.RemoveAll();
+
+        if (motionControl == null) return;
+
+        _section.CreateFilterablePopup(new JSONStorableStringChooser(
+            "",
+            _trackers.controllers.Select(mc => mc.controller.name).ToList(),
+            motionControl.mappedControllerName,
+            "Map to control",
+            val =>
+            {
+                motionControl.mappedControllerName = val;
+                context.Refresh();
+            }));
+
         var offsetX = new JSONStorableFloat(
             $"{motionControl.name} Offset X",
             motionControl.customOffset.x,
@@ -40,7 +59,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -0.5f,
             0.5f,
             false);
-        CreateSlider(offsetX);
+        _section.CreateSlider(offsetX);
 
         var offsetY = new JSONStorableFloat(
             $"{motionControl.name} Offset Y",
@@ -49,7 +68,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -0.5f,
             0.5f,
             false);
-        CreateSlider(offsetY);
+        _section.CreateSlider(offsetY);
 
         var offsetZ = new JSONStorableFloat(
             $"{motionControl.name} Offset Z",
@@ -58,7 +77,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -0.5f,
             0.5f,
             false);
-        CreateSlider(offsetZ);
+        _section.CreateSlider(offsetZ);
 
         var offsetRotateX = new JSONStorableFloat(
             $"{motionControl.name} Offset rotate X",
@@ -67,7 +86,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(offsetRotateX);
+        _section.CreateSlider(offsetRotateX);
 
         var offsetRotateY = new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Y",
@@ -76,7 +95,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(offsetRotateY);
+        _section.CreateSlider(offsetRotateY);
 
         var offsetRotateZ = new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Z",
@@ -85,7 +104,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(offsetRotateZ);
+        _section.CreateSlider(offsetRotateZ);
 
         var pointRotateX = new JSONStorableFloat(
             $"{motionControl.name} Point rotate X",
@@ -94,7 +113,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(pointRotateX);
+        _section.CreateSlider(pointRotateX);
 
         var pointRotateY = new JSONStorableFloat(
             $"{motionControl.name} Point rotate Y",
@@ -103,7 +122,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(pointRotateY);
+        _section.CreateSlider(pointRotateY);
 
         var pointRotateZ = new JSONStorableFloat(
             $"{motionControl.name} Point rotate Z",
@@ -112,6 +131,6 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false);
-        CreateSlider(pointRotateZ);
+        _section.CreateSlider(pointRotateZ);
     }
 }
