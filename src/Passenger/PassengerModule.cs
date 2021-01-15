@@ -272,8 +272,17 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         var positionSmoothing = positionSmoothingJSON.val;
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
+        // TODO: All of this should be greatly simplified. Find the eye center and offset from there.
+        /*
+            var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
+            _lEye = eyes.First(eye => eye.name == "lEye").transform;
+            _rEye = eyes.First(eye => eye.name == "rEye").transform;
+            var eyesDistance = Vector3.Distance(_lEye.position, _rightEye.position)
+            // TODO: Now, parent something to lEye and offset by lEye.right * (eyesDistance / 2f)
+         */
         var eyesToHeadOffset = new Vector3(0, 0, eyesToHeadDistanceJSON.val);
 
+        // TODO: Use the context motion control instead with the custom possess point!
         var centerTargetTransform = CameraTarget.centerTarget.transform;
         var navigationRigTransform = navigationRig.transform;
         var linkTransform = _link.transform;

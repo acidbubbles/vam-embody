@@ -79,6 +79,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == "Head")
             {
+                // TODO: If Passenger is selected, skip
                 // TODO: Find the eyes center and offset from this point instead. in the case of hands, find the possessPoint if it's available and use that as the base offset.
                 // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
                 // sc.SyncMonitorRigPosition();
@@ -98,6 +99,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             }
             else
             {
+                // TODO: If Snug is selected, skip LeftHand and RightHand
                 controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
                 // TODO: Rotate around the "new" center and update in the UI
                 // controller.control.RotateAround(motionControl.customPossessPoint.position, motionControl.customPossessPoint.up, 45f);
@@ -212,6 +214,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var rotation = Quaternion.FromToRotation(fromDirection, vector);
         navigationRig.rotation = rotation * navigationRig.rotation;
 
+        // TODO: Validate if this is useful or overkill
         var followWhenOffPosition = Vector3.zero;
         var followWhenOffRotation = Quaternion.identity;
         var followWhenOff = controller.followWhenOff;
