@@ -33,8 +33,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.Awake();
 
         AddMotionControl("Head", () => context.head, "headControl");
-        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl", new Vector3(0.04120696f, 0, -0.0057684838f));
-        AddMotionControl("RightHand", () => context.rightHand, "rHandControl", new Vector3(-0.04120696f, 0, -0.0057684838f));
+        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl", new Vector3(-0.03247f, -0.03789f, -0.10116f), new Vector3(-90, 90, 0));
+        AddMotionControl("RightHand", () => context.rightHand, "rHandControl", new Vector3(0.03247f, -0.03789f, -0.10116f), new Vector3(-90, -90, 0));
         AddMotionControl("ViveTracker1", () => context.viveTracker1);
         AddMotionControl("ViveTracker2", () => context.viveTracker2);
         AddMotionControl("ViveTracker3", () => context.viveTracker3);
@@ -53,11 +53,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
-    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 baseOffset = new Vector3())
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 baseOffset = new Vector3(), Vector3 baseOffsetRotation = new Vector3())
     {
         var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl);
         motionControl.mappedControllerName = mappedControllerName;
         motionControl.baseOffset = baseOffset;
+        motionControl.baseOffsetRotation = baseOffsetRotation;
         motionControls.Add(motionControl);
     }
 
@@ -77,17 +78,21 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             if (controllerWithSnapshot == null) continue;
             var controller = controllerWithSnapshot.controller;
             if (controller.possessed) continue;
+            if (!controller.possessable) continue;
             if (restorePoseAfterPossessJSON.val)
                 controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
             if(!motionControl.Connect()) continue;
 
             if (motionControl.name == "Head")
             {
-                // TODO: This is only useful on Desktop, we'll overwrite it anyway. Validate.
-                // sc.SyncMonitorRigPosition();
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
                 var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
-                motionControl.baseOffset = -controller.transform.InverseTransformPoint(eyesCenter);
+                motionControl.baseOffset = controller.control.InverseTransformPoint(eyesCenter);
+                // TODO: The VR view is _lower_ than the eyes?
+                // VisualCuesHelper.Cross(Color.green).transform.SetParent(eyes.First(eye => eye.name == "lEye").transform, false);
+                // var tmp = VisualCuesHelper.Cross(Color.green).transform;
+                // tmp.SetParent(controller.control, false);
+                // tmp.position = controller.control.position + controller.control.rotation * motionControl.combinedOffset;
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
@@ -95,7 +100,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 }
                 else
                 {
-                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controller.control.rotation * -motionControl.combinedOffset, controller.control.rotation);
+                    var controlRotation = controller.control.rotation;
+                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controlRotation * motionControl.combinedOffset, controlRotation);
                 }
             }
             else
@@ -129,36 +135,20 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         var sc = SuperController.singleton;
 
-        if (!controller.canGrabPosition && !controller.canGrabRotation)
-            return;
-
         controller.possessed = true;
+        controller.canGrabPosition = true;
+        controller.canGrabRotation = true;
 
         var motionControllerHeadRigidbody = motionControl.customRigidbody;
 
-        if (controller.canGrabPosition)
-        {
-            controller.GetComponent<MotionAnimationControl>().suspendPositionPlayback = true;
-            controller.RBHoldPositionSpring = sc.possessPositionSpring;
-        }
-
-        if (controller.canGrabRotation)
-        {
-             controller.GetComponent<MotionAnimationControl>().suspendRotationPlayback = true;
-            controller.RBHoldRotationSpring = sc.possessRotationSpring;
-        }
+        var motionAnimationControl = controller.GetComponent<MotionAnimationControl>();
+        motionAnimationControl.suspendPositionPlayback = true;
+        controller.RBHoldPositionSpring = sc.possessPositionSpring;
+        motionAnimationControl.suspendRotationPlayback = true;
+        controller.RBHoldRotationSpring = sc.possessRotationSpring;
 
         var linkState = FreeControllerV3.SelectLinkState.Position;
-        if (controller.canGrabPosition)
-        {
-            if (controller.canGrabRotation)
-                linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
-        }
-        else if (controller.canGrabRotation)
-        {
-            linkState = FreeControllerV3.SelectLinkState.Rotation;
-        }
-
+        linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
     }
 
@@ -183,6 +173,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 c.snapshot.Restore();
                 c.snapshot = null;
             }
+        }
+
+        foreach (var motionControl in motionControls)
+        {
+            motionControl.Disconnect();
         }
 
         if (_navigationRigSnapshot != null)

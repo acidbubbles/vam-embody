@@ -13,8 +13,9 @@ public class MotionControllerWithCustomPossessPoint
     private Func<Transform> _getMotionControl;
     private LineRenderer _lineRenderer;
     private Vector3 _baseOffset;
+    private Vector3 _baseOffsetRotation;
     private Vector3 _customOffset;
-    private Vector3 _offsetRotation;
+    private Vector3 _customOffsetRotation;
     private Vector3 _pointRotation;
     private bool _showLine;
 
@@ -24,16 +25,22 @@ public class MotionControllerWithCustomPossessPoint
         set { _baseOffset = value; SyncOffset(); }
     }
 
+    public Vector3 baseOffsetRotation
+    {
+        get { return _baseOffsetRotation; }
+        set { _baseOffsetRotation = value; SyncOffset(); }
+    }
+
     public Vector3 customOffset
     {
         get { return _customOffset; }
         set { _customOffset = value; SyncOffset(); }
     }
 
-    public Vector3 offsetRotation
+    public Vector3 customOffsetRotation
     {
-        get { return _offsetRotation; }
-        set { _offsetRotation = value; SyncOffset(); }
+        get { return _customOffsetRotation; }
+        set { _customOffsetRotation = value; SyncOffset(); }
     }
 
     public Vector3 possessPointRotation
@@ -43,6 +50,7 @@ public class MotionControllerWithCustomPossessPoint
     }
 
     public Vector3 combinedOffset => _baseOffset + _customOffset;
+    public Vector3 combinedOffsetRotation => _baseOffsetRotation + _customOffsetRotation;
 
     public bool showLine
     {
@@ -54,7 +62,7 @@ public class MotionControllerWithCustomPossessPoint
     {
         if (currentMotionControl == null) return;
         offsetTransform.localPosition = combinedOffset;
-        offsetTransform.localEulerAngles = _offsetRotation;
+        offsetTransform.localEulerAngles = combinedOffsetRotation;
         possessPointTransform.localPosition = Quaternion.Euler(possessPointRotation) * combinedOffset - combinedOffset;
         possessPointTransform.localEulerAngles = possessPointRotation;
         UpdateLineRenderer();
@@ -69,15 +77,19 @@ public class MotionControllerWithCustomPossessPoint
         return true;
     }
 
+    public void Disconnect()
+    {
+        currentMotionControl = null;
+        Object.Destroy(_lineRenderer);
+    }
 
     private void UpdateLineRenderer()
     {
-        if (currentMotionControl == null) return;
-
-        if (!_showLine)
+        if (!_showLine || ReferenceEquals(currentMotionControl, null))
         {
             if(!ReferenceEquals(_lineRenderer, null))
                 Object.Destroy(_lineRenderer);
+            return;
         }
 
         if(ReferenceEquals(_lineRenderer, null))

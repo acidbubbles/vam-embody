@@ -20,8 +20,8 @@ public class NavigationRigSnapshot
     public void Restore()
     {
         var navigationRig = SuperController.singleton.navigationRig;
+        SuperController.singleton.playerHeightAdjust = _playerHeightAdjust;
         navigationRig.position = _position;
         navigationRig.rotation = _rotation;
-        SuperController.singleton.playerHeightAdjust = _playerHeightAdjust;
     }
 }

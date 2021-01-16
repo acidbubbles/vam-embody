@@ -18,6 +18,7 @@
         CreateSlider(_offsetCamera.cameraDepthJSON, true).label = "Depth adjust";
         CreateSlider(_offsetCamera.cameraHeightJSON, true).label = "Height adjust";
         CreateSlider(_offsetCamera.cameraPitchJSON, true).label = "Pitch adjust";
+        // TODO: This should apply even with trackers
         CreateSlider(_offsetCamera.clipDistanceJSON, true).label = "Clip distance";
     }
 }

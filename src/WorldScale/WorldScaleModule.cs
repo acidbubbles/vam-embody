@@ -35,8 +35,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
-
-        enabled = true;
     }
 
     public override void OnEnable()

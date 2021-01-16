@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class TrackersSettingsScreen : ScreenBase, IScreen
 {
-    private readonly ITrackersModule _trackers;
     public const string ScreenName = TrackersModule.Label;
+
+    private const string _none = "None";
+
+    private readonly ITrackersModule _trackers;
     private CollapsibleSection _section;
 
     public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
@@ -22,10 +25,17 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
 
+        var showLineJSON = new JSONStorableBool("Preview 3D offset", _trackers.motionControls[0].showLine, (bool val) =>
+        {
+            foreach (var mc in _trackers.motionControls)
+                mc.showLine = val;
+        });
+        CreateToggle(showLineJSON, true);
+
         CreateFilterablePopup(new JSONStorableStringChooser(
             "",
-            _trackers.motionControls.Select(mc => mc.name).ToList(),
-            _trackers.motionControls[0].name,
+           _trackers.motionControls.Select(mc => mc.name).ToList(),
+            _trackers.motionControls[0].name ?? _none,
             "Motion control",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
         ));
@@ -43,12 +53,12 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateFilterablePopup(new JSONStorableStringChooser(
             "",
-            _trackers.controllers.Select(mc => mc.controller.name).ToList(),
+            new[]{_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),
             motionControl.mappedControllerName,
             "Map to control",
             val =>
             {
-                motionControl.mappedControllerName = val;
+                motionControl.mappedControllerName = val == _none ? null : val;
                 context.Refresh();
             }), false);
 
@@ -78,24 +88,24 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate X",
-            motionControl.offsetRotation.x,
-            val => motionControl.offsetRotation = new Vector3(val, motionControl.offsetRotation.y, motionControl.offsetRotation.z),
+            motionControl.customOffsetRotation.x,
+            val => motionControl.customOffsetRotation = new Vector3(val, motionControl.customOffsetRotation.y, motionControl.customOffsetRotation.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Y",
-            motionControl.offsetRotation.x,
-            val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, val, motionControl.offsetRotation.z),
+            motionControl.customOffsetRotation.x,
+            val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, val, motionControl.customOffsetRotation.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"{motionControl.name} Offset rotate Z",
-            motionControl.offsetRotation.x,
-            val => motionControl.offsetRotation = new Vector3(motionControl.offsetRotation.x, motionControl.offsetRotation.y, val),
+            motionControl.customOffsetRotation.x,
+            val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, motionControl.customOffsetRotation.y, val),
             -180,
             180,
             false), false);
