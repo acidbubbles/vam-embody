@@ -32,8 +32,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        // TODO: This actually changes from MonitorCamera to the actual VR headset when switching monitor mode. We can make a func, but then we'd need to switch the possess point's parent. SetParent(x, false) should keep local position.
-        // TODO: Determine some reasonable offset value
         AddMotionControl("Head", () => context.head, "headControl");
         AddMotionControl("LeftHand", () => context.leftHand, "lHandControl", new Vector3(0.04120696f, 0, -0.0057684838f));
         AddMotionControl("RightHand", () => context.rightHand, "rHandControl", new Vector3(-0.04120696f, 0, -0.0057684838f));
@@ -72,7 +70,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         foreach (var motionControl in motionControls)
         {
             if (motionControl.mappedControllerName == null) continue;
-            // TODO: Lines not tested
             if (passenger.selectedJSON.val && motionControl.name == "Head") continue;
             if (snug.selectedJSON.val && (motionControl.name == "LeftHand" || motionControl.name == "RightHand")) return;
 

@@ -19,7 +19,6 @@ public class MeasureHandsPaddingStep : IWizardStep, IWizardUpdate
 
     public void Update()
     {
-        // TODO: Fingers
         _leftHandControl.control.position = _head.position + _head.transform.forward * 0.3f + Vector3.down * 0.2f + _head.transform.right * -0.01f;
         _leftHandControl.control.eulerAngles = _head.rotation.eulerAngles;
         _leftHandControl.control.Rotate(new Vector3(180, 0, 90 + 10));

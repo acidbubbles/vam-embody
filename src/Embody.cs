@@ -29,8 +29,6 @@ public class Embody : MVRScript, IEmbody
             _modules.transform.SetParent(transform, false);
             _modules.SetActive(false);
 
-            // TODO: Filter based on whether it's a person atom
-
             _context = new EmbodyContext(this, this);
             _context.Initialize();
 
@@ -51,11 +49,8 @@ public class Embody : MVRScript, IEmbody
             wizardModule.worldScale = worldScaleModule;
             wizardModule.snug = snugModule;
 
-            // TODO: Once awaken, register the useful storables so they can be modified by scripts
-
             _modules.SetActive(true);
 
-            // TODO: This is weird structure wise. Review architecture so those modules have their place.
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
             _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));

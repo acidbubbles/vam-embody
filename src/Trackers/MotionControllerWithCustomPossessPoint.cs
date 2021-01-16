@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public class MotionControllerWithCustomPossessPoint
 {
@@ -14,7 +15,8 @@ public class MotionControllerWithCustomPossessPoint
     private Vector3 _baseOffset;
     private Vector3 _customOffset;
     private Vector3 _offsetRotation;
-    private Vector3 _pointRotatio;
+    private Vector3 _pointRotation;
+    private bool _showLine;
 
     public Vector3 baseOffset
     {
@@ -36,11 +38,17 @@ public class MotionControllerWithCustomPossessPoint
 
     public Vector3 possessPointRotation
     {
-        get { return _pointRotatio; }
-        set { _pointRotatio = value; SyncOffset(); }
+        get { return _pointRotation; }
+        set { _pointRotation = value; SyncOffset(); }
     }
 
     public Vector3 combinedOffset => _baseOffset + _customOffset;
+
+    public bool showLine
+    {
+        get { return _showLine; }
+        set { _showLine = value; UpdateLineRenderer(); }
+    }
 
     private void SyncOffset()
     {
@@ -65,6 +73,16 @@ public class MotionControllerWithCustomPossessPoint
     private void UpdateLineRenderer()
     {
         if (currentMotionControl == null) return;
+
+        if (!_showLine)
+        {
+            if(!ReferenceEquals(_lineRenderer, null))
+                Object.Destroy(_lineRenderer);
+        }
+
+        if(ReferenceEquals(_lineRenderer, null))
+            _lineRenderer = VisualCuesHelper.CreateLine(possessPointTransform.gameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 3, false, true);
+
         _lineRenderer.SetPositions(new[]
         {
             Vector3.zero,
@@ -78,17 +96,11 @@ public class MotionControllerWithCustomPossessPoint
         var offsetPointGameObject = new GameObject($"EmbodyPossessOffsetPoint_{motionControlName}");
         var possessPointGameObject = new GameObject($"EmbodyPossessPoint_{motionControlName}");
 
-        // VisualCuesHelper.Cross(Color.green).transform.SetParent(offsetPointGameObject.transform, false);
-        // VisualCuesHelper.Cross(Color.blue).transform.SetParent(possessPointGameObject.transform, false);
-
         var rb = possessPointGameObject.AddComponent<Rigidbody>();
         rb.interpolation = RigidbodyInterpolation.None;
         rb.isKinematic = true;
 
         possessPointGameObject.transform.SetParent(offsetPointGameObject.transform, false);
-
-        // TODO: Optional
-        var lineRenderer = VisualCuesHelper.CreateLine(possessPointGameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 3, false, true);
 
         return new MotionControllerWithCustomPossessPoint
         {
@@ -97,7 +109,6 @@ public class MotionControllerWithCustomPossessPoint
             offsetTransform = offsetPointGameObject.transform,
             possessPointTransform = possessPointGameObject.transform,
             customRigidbody = rb,
-            _lineRenderer = lineRenderer
         };
     }
 }

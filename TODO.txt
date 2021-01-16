@@ -1,0 +1,11 @@
+﻿- Finish the wizard
+- Connect to the leap motion when possessing hands
+- Without leap, see if we could animate hands when grabbing
+- When building the base offset for tracker hands, measure wrist to middle finger base to determine offset and rotation
+- Measure hand padding using a collider height instead of manually
+- Support non-person atoms (keep passenger)
+- Determine some useful storables to make available
+- Make a setting to show the offset lines in MotionControllerWithCustomPossessPoint (showLine)
+- Cleanup Passenger
+- Cleanup Snug
+- Use overlays to show the wizard message and how to exit Passenger

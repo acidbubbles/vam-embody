@@ -72,8 +72,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
-        // Left Side
-
         var defaultLink = containingAtom.type == "Person" ? "head" : "object";
         var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
         linkJSON = new JSONStorableStringChooser("Link", links, defaultLink, "Link to", (string val) => Reapply());
@@ -103,8 +101,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             rotationLockJSON.valNoCallback = false;
             Reapply();
         });
-
-        // Right Side
 
         rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
 
@@ -155,8 +151,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         try
         {
-            // TODO: Instead automatically offset from the eyes center (between both eye bones)
-
             _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == linkJSON.val);
             if (lookAtJSON.val)
                 _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");

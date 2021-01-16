@@ -32,6 +32,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateToggle(_passenger.rotationLockJSON).label = "Control camera rotation";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent camera roll";
 
+        // TODO: Simplify and only offer follow as a checkbox (follow rotation) and remove rigidbody choice.
         var followerPopup = CreateFilterablePopup(_passenger.possessRotationLink);
         followerPopup.popupPanelHeight = 600f;
         // TODO: Re-enable

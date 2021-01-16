@@ -4,7 +4,6 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
-// TODO: Probably to deprecate... or based on player height v.s. model height if I can figure out sitting model height...
 public interface IWorldScaleModule : IEmbodyModule
 {
     JSONStorableStringChooser worldScaleMethod { get; }

@@ -1,8 +1,5 @@
-/* TODO
-- Remove sliders for in-game size, or make them "advanced"
-- Run auto setup whenever enabled or visual helpers shown
-- When loading a preset, overwrite with autosetup immediately
-*/
+// TODO: Reverse important adjustment sliders and advanced ones. Hide under an advanced toggle.
+// TODO: When loading a preset, overwrite with autosetup immediately// TODO:
 
 using System;
 using System.Collections;
@@ -73,8 +70,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             InitVisualCues();
             InitDisableSelection();
             InitHandsSettings();
-
-            // TODO: Auto move eye target against mirror (to make the model look at herself)
         }
         catch (Exception exc)
         {
@@ -531,7 +526,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             anchorPoint.VirtualCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.gray);
             anchorPoint.Update();
 
-            // TODO: Uncomment when there
             anchorPoint.PhysicalCue = new ControllerAnchorPointVisualCue(anchorPoint.RigidBody.transform, Color.white);
             anchorPoint.Update();
         }

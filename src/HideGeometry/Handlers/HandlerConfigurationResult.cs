@@ -1,5 +1,3 @@
-// #define POV_DIAGNOSTICS
-
 namespace Handlers
 {
     public static class HandlerConfigurationResult

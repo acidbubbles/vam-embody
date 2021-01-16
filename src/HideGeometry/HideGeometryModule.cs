@@ -1,5 +1,3 @@
-// TODO: Hide Hunting Succubus's eyes and cua hair
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,15 +27,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public JSONStorableBool hideClothingJSON { get; set; }
 
     private readonly List<IHandler> _handlers = new List<IHandler>();
-    // For change detection purposes
-    private DAZCharacter _character;
 
-    // Requires re-generating all shaders and materials, either because last frame was not ready or because something changed
     private bool _dirty;
-    // To avoid spamming errors when something failed
     private bool _failedOnce;
-    // When waiting for a model to load, how long before we abandon
     private int _tryAgainAttempts;
+    private DAZCharacter _character;
     private int _hairHashSum;
     private int _clothingHashSum;
 

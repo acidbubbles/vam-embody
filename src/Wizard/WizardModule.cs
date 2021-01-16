@@ -96,8 +96,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
             autoSetup.AutoSetup();
         }
 
-        // TODO: Add headControl to eyes center offset to the _trackers configuration so the head-to-eyes is perfect
-
         var steps = new List<IWizardStep>();
 
         if (worldScale.selectedJSON.val)
@@ -130,7 +128,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
         {
             var step = steps[i];
             var stepUpdate = step as IWizardUpdate;
-            // TODO: Use overlays instead
             statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{step.helpText}";
             while (!AreAnyStartRecordKeysDown())
             {
