@@ -55,7 +55,7 @@ public class MotionControllerWithCustomPossessPoint
     public bool showLine
     {
         get { return _showLine; }
-        set { _showLine = value; UpdateLineRenderer(); }
+        set { _showLine = value; CreateOrDestroyLineRenderer(); }
     }
 
     private void SyncOffset()
@@ -65,36 +65,41 @@ public class MotionControllerWithCustomPossessPoint
         offsetTransform.localEulerAngles = combinedOffsetRotation;
         possessPointTransform.localPosition = Quaternion.Euler(possessPointRotation) * combinedOffset - combinedOffset;
         possessPointTransform.localEulerAngles = possessPointRotation;
-        UpdateLineRenderer();
+        SyncLineRenderer();
     }
 
-    public bool Connect()
+    public bool SyncMotionControl()
     {
         currentMotionControl = _getMotionControl();
-        if (currentMotionControl == null) return false;
+        if (currentMotionControl == null)
+        {
+            CreateOrDestroyLineRenderer();
+            return false;
+        }
         offsetTransform.SetParent(currentMotionControl, false);
         SyncOffset();
+        CreateOrDestroyLineRenderer();
         return true;
     }
 
-    public void Disconnect()
-    {
-        currentMotionControl = null;
-        Object.Destroy(_lineRenderer);
-    }
-
-    private void UpdateLineRenderer()
+    private void CreateOrDestroyLineRenderer()
     {
         if (!_showLine || ReferenceEquals(currentMotionControl, null))
         {
-            if(!ReferenceEquals(_lineRenderer, null))
-                Object.Destroy(_lineRenderer);
+            Object.Destroy(_lineRenderer);
+            _lineRenderer = null;
             return;
         }
 
-        if(ReferenceEquals(_lineRenderer, null))
+        if (_lineRenderer == null)
             _lineRenderer = VisualCuesHelper.CreateLine(possessPointTransform.gameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 3, false, true);
 
+        SyncLineRenderer();
+    }
+
+    private void SyncLineRenderer()
+    {
+        if (_lineRenderer == null) return;
         _lineRenderer.SetPositions(new[]
         {
             Vector3.zero,

@@ -25,12 +25,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
 
-        var showLineJSON = new JSONStorableBool("Preview 3D offset", _trackers.motionControls[0].showLine, (bool val) =>
-        {
-            foreach (var mc in _trackers.motionControls)
-                mc.showLine = val;
-        });
-        CreateToggle(showLineJSON, true);
+        CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
         CreateFilterablePopup(new JSONStorableStringChooser(
             "",

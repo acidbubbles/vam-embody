@@ -113,9 +113,11 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
     {
         yield return new WaitForSecondsRealtime(0.2f);
         // Activate
-        context.embody.activeJSON.val = true;
+        // context.embody.activeJSON.val = true;
+        // Show 3d trackers
+        (_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
+        // Wizard
         /*
-         // Wizard
         _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
         _modules.First(m => m.storeId == "Trackers").selectedJSON.val = false;
         _modules.First(m => m.storeId == "WorldScale").selectedJSON.val = false;

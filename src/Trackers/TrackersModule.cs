@@ -7,6 +7,7 @@ using UnityEngine;
 public interface ITrackersModule : IEmbodyModule
 {
     JSONStorableBool restorePoseAfterPossessJSON { get; }
+    JSONStorableBool previewTrackerOffsetJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
     List<FreeControllerV3WithSnapshot> controllers { get; }
 }
@@ -26,6 +27,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
+    public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Awake()
@@ -51,6 +53,15 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 controller = controller,
             });
         }
+
+        previewTrackerOffsetJSON.setCallbackFunction = val =>
+        {
+            foreach (var mc in motionControls)
+            {
+                mc.SyncMotionControl();
+                mc.showLine = val;
+            }
+        };
     }
 
     private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 baseOffset = new Vector3(), Vector3 baseOffsetRotation = new Vector3())
@@ -60,6 +71,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         motionControl.baseOffset = baseOffset;
         motionControl.baseOffsetRotation = baseOffsetRotation;
         motionControls.Add(motionControl);
+        motionControl.SyncMotionControl();
     }
 
     public override void OnEnable()
@@ -81,7 +93,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             if (!controller.possessable) continue;
             if (restorePoseAfterPossessJSON.val)
                 controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
-            if(!motionControl.Connect()) continue;
+            if(!motionControl.SyncMotionControl()) continue;
 
             if (motionControl.name == "Head")
             {
@@ -167,11 +179,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 c.snapshot.Restore();
                 c.snapshot = null;
             }
-        }
-
-        foreach (var motionControl in motionControls)
-        {
-            motionControl.Disconnect();
         }
 
         if (_navigationRigSnapshot != null)
