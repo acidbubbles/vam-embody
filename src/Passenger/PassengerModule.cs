@@ -262,6 +262,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
     private void UpdateNavigationRig(bool force)
     {
+        // Idea!!! Set player height to zero :)
         // Context
         var positionSmoothing = positionSmoothingJSON.val;
         var rotationSmoothing = rotationSmoothingJSON.val;

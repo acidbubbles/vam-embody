@@ -90,6 +90,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 motionControl.baseOffset = controller.control.InverseTransformPoint(eyesCenter);
                 // TODO: The VR view is _lower_ than the eyes?
                 // VisualCuesHelper.Cross(Color.green).transform.SetParent(eyes.First(eye => eye.name == "lEye").transform, false);
+                // VisualCuesHelper.Cross(Color.red).transform.SetParent(motionControl.currentMotionControl, false);
+                // VisualCuesHelper.Cross(Color.blue).transform.SetParent(SuperController.singleton.centerCameraTarget.transform, false);
                 // var tmp = VisualCuesHelper.Cross(Color.green).transform;
                 // tmp.SetParent(controller.control, false);
                 // tmp.position = controller.control.position + controller.control.rotation * motionControl.combinedOffset;
@@ -136,20 +138,19 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var sc = SuperController.singleton;
 
         controller.possessed = true;
-        controller.canGrabPosition = true;
-        controller.canGrabRotation = true;
 
         var motionControllerHeadRigidbody = motionControl.customRigidbody;
-
         var motionAnimationControl = controller.GetComponent<MotionAnimationControl>();
+
+        controller.canGrabPosition = true;
         motionAnimationControl.suspendPositionPlayback = true;
         controller.RBHoldPositionSpring = sc.possessPositionSpring;
+
+        controller.canGrabRotation = true;
         motionAnimationControl.suspendRotationPlayback = true;
         controller.RBHoldRotationSpring = sc.possessRotationSpring;
 
-        var linkState = FreeControllerV3.SelectLinkState.Position;
-        linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
-        controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, linkState);
+        controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, FreeControllerV3.SelectLinkState.PositionAndRotation);
     }
 
     public void ClearPossess()
@@ -206,24 +207,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var rotation = Quaternion.FromToRotation(fromDirection, vector);
         navigationRig.rotation = rotation * navigationRig.rotation;
 
-        // TODO: Validate if this is useful or overkill
-        var followWhenOffPosition = Vector3.zero;
-        var followWhenOffRotation = Quaternion.identity;
-        var followWhenOff = controller.followWhenOff;
-        var useFollowWhenOffAndPossessPoint = controller.possessPoint != null && followWhenOff != null;
-        if (useFollowWhenOffAndPossessPoint)
-        {
-            followWhenOffPosition = followWhenOff.position;
-            followWhenOffRotation = followWhenOff.rotation;
-            followWhenOff.position = controller.control.position;
-            followWhenOff.rotation = controller.control.rotation;
-        }
+        controller.AlignTo(motionControl.possessPointTransform, true);
 
-        if (controller.canGrabRotation)
-            controller.AlignTo(motionControl.possessPointTransform, true);
-
-        var possessPointPosition = controller.possessPoint == null ? controller.control.position : controller.possessPoint.position;
-        var possessPointDelta = possessPointPosition - motionControl.possessPointTransform.position;
+        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position + (motionControl.currentMotionControl.InverseTransformPoint(motionControl.possessPointTransform.position));
         var navigationRigPosition = navigationRig.position;
         var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
         var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
@@ -239,14 +225,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             localEulerAngles.y = 0f;
             localEulerAngles.z = 0f;
             monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
-        }
-
-        controller.PossessMoveAndAlignTo(motionControl.possessPointTransform);
-
-        if (useFollowWhenOffAndPossessPoint)
-        {
-            followWhenOff.position = followWhenOffPosition;
-            followWhenOff.rotation = followWhenOffRotation;
         }
     }
 
