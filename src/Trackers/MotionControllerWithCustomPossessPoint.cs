@@ -11,13 +11,13 @@ public class MotionControllerWithCustomPossessPoint
     public Transform currentMotionControl { get; private set; }
     public string mappedControllerName { get; set; }
     private Func<Transform> _getMotionControl;
-    private LineRenderer _lineRenderer;
+    private OffsetPreview _offsetPreview;
     private Vector3 _baseOffset;
     private Vector3 _baseOffsetRotation;
     private Vector3 _customOffset;
     private Vector3 _customOffsetRotation;
     private Vector3 _pointRotation;
-    private bool _showLine;
+    private bool _showPreview;
 
     public Vector3 baseOffset
     {
@@ -52,10 +52,10 @@ public class MotionControllerWithCustomPossessPoint
     public Vector3 combinedOffset => _baseOffset + _customOffset;
     public Vector3 combinedOffsetRotation => _baseOffsetRotation + _customOffsetRotation;
 
-    public bool showLine
+    public bool showPreview
     {
-        get { return _showLine; }
-        set { _showLine = value; CreateOrDestroyLineRenderer(); }
+        get { return _showPreview; }
+        set { _showPreview = value; CreateOrDestroyOffsetPreview(); }
     }
 
     private void SyncOffset()
@@ -65,7 +65,7 @@ public class MotionControllerWithCustomPossessPoint
         offsetTransform.localEulerAngles = combinedOffsetRotation;
         possessPointTransform.localPosition = Quaternion.Euler(possessPointRotation) * combinedOffset - combinedOffset;
         possessPointTransform.localEulerAngles = possessPointRotation;
-        SyncLineRenderer();
+        SyncOffsetPreview();
     }
 
     public bool SyncMotionControl()
@@ -73,39 +73,40 @@ public class MotionControllerWithCustomPossessPoint
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null)
         {
-            CreateOrDestroyLineRenderer();
+            CreateOrDestroyOffsetPreview();
             return false;
         }
         offsetTransform.SetParent(currentMotionControl, false);
         SyncOffset();
-        CreateOrDestroyLineRenderer();
+        CreateOrDestroyOffsetPreview();
         return true;
     }
 
-    private void CreateOrDestroyLineRenderer()
+    private void CreateOrDestroyOffsetPreview()
     {
-        if (!_showLine || ReferenceEquals(currentMotionControl, null))
+        if (!_showPreview || ReferenceEquals(currentMotionControl, null) || !currentMotionControl.gameObject.activeInHierarchy)
         {
-            Object.Destroy(_lineRenderer);
-            _lineRenderer = null;
+            if (_offsetPreview == null) return;
+            Object.Destroy(_offsetPreview.gameObject);
+            _offsetPreview = null;
             return;
         }
 
-        if (_lineRenderer == null)
-            _lineRenderer = VisualCuesHelper.CreateLine(possessPointTransform.gameObject, new Color(0.8f, 0.8f, 0.5f, 0.8f), 0.002f, 3, false, true);
+        if (_offsetPreview == null)
+        {
+            var go = new GameObject("EmbodyOffsetPreview_" + name);
+            go.transform.SetParent(possessPointTransform, false);
+            _offsetPreview = go.gameObject.AddComponent<OffsetPreview>();
+        }
 
-        SyncLineRenderer();
+        _offsetPreview.offsetTransform = offsetTransform;
+        _offsetPreview.currentMotionControl = currentMotionControl;
     }
 
-    private void SyncLineRenderer()
+    private void SyncOffsetPreview()
     {
-        if (_lineRenderer == null) return;
-        _lineRenderer.SetPositions(new[]
-        {
-            Vector3.zero,
-            possessPointTransform.InverseTransformPoint(offsetTransform.position),
-            possessPointTransform.InverseTransformPoint(currentMotionControl.position),
-        });
+        if (_offsetPreview == null) return;
+        _offsetPreview.Sync();
     }
 
     public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl)

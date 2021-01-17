@@ -104,6 +104,7 @@
     <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
     <Compile Include="src\Trackers\NavigationRigSnapshot.cs" />
+    <Compile Include="src\Trackers\OffsetPreview.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\Utilities\Utilities.cs" />

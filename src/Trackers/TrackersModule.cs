@@ -59,7 +59,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             foreach (var mc in motionControls)
             {
                 mc.SyncMotionControl();
-                mc.showLine = val;
+                mc.showPreview = val;
             }
         };
     }

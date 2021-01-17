@@ -37,6 +37,7 @@ src\Trackers\FreeControllerV3Snapshot.cs
 src\Trackers\FreeControllerV3WithSnapshot.cs
 src\Trackers\MotionControllerWithCustomPossessPoint.cs
 src\Trackers\NavigationRigSnapshot.cs
+src\Trackers\OffsetPreview.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\Utilities\Utilities.cs
