@@ -98,7 +98,7 @@ public class MotionControllerWithCustomPossessPoint
         _lineRenderer.SetPositions(new[]
         {
             Vector3.zero,
-            offsetTransform.InverseTransformPoint(currentMotionControl.position),
+            possessPointTransform.InverseTransformPoint(offsetTransform.position),
             possessPointTransform.InverseTransformPoint(currentMotionControl.position),
         });
     }

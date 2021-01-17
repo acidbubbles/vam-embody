@@ -34,6 +34,9 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private DAZCharacter _character;
     private int _hairHashSum;
     private int _clothingHashSum;
+    private Camera _ovrCamera;
+    private Camera _steamvrCamera;
+    private Camera _monitorCamera;
 
     public override void Awake()
     {
@@ -44,6 +47,10 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             _person = containingAtom;
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
             _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
+
+            _ovrCamera = SuperController.singleton.OVRCenterCamera;
+            _steamvrCamera = SuperController.singleton.ViveCenterCamera;
+            _monitorCamera = SuperController.singleton.MonitorCenterCamera;
 
             InitControls();
         }
@@ -88,18 +95,13 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    private static bool IsPovCamera(Camera cam)
+    private bool IsPovCamera(Camera cam)
     {
-        return
-            // Oculus Rift
-            cam.name == "CenterEyeAnchor" ||
-            // Steam VR
-            cam.name == "Camera (eye)" ||
-            // Desktop
-            cam.name == "MonitorRig"; /* ||
-            // Window Camera
-            cam.name == "MiniCamera";
-            */
+        if (ReferenceEquals(cam, _ovrCamera)) return true;
+        if (ReferenceEquals(cam, _steamvrCamera)) return true;
+        if (ReferenceEquals(cam, _monitorCamera)) return true;
+        // if(cam.name == "MiniCamera") return true;
+        return false;
     }
 
     private void InitControls()
@@ -242,13 +244,28 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
                 RefreshHandlers();
                 return;
             }
-            // TODO: Validate if this actually works, and if it does use loop instead of linq
-            if (_hairHashSum != _selector.hairItems.Where(h => h.active).Aggregate(0, (s, h) => s ^ h.GetHashCode()))
+
+            var hairHashSum = 0;
+            for (var i = 0; i < _selector.hairItems.Length; i++)
+            {
+                var hair = _selector.hairItems[i];
+                if (!hair.active) continue;
+                hairHashSum ^= hair.GetHashCode();
+            }
+            if (_hairHashSum != hairHashSum)
             {
                 RefreshHandlers();
                 return;
             }
-            if (_clothingHashSum != _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode()))
+
+            var clothingHashSum = 0;
+            for (var i = 0; i < _selector.clothingItems.Length; i++)
+            {
+                var clothing = _selector.clothingItems[i];
+                if (!clothing.active) continue;
+                clothingHashSum ^= clothing.GetHashCode();
+            }
+            if (_clothingHashSum != clothingHashSum)
             {
                 RefreshHandlers();
                 return;

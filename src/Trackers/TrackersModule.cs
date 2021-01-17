@@ -88,13 +88,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
                 var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
                 motionControl.baseOffset = controller.control.InverseTransformPoint(eyesCenter);
-                // TODO: The VR view is _lower_ than the eyes?
-                // VisualCuesHelper.Cross(Color.green).transform.SetParent(eyes.First(eye => eye.name == "lEye").transform, false);
-                // VisualCuesHelper.Cross(Color.red).transform.SetParent(motionControl.currentMotionControl, false);
-                // VisualCuesHelper.Cross(Color.blue).transform.SetParent(SuperController.singleton.centerCameraTarget.transform, false);
-                // var tmp = VisualCuesHelper.Cross(Color.green).transform;
-                // tmp.SetParent(controller.control, false);
-                // tmp.position = controller.control.position + controller.control.rotation * motionControl.combinedOffset;
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();

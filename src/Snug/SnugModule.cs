@@ -1,5 +1,5 @@
 // TODO: Reverse important adjustment sliders and advanced ones. Hide under an advanced toggle.
-// TODO: When loading a preset, overwrite with autosetup immediately// TODO:
+// TODO: When loading a preset, overwrite with autosetup immediately
 
 using System;
 using System.Collections;
@@ -28,9 +28,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public Vector3 palmToWristOffset { get; set; }
     public Vector3 handRotateOffset { get; set; }
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
-    // TODO: Oops, this was never saved!
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool showVisualCuesJSON { get; private set; }
+    // TODO: Remove this
     public JSONStorableBool disableSelectionJSON { get; set; }
 
     private readonly List<GameObject> _cues = new List<GameObject>();
@@ -292,6 +292,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
 
         jc["Anchors"] = anchors;
+
+        falloffJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc)
@@ -320,6 +322,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 anchor.Update();
             }
         }
+
+        falloffJSON.RestoreFromJSON(jc);
     }
 
 
@@ -480,6 +484,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             _leftHandActive = true;
         if (_rightAutoSnapPoint != null)
             _rightHandActive = true;
+        // TODO: We should not use deferred here
         StartCoroutine(DeferredActivateHands());
     }
 

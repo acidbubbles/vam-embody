@@ -102,15 +102,11 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                     closestMirror = potentialMirror;
                 }
                 RaycastHit hit;
-                if (!potentialMirror.Raycast(ray, out hit, 10f))
+                if (!potentialMirror.Raycast(ray, out hit, 20f))
                     continue;
-                if (hit.distance > lookAtMirrorDistance)
-                    continue;
-                // TODO: This warning makes no sense, check again when more concentrated
-                // ReSharper disable once RedundantAssignment
+                if (hit.distance > lookAtMirrorDistance) continue;
                 lookAtMirrorDistance = hit.distance;
                 lookAtMirror = potentialMirror;
-                break;
             }
 
             if (ReferenceEquals(lookAtMirror, null))
@@ -127,15 +123,5 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         var planePoint = plane.ClosestPointOnPlane(eyesCenter);
         var reflectPosition = planePoint - (eyesCenter - planePoint);
         _eyeTarget.control.position = reflectPosition;
-    }
-
-    public override void StoreJSON(JSONClass jc)
-    {
-        base.StoreJSON(jc);
-    }
-
-    public override void RestoreFromJSON(JSONClass jc)
-    {
-        base.RestoreFromJSON(jc);
     }
 }

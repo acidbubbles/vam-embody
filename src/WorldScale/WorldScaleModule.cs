@@ -100,10 +100,11 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     private static float GetRigEyesDistance()
     {
         // TODO: Do it for Steam too
-        var rig = FindObjectOfType<OVRCameraRig>();
-        if (rig == null)
-            return 0;
-        return Vector3.Distance(rig.leftEyeAnchor.transform.position, rig.rightEyeAnchor.transform.position);
+        var ovrRig = SuperController.singleton.OVRRig.GetComponent<OVRCameraRig>();
+        if (ovrRig != null)
+            return Vector3.Distance(ovrRig.leftEyeAnchor.transform.position, ovrRig.rightEyeAnchor.transform.position);
+
+        return 0;
     }
 
     private void UsePersonHeightMethod()

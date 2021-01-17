@@ -9,3 +9,4 @@
 - Cleanup Passenger
 - Cleanup Snug
 - Use overlays to show the wizard message and how to exit Passenger
+- Auto bind vive controllers by checking the closest freecontroller from each, and recording the current rotation
