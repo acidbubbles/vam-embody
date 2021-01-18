@@ -49,7 +49,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         if (motionControl == null) return;
 
         _section.CreateToggle(new JSONStorableBool(
-            "Enabled",
+            $"{motionControl.name}  Enabled",
             motionControl.enabled,
             val =>
             {

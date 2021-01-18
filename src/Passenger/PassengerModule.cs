@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using MeshVR;
 using SimpleJSON;
@@ -7,9 +6,6 @@ using UnityEngine;
 
 public interface IPassengerModule : IEmbodyModule
 {
-    JSONStorableStringChooser linkJSON { get; }
-    JSONStorableStringChooser possessRotationLink { get; }
-    JSONStorableFloat eyesToHeadDistanceJSON { get; }
     JSONStorableBool lookAtJSON { get; }
     JSONStorableFloat lookAtWeightJSON { get; }
     JSONStorableBool rotationLockJSON { get; }
@@ -23,6 +19,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableFloat positionOffsetXjson { get; }
     JSONStorableFloat positionOffsetYjson { get; }
     JSONStorableFloat positionOffsetZjson { get; }
+    JSONStorableBool allowPersonHeadRotationJSON { get; }
 }
 
 public class PassengerModule : EmbodyModuleBase, IPassengerModule
@@ -34,9 +31,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override string storeId => "Passenger";
     public override string label => Label;
 
-    public JSONStorableStringChooser linkJSON { get; set; }
-    public JSONStorableStringChooser possessRotationLink { get; set; }
-    public JSONStorableFloat eyesToHeadDistanceJSON { get; set; }
     public JSONStorableBool lookAtJSON { get; set; }
     public JSONStorableFloat lookAtWeightJSON { get; set; }
     public JSONStorableBool rotationLockJSON { get; set; }
@@ -50,9 +44,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableFloat positionOffsetXjson { get; set; }
     public JSONStorableFloat positionOffsetYjson { get; set; }
     public JSONStorableFloat positionOffsetZjson { get; set; }
+    public JSONStorableBool allowPersonHeadRotationJSON { get; set; }
 
-    private Rigidbody _link;
-    private Rigidbody _possessedLink;
+    private Rigidbody _headRigidbody;
+    private FreeControllerV3 _headController;
     private Possessor _possessor;
     private Vector3 _positionOffset;
     private Quaternion _rotationOffset;
@@ -63,7 +58,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private UserPreferences _preferences;
     private Quaternion _startRotationOffset;
     private RigidbodyInterpolation _previousInterpolation;
-    private FreeControllerV3 _lookAt;
+    private FreeControllerV3 _eyeTargetControl;
+    private Transform _cameraCenterTarget;
 
     public override void Awake()
     {
@@ -72,33 +68,23 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 
-        var defaultLink = containingAtom.type == "Person" ? "head" : "object";
-        var links = containingAtom.linkableRigidbodies.Select(c => c.name).ToList();
-        linkJSON = new JSONStorableStringChooser("Link", links, defaultLink, "Link to", (string val) => Reapply());
-
         lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
 
         lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
 
-        positionLockJSON = new JSONStorableBool("ControlPosition", true, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        positionLockJSON = new JSONStorableBool("ControlPosition", true, (bool val) => Reapply());
 
-        rotationLockJSON = new JSONStorableBool("ControlRotation", false, new JSONStorableBool.SetBoolCallback(v =>
+        rotationLockJSON = new JSONStorableBool("ControlRotation", false, (bool val) =>
         {
-            possessRotationLink.valNoCallback = null;
+            if(val) allowPersonHeadRotationJSON.valNoCallback = false;
             Reapply();
-        }));
+        });
 
-        rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, new JSONStorableBool.SetBoolCallback(v => Reapply()));
+        rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, (bool val) => Reapply());
 
-        Func<List<string>> getPossessRotationChoices = () =>
+        allowPersonHeadRotationJSON = new JSONStorableBool("AllowPersonHeadRotationJSON", false, (bool val) =>
         {
-            var controllers = containingAtom.freeControllers.Where(x => x.possessable && x.canGrabRotation).Select(x => x.name).ToList();
-            controllers.Insert(0, _targetNone);
-            return controllers;
-        };
-        possessRotationLink = new JSONStorableStringChooser("PossessRotationLink", getPossessRotationChoices(), _targetNone, "Possess rotation of", (string val) =>
-        {
-            rotationLockJSON.valNoCallback = false;
+            if (val) rotationLockJSON.valNoCallback = false;
             Reapply();
         });
 
@@ -117,8 +103,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionOffsetYjson = new JSONStorableFloat("Position Y", 0.08f, SyncPositionOffset, -2f, 2f, false, true);
 
         positionOffsetZjson = new JSONStorableFloat("Position Z", 0f, SyncPositionOffset, -2f, 2f, false, true);
-
-        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, new JSONStorableFloat.SetFloatCallback(v => Reapply()), 0f, 0.2f, false);
 
         SyncPositionOffset(0);
         SyncRotationOffset(0);
@@ -149,73 +133,53 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.OnEnable();
 
-        try
-        {
-            _link = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == linkJSON.val);
-            if (lookAtJSON.val)
-                _lookAt = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-            if (possessRotationLink.val != _targetNone)
-                _possessedLink = containingAtom.linkableRigidbodies.FirstOrDefault(rb => rb.name == possessRotationLink.val);
+        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object");
+        if (_headRigidbody == null) throw new NullReferenceException("Embody: Could not find a link");
 
-            if (!CanActivate() || !IsValid())
-            {
-                enabled = false;
-                return;
-            }
+        if (lookAtJSON.val)
+            _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
+        if (allowPersonHeadRotationJSON.val)
+            _headController = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl");
 
-            var superController = SuperController.singleton;
-            var navigationRig = superController.navigationRig;
-
-            _previousRotation = navigationRig.rotation;
-            _previousPosition = navigationRig.position;
-
-            var rigidBody = _link.GetComponent<Rigidbody>();
-            _previousInterpolation = rigidBody.interpolation;
-            rigidBody.interpolation = RigidbodyInterpolation.Extrapolate;
-
-            var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
-            if (offsetStartRotation)
-                _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
-
-            GlobalSceneOptions.singleton.disableNavigation = true;
-
-            UpdateNavigationRig(true);
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"Embody: Failed to activate Passenger.\n{exc}");
-            enabled = false;
-        }
-    }
-
-    private bool CanActivate()
-    {
-        if (_link == null)
-        {
-            SuperController.LogError("Embody: Could not find the specified link.");
-            return false;
-        }
-
-        var linkController = containingAtom.GetStorableByID(_link.name.EndsWith("Control") ? _link.name : $"{_link.name}Control") as FreeControllerV3;
-        if (linkController != null && linkController.possessed)
-        {
-            SuperController.LogError(
-                $"Embody: Cannot activate Passenger while the target rigidbody {_link.name} is being possessed. Use the 'Active' checkbox or trigger instead of using built-in Virt-A-Mate possession.");
-            return false;
-        }
-
-        return true;
-    }
-
-    private bool IsValid()
-    {
         if (_preferences.useHeadCollider)
         {
             SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
-            return false;
+            enabled = false;
+            return;
         }
 
-        return true;
+        if (context.containingAtom.type == "Person")
+        {
+            var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
+            var lEye = eyes.First(eye => eye.name == "lEye").transform;
+            var rEye = eyes.First(eye => eye.name == "rEye").transform;
+            _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
+            _cameraCenterTarget.SetParent(lEye, false);
+            _cameraCenterTarget.position = (lEye.position + rEye.position) / 2f;
+            _cameraCenterTarget.rotation = _headRigidbody.rotation;
+        }
+        else
+        {
+            _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
+            _cameraCenterTarget.SetParent(_headRigidbody.transform, false);
+        }
+
+        var superController = SuperController.singleton;
+        var navigationRig = superController.navigationRig;
+
+        _previousRotation = navigationRig.rotation;
+        _previousPosition = navigationRig.position;
+
+        _previousInterpolation = _headRigidbody.interpolation;
+        _headRigidbody.interpolation = RigidbodyInterpolation.Extrapolate;
+
+        var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
+        if (offsetStartRotation)
+            _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
+
+        GlobalSceneOptions.singleton.disableNavigation = true;
+
+        UpdateNavigationRig(true);
     }
 
     public override void OnDisable()
@@ -227,30 +191,25 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         SuperController.singleton.navigationRig.rotation = _previousRotation;
         SuperController.singleton.navigationRig.position = _previousPosition;
 
-        if (_link != null)
-        {
-            var rigidBody = _link.GetComponent<Rigidbody>();
-            rigidBody.interpolation = _previousInterpolation;
-        }
+        if(_cameraCenterTarget != null)
+            Destroy(_cameraCenterTarget.gameObject);
+
+        if (_headRigidbody != null)
+            _headRigidbody.interpolation = _previousInterpolation;
 
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
 
-        _link = null;
-        _lookAt = null;
+        _headRigidbody = null;
+        _headController = null;
+        _eyeTargetControl = null;
     }
 
     public void Update()
     {
         try
         {
-            if (!IsValid())
-            {
-                enabled = false;
-                return;
-            }
-
             UpdateNavigationRig(false);
         }
         catch (Exception e)
@@ -262,34 +221,24 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
     private void UpdateNavigationRig(bool force)
     {
-        // Idea!!! Set player height to zero :)
         // Context
         var positionSmoothing = positionSmoothingJSON.val;
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
-        // TODO: All of this should be greatly simplified. Find the eye center and offset from there.
-        /*
-            var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-            _lEye = eyes.First(eye => eye.name == "lEye").transform;
-            _rEye = eyes.First(eye => eye.name == "rEye").transform;
-            var eyesDistance = Vector3.Distance(_lEye.position, _rightEye.position)
-            // TODO: Now, parent something to lEye and offset by lEye.right * (eyesDistance / 2f)
-         */
-        var eyesToHeadOffset = new Vector3(0, 0, eyesToHeadDistanceJSON.val);
-
+        // TODO: Further simplify
         // TODO: Use the context motion control instead with the custom possess point!
         var centerTargetTransform = CameraTarget.centerTarget.transform;
         var navigationRigTransform = navigationRig.transform;
-        var linkTransform = _link.transform;
+        var linkTransform = _cameraCenterTarget;
 
         // Desired camera position
 
         var position = linkTransform.position;
         var rotation = linkTransform.rotation;
 
-        if (!ReferenceEquals(_lookAt, null) && lookAtWeightJSON.val > 0)
+        if (!ReferenceEquals(_eyeTargetControl, null) && lookAtWeightJSON.val > 0)
         {
-            var lookAtRotation = Quaternion.LookRotation(_lookAt.transform.position - linkTransform.position, linkTransform.up);
+            var lookAtRotation = Quaternion.LookRotation(_eyeTargetControl.transform.position - linkTransform.position, linkTransform.up);
             rotation = Quaternion.Slerp(rotation, lookAtRotation, lookAtWeightJSON.val);
         }
 
@@ -302,9 +251,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         // Move navigation rig
 
-        var cameraDelta = centerTargetTransform.position
-                          - navigationRigTransform.position
-                          - centerTargetTransform.rotation * eyesToHeadOffset;
+        var cameraDelta = centerTargetTransform.position - navigationRigTransform.position;
         var navigationRigPosition = position - cameraDelta;
 
         var navigationRigRotation = rotation;
@@ -326,8 +273,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (force || rotationLockJSON.val)
         {
-            if (!ReferenceEquals(_possessedLink, null))
-                _possessedLink.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation * _rotationOffset;
+            if (!ReferenceEquals(_headController, null))
+                _headController.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation * _rotationOffset;
             else
                 navigationRigTransform.rotation = navigationRigRotation;
         }

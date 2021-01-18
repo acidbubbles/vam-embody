@@ -15,7 +15,6 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
     {
         if (ShowNotSelected(_passenger.selectedJSON.val)) return;
 
-        CreateFilterablePopup(_passenger.linkJSON).popupPanelHeight = 600f;
         if (context.containingAtom.type == "Person")
         {
             CreateToggle(_passenger.lookAtJSON).label = "Look at eye target";
@@ -31,15 +30,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateToggle(_passenger.positionLockJSON).label = "Control camera position";
         CreateToggle(_passenger.rotationLockJSON).label = "Control camera rotation";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent camera roll";
-
-        // TODO: Simplify and only offer follow as a checkbox (follow rotation) and remove rigidbody choice.
-        var followerPopup = CreateFilterablePopup(_passenger.possessRotationLink);
-        followerPopup.popupPanelHeight = 600f;
-        // TODO: Re-enable
-        // followerPopup.popup.onOpenPopupHandlers += () =>
-        // {
-        //     possessRotationLink.choices = getPossessRotationChoices();
-        // };
+        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "Camera controls rotation";
 
         CreateSlider(_passenger.rotationSmoothingJSON, true);
         CreateSlider(_passenger.rotationOffsetXjson, true);
@@ -49,6 +40,5 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateSlider(_passenger.positionOffsetXjson, true).valueFormat = "F4";
         CreateSlider(_passenger.positionOffsetYjson, true).valueFormat = "F4";
         CreateSlider(_passenger.positionOffsetZjson, true).valueFormat = "F4";
-        CreateSlider(_passenger.eyesToHeadDistanceJSON, true);
     }
 }
