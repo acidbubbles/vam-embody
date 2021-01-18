@@ -32,6 +32,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateToggle(_passenger.rotationLockJSON).label = "Control camera rotation";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent camera roll";
         CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "Camera controls rotation";
+        CreateSlider(_passenger.eyesToHeadDistanceJSON).label = "Head to eyes distance offset";
 
         CreateSlider(_passenger.rotationSmoothingJSON, true);
         CreateSlider(new JSONStorableFloat(

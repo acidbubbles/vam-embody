@@ -63,6 +63,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private Transform _cameraCenterTarget;
     private NavigationRigSnapshot _navigationRigSnapshot;
     private Transform _cameraCenter;
+    private float _headToEyesDistance;
 
     public override void Awake()
     {
@@ -111,7 +112,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
 
-        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, (float val) => Reapply(), 0f, 0.2f, false);
+        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0f, (float val) => Reapply(), -0.1f, 0.2f, false);
     }
 
     private void Reapply()
@@ -152,8 +153,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             var d = Vector3.Dot(eyesCenter, _headRigidbody.transform.up);
             _cameraCenter.position = new Vector3(0f, d, 0f);
             // TODO: There should be another JSON for offset and a calculated value
-            eyesToHeadDistanceJSON.val = Vector3.Distance(eyesCenter, _cameraCenter.position);
+            _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
+
+        // TODO: Disable grabbing
 
         var superController = SuperController.singleton;
         var navigationRig = superController.navigationRig;
@@ -161,6 +164,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
         _previousInterpolation = _headRigidbody.interpolation;
+        // TODO: Try with this and none, see what's best
         _headRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
 
         var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
@@ -240,7 +244,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         var cameraDelta = centerTargetTransform.position
                           - navigationRigTransform.position
-                          - centerTargetTransform.rotation * new Vector3(0, 0, eyesToHeadDistanceJSON.val);
+                          - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance);
         var navigationRigPosition = position - cameraDelta;
 
         var navigationRigRotation = rotation;
