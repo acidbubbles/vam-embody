@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using UnityEngine;
 
 public class PassengerSettingsScreen : ScreenBase, IScreen
 {
@@ -33,12 +34,51 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "Camera controls rotation";
 
         CreateSlider(_passenger.rotationSmoothingJSON, true);
-        CreateSlider(_passenger.rotationOffsetXjson, true);
-        CreateSlider(_passenger.rotationOffsetYjson, true);
-        CreateSlider(_passenger.rotationOffsetZjson, true);
+        CreateSlider(new JSONStorableFloat(
+            "Rotation X",
+            0f,
+            (float val) => _passenger.rotationOffset = new Vector3(val, _passenger.rotationOffset.y, _passenger.rotationOffset.z),
+            -180f,
+            180f
+        ), true);
+        CreateSlider(new JSONStorableFloat(
+            "Rotation Y",
+            0f,
+            (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, val, _passenger.rotationOffset.z),
+            -180f,
+            180f
+        ), true);
+        CreateSlider(new JSONStorableFloat(
+            "Rotation Z",
+            0f,
+            (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, _passenger.rotationOffset.y, val),
+            -180f,
+            180f
+        ), true);
         CreateSlider(_passenger.positionSmoothingJSON, true);
-        CreateSlider(_passenger.positionOffsetXjson, true).valueFormat = "F4";
-        CreateSlider(_passenger.positionOffsetYjson, true).valueFormat = "F4";
-        CreateSlider(_passenger.positionOffsetZjson, true).valueFormat = "F4";
+        CreateSlider(new JSONStorableFloat(
+            "Position X",
+            0f,
+            (float val) => _passenger.positionOffset = new Vector3(val, _passenger.positionOffset.y, _passenger.positionOffset.z),
+            -2f,
+            2f,
+            false
+        ), true).valueFormat = "F4";
+        CreateSlider(new JSONStorableFloat(
+            "Position Y",
+            0f,
+            (float val) => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, val, _passenger.positionOffset.z),
+            -2f,
+            2f,
+            false
+        ), true).valueFormat = "F4";
+        CreateSlider(new JSONStorableFloat(
+            "Position Z",
+            0f,
+            (float val) => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, _passenger.positionOffset.y, val),
+            -2f,
+            2f,
+            false
+        ), true).valueFormat = "F4";
     }
 }

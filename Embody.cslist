@@ -3,6 +3,7 @@ src\Automation\AutomationSettingsScreen.cs
 src\Common\EmbodyContext.cs
 src\Common\EmbodyModuleBase.cs
 src\Common\ListExtensions.cs
+src\Common\NavigationRigSnapshot.cs
 src\Common\QuaternionExtensions.cs
 src\Common\Vector3Extensions.cs
 src\Common\VisualCuesHelper.cs
@@ -36,7 +37,6 @@ src\Snug\SnugSettingsScreen.cs
 src\Trackers\FreeControllerV3Snapshot.cs
 src\Trackers\FreeControllerV3WithSnapshot.cs
 src\Trackers\MotionControllerWithCustomPossessPoint.cs
-src\Trackers\NavigationRigSnapshot.cs
 src\Trackers\OffsetPreview.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs

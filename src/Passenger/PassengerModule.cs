@@ -6,20 +6,17 @@ using UnityEngine;
 
 public interface IPassengerModule : IEmbodyModule
 {
+    // TODO: This is incompatible with mirror lookat. They should exclude each other.
     JSONStorableBool lookAtJSON { get; }
     JSONStorableFloat lookAtWeightJSON { get; }
     JSONStorableBool rotationLockJSON { get; }
     JSONStorableBool rotationLockNoRollJSON { get; }
     JSONStorableFloat rotationSmoothingJSON { get; }
-    JSONStorableFloat rotationOffsetXjson { get; }
-    JSONStorableFloat rotationOffsetYjson { get; }
-    JSONStorableFloat rotationOffsetZjson { get; }
     JSONStorableBool positionLockJSON { get; }
     JSONStorableFloat positionSmoothingJSON { get; }
-    JSONStorableFloat positionOffsetXjson { get; }
-    JSONStorableFloat positionOffsetYjson { get; }
-    JSONStorableFloat positionOffsetZjson { get; }
     JSONStorableBool allowPersonHeadRotationJSON { get; }
+    Vector3 positionOffset { get; set; }
+    Vector3 rotationOffset { get; set; }
 }
 
 public class PassengerModule : EmbodyModuleBase, IPassengerModule
@@ -36,23 +33,25 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableBool rotationLockJSON { get; set; }
     public JSONStorableBool rotationLockNoRollJSON { get; set; }
     public JSONStorableFloat rotationSmoothingJSON { get; set; }
-    public JSONStorableFloat rotationOffsetXjson { get; set; }
-    public JSONStorableFloat rotationOffsetYjson { get; set; }
-    public JSONStorableFloat rotationOffsetZjson { get; set; }
     public JSONStorableBool positionLockJSON { get; set; }
     public JSONStorableFloat positionSmoothingJSON { get; set; }
-    public JSONStorableFloat positionOffsetXjson { get; set; }
-    public JSONStorableFloat positionOffsetYjson { get; set; }
-    public JSONStorableFloat positionOffsetZjson { get; set; }
     public JSONStorableBool allowPersonHeadRotationJSON { get; set; }
+
+    public Vector3 positionOffset
+    {
+        get { return _cameraCenterTarget.localPosition; }
+        set { _cameraCenterTarget.localPosition = value; }
+    }
+
+    public Vector3 rotationOffset
+    {
+        get { return _cameraCenterTarget.localEulerAngles; }
+        set { _cameraCenterTarget.localEulerAngles = value; }
+    }
 
     private Rigidbody _headRigidbody;
     private FreeControllerV3 _headController;
     private Possessor _possessor;
-    private Vector3 _positionOffset;
-    private Quaternion _rotationOffset;
-    private Vector3 _previousPosition;
-    private Quaternion _previousRotation;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
     private UserPreferences _preferences;
@@ -60,6 +59,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private RigidbodyInterpolation _previousInterpolation;
     private FreeControllerV3 _eyeTargetControl;
     private Transform _cameraCenterTarget;
+    private NavigationRigSnapshot _navigationRigSnapshot;
+    private Transform _cameraCenter;
 
     public override void Awake()
     {
@@ -67,6 +68,22 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
+        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object");
+        if (_headRigidbody == null) throw new NullReferenceException("Embody: Could not find a link");
+
+        _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
+        _cameraCenter.SetParent(_headRigidbody.transform, false);
+        _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
+        _cameraCenterTarget.SetParent(_cameraCenter, false);
+        /*
+        TODO: Optionally attach to a spring joint
+        var cameraCenterTargetRigidbody = _cameraCenter.gameObject.AddComponent<Rigidbody>();
+        cameraCenterTargetRigidbody.detectCollisions = false;
+
+        var cameraCenterTarget2 = new GameObject("Passenger_CameraCenterTarget2");
+        var cameraCenterTarget2Rigidbody = _cameraCenter.gameObject.AddComponent<Rigidbody>();
+        cameraCenterTarget2Rigidbody.detectCollisions = false;
+        */
 
         lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
 
@@ -74,7 +91,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         positionLockJSON = new JSONStorableBool("ControlPosition", true, (bool val) => Reapply());
 
-        rotationLockJSON = new JSONStorableBool("ControlRotation", false, (bool val) =>
+        rotationLockJSON = new JSONStorableBool("ControlRotation", true, (bool val) =>
         {
             if(val) allowPersonHeadRotationJSON.valNoCallback = false;
             Reapply();
@@ -90,32 +107,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
 
-        rotationOffsetXjson = new JSONStorableFloat("Rotation X", 0f, SyncRotationOffset, -180, 180, true, true);
-
-        rotationOffsetYjson = new JSONStorableFloat("Rotation Y", 0f, SyncRotationOffset, -180, 180, true, true);
-
-        rotationOffsetZjson = new JSONStorableFloat("Rotation Z", 0f, SyncRotationOffset, -180, 180, true, true);
-
         positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
-
-        positionOffsetXjson = new JSONStorableFloat("Position X", 0f,  SyncPositionOffset, -2f, 2f, false, true);
-
-        positionOffsetYjson = new JSONStorableFloat("Position Y", 0.08f, SyncPositionOffset, -2f, 2f, false, true);
-
-        positionOffsetZjson = new JSONStorableFloat("Position Z", 0f, SyncPositionOffset, -2f, 2f, false, true);
-
-        SyncPositionOffset(0);
-        SyncRotationOffset(0);
-    }
-
-    private void SyncRotationOffset(float _)
-    {
-        _rotationOffset = Quaternion.Euler(rotationOffsetXjson.val, rotationOffsetYjson.val, rotationOffsetZjson.val);
-    }
-
-    private void SyncPositionOffset(float _)
-    {
-        _positionOffset = new Vector3(positionOffsetXjson.val, positionOffsetYjson.val, positionOffsetZjson.val);
     }
 
     private void Reapply()
@@ -132,9 +124,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void OnEnable()
     {
         base.OnEnable();
-
-        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object");
-        if (_headRigidbody == null) throw new NullReferenceException("Embody: Could not find a link");
 
         if (lookAtJSON.val)
             _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
@@ -153,25 +142,17 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;
-            _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
-            _cameraCenterTarget.SetParent(lEye, false);
-            _cameraCenterTarget.position = (lEye.position + rEye.position) / 2f;
-            _cameraCenterTarget.rotation = _headRigidbody.rotation;
-        }
-        else
-        {
-            _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
-            _cameraCenterTarget.SetParent(_headRigidbody.transform, false);
+            _cameraCenter.position = (lEye.position + rEye.position) / 2f;
+            _cameraCenter.rotation = _headRigidbody.rotation;
         }
 
         var superController = SuperController.singleton;
         var navigationRig = superController.navigationRig;
 
-        _previousRotation = navigationRig.rotation;
-        _previousPosition = navigationRig.position;
+        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
         _previousInterpolation = _headRigidbody.interpolation;
-        _headRigidbody.interpolation = RigidbodyInterpolation.Extrapolate;
+        _headRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
 
         var offsetStartRotation = !superController.MonitorRig.gameObject.activeSelf;
         if (offsetStartRotation)
@@ -188,11 +169,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         GlobalSceneOptions.singleton.disableNavigation = false;
 
-        SuperController.singleton.navigationRig.rotation = _previousRotation;
-        SuperController.singleton.navigationRig.position = _previousPosition;
-
-        if(_cameraCenterTarget != null)
-            Destroy(_cameraCenterTarget.gameObject);
+        _navigationRigSnapshot?.Restore();
 
         if (_headRigidbody != null)
             _headRigidbody.interpolation = _previousInterpolation;
@@ -201,9 +178,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _currentRotationVelocity = Quaternion.identity;
         _startRotationOffset = Quaternion.identity;
 
-        _headRigidbody = null;
         _headController = null;
         _eyeTargetControl = null;
+    }
+
+    public void OnDestroy()
+    {
+        if (_cameraCenterTarget != null) Destroy(_cameraCenterTarget.gameObject);
+        if (_cameraCenter != null) Destroy(_cameraCenter.gameObject);
     }
 
     public void Update()
@@ -226,7 +208,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
         // TODO: Further simplify
-        // TODO: Use the context motion control instead with the custom possess point!
         var centerTargetTransform = CameraTarget.centerTarget.transform;
         var navigationRigTransform = navigationRig.transform;
         var linkTransform = _cameraCenterTarget;
@@ -242,12 +223,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             rotation = Quaternion.Slerp(rotation, lookAtRotation, lookAtWeightJSON.val);
         }
 
-        rotation *= _rotationOffset;
-
         if (rotationLockNoRollJSON.val)
             rotation.SetLookRotation(rotation * Vector3.forward, Vector3.up);
-
-        position += rotation * _positionOffset;
 
         // Move navigation rig
 
@@ -274,7 +251,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (force || rotationLockJSON.val)
         {
             if (!ReferenceEquals(_headController, null))
-                _headController.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation * _rotationOffset;
+                _headController.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
             else
                 navigationRigTransform.rotation = navigationRigRotation;
         }

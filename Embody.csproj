@@ -69,6 +69,7 @@
     <Compile Include="src\Common\EmbodyContext.cs" />
     <Compile Include="src\Common\EmbodyModuleBase.cs" />
     <Compile Include="src\Common\ListExtensions.cs" />
+    <Compile Include="src\Common\NavigationRigSnapshot.cs" />
     <Compile Include="src\Common\QuaternionExtensions.cs" />
     <Compile Include="src\Common\Vector3Extensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
@@ -103,7 +104,6 @@
     <Compile Include="src\Trackers\FreeControllerV3Snapshot.cs" />
     <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
-    <Compile Include="src\Trackers\NavigationRigSnapshot.cs" />
     <Compile Include="src\Trackers\OffsetPreview.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
