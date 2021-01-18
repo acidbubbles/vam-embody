@@ -82,6 +82,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var motionControl in motionControls)
         {
+            if (!motionControl.enabled) continue;
             if (motionControl.mappedControllerName == null) continue;
             if (passenger.selectedJSON.val && motionControl.name == "Head") continue;
             if (snug.selectedJSON.val && (motionControl.name == "LeftHand" || motionControl.name == "RightHand")) return;
@@ -241,7 +242,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             {
                 {"OffsetPosition", customized.possessPointTransform.localPosition.ToJSON()},
                 {"OffsetRotation", customized.possessPointTransform.localEulerAngles.ToJSON()},
-                {"Controller", customized.mappedControllerName}
+                {"Controller", customized.mappedControllerName},
+                {"Enabled", customized.enabled ? "false" : "true"}
             };
             motionControlsJSON[customized.name] = motionControlJSON;
         }
@@ -263,6 +265,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             customized.possessPointTransform.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
             customized.possessPointTransform.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
             customized.mappedControllerName = controllerJSON["Controller"].Value;
+            customized.enabled = controllerJSON["Enabled"].Value != "false";
             if (customized.mappedControllerName == "") customized.mappedControllerName = null;
         }
     }

@@ -46,6 +46,16 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         if (motionControl == null) return;
 
+        _section.CreateToggle(new JSONStorableBool(
+            "Enabled",
+            motionControl.enabled,
+            val =>
+            {
+                motionControl.enabled = val;
+                context.Refresh();
+            }
+        ));
+
         _section.CreateFilterablePopup(new JSONStorableStringChooser(
             "",
             new[]{_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),

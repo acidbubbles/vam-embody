@@ -9,6 +9,7 @@ public class MotionControllerWithCustomPossessPoint
     public Transform possessPointTransform;
     public Rigidbody customRigidbody;
     public Transform currentMotionControl { get; private set; }
+    public bool enabled = true;
     public string mappedControllerName { get; set; }
     private Func<Transform> _getMotionControl;
     private OffsetPreview _offsetPreview;
