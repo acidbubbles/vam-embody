@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Leap.Unity;
 using UnityEngine;
 
 public class TrackersSettingsScreen : ScreenBase, IScreen
@@ -138,5 +140,34 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false), false);
+
+        _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
+        {
+            if (motionControl.mappedControllerName != null)
+            {
+                SuperController.LogError($"Embody: {motionControl.name} Already attached to {motionControl.mappedControllerName}");
+                return;
+            }
+
+            var possessPoint = motionControl.possessPointTransform.position;
+
+            var closestDistance = float.PositiveInfinity;
+            Rigidbody closest = null;
+            foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Select(fc => fc.GetComponent<Rigidbody>()))
+            {
+                var distance = Vector3.Distance(possessPoint, controller.position);
+                if (distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closest = controller;
+                }
+            }
+            if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
+
+            motionControl.mappedControllerName = closest.name;
+            motionControl.customOffset =  motionControl.possessPointTransform.InverseTransformDirection(closest.position - possessPoint);
+            motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
+            context.Refresh();
+        });
     }
 }

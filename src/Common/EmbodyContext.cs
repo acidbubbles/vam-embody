@@ -35,14 +35,14 @@ public class EmbodyContext
         head = sc.GetAtomByUid($"{prefix}head")?.mainController?.transform ?? sc.centerCameraTarget.transform;
         leftHand = sc.GetAtomByUid($"{prefix}lHand")?.mainController?.transform ?? sc.leftHand;
         rightHand = sc.GetAtomByUid($"{prefix}rHand")?.mainController?.transform ?? sc.rightHand;
-        viveTracker1 = sc.viveTracker1;
-        viveTracker2 = sc.viveTracker2;
-        viveTracker3 = sc.viveTracker3;
-        viveTracker4 = sc.viveTracker4;
-        viveTracker5 = sc.viveTracker5;
-        viveTracker6 = sc.viveTracker6;
-        viveTracker7 = sc.viveTracker7;
-        viveTracker8 = sc.viveTracker8;
+        viveTracker1 = sc.GetAtomByUid($"{prefix}viveTracker1")?.mainController?.transform ?? sc.viveTracker1;
+        viveTracker2 = sc.GetAtomByUid($"{prefix}viveTracker2")?.mainController?.transform ?? sc.viveTracker2;
+        viveTracker3 = sc.GetAtomByUid($"{prefix}viveTracker3")?.mainController?.transform ?? sc.viveTracker3;
+        viveTracker4 = sc.GetAtomByUid($"{prefix}viveTracker4")?.mainController?.transform ?? sc.viveTracker4;
+        viveTracker5 = sc.GetAtomByUid($"{prefix}viveTracker5")?.mainController?.transform ?? sc.viveTracker5;
+        viveTracker6 = sc.GetAtomByUid($"{prefix}viveTracker6")?.mainController?.transform ?? sc.viveTracker6;
+        viveTracker7 = sc.GetAtomByUid($"{prefix}viveTracker7")?.mainController?.transform ?? sc.viveTracker7;
+        viveTracker8 = sc.GetAtomByUid($"{prefix}viveTracker8")?.mainController?.transform ?? sc.viveTracker8;
     }
 
     public void Refresh()
