@@ -55,7 +55,7 @@ public class MotionControllerWithCustomPossessPoint
     public bool showPreview
     {
         get { return _showPreview; }
-        set { _showPreview = value; CreateOrDestroyOffsetPreview(); }
+        set { _showPreview = value; SyncMotionControl(); }
     }
 
     private void SyncOffset()
@@ -71,27 +71,22 @@ public class MotionControllerWithCustomPossessPoint
     public bool SyncMotionControl()
     {
         currentMotionControl = _getMotionControl();
-        if (currentMotionControl == null)
+        if (currentMotionControl == null || !currentMotionControl.gameObject.activeInHierarchy)
         {
-            CreateOrDestroyOffsetPreview();
+            DestroyOffsetPreview();
             return false;
         }
         offsetTransform.SetParent(currentMotionControl, false);
+        if(!_showPreview)
+            DestroyOffsetPreview();
+        else
+            CreatOffsetPreview();
         SyncOffset();
-        CreateOrDestroyOffsetPreview();
         return true;
     }
 
-    private void CreateOrDestroyOffsetPreview()
+    private void CreatOffsetPreview()
     {
-        if (!_showPreview || ReferenceEquals(currentMotionControl, null) || !currentMotionControl.gameObject.activeInHierarchy)
-        {
-            if (_offsetPreview == null) return;
-            Object.Destroy(_offsetPreview.gameObject);
-            _offsetPreview = null;
-            return;
-        }
-
         if (_offsetPreview == null)
         {
             var go = new GameObject("EmbodyOffsetPreview_" + name);
@@ -101,6 +96,13 @@ public class MotionControllerWithCustomPossessPoint
 
         _offsetPreview.offsetTransform = offsetTransform;
         _offsetPreview.currentMotionControl = currentMotionControl;
+    }
+
+    private void DestroyOffsetPreview()
+    {
+        if (_offsetPreview == null) return;
+        Object.Destroy(_offsetPreview.gameObject);
+        _offsetPreview = null;
     }
 
     private void SyncOffsetPreview()

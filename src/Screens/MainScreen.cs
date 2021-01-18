@@ -106,16 +106,16 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         }
 
         #warning For debugging purposes
-        // context.plugin.StartCoroutine(DebugCo());
+        context.plugin.StartCoroutine(DebugCo());
     }
 
     private IEnumerator DebugCo()
     {
         yield return new WaitForSecondsRealtime(0.2f);
-        // Activate
-        // context.embody.activeJSON.val = true;
         // Show 3d trackers
         (_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
+        // Activate
+        context.embody.activeJSON.val = true;
         // Wizard
         /*
         _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
