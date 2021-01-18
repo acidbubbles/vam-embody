@@ -158,7 +158,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (offsetStartRotation)
             _startRotationOffset = Quaternion.Euler(0, navigationRig.eulerAngles.y - _possessor.transform.eulerAngles.y, 0f);
 
-        GlobalSceneOptions.singleton.disableNavigation = true;
+        if (!allowPersonHeadRotationJSON.val)
+            GlobalSceneOptions.singleton.disableNavigation = true;
 
         UpdateNavigationRig(true);
     }
@@ -250,10 +251,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (force || rotationLockJSON.val)
         {
-            if (!ReferenceEquals(_headController, null))
-                _headController.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
-            else
-                navigationRigTransform.rotation = navigationRigRotation;
+            navigationRigTransform.rotation = navigationRigRotation;
+        }
+
+        if (!ReferenceEquals(_headController, null))
+        {
+            _headController.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
         }
 
         if (force || positionLockJSON.val)
