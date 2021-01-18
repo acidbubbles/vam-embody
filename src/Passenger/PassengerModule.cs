@@ -15,6 +15,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableBool positionLockJSON { get; }
     JSONStorableFloat positionSmoothingJSON { get; }
     JSONStorableBool allowPersonHeadRotationJSON { get; }
+    JSONStorableFloat eyesToHeadDistanceJSON { get; }
     Vector3 positionOffset { get; set; }
     Vector3 rotationOffset { get; set; }
 }
@@ -36,6 +37,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableBool positionLockJSON { get; set; }
     public JSONStorableFloat positionSmoothingJSON { get; set; }
     public JSONStorableBool allowPersonHeadRotationJSON { get; set; }
+    public JSONStorableFloat eyesToHeadDistanceJSON { get; set; }
 
     public Vector3 positionOffset
     {
@@ -108,6 +110,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
 
         positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
+
+        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0.1f, (float val) => Reapply(), 0f, 0.2f, false);
     }
 
     private void Reapply()
@@ -137,13 +141,18 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             return;
         }
 
+        _cameraCenter.rotation = _headRigidbody.rotation;
+        _cameraCenter.position = _headRigidbody.position;
         if (context.containingAtom.type == "Person")
         {
             var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;
-            _cameraCenter.position = (lEye.position + rEye.position) / 2f;
-            _cameraCenter.rotation = _headRigidbody.rotation;
+            var eyesCenter = (lEye.position + rEye.position) / 2f;
+            var d = Vector3.Dot(eyesCenter, _headRigidbody.transform.up);
+            _cameraCenter.position = new Vector3(0f, d, 0f);
+            // TODO: There should be another JSON for offset and a calculated value
+            eyesToHeadDistanceJSON.val = Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
 
         var superController = SuperController.singleton;
@@ -229,7 +238,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         // Move navigation rig
 
-        var cameraDelta = centerTargetTransform.position - navigationRigTransform.position;
+        var cameraDelta = centerTargetTransform.position
+                          - navigationRigTransform.position
+                          - centerTargetTransform.rotation * new Vector3(0, 0, eyesToHeadDistanceJSON.val);
         var navigationRigPosition = position - cameraDelta;
 
         var navigationRigRotation = rotation;
