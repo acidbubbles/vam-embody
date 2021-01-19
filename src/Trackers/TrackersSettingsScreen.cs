@@ -12,6 +12,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
     private readonly ITrackersModule _trackers;
     private CollapsibleSection _section;
+    private JSONStorableStringChooser _motionControlJSON;
 
     public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
         : base(context)
@@ -29,15 +30,22 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
-        CreateFilterablePopup(new JSONStorableStringChooser(
+        _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
-           _trackers.motionControls.Select(mc => mc.name).ToList(),
+            _trackers.motionControls.Select(mc => mc.name).ToList(),
             _trackers.motionControls[0].name ?? _none,
             "Motion control",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
-        ));
+        );
+        CreateFilterablePopup(_motionControlJSON);
 
         ShowMotionControl(_trackers.motionControls[0]);
+    }
+
+    public override void Hide()
+    {
+        base.Hide();
+        _section = null;
     }
 
     [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
