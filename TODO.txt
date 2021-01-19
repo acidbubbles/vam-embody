@@ -11,3 +11,4 @@
 - Use overlays to show the wizard message and how to exit Passenger
 - Auto bind vive controllers by checking the closest freecontroller from each, and recording the current rotation. This can be part of the wizard.
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
+- Male Snug?

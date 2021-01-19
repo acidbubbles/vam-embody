@@ -68,6 +68,7 @@
     <Compile Include="src\Automation\AutomationSettingsScreen.cs" />
     <Compile Include="src\Common\EmbodyContext.cs" />
     <Compile Include="src\Common\EmbodyModuleBase.cs" />
+    <Compile Include="src\Common\FreeControllerV3Snapshot.cs" />
     <Compile Include="src\Common\ListExtensions.cs" />
     <Compile Include="src\Common\NavigationRigSnapshot.cs" />
     <Compile Include="src\Common\QuaternionExtensions.cs" />
@@ -101,7 +102,6 @@
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\Snug\SnugAutoSetup.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
-    <Compile Include="src\Trackers\FreeControllerV3Snapshot.cs" />
     <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
     <Compile Include="src\Trackers\OffsetPreview.cs" />

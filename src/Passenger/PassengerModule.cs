@@ -56,9 +56,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private RigidbodyInterpolation _previousInterpolation;
     private FreeControllerV3 _eyeTargetControl;
     private Transform _cameraCenterTarget;
-    private NavigationRigSnapshot _navigationRigSnapshot;
     private Transform _cameraCenter;
     private float _headToEyesDistance;
+    private NavigationRigSnapshot _navigationRigSnapshot;
+    private FreeControllerV3Snapshot _headControlSnapshot;
 
     public override void Awake()
     {
@@ -138,7 +139,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
 
-        // TODO: Disable grabbing
+        _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
+        _headControl.canGrabPosition = false;
+        _headControl.canGrabRotation = false;
 
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
@@ -162,6 +165,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (_headRigidbody != null)
             _headRigidbody.interpolation = _previousInterpolation;
+
+        if (_headControlSnapshot != null)
+        {
+            _headControlSnapshot.Restore();
+            _headControlSnapshot = null;
+        }
 
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;

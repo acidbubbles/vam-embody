@@ -2,6 +2,7 @@ src\Automation\AutomationModule.cs
 src\Automation\AutomationSettingsScreen.cs
 src\Common\EmbodyContext.cs
 src\Common\EmbodyModuleBase.cs
+src\Common\FreeControllerV3Snapshot.cs
 src\Common\ListExtensions.cs
 src\Common\NavigationRigSnapshot.cs
 src\Common\QuaternionExtensions.cs
@@ -34,7 +35,6 @@ src\Snug\Anchors\ControllerAnchorPointVisualCue.cs
 src\Snug\SnugAutoSetup.cs
 src\Snug\SnugModule.cs
 src\Snug\SnugSettingsScreen.cs
-src\Trackers\FreeControllerV3Snapshot.cs
 src\Trackers\FreeControllerV3WithSnapshot.cs
 src\Trackers\MotionControllerWithCustomPossessPoint.cs
 src\Trackers\OffsetPreview.cs
