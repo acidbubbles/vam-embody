@@ -243,7 +243,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 {"OffsetPosition", customized.possessPointTransform.localPosition.ToJSON()},
                 {"OffsetRotation", customized.possessPointTransform.localEulerAngles.ToJSON()},
                 {"Controller", customized.mappedControllerName},
-                {"Enabled", customized.enabled ? "false" : "true"}
+                {"Enabled", customized.enabled ? "true" : "false"}
             };
             motionControlsJSON[customized.name] = motionControlJSON;
         }
