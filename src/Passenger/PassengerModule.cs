@@ -146,7 +146,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
         _previousInterpolation = _headRigidbody.interpolation;
-        // TODO: Try with this and none, see what's best
         _headRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
 
         if (!allowPersonHeadRotationJSON.val)
