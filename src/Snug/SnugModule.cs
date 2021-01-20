@@ -31,6 +31,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool disableSelectionJSON { get; set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
+    private SnugAutoSetup _autoSetup;
 
     private struct FreeControllerV3GrabSnapshot
     {
@@ -44,6 +45,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         try
         {
             base.Awake();
+
+            _autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
             InitAnchors();
 
@@ -194,8 +197,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnEnable();
 
+        _autoSetup.AutoSetup();
+
         _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
-        if (_lHand.motionControl != null)
+        if (_lHand.motionControl != null && _lHand.motionControl.SyncMotionControl())
         {
             _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
             CustomPossessHand(_lHand.controller);
@@ -203,10 +208,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             if (showVisualCuesJSON.val) _lHand.showCueLine = true;
         }
         _rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
-        if (_rHand.motionControl != null)
+        if (_rHand.motionControl != null && _rHand.motionControl.SyncMotionControl())
         {
-            CustomPossessHand(_rHand.controller);
             _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
+            CustomPossessHand(_rHand.controller);
             _rHand.active = true;
             if (showVisualCuesJSON.val) _rHand.showCueLine = true;
         }
@@ -291,11 +296,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void ProcessHand(SnugHand hand)
     {
-        var handController = hand.controller;
         var motionControl = hand.motionControl;
         var visualCueLinePoints = hand.visualCueLinePoints;
         // Base position
-        var position = motionControl.possessPointTransform.position;
+        var position = motionControl.currentMotionControl.position;
 
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
@@ -354,12 +358,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         resultOffset = new Vector3(resultOffset.x / realToGameScale.x, resultOffset.y / realToGameScale.y, resultOffset.z / realToGameScale.z) - realOffset;
         resultOffset = anchorRotation * resultOffset;
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
-        resultPosition += motionControl.possessPointTransform.rotation * motionControl.offsetTransform.localPosition;
+        var handPosition = resultPosition + (motionControl.currentMotionControl.InverseTransformPoint(motionControl.possessPointTransform.position));
 
         // Do the displacement
-        // TODO: Avoid getting the rigidbody component every frame
-        var rb = handController.GetComponent<Rigidbody>();
-        rb.MovePosition(resultPosition);
+        hand.controllerRigidbody.MovePosition(handPosition);
+        hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
 
         visualCueLinePoints[0] = anchorPosition;
         visualCueLinePoints[1] = resultPosition;
