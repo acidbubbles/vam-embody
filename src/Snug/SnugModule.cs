@@ -29,10 +29,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool showVisualCuesJSON { get; private set; }
     // TODO: Remove this
     public JSONStorableBool disableSelectionJSON { get; set; }
-    public SnugHand lHand;
-    public SnugHand rHand;
+    private SnugHand _lHand;
+    private SnugHand _rHand;
 
-    private readonly List<GameObject> _cues = new List<GameObject>();
     private struct FreeControllerV3GrabSnapshot
     {
         public bool canGrabPosition;
@@ -48,11 +47,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             InitAnchors();
 
-            lHand = new SnugHand
+            _lHand = new SnugHand
             {
                 controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl")
             };
-            rHand = new SnugHand
+            _rHand = new SnugHand
             {
                 controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl")
             };
@@ -89,7 +88,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             {
                 foreach (var fc in containingAtom.freeControllers)
                 {
-                    if (fc == lHand.controller || fc == rHand.controller) continue;
+                    if (fc == _lHand.controller || fc == _rHand.controller) continue;
                     if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
                     var state = new FreeControllerV3GrabSnapshot {canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation};
                     _previousState[fc] = state;
@@ -195,19 +194,21 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnEnable();
 
-        lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
-        if (lHand.motionControl != null)
+        _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
+        if (_lHand.motionControl != null)
         {
-            lHand.snapshot = FreeControllerV3Snapshot.Snap(lHand.controller);
-            CustomPossessHand(lHand.controller);
-            lHand.active = true;
+            _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
+            CustomPossessHand(_lHand.controller);
+            _lHand.active = true;
+            if (showVisualCuesJSON.val) _lHand.showCueLine = true;
         }
-        rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
-        if (rHand.motionControl != null)
+        _rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
+        if (_rHand.motionControl != null)
         {
-            CustomPossessHand(rHand.controller);
-            rHand.snapshot = FreeControllerV3Snapshot.Snap(rHand.controller);
-            rHand.active = true;
+            CustomPossessHand(_rHand.controller);
+            _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
+            _rHand.active = true;
+            if (showVisualCuesJSON.val) _rHand.showCueLine = true;
         }
     }
 
@@ -215,19 +216,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnDisable();
 
-        if (lHand.active)
+        if (_lHand.active)
         {
-            CustomReleaseHand(lHand.controller);
-            lHand.active = false;
-            lHand.snapshot.Restore();
+            CustomReleaseHand(_lHand.controller);
+            _lHand.active = false;
+            _lHand.snapshot.Restore();
         }
 
-        if (rHand.active)
+        if (_rHand.active)
         {
-            CustomReleaseHand(rHand.controller);
-            rHand.active = false;
-            rHand.snapshot.Restore();
+            CustomReleaseHand(_rHand.controller);
+            _rHand.active = false;
+            _rHand.snapshot.Restore();
         }
+
+        _lHand.showCueLine = false;
+        _rHand.showCueLine = false;
     }
 
     public void OnDestroy()
@@ -261,8 +265,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         try
         {
-            UpdateCueLine(lHand);
-            UpdateCueLine(rHand);
+            _lHand.SyncCueLine();
+            _rHand.SyncCueLine();
         }
         catch (Exception exc)
         {
@@ -271,20 +275,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
-    private static void UpdateCueLine(SnugHand hand)
-    {
-        if (hand.visualCueLineRenderer == null) return;
-        hand.visualCueLineRenderer.SetPositions(hand.visualCueLinePoints);
-        for (var i = 0; i < hand.visualCueLinePoints.Length; i++)
-            hand.visualCueLinePointIndicators[i].transform.position = hand.visualCueLinePoints[i];
-    }
-
     public void FixedUpdate()
     {
         try
         {
-            ProcessHand(lHand);
-            ProcessHand(rHand);
+            ProcessHand(_lHand);
+            ProcessHand(_rHand);
         }
         catch (Exception exc)
         {
@@ -377,8 +373,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         DestroyVisualCues();
 
-        lHand.visualCueLineRenderer = CreateHandVisualCue(lHand.visualCueLinePointIndicators);
-        rHand.visualCueLineRenderer = CreateHandVisualCue(rHand.visualCueLinePointIndicators);
+        _lHand.showCueLine = true;
+        _rHand.showCueLine = true;
 
         foreach (var anchorPoint in anchorPoints)
         {
@@ -392,41 +388,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
-    private LineRenderer CreateHandVisualCue(List<GameObject> visualCueLinePointIndicators)
-    {
-        var lineGo = new GameObject();
-        var line = VisualCuesHelper.CreateLine(lineGo, Color.yellow, 0.002f, 2, true);
-        _cues.Add(lineGo);
-
-        for (var i = 0; i < 2; i++)
-        {
-            var p = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, Color.yellow);
-            p.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-            visualCueLinePointIndicators.Add(p);
-        }
-
-        return line;
-    }
-
     private void DestroyVisualCues()
     {
-        Destroy(lHand.visualCueLineRenderer);
-        Destroy(rHand.visualCueLineRenderer);
-        lHand.visualCueLineRenderer = null;
-        rHand.visualCueLineRenderer = null;
-        foreach (var p in lHand.visualCueLinePointIndicators)
-            Destroy(p);
-        lHand.visualCueLinePointIndicators.Clear();
-        foreach (var p in rHand.visualCueLinePointIndicators)
-            Destroy(p);
-        rHand.visualCueLinePointIndicators.Clear();
-        // TODO: We can get rid of all this
-        foreach (var debugger in _cues)
-        {
-            Destroy(debugger);
-        }
+        _lHand.showCueLine = false;
+        _rHand.showCueLine = false;
 
-        _cues.Clear();
         foreach (var anchor in anchorPoints)
         {
             Destroy(anchor.VirtualCue?.gameObject);

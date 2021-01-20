@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Rendering;
 
 public class OffsetPreview : MonoBehaviour
 {
@@ -17,12 +16,13 @@ public class OffsetPreview : MonoBehaviour
 
     public void Sync()
     {
+        var motionControlPosition = currentMotionControl.position;
         _lineRenderer.SetPositions(new[]
         {
             Vector3.zero,
-            transform.InverseTransformPoint(currentMotionControl.position),
+            transform.InverseTransformPoint(motionControlPosition),
         });
-        _motionControlPreview.SetPositionAndRotation(currentMotionControl.position, currentMotionControl.rotation);
+        _motionControlPreview.SetPositionAndRotation(motionControlPosition, currentMotionControl.rotation);
     }
 
     private Transform CreateAxisIndicator(Color color)
@@ -62,12 +62,12 @@ public class OffsetPreview : MonoBehaviour
         return go;
     }
 
-    public LineRenderer CreateLine()
+    private LineRenderer CreateLine()
     {
         var line = gameObject.AddComponent<LineRenderer>();
         line.useWorldSpace = false;
-            var material = new Material(Shader.Find("Battlehub/RTHandles/VertexColor"));
-            line.material = material;
+        var material = new Material(Shader.Find("Battlehub/RTHandles/VertexColor"));
+        line.material = material;
         line.widthMultiplier = 0.0006f;
         line.positionCount = 2;
         return line;
