@@ -65,7 +65,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         SuperController.singleton.worldScale = _originalWorldScale;
         // TODO: Figure out a way to avoid that. Probably wait one second before re-enabling it...
-        SuperController.singleton.showNavigationHologrid = _originalShowNavigationHologrid;
+        if (_originalShowNavigationHologrid)
+            SuperController.singleton.showNavigationHologrid = true;
         _originalWorldScale = 0f;
     }
 

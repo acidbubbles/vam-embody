@@ -79,7 +79,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
     private void OnGeometryPostRender(Camera cam)
     {
-        // TODO: Instead only register on cameras we need on enable?
         if (!IsPovCamera(cam)) return;
 
         try
