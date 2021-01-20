@@ -99,11 +99,13 @@
     <Compile Include="src\Screens\ScreensManager.cs" />
     <Compile Include="src\Snug\Anchors\ControllerAnchorPoint.cs" />
     <Compile Include="src\Snug\Anchors\ControllerAnchorPointVisualCue.cs" />
+    <Compile Include="src\Snug\SnugHand.cs" />
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\Snug\SnugAutoSetup.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
     <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
+    <Compile Include="src\Trackers\MotionControlNames.cs" />
     <Compile Include="src\Trackers\OffsetPreview.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />

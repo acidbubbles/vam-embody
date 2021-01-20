@@ -40,26 +40,11 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         InitAnchorsUI();
 
         SyncSelectedAnchorJSON("");
-        SyncHandsOffset();
     }
 
     private void InitHandsSettingsUI()
     {
         CreateSlider(_snug.falloffJSON, false);
-
-        _handOffsetXJSON = new JSONStorableFloat("Hand Offset X", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetXJSON, false);
-        _handOffsetYJSON = new JSONStorableFloat("Hand Offset Y", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetYJSON, false);
-        _handOffsetZJSON = new JSONStorableFloat("Hand Offset Z", 0f, UpdateHandsOffset, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_handOffsetZJSON, false);
-
-        _handRotateXJSON = new JSONStorableFloat("Hand Rotate X", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateXJSON, false);
-        _handRotateYJSON = new JSONStorableFloat("Hand Rotate Y", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateYJSON, false);
-        _handRotateZJSON = new JSONStorableFloat("Hand Rotate Z", 0f, UpdateHandsOffset, -25f, 25f, false) {isStorable = false};
-        CreateSlider(_handRotateZJSON, false);
     }
 
     private void InitAnchorsUI()
@@ -132,21 +117,5 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         }
 
         anchor.Update();
-    }
-
-    private void SyncHandsOffset()
-    {
-        _handOffsetXJSON.valNoCallback = _snug.palmToWristOffset.x;
-        _handOffsetYJSON.valNoCallback = _snug.palmToWristOffset.y;
-        _handOffsetZJSON.valNoCallback = _snug.palmToWristOffset.z;
-        _handRotateXJSON.valNoCallback = _snug.handRotateOffset.x;
-        _handRotateYJSON.valNoCallback = _snug.handRotateOffset.y;
-        _handRotateZJSON.valNoCallback = _snug.handRotateOffset.z;
-    }
-
-    private void UpdateHandsOffset(float _)
-    {
-        _snug.palmToWristOffset = new Vector3(_handOffsetXJSON.val, _handOffsetYJSON.val, _handOffsetZJSON.val);
-        _snug.handRotateOffset = new Vector3(_handRotateXJSON.val, _handRotateYJSON.val, _handRotateZJSON.val);
     }
 }

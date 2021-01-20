@@ -33,10 +33,12 @@ src\Screens\ScreensManager.cs
 src\Snug\Anchors\ControllerAnchorPoint.cs
 src\Snug\Anchors\ControllerAnchorPointVisualCue.cs
 src\Snug\SnugAutoSetup.cs
+src\Snug\SnugHand.cs
 src\Snug\SnugModule.cs
 src\Snug\SnugSettingsScreen.cs
 src\Trackers\FreeControllerV3WithSnapshot.cs
 src\Trackers\MotionControllerWithCustomPossessPoint.cs
+src\Trackers\MotionControlNames.cs
 src\Trackers\OffsetPreview.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs

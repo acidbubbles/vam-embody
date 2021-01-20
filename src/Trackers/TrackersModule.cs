@@ -34,9 +34,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        AddMotionControl("Head", () => context.head, "headControl");
-        AddMotionControl("LeftHand", () => context.leftHand, "lHandControl", new Vector3(-0.03247f, -0.03789f, -0.10116f), new Vector3(-90, 90, 0));
-        AddMotionControl("RightHand", () => context.rightHand, "rHandControl", new Vector3(0.03247f, -0.03789f, -0.10116f), new Vector3(-90, -90, 0));
+        AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
+        AddMotionControl(MotionControlNames.LeftHand, () => context.leftHand, "lHandControl", new Vector3(-0.03247f, -0.03789f, -0.10116f), new Vector3(-90, 90, 0));
+        AddMotionControl(MotionControlNames.RightHand, () => context.rightHand, "rHandControl", new Vector3(0.03247f, -0.03789f, -0.10116f), new Vector3(-90, -90, 0));
         AddMotionControl("ViveTracker1", () => context.viveTracker1);
         AddMotionControl("ViveTracker2", () => context.viveTracker2);
         AddMotionControl("ViveTracker3", () => context.viveTracker3);
@@ -84,8 +84,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             if (!motionControl.enabled) continue;
             if (motionControl.mappedControllerName == null) continue;
-            if (passenger.selectedJSON.val && motionControl.name == "Head") continue;
-            if (snug.selectedJSON.val && (motionControl.name == "LeftHand" || motionControl.name == "RightHand")) return;
+            if (passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) continue;
+            if (snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return;
 
             var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
             if (controllerWithSnapshot == null) continue;
@@ -96,7 +96,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
             if(!motionControl.SyncMotionControl()) continue;
 
-            if (motionControl.name == "Head")
+            if (motionControl.name == MotionControlNames.Head)
             {
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
                 var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
@@ -118,6 +118,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             }
 
             Possess(motionControl, controllerWithSnapshot.controller);
+
+            // TODO: (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = true;
         }
     }
 

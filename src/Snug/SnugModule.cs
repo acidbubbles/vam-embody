@@ -2,7 +2,6 @@
 // TODO: When loading a preset, overwrite with autosetup immediately
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
@@ -10,8 +9,6 @@ using UnityEngine;
 
 public interface ISnugModule : IEmbodyModule
 {
-    Vector3 palmToWristOffset { get; set; }
-    Vector3 handRotateOffset { get; set; }
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
     JSONStorableBool showVisualCuesJSON { get; }
@@ -25,38 +22,23 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public override string storeId => "Snug";
     public override string label => Label;
 
-    public Vector3 palmToWristOffset { get; set; }
-    public Vector3 handRotateOffset { get; set; }
+    public ITrackersModule trackers;
+
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool showVisualCuesJSON { get; private set; }
     // TODO: Remove this
     public JSONStorableBool disableSelectionJSON { get; set; }
+    public SnugHand lHand;
+    public SnugHand rHand;
 
     private readonly List<GameObject> _cues = new List<GameObject>();
-    private bool _leftHandActive, _rightHandActive;
-    private GameObject _leftHandTarget, _rightHandTarget;
-    private FreeControllerV3 _personLHandController, _personRHandController;
-    private Transform _leftAutoSnapPoint, _rightAutoSnapPoint;
-    private readonly Vector3[] _lHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
-    private readonly Vector3[] _rHandVisualCueLinePoints = new Vector3[VisualCueLineIndices.Count];
-    private LineRenderer _lHandVisualCueLine, _rHandVisualCueLine;
-    private readonly List<GameObject> _lHandVisualCueLinePointIndicators = new List<GameObject>();
-    private readonly List<GameObject> _rHandVisualCueLinePointIndicators = new List<GameObject>();
-    private struct FreeControllerV3Snapshot
+    private struct FreeControllerV3GrabSnapshot
     {
         public bool canGrabPosition;
         public bool canGrabRotation;
     }
-    private readonly Dictionary<FreeControllerV3, FreeControllerV3Snapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3Snapshot>();
-
-    private static class VisualCueLineIndices
-    {
-        public static int Anchor = 0;
-        public static int Hand = 1;
-        public static int Controller = 2;
-        public static int Count = 3;
-    }
+    private readonly Dictionary<FreeControllerV3, FreeControllerV3GrabSnapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3GrabSnapshot>();
 
     public override void Awake()
     {
@@ -66,7 +48,15 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             InitAnchors();
 
-            InitHands();
+            lHand = new SnugHand
+            {
+                controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl")
+            };
+            rHand = new SnugHand
+            {
+                controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl")
+            };
+
             InitVisualCues();
             InitDisableSelection();
             InitHandsSettings();
@@ -75,43 +65,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             SuperController.LogError($"{nameof(SnugModule)}.{nameof(Awake)}: {exc}");
         }
-    }
-
-    private void InitHands()
-    {
-        var s = SuperController.singleton;
-
-        Transform touchObjectLeft = null;
-        if (s.isOVR)
-            touchObjectLeft = s.touchObjectLeft;
-        else if (s.isOpenVR)
-            touchObjectLeft = s.viveObjectLeft;
-        if (touchObjectLeft != null)
-            _leftAutoSnapPoint = touchObjectLeft.GetComponent<Possessor>().autoSnapPoint;
-        _personLHandController = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl");
-        if (_personLHandController == null)
-            throw new NullReferenceException(
-                $"Could not find the lHandControl controller. Controllers: {string.Join(", ", containingAtom.freeControllers.Select(fc => fc.name).ToArray())}");
-        _leftHandTarget = new GameObject($"{containingAtom.gameObject.name}.lHandController.snugTarget");
-        var leftHandRigidBody = _leftHandTarget.AddComponent<Rigidbody>();
-        leftHandRigidBody.isKinematic = true;
-        leftHandRigidBody.detectCollisions = false;
-
-        Transform touchObjectRight = null;
-        if (s.isOVR)
-            touchObjectRight = s.touchObjectRight;
-        else if (s.isOpenVR)
-            touchObjectRight = s.viveObjectRight;
-        if (touchObjectRight != null)
-            _rightAutoSnapPoint = touchObjectRight.GetComponent<Possessor>().autoSnapPoint;
-        _personRHandController = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl");
-        if (_personRHandController == null)
-            throw new NullReferenceException(
-                $"Could not find the rHandControl controller. Controllers: {string.Join(", ", containingAtom.freeControllers.Select(fc => fc.name).ToArray())}");
-        _rightHandTarget = new GameObject($"{containingAtom.gameObject.name}.rHandController.snugTarget");
-        var rightHandRigidBody = _rightHandTarget.AddComponent<Rigidbody>();
-        rightHandRigidBody.isKinematic = true;
-        rightHandRigidBody.detectCollisions = false;
     }
 
     private void InitVisualCues()
@@ -136,9 +89,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             {
                 foreach (var fc in containingAtom.freeControllers)
                 {
-                    if (fc == _personLHandController || fc == _personRHandController) continue;
+                    if (fc == lHand.controller || fc == rHand.controller) continue;
                     if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
-                    var state = new FreeControllerV3Snapshot {canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation};
+                    var state = new FreeControllerV3GrabSnapshot {canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation};
                     _previousState[fc] = state;
                     fc.canGrabPosition = false;
                     fc.canGrabRotation = false;
@@ -236,98 +189,71 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
     }
 
-    private IEnumerator DeferredActivateHands()
+    #region Lifecycle
+
+    public override void OnEnable()
     {
-        yield return new WaitForSeconds(0f);
-        if (_leftHandActive)
-            CustomPossessHand(_personLHandController, _leftHandTarget);
-        if (_rightHandActive)
-            CustomPossessHand(_personRHandController, _rightHandTarget);
+        base.OnEnable();
+
+        lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
+        if (lHand.motionControl != null)
+        {
+            lHand.snapshot = FreeControllerV3Snapshot.Snap(lHand.controller);
+            CustomPossessHand(lHand.controller);
+            lHand.active = true;
+        }
+        rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
+        if (rHand.motionControl != null)
+        {
+            CustomPossessHand(rHand.controller);
+            rHand.snapshot = FreeControllerV3Snapshot.Snap(rHand.controller);
+            rHand.active = true;
+        }
     }
 
-    private static void CustomPossessHand(FreeControllerV3 controllerV3, GameObject target)
+    public override void OnDisable()
     {
-        controllerV3.PossessMoveAndAlignTo(target.transform);
-        controllerV3.SelectLinkToRigidbody(target.GetComponent<Rigidbody>());
+        base.OnDisable();
+
+        if (lHand.active)
+        {
+            CustomReleaseHand(lHand.controller);
+            lHand.active = false;
+            lHand.snapshot.Restore();
+        }
+
+        if (rHand.active)
+        {
+            CustomReleaseHand(rHand.controller);
+            rHand.active = false;
+            rHand.snapshot.Restore();
+        }
+    }
+
+    public void OnDestroy()
+    {
+        OnDisable();
+        DestroyVisualCues();
+    }
+
+    #endregion
+
+    private static void CustomPossessHand(FreeControllerV3 controllerV3)
+    {
         controllerV3.canGrabPosition = false;
         controllerV3.canGrabRotation = false;
         controllerV3.possessed = true;
-        controllerV3.possessable = false;
         (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = true;
     }
 
     private static void CustomReleaseHand(FreeControllerV3 controllerV3)
     {
-        controllerV3.RestorePreLinkState();
         // TODO: This should return to the previous state
         controllerV3.canGrabPosition = true;
         controllerV3.canGrabRotation = true;
         controllerV3.possessed = false;
-        controllerV3.possessable = true;
         (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = false;
     }
-
-    #region Load / Save
-
-    public override void StoreJSON(JSONClass jc)
-    {
-        base.StoreJSON(jc);
-
-        jc["Hands"] = new JSONClass
-        {
-            {"Offset", palmToWristOffset.ToJSON()},
-            {"Rotation", handRotateOffset.ToJSON()}
-        };
-        var anchors = new JSONClass();
-        foreach (var anchor in anchorPoints)
-        {
-            anchors[anchor.Id] = new JSONClass
-            {
-                {"InGameOffset", anchor.InGameOffset.ToJSON()},
-                {"InGameSize", anchor.InGameSize.ToJSON()},
-                {"RealLifeOffset", anchor.RealLifeOffset.ToJSON()},
-                {"RealLifeScale", anchor.RealLifeSize.ToJSON()},
-                {"Active", anchor.Active ? "true" : "false"},
-            };
-        }
-
-        jc["Anchors"] = anchors;
-
-        falloffJSON.StoreJSON(jc);
-    }
-
-    public override void RestoreFromJSON(JSONClass jc)
-    {
-        base.RestoreFromJSON(jc);
-
-        var handsJSON = jc["Hands"];
-        if (handsJSON != null)
-        {
-            palmToWristOffset = handsJSON["Offset"].ToVector3(palmToWristOffset);
-            handRotateOffset = handsJSON["Rotation"].ToVector3(handRotateOffset);
-        }
-
-        var anchorsJSON = jc["Anchors"];
-        if (anchorsJSON != null)
-        {
-            foreach (var anchor in anchorPoints)
-            {
-                var anchorJSON = anchorsJSON[anchor.Id];
-                if (anchorJSON == null) continue;
-                anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
-                anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
-                anchor.RealLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.RealLifeOffset);
-                anchor.RealLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.RealLifeSize);
-                anchor.Active = anchorJSON["Active"]?.Value != "false";
-                anchor.Update();
-            }
-        }
-
-        falloffJSON.RestoreFromJSON(jc);
-    }
-
-
-    #endregion
 
     #region Update
 
@@ -335,49 +261,30 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         try
         {
-            UpdateCueLine(_lHandVisualCueLine, _lHandVisualCueLinePoints, _lHandVisualCueLinePointIndicators);
-            UpdateCueLine(_rHandVisualCueLine, _rHandVisualCueLinePoints, _rHandVisualCueLinePointIndicators);
+            UpdateCueLine(lHand);
+            UpdateCueLine(rHand);
         }
         catch (Exception exc)
         {
             SuperController.LogError($"{nameof(SnugModule)}.{nameof(Update)}: {exc}");
-            OnDisable();
+            enabled = false;
         }
     }
 
-    private static void UpdateCueLine(LineRenderer line, Vector3[] points, IList<GameObject> indicators)
+    private static void UpdateCueLine(SnugHand hand)
     {
-        if (line != null)
-        {
-            line.SetPositions(points);
-            for (var i = 0; i < points.Length; i++)
-                indicators[i].transform.position = points[i];
-        }
+        if (hand.visualCueLineRenderer == null) return;
+        hand.visualCueLineRenderer.SetPositions(hand.visualCueLinePoints);
+        for (var i = 0; i < hand.visualCueLinePoints.Length; i++)
+            hand.visualCueLinePointIndicators[i].transform.position = hand.visualCueLinePoints[i];
     }
 
     public void FixedUpdate()
     {
-        // TODO: The hand should rotate around it's axis, the offset makes the hand rotates
         try
         {
-            if (_leftHandActive || showVisualCuesJSON.val && !ReferenceEquals(_leftAutoSnapPoint, null) && !ReferenceEquals(_leftHandTarget, null))
-                ProcessHand(
-                    _leftHandTarget,
-                    SuperController.singleton.leftHand,
-                    _leftAutoSnapPoint,
-                    new Vector3(palmToWristOffset.x * -1f, palmToWristOffset.y, palmToWristOffset.z),
-                    new Vector3(handRotateOffset.x, -handRotateOffset.y, -handRotateOffset.z),
-                    _lHandVisualCueLinePoints
-                );
-            if (_rightHandActive || showVisualCuesJSON.val && !ReferenceEquals(_rightAutoSnapPoint, null) && !ReferenceEquals(_rightHandTarget, null))
-                ProcessHand(
-                    _rightHandTarget,
-                    SuperController.singleton.rightHand,
-                    _rightAutoSnapPoint,
-                    palmToWristOffset,
-                    handRotateOffset,
-                    _rHandVisualCueLinePoints
-                );
+            ProcessHand(lHand);
+            ProcessHand(rHand);
         }
         catch (Exception exc)
         {
@@ -386,18 +293,13 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
-    private void ProcessHand(
-        GameObject handTarget,
-        Transform realHand,
-        Transform autoSnapPoint,
-        Vector3 palmToWristOffset,
-        Vector3 handRotateOffset,
-        Vector3[] visualCueLinePoints
-        )
+    private void ProcessHand(SnugHand hand)
     {
+        var handController = hand.controller;
+        var motionControl = hand.motionControl;
+        var visualCueLinePoints = hand.visualCueLinePoints;
         // Base position
-        var position = realHand.position;
-        var snapOffset = autoSnapPoint.localPosition;
+        var position = motionControl.possessPointTransform.position;
 
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
@@ -439,7 +341,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
         // TODO: Is this useful?
         anchorPosition.y = position.y;
-        visualCueLinePoints[VisualCueLineIndices.Anchor] = anchorPosition;
 
         // Determine the falloff (closer = stronger, fades out with distance)
         // TODO: Even better to use closest point on ellipse, but not necessary.
@@ -457,60 +358,15 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         resultOffset = new Vector3(resultOffset.x / realToGameScale.x, resultOffset.y / realToGameScale.y, resultOffset.z / realToGameScale.z) - realOffset;
         resultOffset = anchorRotation * resultOffset;
         var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
-        visualCueLinePoints[VisualCueLineIndices.Hand] = resultPosition;
-
-        // Apply the hands adjustments
-        var resultRotation = autoSnapPoint.rotation * Quaternion.Euler(handRotateOffset);
-        resultPosition += resultRotation * (snapOffset + palmToWristOffset);
+        resultPosition += motionControl.possessPointTransform.rotation * motionControl.offsetTransform.localPosition;
 
         // Do the displacement
         // TODO: Avoid getting the rigidbody component every frame
-        var rb = handTarget.GetComponent<Rigidbody>();
+        var rb = handController.GetComponent<Rigidbody>();
         rb.MovePosition(resultPosition);
-        rb.MoveRotation(resultRotation);
 
-        visualCueLinePoints[VisualCueLineIndices.Controller] = realHand.transform.position;
-    }
-
-    #endregion
-
-    #region Lifecycle
-
-    public override void OnEnable()
-    {
-        base.OnEnable();
-
-        if (_leftAutoSnapPoint != null)
-            _leftHandActive = true;
-        if (_rightAutoSnapPoint != null)
-            _rightHandActive = true;
-        // TODO: We should not use deferred here
-        StartCoroutine(DeferredActivateHands());
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-
-        if (_leftHandActive)
-        {
-            CustomReleaseHand(_personLHandController);
-            _leftHandActive = false;
-        }
-
-        if (_rightHandActive)
-        {
-            CustomReleaseHand(_personRHandController);
-            _rightHandActive = false;
-        }
-    }
-
-    public void OnDestroy()
-    {
-        OnDisable();
-        DestroyVisualCues();
-        Destroy(_leftHandTarget);
-        Destroy(_rightHandTarget);
+        visualCueLinePoints[0] = anchorPosition;
+        visualCueLinePoints[1] = resultPosition;
     }
 
     #endregion
@@ -521,8 +377,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         DestroyVisualCues();
 
-        _lHandVisualCueLine = CreateHandVisualCue(_lHandVisualCueLinePointIndicators);
-        _rHandVisualCueLine = CreateHandVisualCue(_rHandVisualCueLinePointIndicators);
+        lHand.visualCueLineRenderer = CreateHandVisualCue(lHand.visualCueLinePointIndicators);
+        rHand.visualCueLineRenderer = CreateHandVisualCue(rHand.visualCueLinePointIndicators);
 
         foreach (var anchorPoint in anchorPoints)
         {
@@ -539,10 +395,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private LineRenderer CreateHandVisualCue(List<GameObject> visualCueLinePointIndicators)
     {
         var lineGo = new GameObject();
-        var line = VisualCuesHelper.CreateLine(lineGo, Color.yellow, 0.002f, VisualCueLineIndices.Count, true);
+        var line = VisualCuesHelper.CreateLine(lineGo, Color.yellow, 0.002f, 2, true);
         _cues.Add(lineGo);
 
-        for (var i = 0; i < VisualCueLineIndices.Count; i++)
+        for (var i = 0; i < 2; i++)
         {
             var p = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, Color.yellow);
             p.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
@@ -554,14 +410,17 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void DestroyVisualCues()
     {
-        _lHandVisualCueLine = null;
-        _rHandVisualCueLine = null;
-        foreach (var p in _lHandVisualCueLinePointIndicators)
+        Destroy(lHand.visualCueLineRenderer);
+        Destroy(rHand.visualCueLineRenderer);
+        lHand.visualCueLineRenderer = null;
+        rHand.visualCueLineRenderer = null;
+        foreach (var p in lHand.visualCueLinePointIndicators)
             Destroy(p);
-        _lHandVisualCueLinePointIndicators.Clear();
-        foreach (var p in _rHandVisualCueLinePointIndicators)
+        lHand.visualCueLinePointIndicators.Clear();
+        foreach (var p in rHand.visualCueLinePointIndicators)
             Destroy(p);
-        _rHandVisualCueLinePointIndicators.Clear();
+        rHand.visualCueLinePointIndicators.Clear();
+        // TODO: We can get rid of all this
         foreach (var debugger in _cues)
         {
             Destroy(debugger);
@@ -575,6 +434,55 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Destroy(anchor.PhysicalCue?.gameObject);
             anchor.PhysicalCue = null;
         }
+    }
+
+    #endregion
+
+    #region Load / Save
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        var anchors = new JSONClass();
+        foreach (var anchor in anchorPoints)
+        {
+            anchors[anchor.Id] = new JSONClass
+            {
+                {"InGameOffset", anchor.InGameOffset.ToJSON()},
+                {"InGameSize", anchor.InGameSize.ToJSON()},
+                {"RealLifeOffset", anchor.RealLifeOffset.ToJSON()},
+                {"RealLifeScale", anchor.RealLifeSize.ToJSON()},
+                {"Active", anchor.Active ? "true" : "false"},
+            };
+        }
+
+        jc["Anchors"] = anchors;
+
+        falloffJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        var anchorsJSON = jc["Anchors"];
+        if (anchorsJSON != null)
+        {
+            foreach (var anchor in anchorPoints)
+            {
+                var anchorJSON = anchorsJSON[anchor.Id];
+                if (anchorJSON == null) continue;
+                anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
+                anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
+                anchor.RealLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.RealLifeOffset);
+                anchor.RealLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.RealLifeSize);
+                anchor.Active = anchorJSON["Active"]?.Value != "false";
+                anchor.Update();
+            }
+        }
+
+        falloffJSON.RestoreFromJSON(jc);
     }
 
     #endregion

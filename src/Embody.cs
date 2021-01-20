@@ -33,17 +33,19 @@ public class Embody : MVRScript, IEmbody
             _context.Initialize();
 
             var automationModule = CreateModule<AutomationModule>(_context);
-            automationModule.embody = this;
             var worldScaleModule = CreateModule<WorldScaleModule>(_context);
             var hideGeometryModule = CreateModule<HideGeometryModule>(_context);
             var offsetCameraModule = CreateModule<OffsetCameraModule>(_context);
             var passengerModule = CreateModule<PassengerModule>(_context);
-            var snugModule = CreateModule<SnugModule>(_context);
             var trackersModule = CreateModule<TrackersModule>(_context);
-            trackersModule.snug = snugModule;
-            trackersModule.passenger = passengerModule;
+            var snugModule = CreateModule<SnugModule>(_context);
             var eyeTargetModule = CreateModule<EyeTargetModule>(_context);
             var wizardModule = CreateModule<WizardModule>(_context);
+
+            automationModule.embody = this;
+            trackersModule.snug = snugModule;
+            trackersModule.passenger = passengerModule;
+            snugModule.trackers = trackersModule;
             wizardModule.embody = this;
             wizardModule.passenger = passengerModule;
             wizardModule.worldScale = worldScaleModule;
