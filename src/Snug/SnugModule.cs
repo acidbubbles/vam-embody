@@ -197,12 +197,19 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnEnable();
 
+        if (!trackers.selectedJSON.val)
+        {
+            SuperController.LogError("Embody: Snug requires the Trackers module.");
+            enabled = false;
+        }
+
         _autoSetup.AutoSetup();
 
         _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
         if (_lHand.motionControl != null && _lHand.motionControl.SyncMotionControl())
         {
-            _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
+            if (trackers.restorePoseAfterPossessJSON.val)
+                _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
             CustomPossessHand(_lHand.controller);
             _lHand.active = true;
             if (showVisualCuesJSON.val) _lHand.showCueLine = true;
@@ -210,7 +217,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         _rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
         if (_rHand.motionControl != null && _rHand.motionControl.SyncMotionControl())
         {
-            _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
+            if (trackers.restorePoseAfterPossessJSON.val)
+                _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
             CustomPossessHand(_rHand.controller);
             _rHand.active = true;
             if (showVisualCuesJSON.val) _rHand.showCueLine = true;
@@ -225,14 +233,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             CustomReleaseHand(_lHand.controller);
             _lHand.active = false;
-            _lHand.snapshot.Restore();
+            if (_lHand.snapshot != null)
+            {
+                _lHand.snapshot.Restore();
+                _lHand.snapshot = null;
+            }
         }
 
         if (_rHand.active)
         {
             CustomReleaseHand(_rHand.controller);
             _rHand.active = false;
-            _rHand.snapshot.Restore();
+            if (_rHand.snapshot != null)
+            {
+                _rHand.snapshot.Restore();
+                _rHand.snapshot = null;
+            }
         }
 
         _lHand.showCueLine = false;
