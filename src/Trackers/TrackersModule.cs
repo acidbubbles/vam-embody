@@ -98,13 +98,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == MotionControlNames.Head)
             {
+                // TODO: Make sure this is right? Also when the head has rotation, it will possess at an angle
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
                 var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
                 motionControl.baseOffset = controller.control.InverseTransformPoint(eyesCenter);
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
-                    AlignRigAndController(controllerWithSnapshot, motionControl);
+                    AlignRigAndController(controller, motionControl);
                 }
                 else
                 {
@@ -191,12 +192,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
     }
 
-    private static void AlignRigAndController(FreeControllerV3WithSnapshot customized, MotionControllerWithCustomPossessPoint motionControl)
+    private static void AlignRigAndController(FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl)
     {
-        var controller = customized.controller;
         var sc = SuperController.singleton;
         var navigationRig = sc.navigationRig;
-        // NOTE: This code comes from VaM
 
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();

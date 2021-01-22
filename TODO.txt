@@ -1,4 +1,6 @@
-﻿- Finish the wizard
+﻿FEATURES
+
+- Finish the wizard
 - Connect to the leap motion when possessing hands
 - Without leap, see if we could animate hands when grabbing
 - When building the base offset for tracker hands, measure wrist to middle finger base to determine offset and rotation
@@ -12,3 +14,11 @@
 - Auto bind vive controllers by checking the closest freecontroller from each, and recording the current rotation. This can be part of the wizard.
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
 - Male Snug?
+- Start recording all tracked controllers (arm, clear and start record)
+- Global plugin to share settings like player height (for world scale)
+- In snug, show a ring for each hand so users can see what the proportions are at any point
+- Use next/previous buttons and slider drop down in trackers for quicker nav
+
+BUGS
+
+- Point rotate seems broken

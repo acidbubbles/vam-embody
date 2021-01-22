@@ -352,36 +352,35 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var lowerWeight = 1f - upperWeight;
         var lowerRotation = lower.RigidBody.transform.rotation;
         var upperRotation = upper.RigidBody.transform.rotation;
-        // TODO: SmoothStep?
+        // TODO: We can use a bezier curve or similar to make a curve following the angle of the upper/lower controls
         var anchorPosition = Vector3.Lerp(upperPosition, lowerPosition, lowerWeight);
         var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
-        // TODO: Is this useful?
-        anchorPosition.y = position.y;
 
-        // Determine the falloff (closer = stronger, fades out with distance)
-        // TODO: Even better to use closest point on ellipse, but not necessary.
-        var distance = Mathf.Abs(Vector3.Distance(anchorPosition, position));
+        var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, position - anchorPosition, anchorRotation * Vector3.up);
         var realLifeSize = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
-        var realLifeDistanceFromCenter = Mathf.Max(realLifeSize.x, realLifeSize.z);
-        // TODO: Check both x and z to determine a falloff relative to both distances
-        var falloff = falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distance - realLifeDistanceFromCenter, 0, falloffJSON.val) / falloffJSON.val) : 1f;
+        var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
-        // Calculate the controller offset based on the physical scale/offset of anchors
-        var realToGameScale = Vector3.Lerp(upper.GetRealToGameScale(), lower.GetRealToGameScale(), lowerWeight);
+        // TODO: When closer to center it should clamp to 0, otherwise when scales get large it will push hand instead of pulling when too close.
+        var distanceFromAnchorHook = Vector3.Distance(anchorHook, position);
+        var falloff = falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val) : 1f;
+
         var realOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
-        var baseOffset = position - anchorPosition;
-        var resultOffset = Quaternion.Inverse(anchorRotation) * baseOffset;
-        resultOffset = new Vector3(resultOffset.x / realToGameScale.x, resultOffset.y / realToGameScale.y, resultOffset.z / realToGameScale.z) - realOffset;
-        resultOffset = anchorRotation * resultOffset;
-        var resultPosition = anchorPosition + Vector3.Lerp(baseOffset, resultOffset, falloff);
-        var handPosition = resultPosition + (motionControl.currentMotionControl.InverseTransformPoint(motionControl.possessPointTransform.position));
+        var inGameSize = Vector3.Lerp(upper.InGameSize, lower.InGameSize, lowerWeight);
+        var scale = new Vector3(inGameSize.x / realLifeSize.x, inGameSize.y / realLifeSize.y, inGameSize.z / realLifeSize.z);
+        var actualRelativePosition = position - anchorPosition;
+        var scaled = Vector3.Scale(actualRelativePosition, scale);
+        var finalPosition = Vector3.Lerp(position, anchorPosition + scaled - realOffset, falloff);
 
-        // Do the displacement
-        hand.controllerRigidbody.MovePosition(handPosition);
+        visualCueLinePoints[0] = finalPosition;
+        visualCueLinePoints[1] = position;
+
+        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - position);// + hand.motionControl.possessPointTransform.position * hand.motionControl.baseOffset;
+
+        hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
         hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
 
-        visualCueLinePoints[0] = anchorPosition;
-        visualCueLinePoints[1] = resultPosition;
+        visualCueLinePoints[0] = motionControl.possessPointTransform.position;
+        visualCueLinePoints[1] = finalPositionToControlPoint;
     }
 
     #endregion
