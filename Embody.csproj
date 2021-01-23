@@ -72,6 +72,7 @@
     <Compile Include="src\Common\ListExtensions.cs" />
     <Compile Include="src\Common\NavigationRigSnapshot.cs" />
     <Compile Include="src\Common\QuaternionExtensions.cs" />
+    <Compile Include="src\Common\UIDynamicPopupExtensions.cs" />
     <Compile Include="src\Common\Vector3Extensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
     <Compile Include="src\Embody.cs" />

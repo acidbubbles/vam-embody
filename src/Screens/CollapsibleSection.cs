@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Common;
 
 public class CollapsibleSection
 {
@@ -45,7 +46,7 @@ public class CollapsibleSection
     public void RemoveToggle(UIDynamicToggle component) { _plugin.RemoveToggle(component); _toggles.Remove(component); }
     public UIDynamicSlider CreateSlider(JSONStorableFloat jsf, bool rightSide = false) { return _sliders.AddAndReturn(_plugin.CreateSlider(jsf, rightSide)); }
     public void RemoveSlider(UIDynamicSlider component) { _plugin.RemoveSlider(component); _sliders.Remove(component); }
-    public UIDynamicPopup CreateScrollablePopup(JSONStorableStringChooser jss, bool rightSide = false) { return _popups.AddAndReturn(_plugin.CreateScrollablePopup(jss, rightSide)); }
+    public UIDynamicPopup CreateScrollablePopup(JSONStorableStringChooser jss, bool rightSide = false) { return _popups.AddAndReturn(_plugin.CreateScrollablePopup(jss, rightSide).AddNav(_plugin)); }
     public UIDynamicPopup CreateFilterablePopup(JSONStorableStringChooser jss, bool rightSide = false) { return _popups.AddAndReturn(_plugin.CreateFilterablePopup(jss, rightSide)); }
     public void RemoveFilterablePopup(UIDynamicPopup component) { _plugin.RemovePopup(component); _popups.Remove(component); }
     public UIDynamicButton CreateButton(string label, bool rightSide = false) { return _buttons.AddAndReturn(_plugin.CreateButton(label, rightSide)); }

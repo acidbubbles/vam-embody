@@ -37,7 +37,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             "Motion control",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
         );
-        CreateFilterablePopup(_motionControlJSON);
+        CreateScrollablePopup(_motionControlJSON);
 
         ShowMotionControl(_trackers.motionControls[0]);
     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Common;
 using SimpleJSON;
 using UnityEngine;
 
@@ -94,7 +95,9 @@ public class Embody : MVRScript, IEmbody
             activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
-            CreateScrollablePopup(_screensManager.screensJSON).popupPanelHeight = 700f;
+            var popup = CreateScrollablePopup(_screensManager.screensJSON);
+            popup.popupPanelHeight = 700f;
+            popup.AddNav(this);
 
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
