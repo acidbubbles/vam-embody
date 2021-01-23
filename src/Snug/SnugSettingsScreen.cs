@@ -65,6 +65,8 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         _anchorPhysOffsetZJSON = new JSONStorableFloat("Real-Life Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorPhysOffsetZJSON, true);
 
+        // TODO: Since we don't need this, should even try saving it at all?
+        /*
         _anchorVirtSizeXJSON = new JSONStorableFloat("In-Game Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
         CreateSlider(_anchorVirtSizeXJSON, true);
         _anchorVirtSizeZJSON = new JSONStorableFloat("In-Game Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
@@ -76,6 +78,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         CreateSlider(_anchorVirtOffsetYJSON, true);
         _anchorVirtOffsetZJSON = new JSONStorableFloat("In-Game Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorVirtOffsetZJSON, true);
+        */
 
         _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
         CreateToggle(_anchorActiveJSON, true);
