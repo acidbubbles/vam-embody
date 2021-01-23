@@ -62,15 +62,16 @@ public class MotionControllerWithCustomPossessPoint
     private void SyncOffset()
     {
         if (currentMotionControl == null) return;
-        offsetTransform.localPosition = combinedOffset;
-        offsetTransform.localEulerAngles = combinedOffsetRotation;
-        possessPointTransform.localPosition = Quaternion.Euler(possessPointRotation) * combinedOffset - combinedOffset;
-        possessPointTransform.localEulerAngles = possessPointRotation;
+        offsetTransform.localPosition = Vector3.zero;
+        offsetTransform.localEulerAngles = _pointRotation;
+        possessPointTransform.localPosition = combinedOffset;
+        possessPointTransform.localEulerAngles = combinedOffsetRotation;
         SyncOffsetPreview();
     }
 
     public bool SyncMotionControl()
     {
+        // TODO: Crash when moving from debug object to actual motion control
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null || !currentMotionControl.gameObject.activeInHierarchy)
         {

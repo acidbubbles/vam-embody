@@ -101,7 +101,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 // TODO: Make sure this is right? Also when the head has rotation, it will possess at an angle
                 var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
                 var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
-                motionControl.baseOffset = controller.control.InverseTransformPoint(eyesCenter);
+                motionControl.baseOffset = -controller.control.InverseTransformPoint(eyesCenter);
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
@@ -110,7 +110,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 else
                 {
                     var controlRotation = controller.control.rotation;
-                    motionControl.currentMotionControl.SetPositionAndRotation(controller.control.position + controlRotation * motionControl.combinedOffset, controlRotation);
+                    motionControl.currentMotionControl.SetPositionAndRotation(
+                        controller.control.position - controlRotation * motionControl.combinedOffset,
+                        controlRotation
+                    );
                 }
             }
             else
@@ -211,7 +214,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.AlignTo(motionControl.possessPointTransform, true);
 
-        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position + (motionControl.currentMotionControl.InverseTransformPoint(motionControl.possessPointTransform.position));
+        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position - controller.control.rotation * motionControl.combinedOffset;
         var navigationRigPosition = navigationRig.position;
         var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
         var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
