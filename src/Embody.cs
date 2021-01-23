@@ -17,8 +17,9 @@ public class Embody : MVRScript, IEmbody
 
     private GameObject _modules;
     private ScreensManager _screensManager;
-    private bool _restored;
     private EmbodyContext _context;
+    private bool _restored;
+    private bool _activateAfterSaveComplete;
 
     public override void Init()
     {
@@ -172,9 +173,39 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
+    public void OnEnable()
+    {
+#if(VAM_GT_1_20_6_0)
+        SuperController.singleton.onBeforeSceneSaveHandlers += OnBeforeSceneSave;
+        SuperController.singleton.onSceneSavedHandlers += OnSceneSaved;
+#endif
+    }
+
     public void OnDisable()
     {
+#if(VAM_GT_1_20_6_0)
+        SuperController.singleton.onBeforeSceneSaveHandlers -= OnBeforeSceneSave;
+        SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
+#endif
         activeJSON.val = false;
+    }
+
+    private void OnBeforeSceneSave()
+    {
+        if (activeJSON.val)
+        {
+            _activateAfterSaveComplete = true;
+            activeJSON.val = false;
+        }
+    }
+
+    private void OnSceneSaved()
+    {
+        if (_activateAfterSaveComplete)
+        {
+            _activateAfterSaveComplete = false;
+            activeJSON.val = true;
+        }
     }
 
     public void OnDestroy()
