@@ -11,7 +11,7 @@ public interface ISnugModule : IEmbodyModule
 {
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
-    JSONStorableBool showVisualCuesJSON { get; }
+    JSONStorableBool previewSnugOffsetJSON { get; }
     JSONStorableBool disableSelectionJSON { get; set; }
 }
 
@@ -26,7 +26,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
     public JSONStorableFloat falloffJSON { get; private set; }
-    public JSONStorableBool showVisualCuesJSON { get; private set; }
+    public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     // TODO: Remove this
     public JSONStorableBool disableSelectionJSON { get; set; }
     private SnugHand _lHand;
@@ -71,7 +71,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitVisualCues()
     {
-        showVisualCuesJSON = new JSONStorableBool("Show Visual Cues", false, val =>
+        previewSnugOffsetJSON = new JSONStorableBool("PreviewSnugOffset", false, val =>
         {
             if (val)
                 CreateVisualCues();
@@ -85,7 +85,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitDisableSelection()
     {
-        disableSelectionJSON = new JSONStorableBool("Make controllers unselectable", false, val =>
+        disableSelectionJSON = new JSONStorableBool("DisablePersonGrab", false, val =>
         {
             if (val)
             {
@@ -93,6 +93,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 {
                     if (fc == _lHand.controller || fc == _rHand.controller) continue;
                     if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
+                    if (!fc.name.EndsWith("Control")) continue;
                     var state = new FreeControllerV3GrabSnapshot {canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation};
                     _previousState[fc] = state;
                     fc.canGrabPosition = false;
@@ -212,7 +213,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
             CustomPossessHand(_lHand.controller);
             _lHand.active = true;
-            if (showVisualCuesJSON.val) _lHand.showCueLine = true;
+            if (previewSnugOffsetJSON.val) _lHand.showCueLine = true;
         }
         _rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
         if (_rHand.motionControl != null && _rHand.motionControl.SyncMotionControl())
@@ -221,7 +222,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
             CustomPossessHand(_rHand.controller);
             _rHand.active = true;
-            if (showVisualCuesJSON.val) _rHand.showCueLine = true;
+            if (previewSnugOffsetJSON.val) _rHand.showCueLine = true;
         }
     }
 

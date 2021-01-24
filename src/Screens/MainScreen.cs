@@ -123,7 +123,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
     {
         yield return new WaitForSecondsRealtime(0.2f);
         // Enable Snug
-        (_modules.First(m => m.storeId == "Snug") as SnugModule).showVisualCuesJSON.val = true;
+        (_modules.First(m => m.storeId == "Snug") as SnugModule).previewSnugOffsetJSON.val = true;
         // Show 3d trackers
         (_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
         // Activate
