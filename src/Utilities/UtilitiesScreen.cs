@@ -1,4 +1,6 @@
-﻿public class UtilitiesScreen : ScreenBase, IScreen
+﻿using System.Linq;
+
+public class UtilitiesScreen : ScreenBase, IScreen
 {
     public const string ScreenName = "Utilities";
 
@@ -11,6 +13,25 @@
     {
         CreateText(new JSONStorableString("", "Some useful functions, hopefully!"), true);
 
-        CreateButton("Create mirror").button.onClick.AddListener(() => SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.containingAtom)));
+        CreateButton("Create Mirror").button.onClick.AddListener(CreateMirror);
+
+        CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
+
+    }
+
+    private void CreateMirror()
+    {
+        SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.containingAtom));
+    }
+
+    private void StartRecord()
+    {
+        context.embody.activeJSON.val = true;
+        foreach (var controller in context.plugin.containingAtom.freeControllers.Where(fc => fc.possessed))
+        {
+            var mac = controller.GetComponent<MotionAnimationControl>();
+            mac.armedForRecord = true;
+        }
+        SuperController.singleton.SelectModeAnimationRecord();
     }
 }

@@ -27,12 +27,6 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
         CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
-        CreateButton("Arm hands for record").button.onClick.AddListener(() =>
-        {
-            SuperController.singleton.ArmAllControlledControllersForRecord();
-            context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
-            context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl").GetComponent<MotionAnimationControl>().armedForRecord = true;
-        });
         CreateToggle(_snug.disableSelectionJSON).label = "Disable Person Grab";
         CreateSpacer().height = 10f;
         CreateSpacer().height = 10f;
