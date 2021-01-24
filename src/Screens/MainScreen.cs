@@ -92,21 +92,31 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
 
         foreach (var module in _modules)
         {
-            if (module.storeId == "Automation") continue;
-            if (module.storeId == "Wizard") continue;
+            if (module.storeId == AutomationModule.Label) continue;
+            if (module.storeId == WizardModule.Label) continue;
             var selectToggle = CreateToggle(module.selectedJSON, false);
             selectToggle.label = $"Select {module.label}";
-            var configureButton = CreateButton($"Configure {module.label}...", true);
-            configureButton.buttonText.alignment = TextAnchor.MiddleLeft;
-            configureButton.buttonText.GetComponent<RectTransform>().offsetMin = new Vector2(20, 0f);
-            configureButton.buttonColor = new Color(0.8f, 0.7f, 0.8f);
-            configureButton.button.onClick.AddListener(() => screensManager.Show(module.label));
-            configureButton.button.interactable = module.selectedJSON.val;
+            var label = module.label;
+            var configureButton = CreateConfigButton(label, $"Configure {label}...", module.selectedJSON.val);
             selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
         }
 
-        #warning For debugging purposes
+        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts...");
+        CreateConfigButton(UtilitiesScreen.ScreenName, "Animation & Utilities...");
+
+#warning For debugging purposes
         //context.plugin.StartCoroutine(DebugCo());
+    }
+
+    private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
+    {
+        var configureButton = CreateButton(btnLabel, true);
+        configureButton.buttonText.alignment = TextAnchor.MiddleLeft;
+        configureButton.buttonText.GetComponent<RectTransform>().offsetMin = new Vector2(20, 0f);
+        configureButton.buttonColor = new Color(0.8f, 0.7f, 0.8f);
+        configureButton.button.onClick.AddListener(() => screensManager.Show(screenName));
+        configureButton.button.interactable = interactable;
+        return configureButton;
     }
 
     private IEnumerator DebugCo()
