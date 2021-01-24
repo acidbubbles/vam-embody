@@ -225,8 +225,6 @@ public class Embody : MVRScript, IEmbody
             c.StoreJSON(jc);
             json[c.storeId] = jc;
         }
-
-        _screensManager.screensJSON.StoreJSON(json);
         needsStore = true;
         return json;
     }
@@ -236,7 +234,6 @@ public class Embody : MVRScript, IEmbody
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
         foreach(var c in _modules.GetComponents<EmbodyModuleBase>())
             c.RestoreFromJSON(jc[c.storeId].AsObject);
-        _screensManager.screensJSON.RestoreFromJSON(jc);
         _restored = true;
     }
 }
