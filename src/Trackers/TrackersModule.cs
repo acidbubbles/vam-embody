@@ -48,10 +48,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
-            controllers.Add(new FreeControllerV3WithSnapshot
-            {
-                controller = controller,
-            });
+            controllers.Add(new FreeControllerV3WithSnapshot(controller));
         }
 
         previewTrackerOffsetJSON.setCallbackFunction = val =>
@@ -74,6 +71,25 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         motionControl.SyncMotionControl();
     }
 
+    public override bool BeforeEnable()
+    {
+        AdjustHeadToEyesOffset();
+        return true;
+    }
+
+    private void AdjustHeadToEyesOffset()
+    {
+        var motionControl = motionControls.First(mc => mc.name == MotionControlNames.Head);
+        var controller = FindController(motionControl)?.controller;
+        if (controller == null) return;
+
+        // TODO: Make sure this is right? Also when the head has rotation, it will possess at an angle
+        var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
+        var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
+        motionControl.baseOffset = -controller.control.InverseTransformPoint(eyesCenter);
+        SuperController.LogMessage(motionControl.baseOffset.ToString());
+    }
+
     public override void OnEnable()
     {
         base.OnEnable();
@@ -82,26 +98,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var motionControl in motionControls)
         {
-            if (!motionControl.enabled) continue;
-            if (motionControl.mappedControllerName == null) continue;
-            if (passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) continue;
-            if (snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return;
-
-            var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
+            var controllerWithSnapshot = FindController(motionControl);
             if (controllerWithSnapshot == null) continue;
             var controller = controllerWithSnapshot.controller;
-            if (controller.possessed) continue;
-            if (!controller.possessable) continue;
             if (restorePoseAfterPossessJSON.val)
                 controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
-            if(!motionControl.SyncMotionControl()) continue;
 
             if (motionControl.name == MotionControlNames.Head)
             {
-                // TODO: Make sure this is right? Also when the head has rotation, it will possess at an angle
-                var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-                var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
-                motionControl.baseOffset = -controller.control.InverseTransformPoint(eyesCenter);
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
@@ -119,19 +123,62 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             else
             {
                 controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
+                if (controllerWithSnapshot.handControl != null)
+                    controllerWithSnapshot.handControl.possessed = true;
             }
 
             Possess(motionControl, controllerWithSnapshot.controller);
-
-            // TODO: (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = true;
         }
+    }
+
+    private FreeControllerV3WithSnapshot FindController(MotionControllerWithCustomPossessPoint motionControl)
+    {
+        if (!motionControl.enabled) return null;
+        if (motionControl.mappedControllerName == null) return null;
+        if (passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
+        if (snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return null;
+        var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
+        if (controllerWithSnapshot == null) return null;
+        var controller = controllerWithSnapshot.controller;
+        if (controller.possessed) return null;
+        if (!controller.possessable) return null;
+        if (!motionControl.SyncMotionControl()) return null;
+        return controllerWithSnapshot;
     }
 
     public override void OnDisable()
     {
         base.OnDisable();
 
-        ClearPossess();
+        foreach (var c in controllers)
+        {
+            if (!c.controller.possessed) continue;
+
+            c.controller.RestorePreLinkState();
+            c.controller.possessed = false;
+
+            var mac = c.controller.GetComponent<MotionAnimationControl>();
+            if (mac != null)
+            {
+                mac.suspendPositionPlayback = false;
+                mac.suspendRotationPlayback = false;
+            }
+
+            if (restorePoseAfterPossessJSON.val && c.snapshot != null)
+            {
+                c.snapshot.Restore();
+                c.snapshot = null;
+            }
+
+            if (c.handControl != null)
+                c.handControl.possessed = false;
+        }
+
+        if (_navigationRigSnapshot != null)
+        {
+            _navigationRigSnapshot.Restore();
+            _navigationRigSnapshot = null;
+        }
     }
 
     public void OnDestroy()
@@ -163,36 +210,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.RBHoldRotationSpring = sc.possessRotationSpring;
 
         controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, FreeControllerV3.SelectLinkState.PositionAndRotation);
-    }
-
-    public void ClearPossess()
-    {
-        foreach (var c in controllers)
-        {
-            if (!c.controller.possessed) continue;
-
-            c.controller.RestorePreLinkState();
-            c.controller.possessed = false;
-
-            var mac = c.controller.GetComponent<MotionAnimationControl>();
-            if (mac != null)
-            {
-                mac.suspendPositionPlayback = false;
-                mac.suspendRotationPlayback = false;
-            }
-
-            if (restorePoseAfterPossessJSON.val && c.snapshot != null)
-            {
-                c.snapshot.Restore();
-                c.snapshot = null;
-            }
-        }
-
-        if (_navigationRigSnapshot != null)
-        {
-            _navigationRigSnapshot.Restore();
-            _navigationRigSnapshot = null;
-        }
     }
 
     private static void AlignRigAndController(FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl)

@@ -116,18 +116,13 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         enabled = true;
     }
 
-    public override void OnEnable()
+    public override bool BeforeEnable()
     {
-        base.OnEnable();
-
         if (_preferences.useHeadCollider)
         {
             SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
-            enabled = false;
-            return;
+            return false;
         }
-
-        _cameraCenter.localPosition = Vector3.zero;
         if (context.containingAtom.type == "Person")
         {
             var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
@@ -138,6 +133,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
             _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
+        return true;
+    }
+
+    public override void OnEnable()
+    {
+        base.OnEnable();
+
+        _cameraCenter.localPosition = Vector3.zero;
 
         _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;

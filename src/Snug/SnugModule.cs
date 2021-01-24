@@ -12,7 +12,7 @@ public interface ISnugModule : IEmbodyModule
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
-    JSONStorableBool disableSelectionJSON { get; set; }
+    JSONStorableBool disableSelectionJSON { get; }
 }
 
 public class SnugModule : EmbodyModuleBase, ISnugModule
@@ -194,18 +194,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     #region Lifecycle
 
-    public override void OnEnable()
+    public override bool BeforeEnable()
     {
-        base.OnEnable();
-
         if (!trackers.selectedJSON.val)
         {
             SuperController.LogError("Embody: Snug requires the Trackers module.");
-            enabled = false;
+            return false;
         }
 
-        // TODO: Because TrackersModule enables before, it generates movement and screws up auto setup. It should run before Trackers. e.g. add a BeforeEnable?
         _autoSetup.AutoSetup();
+
+        return true;
+    }
+
+    public override void OnEnable()
+    {
+        base.OnEnable();
 
         _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
         if (_lHand.motionControl != null && _lHand.motionControl.SyncMotionControl())

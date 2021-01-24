@@ -77,7 +77,13 @@ public class Embody : MVRScript, IEmbody
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
                         if (module.alwaysEnabled) continue;
-                        module.enabledJSON.val = module.selectedJSON.val;
+                        if (!module.selectedJSON.val)
+                        {
+                            module.enabledJSON.val = false;
+                            continue;
+                        }
+                        if (module.BeforeEnable())
+                            module.enabledJSON.val = true;
                     }
                 }
                 else

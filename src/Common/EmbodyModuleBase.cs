@@ -10,6 +10,8 @@ public interface IEmbodyModule
     JSONStorableBool selectedJSON { get; }
     EmbodyContext context { get; set; }
     JSONStorableBool activeJSON { get; set; }
+
+    bool BeforeEnable();
 }
 
 public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
@@ -34,6 +36,11 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
             activeJSON.val = true;
         });
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
+    }
+
+    public virtual bool BeforeEnable()
+    {
+        return true;
     }
 
     public virtual void OnEnable()

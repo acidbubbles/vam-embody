@@ -44,20 +44,22 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
     }
 
+    public override bool BeforeEnable()
+    {
+        _mirrors = GetMirrors();
+        _windowCamera = GetWindowCamera();
+
+        return _mirrors.Count > 0 || !ReferenceEquals(_windowCamera, null);
+    }
+
     public override void OnEnable()
     {
         base.OnEnable();
-
-        _mirrors = GetMirrors();
-        _windowCamera = GetWindowCamera();
 
         _eyeTargetRestorePosition = _eyeTarget.control.position;
         _eyeBehaviorRestoreLookMode = _eyeBehavior.currentLookMode;
 
         _eyeBehavior.currentLookMode = EyesControl.LookMode.Target;
-
-        if (_mirrors.Count == 0 &&  ReferenceEquals(_windowCamera, null))
-            enabled = false;
     }
 
     private static List<BoxCollider> GetMirrors()
