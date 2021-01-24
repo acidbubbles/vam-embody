@@ -8,13 +8,11 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     public const string ScreenName = SnugModule.Label;
 
     private JSONStorableStringChooser _selectedAnchorsJSON;
-    private JSONStorableFloat _handOffsetXJSON, _handOffsetYJSON, _handOffsetZJSON;
-    private JSONStorableFloat _handRotateXJSON, _handRotateYJSON, _handRotateZJSON;
-    private JSONStorableFloat _anchorVirtSizeXJSON, _anchorVirtSizeZJSON;
-    private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
-    private JSONStorableFloat _anchorPhysOffsetXJSON, _anchorPhysOffsetYJSON, _anchorPhysOffsetZJSON;
-    private JSONStorableFloat _anchorPhysSizeXJSON, _anchorPhysSizeZJSON;
+    // private JSONStorableFloat _anchorVirtSizeXJSON, _anchorVirtSizeZJSON;
+    // private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
     private JSONStorableBool _anchorActiveJSON;
+    private JSONStorableFloat _anchorRealOffsetXJSON, _anchorRealOffsetYJSON, _anchorRealOffsetZJSON;
+    private JSONStorableFloat _anchorRealSizeXJSON, _anchorRealSizeZJSON;
 
     public SnugSettingsScreen(EmbodyContext context, ISnugModule snug)
         : base(context)
@@ -50,17 +48,17 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
         CreateToggle(_anchorActiveJSON, true);
 
-        _anchorPhysSizeXJSON = new JSONStorableFloat("Size X (Width)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorPhysSizeXJSON, true);
-        _anchorPhysSizeZJSON = new JSONStorableFloat("Size Z (Depth)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorPhysSizeZJSON, true);
+        _anchorRealSizeXJSON = new JSONStorableFloat("Size X (Width)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+        CreateSlider(_anchorRealSizeXJSON, true);
+        _anchorRealSizeZJSON = new JSONStorableFloat("Size Z (Depth)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
+        CreateSlider(_anchorRealSizeZJSON, true);
 
-        _anchorPhysOffsetXJSON = new JSONStorableFloat("Offset X (Left/Right)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetXJSON, true);
-        _anchorPhysOffsetYJSON = new JSONStorableFloat("Offset Y (Up/Down)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetYJSON, true);
-        _anchorPhysOffsetZJSON = new JSONStorableFloat("Offset Z (Forw./Back.)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorPhysOffsetZJSON, true);
+        _anchorRealOffsetXJSON = new JSONStorableFloat("Offset X (Left/Right)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorRealOffsetXJSON, true);
+        _anchorRealOffsetYJSON = new JSONStorableFloat("Offset Y (Up/Down)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorRealOffsetYJSON, true);
+        _anchorRealOffsetZJSON = new JSONStorableFloat("Offset Z (Forw./Back.)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
+        CreateSlider(_anchorRealOffsetZJSON, true);
 
         // TODO: Since we don't need this, should even try saving it at all?
         /*
@@ -83,11 +81,11 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         var anchor = _snug.anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
         _anchorActiveJSON.valNoCallback = anchor.Active;
-        _anchorPhysSizeXJSON.valNoCallback = anchor.RealLifeSize.x;
-        _anchorPhysSizeZJSON.valNoCallback = anchor.RealLifeSize.z;
-        _anchorPhysOffsetXJSON.valNoCallback = anchor.RealLifeOffset.x;
-        _anchorPhysOffsetYJSON.valNoCallback = anchor.RealLifeOffset.y;
-        _anchorPhysOffsetZJSON.valNoCallback = anchor.RealLifeOffset.z;
+        _anchorRealSizeXJSON.valNoCallback = anchor.RealLifeSize.x;
+        _anchorRealSizeZJSON.valNoCallback = anchor.RealLifeSize.z;
+        _anchorRealOffsetXJSON.valNoCallback = anchor.RealLifeOffset.x;
+        _anchorRealOffsetYJSON.valNoCallback = anchor.RealLifeOffset.y;
+        _anchorRealOffsetZJSON.valNoCallback = anchor.RealLifeOffset.z;
         /*
         _anchorVirtSizeXJSON.valNoCallback = anchor.InGameSize.x;
         _anchorVirtSizeZJSON.valNoCallback = anchor.InGameSize.z;
@@ -101,10 +99,10 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     {
         var anchor = _snug.anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        anchor.InGameSize = new Vector3(_anchorVirtSizeXJSON.val, 1f, _anchorVirtSizeZJSON.val);
-        anchor.InGameOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
-        anchor.RealLifeSize = new Vector3(_anchorPhysSizeXJSON.val, 1f, _anchorPhysSizeZJSON.val);
-        anchor.RealLifeOffset = new Vector3(_anchorPhysOffsetXJSON.val, _anchorPhysOffsetYJSON.val, _anchorPhysOffsetZJSON.val);
+        // anchor.InGameSize = new Vector3(_anchorVirtSizeXJSON.val, 1f, _anchorVirtSizeZJSON.val);
+        // anchor.InGameOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
+        anchor.RealLifeSize = new Vector3(_anchorRealSizeXJSON.val, 1f, _anchorRealSizeZJSON.val);
+        anchor.RealLifeOffset = new Vector3(_anchorRealOffsetXJSON.val, _anchorRealOffsetYJSON.val, _anchorRealOffsetZJSON.val);
         if (anchor.Locked && !_anchorActiveJSON.val)
         {
             _anchorActiveJSON.valNoCallback = true;

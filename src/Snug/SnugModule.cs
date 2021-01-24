@@ -204,6 +204,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             enabled = false;
         }
 
+        // TODO: Because TrackersModule enables before, it generates movement and screws up auto setup. It should run before Trackers. e.g. add a BeforeEnable?
         _autoSetup.AutoSetup();
 
         _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
