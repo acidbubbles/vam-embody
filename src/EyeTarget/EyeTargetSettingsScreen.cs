@@ -13,6 +13,6 @@
     {
         if (ShowNotSelected(_eyeTarget.selectedJSON.val)) return;
 
-        CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors."), true);
+        CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors or the WindowCamera."), true);
     }
 }

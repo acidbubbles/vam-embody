@@ -106,7 +106,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         }
 
         #warning For debugging purposes
-        context.plugin.StartCoroutine(DebugCo());
+        //context.plugin.StartCoroutine(DebugCo());
     }
 
     private IEnumerator DebugCo()

@@ -30,6 +30,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private List<BoxCollider> _mirrors;
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
+    private Transform _windowCamera;
 
     public override void Awake()
     {
@@ -48,13 +49,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         base.OnEnable();
 
         _mirrors = GetMirrors();
+        _windowCamera = GetWindowCamera();
 
         _eyeTargetRestorePosition = _eyeTarget.control.position;
         _eyeBehaviorRestoreLookMode = _eyeBehavior.currentLookMode;
 
         _eyeBehavior.currentLookMode = EyesControl.LookMode.Target;
 
-        if (_mirrors.Count == 0) enabled = false;
+        if (_mirrors.Count == 0 &&  ReferenceEquals(_windowCamera, null))
+            enabled = false;
     }
 
     private static List<BoxCollider> GetMirrors()
@@ -68,6 +71,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             .ToList();
     }
 
+    private static Transform GetWindowCamera()
+    {
+        var atom = SuperController.singleton.GetAtoms()
+            .FirstOrDefault(a => a.type == "WindowCamera");
+        if (atom == null) return null;
+        if (atom.GetStorableByID("CameraControl")?.GetBoolParamValue("cameraOn") != true) return null;
+        return atom.mainController.control;
+    }
+
     public override void OnDisable()
     {
         base.OnDisable();
@@ -79,6 +91,12 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public void Update()
     {
+        if (_mirrors.Count == 0 && !ReferenceEquals(_windowCamera, null))
+        {
+            _eyeTarget.control.position = _windowCamera.position;
+            return;
+        }
+
         var eyesCenter = (_lEye.position + _rEye.position) / 2f;
         BoxCollider lookAtMirror;
         if (_mirrors.Count == 1)
