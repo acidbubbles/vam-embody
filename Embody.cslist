@@ -23,6 +23,7 @@ src\HideGeometry\Handlers\SkinShaderMaterialSnapshot.cs
 src\HideGeometry\HideGeometryModule.cs
 src\HideGeometry\HideGeometrySettingsScreen.cs
 src\ImportExport\ImportExportScreen.cs
+src\ImportExport\SaveFormat.cs
 src\OffsetCamera\OffsetCameraModule.cs
 src\OffsetCamera\OffsetCameraSettingsScreen.cs
 src\Passenger\PassengerModule.cs

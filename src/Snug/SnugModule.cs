@@ -321,6 +321,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var realLifeSize = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
+        // TODO: This seemed wrong in testing, I could not bring the hand in the expected position
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
         // TODO: When closer to center it should clamp to 0, otherwise when scales get large it will push hand instead of pulling when too close.

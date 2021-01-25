@@ -89,6 +89,7 @@
     <Compile Include="src\HideGeometry\Handlers\SkinShaderMaterialSnapshot.cs" />
     <Compile Include="src\HideGeometry\HideGeometryModule.cs" />
     <Compile Include="src\HideGeometry\HideGeometrySettingsScreen.cs" />
+    <Compile Include="src\ImportExport\SaveFormat.cs" />
     <Compile Include="src\OffsetCamera\OffsetCameraModule.cs" />
     <Compile Include="src\OffsetCamera\OffsetCameraSettingsScreen.cs" />
     <Compile Include="src\Passenger\PassengerModule.cs" />

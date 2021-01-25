@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Common;
+using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
 
@@ -122,8 +123,16 @@ public class Embody : MVRScript, IEmbody
         if (!_restored)
         {
             containingAtom.RestoreFromLast(this);
-            _restored = true;
         }
+        if (!_restored)
+        {
+            if(FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
+            {
+                var profile = LoadJSON(SaveFormat.DefaultsPath);
+                SuperController.LogMessage(profile.ToString());
+            }
+        }
+
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
     }
 
@@ -231,6 +240,7 @@ public class Embody : MVRScript, IEmbody
             c.StoreJSON(jc);
             json[c.storeId] = jc;
         }
+        json["Version"].AsInt = SaveFormat.Version;
         needsStore = true;
         return json;
     }
@@ -238,6 +248,12 @@ public class Embody : MVRScript, IEmbody
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
     {
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+        var version = jc["Version"].AsInt;
+        if (version <= 0) return;
+        if (version > SaveFormat.Version)
+        {
+            SuperController.LogError("Embody: This scene was saved with a more recent Embody version than the one you have install. Please get the latest version.");
+        }
         foreach(var c in _modules.GetComponents<EmbodyModuleBase>())
             c.RestoreFromJSON(jc[c.storeId].AsObject);
         _restored = true;
