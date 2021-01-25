@@ -24,8 +24,10 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     {
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
+        _snug.autoSetup.AutoSetup();
+
         CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
-        CreateToggle(_snug.disableSelectionJSON).label = "Disable Person Grab";
+        CreateToggle(_snug.disableSelfGrabJSON).label = "Disable Person Grab";
         CreateSpacer().height = 10f;
         CreateSpacer().height = 10f;
         InitHandsSettingsUI();

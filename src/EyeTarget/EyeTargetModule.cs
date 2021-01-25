@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SimpleJSON;
 using UnityEngine;
 
 public interface IEyeTargetModule : IEmbodyModule
@@ -64,7 +63,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     private static List<BoxCollider> GetMirrors()
     {
-        // TODO: Add WindowCamera (if no mirrors, and direction is around the window camera (e.g. in a 20% fov), look at the window camera directly
         return SuperController.singleton.GetAtoms()
             .Where(a => _mirrorAtomTypes.Contains(a.type))
             .Where(a => a.on)

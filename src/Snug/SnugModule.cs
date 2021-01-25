@@ -1,6 +1,3 @@
-// TODO: Reverse important adjustment sliders and advanced ones. Hide under an advanced toggle.
-// TODO: When loading a preset, overwrite with autosetup immediately
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +9,8 @@ public interface ISnugModule : IEmbodyModule
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
-    JSONStorableBool disableSelectionJSON { get; }
+    JSONStorableBool disableSelfGrabJSON { get; }
+    SnugAutoSetup autoSetup { get; }
 }
 
 public class SnugModule : EmbodyModuleBase, ISnugModule
@@ -27,18 +25,18 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
     public JSONStorableFloat falloffJSON { get; private set; }
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
-    // TODO: Remove this
-    public JSONStorableBool disableSelectionJSON { get; set; }
+    public JSONStorableBool disableSelfGrabJSON { get; set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
-    private SnugAutoSetup _autoSetup;
+    public SnugAutoSetup autoSetup { get; private set; }
 
     private struct FreeControllerV3GrabSnapshot
     {
+        public FreeControllerV3 controller;
         public bool canGrabPosition;
         public bool canGrabRotation;
     }
-    private readonly Dictionary<FreeControllerV3, FreeControllerV3GrabSnapshot> _previousState = new Dictionary<FreeControllerV3, FreeControllerV3GrabSnapshot>();
+    private readonly List<FreeControllerV3GrabSnapshot> _previousState = new List<FreeControllerV3GrabSnapshot>();
 
     public override void Awake()
     {
@@ -46,7 +44,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             base.Awake();
 
-            _autoSetup = new SnugAutoSetup(context.containingAtom, this);
+            autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
             InitAnchors();
 
@@ -60,8 +58,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             };
 
             InitVisualCues();
-            InitDisableSelection();
-            InitHandsSettings();
+            disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", false);
+            falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, 0f, 5f, false) {isStorable = false};
         }
         catch (Exception exc)
         {
@@ -81,41 +79,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             isStorable = false
         };
-    }
-
-    private void InitDisableSelection()
-    {
-        disableSelectionJSON = new JSONStorableBool("DisablePersonGrab", false, val =>
-        {
-            if (val)
-            {
-                foreach (var fc in containingAtom.freeControllers)
-                {
-                    if (fc == _lHand.controller || fc == _rHand.controller) continue;
-                    if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
-                    if (!fc.name.EndsWith("Control")) continue;
-                    var state = new FreeControllerV3GrabSnapshot {canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation};
-                    _previousState[fc] = state;
-                    fc.canGrabPosition = false;
-                    fc.canGrabRotation = false;
-                }
-            }
-            else
-            {
-                foreach (var kvp in _previousState)
-                {
-                    kvp.Key.canGrabPosition = kvp.Value.canGrabPosition;
-                    kvp.Key.canGrabRotation = kvp.Value.canGrabRotation;
-                }
-
-                _previousState.Clear();
-            }
-        });
-    }
-
-    private void InitHandsSettings()
-    {
-        falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, 0f, 5f, false) {isStorable = false};
     }
 
     private void InitAnchors()
@@ -202,7 +165,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             return false;
         }
 
-        _autoSetup.AutoSetup();
+        autoSetup.AutoSetup();
 
         return true;
     }
@@ -211,54 +174,66 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnEnable();
 
-        _lHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.LeftHand);
-        if (_lHand.motionControl != null && _lHand.motionControl.SyncMotionControl())
+        if (disableSelfGrabJSON.val)
         {
-            if (trackers.restorePoseAfterPossessJSON.val)
-                _lHand.snapshot = FreeControllerV3Snapshot.Snap(_lHand.controller);
-            CustomPossessHand(_lHand.controller);
-            _lHand.active = true;
-            if (previewSnugOffsetJSON.val) _lHand.showCueLine = true;
+            foreach (var fc in containingAtom.freeControllers)
+            {
+                if (fc == _lHand.controller || fc == _rHand.controller) continue;
+                if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
+                if (!fc.name.EndsWith("Control")) continue;
+                _previousState.Add(new FreeControllerV3GrabSnapshot {controller = fc, canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation});
+                fc.canGrabPosition = false;
+                fc.canGrabRotation = false;
+            }
         }
-        _rHand.motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == MotionControlNames.RightHand);
-        if (_rHand.motionControl != null && _rHand.motionControl.SyncMotionControl())
-        {
-            if (trackers.restorePoseAfterPossessJSON.val)
-                _rHand.snapshot = FreeControllerV3Snapshot.Snap(_rHand.controller);
-            CustomPossessHand(_rHand.controller);
-            _rHand.active = true;
-            if (previewSnugOffsetJSON.val) _rHand.showCueLine = true;
-        }
+
+        EnableHand(_lHand, MotionControlNames.LeftHand);
+        EnableHand(_rHand, MotionControlNames.RightHand);
+    }
+
+    private void EnableHand(SnugHand hand, string motionControlName)
+    {
+        var motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
+        if (motionControl == null || !motionControl.SyncMotionControl()) return;
+        hand.motionControl = motionControl;
+        if (trackers.restorePoseAfterPossessJSON.val)
+            hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
+        _previousState.Add(new FreeControllerV3GrabSnapshot {controller = hand.controller, canGrabPosition = hand.controller.canGrabPosition, canGrabRotation = hand.controller.canGrabRotation});
+        hand.active = true;
+        hand.controller.canGrabPosition = false;
+        hand.controller.canGrabRotation = false;
+        hand.controller.possessed = true;
+        (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
+        if (previewSnugOffsetJSON.val) hand.showCueLine = true;
     }
 
     public override void OnDisable()
     {
         base.OnDisable();
 
-        if (_lHand.active)
-        {
-            CustomReleaseHand(_lHand.controller);
-            _lHand.active = false;
-            if (_lHand.snapshot != null)
-            {
-                _lHand.snapshot.Restore();
-                _lHand.snapshot = null;
-            }
-        }
+        DisableHand(_lHand);
+        DisableHand(_rHand);
 
-        if (_rHand.active)
+        foreach (var c in _previousState)
         {
-            CustomReleaseHand(_rHand.controller);
-            _rHand.active = false;
-            if (_rHand.snapshot != null)
-            {
-                _rHand.snapshot.Restore();
-                _rHand.snapshot = null;
-            }
+            c.controller.canGrabPosition = c.canGrabPosition;
+            c.controller.canGrabRotation = c.canGrabRotation;
         }
+        _previousState.Clear();
+    }
 
-        _lHand.showCueLine = false;
-        _rHand.showCueLine = false;
+    private static void DisableHand(SnugHand hand)
+    {
+        if (!hand.active) return;
+        hand.controller.possessed = false;
+        (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = false;
+        hand.active = false;
+        if (hand.snapshot != null)
+        {
+            hand.snapshot.Restore();
+            hand.snapshot = null;
+        }
+        hand.showCueLine = false;
     }
 
     public void OnDestroy()
@@ -268,23 +243,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     }
 
     #endregion
-
-    private static void CustomPossessHand(FreeControllerV3 controllerV3)
-    {
-        controllerV3.canGrabPosition = false;
-        controllerV3.canGrabRotation = false;
-        controllerV3.possessed = true;
-        (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = true;
-    }
-
-    private static void CustomReleaseHand(FreeControllerV3 controllerV3)
-    {
-        // TODO: This should return to the previous state
-        controllerV3.canGrabPosition = true;
-        controllerV3.canGrabRotation = true;
-        controllerV3.possessed = false;
-        (controllerV3.GetComponent<HandControl>() ?? controllerV3.GetComponent<HandControlLink>().handControl).possessed = false;
-    }
 
     #region Update
 
@@ -319,9 +277,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private void ProcessHand(SnugHand hand)
     {
         var motionControl = hand.motionControl;
+        var motionControlPosition = motionControl.currentMotionControl.position;
         var visualCueLinePoints = hand.visualCueLinePoints;
-        // Base position
-        var position = motionControl.currentMotionControl.position;
 
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
@@ -330,11 +287,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             if (!anchorPoint.Active) continue;
             var anchorPointPos = anchorPoint.GetAdjustedWorldPosition();
-            if (position.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetAdjustedWorldPosition().y))
+            if (motionControlPosition.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetAdjustedWorldPosition().y))
             {
                 lower = anchorPoint;
             }
-            else if (position.y < anchorPointPos.y && (upper == null || anchorPointPos.y < upper.GetAdjustedWorldPosition().y))
+            else if (motionControlPosition.y < anchorPointPos.y && (upper == null || anchorPointPos.y < upper.GetAdjustedWorldPosition().y))
             {
                 upper = anchorPoint;
             }
@@ -351,8 +308,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var upperPosition = upper.GetAdjustedWorldPosition();
         // ReSharper disable once PossibleNullReferenceException
         var lowerPosition = lower.GetAdjustedWorldPosition();
-        var yUpperDelta = upperPosition.y - position.y;
-        var yLowerDelta = position.y - lowerPosition.y;
+        var yUpperDelta = upperPosition.y - motionControlPosition.y;
+        var yLowerDelta = motionControlPosition.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;
         var upperWeight = totalDelta == 0 ? 1f : yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
@@ -362,25 +319,25 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var anchorPosition = Vector3.Lerp(upperPosition, lowerPosition, lowerWeight);
         var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
 
-        var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, position - anchorPosition, anchorRotation * Vector3.up);
+        var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var realLifeSize = Vector3.Lerp(upper.RealLifeSize, lower.RealLifeSize, lowerWeight);
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
         // TODO: When closer to center it should clamp to 0, otherwise when scales get large it will push hand instead of pulling when too close.
-        var distanceFromAnchorHook = Vector3.Distance(anchorHook, position);
+        var distanceFromAnchorHook = Vector3.Distance(anchorHook, motionControlPosition);
         var falloff = falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val) : 1f;
 
         var realOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
         var inGameSize = Vector3.Lerp(upper.InGameSize, lower.InGameSize, lowerWeight);
         var scale = new Vector3(inGameSize.x / realLifeSize.x, inGameSize.y / realLifeSize.y, inGameSize.z / realLifeSize.z);
-        var actualRelativePosition = position - anchorPosition;
+        var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);
-        var finalPosition = Vector3.Lerp(position, anchorPosition + scaled - realOffset, falloff);
+        var finalPosition = Vector3.Lerp(motionControlPosition, anchorPosition + scaled - realOffset, falloff);
 
         visualCueLinePoints[0] = finalPosition;
-        visualCueLinePoints[1] = position;
+        visualCueLinePoints[1] = motionControlPosition;
 
-        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - position);// + hand.motionControl.possessPointTransform.position * hand.motionControl.baseOffset;
+        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);// + hand.motionControl.possessPointTransform.position * hand.motionControl.baseOffset;
 
         hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
         hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
@@ -396,6 +353,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private void CreateVisualCues()
     {
         DestroyVisualCues();
+
+        autoSetup.AutoSetup();
 
         _lHand.showCueLine = true;
         _rHand.showCueLine = true;
@@ -450,6 +409,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         jc["Anchors"] = anchors;
 
         falloffJSON.StoreJSON(jc);
+        disableSelfGrabJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc)
@@ -473,6 +433,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
 
         falloffJSON.RestoreFromJSON(jc);
+        disableSelfGrabJSON.RestoreFromJSON(jc);
     }
 
     #endregion

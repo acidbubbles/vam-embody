@@ -20,10 +20,8 @@ public class SnugAutoSetup
         foreach (var anchor in _snug.anchorPoints)
         {
             if (anchor.Locked) continue;
-            // if (anchor.Label != "Abdomen") continue;
             AutoSetup(anchor.RigidBody, anchor, colliders);
         }
-        // TODO: If the UI is open, the sliders will be wrong. Determine when is the right time to do the auto-setup.
     }
 
     private static void AutoSetup(Component rb, ControllerAnchorPoint anchor, IEnumerable<Collider> colliders)
@@ -32,7 +30,6 @@ public class SnugAutoSetup
         var rbTransform = rb.transform;
         var rbUp = rbTransform.up;
         var rbOffsetPosition = rbTransform.position + rbUp * anchor.InGameOffset.y;
-        var rbRotation = rbTransform.rotation;
         var rbForward = rbTransform.forward;
 
         var rays = new List<Ray>();
@@ -53,11 +50,11 @@ public class SnugAutoSetup
                 RaycastHit hit;
                 if (!collider.Raycast(ray, out hit, raycastDistance)) continue;
                 isHit = true;
-                min = Vector3.Min(min, hit.point);
-                max = Vector3.Max(max, hit.point);
+                var localPoint = rbTransform.InverseTransformPoint(hit.point);
+                min = Vector3.Min(min, localPoint);
+                max = Vector3.Max(max, localPoint);
 
                 // var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
-                // _cues.Add(hitCue);
                 // hitCue.transform.localScale = Vector3.one * 0.002f;
                 // hitCue.transform.position = hit.point;
             }
@@ -65,17 +62,13 @@ public class SnugAutoSetup
 
         if (!isHit) return;
 
-        var size = Quaternion.Inverse(rbRotation) * (max - min);
-        var center = min + (max - min) / 2f;
-        // TODO: Why add virtual offset here?
-        var offset = center - rbTransform.position; //* + rbUp * anchor.VirtualOffset.y;
+        var offset = min + (max - min) / 2f;
+        var size = max - min;
 
-        // var cue = VisualCuesHelper.Cross(Color.red);
-        // _cues.Add(cue);
-        // cue.transform.localScale = Vector3.one * 2f;
-        // cue.transform.position = center;
+        // var cue1 = VisualCuesHelper.Cross(Color.red);
+        // cue1.transform.localScale = Vector3.one * 0.5f;
+        // cue1.transform.position = min;
 
-        // TODO: Adjust padding for scale?
         var padding = new Vector3(0.02f, 0f, 0.02f);
 
         anchor.InGameSize = size + padding;
