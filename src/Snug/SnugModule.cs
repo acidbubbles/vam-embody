@@ -399,8 +399,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             anchors[anchor.Id] = new JSONClass
             {
+                /*
                 {"InGameOffset", anchor.InGameOffset.ToJSON()},
                 {"InGameSize", anchor.InGameSize.ToJSON()},
+                */
                 {"RealLifeOffset", anchor.RealLifeOffset.ToJSON()},
                 {"RealLifeScale", anchor.RealLifeSize.ToJSON()},
                 {"Active", anchor.Active ? "true" : "false"},
@@ -424,8 +426,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             {
                 var anchorJSON = anchorsJSON[anchor.Id];
                 if (anchorJSON == null) continue;
+                /*
                 anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
                 anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
+                */
                 anchor.RealLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.RealLifeOffset);
                 anchor.RealLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.RealLifeSize);
                 anchor.Active = anchorJSON["Active"]?.Value != "false";
