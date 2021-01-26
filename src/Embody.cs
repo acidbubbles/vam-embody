@@ -234,13 +234,13 @@ public class Embody : MVRScript, IEmbody
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
+        json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
         {
             var jc = new JSONClass();
             c.StoreJSON(jc);
             json[c.storeId] = jc;
         }
-        json["Version"].AsInt = SaveFormat.Version;
         needsStore = true;
         return json;
     }

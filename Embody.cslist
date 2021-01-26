@@ -34,6 +34,7 @@ src\Screens\ScreenBase.cs
 src\Screens\ScreensManager.cs
 src\Snug\Anchors\ControllerAnchorPoint.cs
 src\Snug\Anchors\ControllerAnchorPointVisualCue.cs
+src\Snug\FreeControllerV3GrabSnapshot.cs
 src\Snug\SnugAutoSetup.cs
 src\Snug\SnugHand.cs
 src\Snug\SnugModule.cs

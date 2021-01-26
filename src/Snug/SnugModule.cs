@@ -22,20 +22,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public ITrackersModule trackers;
 
-    public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
-    public JSONStorableFloat falloffJSON { get; private set; }
+    public SnugAutoSetup autoSetup { get; private set; }
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     public JSONStorableBool disableSelfGrabJSON { get; set; }
+    public JSONStorableFloat falloffJSON { get; private set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
-    public SnugAutoSetup autoSetup { get; private set; }
+    public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
 
-    private struct FreeControllerV3GrabSnapshot
-    {
-        public FreeControllerV3 controller;
-        public bool canGrabPosition;
-        public bool canGrabRotation;
-    }
     private readonly List<FreeControllerV3GrabSnapshot> _previousState = new List<FreeControllerV3GrabSnapshot>();
 
     public override void Awake()
@@ -46,20 +40,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
-            InitAnchors();
-
-            _lHand = new SnugHand
-            {
-                controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl")
-            };
-            _rHand = new SnugHand
-            {
-                controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl")
-            };
-
-            InitVisualCues();
             disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", false);
-            falloffJSON = new JSONStorableFloat("Effect Falloff", 0.3f, 0f, 5f, false) {isStorable = false};
+            falloffJSON = new JSONStorableFloat("Falloff", 0.3f, 0f, 5f, false);
+
+            _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
+            _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
+
+            InitAnchors();
+            InitVisualCues();
         }
         catch (Exception exc)
         {

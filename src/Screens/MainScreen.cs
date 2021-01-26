@@ -119,15 +119,18 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         return configureButton;
     }
 
+    private bool _once;
     private IEnumerator DebugCo()
     {
+        if (_once) yield break;
+        _once = true;
         yield return new WaitForSecondsRealtime(0.2f);
         // Enable Snug
         (_modules.First(m => m.storeId == "Snug") as SnugModule).previewSnugOffsetJSON.val = true;
         // Show 3d trackers
-        //(_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
+        (_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
         // Activate
-        //context.embody.activeJSON.val = true;
+        context.embody.activeJSON.val = true;
         // Wizard
         /*
         _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
