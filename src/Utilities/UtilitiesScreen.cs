@@ -27,9 +27,12 @@ public class UtilitiesScreen : ScreenBase, IScreen
     private void StartRecord()
     {
         context.embody.activeJSON.val = true;
+        SuperController.singleton.motionAnimationMaster.StopPlayback();
+        SuperController.singleton.motionAnimationMaster.ResetAnimation();
         foreach (var controller in context.plugin.containingAtom.freeControllers.Where(fc => fc.possessed))
         {
             var mac = controller.GetComponent<MotionAnimationControl>();
+            mac.ClearAnimation();
             mac.armedForRecord = true;
         }
         SuperController.singleton.SelectModeAnimationRecord();

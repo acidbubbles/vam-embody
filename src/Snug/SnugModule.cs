@@ -312,27 +312,46 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         // TODO: This seemed wrong in testing, I could not bring the hand in the expected position
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
-        // TODO: When closer to center it should clamp to 0, otherwise when scales get large it will push hand instead of pulling when too close.
-        var distanceFromAnchorHook = Vector3.Distance(anchorHook, motionControlPosition);
-        var falloff = falloffJSON.val > 0 ? 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val) : 1f;
+        var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
+        var motionControlDistanceFromAnchor = Vector3.Distance(anchorPosition, motionControlPosition);
+        float effectWeight;
+        if (motionControlDistanceFromAnchor < hookDistanceFromAnchor)
+        {
+            effectWeight = 1f;
+        }
+        else if (falloffJSON.val == 0)
+        {
+            effectWeight = 0f;
+        }
+        else
+        {
+            var distanceFromAnchorHook = Vector3.Distance(anchorHook, motionControlPosition);
+            if (distanceFromAnchorHook > falloffJSON.val)
+                effectWeight = 0f;
+            else
+                effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
+        }
 
         var realOffset = Vector3.Lerp(upper.RealLifeOffset, lower.RealLifeOffset, lowerWeight);
         var inGameSize = Vector3.Lerp(upper.InGameSize, lower.InGameSize, lowerWeight);
         var scale = new Vector3(inGameSize.x / realLifeSize.x, inGameSize.y / realLifeSize.y, inGameSize.z / realLifeSize.z);
         var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);
-        var finalPosition = Vector3.Lerp(motionControlPosition, anchorPosition + scaled - realOffset, falloff);
+        var finalPosition = Vector3.Lerp(motionControlPosition, anchorPosition + scaled - realOffset, effectWeight);
 
         visualCueLinePoints[0] = finalPosition;
         visualCueLinePoints[1] = motionControlPosition;
 
         var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);// + hand.motionControl.possessPointTransform.position * hand.motionControl.baseOffset;
 
+        if (previewSnugOffsetJSON.val)
+        {
+            visualCueLinePoints[0] = motionControl.currentMotionControl.position;
+            visualCueLinePoints[1] = finalPosition;
+        }
+
         hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
         hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
-
-        visualCueLinePoints[0] = motionControl.possessPointTransform.position;
-        visualCueLinePoints[1] = finalPositionToControlPoint;
     }
 
     #endregion

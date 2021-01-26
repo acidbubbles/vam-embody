@@ -31,6 +31,8 @@ public class SnugHand
                 _visualCueGameObject = new GameObject();
                 _visualCueLineRenderer = _visualCueGameObject.AddComponent<LineRenderer>();
                 _visualCueLineRenderer.useWorldSpace = true;
+                _visualCueLineRenderer.startColor = Color.green;
+                _visualCueLineRenderer.endColor = Color.red;
                 var material = new Material(Shader.Find("Battlehub/RTHandles/VertexColor"));
                 _visualCueLineRenderer.material = material;
                 _visualCueLineRenderer.widthMultiplier = 0.0006f;
