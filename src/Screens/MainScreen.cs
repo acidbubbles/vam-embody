@@ -105,7 +105,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         CreateConfigButton(UtilitiesScreen.ScreenName, "Animation & Utilities...");
 
 #warning For debugging purposes
-        context.plugin.StartCoroutine(DebugCo());
+        //context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
