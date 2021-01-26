@@ -164,9 +164,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 mac.suspendRotationPlayback = false;
             }
 
-            if (restorePoseAfterPossessJSON.val && c.snapshot != null)
+            if (c.snapshot != null)
             {
-                c.snapshot.Restore();
+                if (restorePoseAfterPossessJSON.val)
+                    c.snapshot.Restore();
                 c.snapshot = null;
             }
 

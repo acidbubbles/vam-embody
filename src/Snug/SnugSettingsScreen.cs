@@ -24,7 +24,8 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     {
         if (ShowNotSelected(_snug.selectedJSON.val)) return;
 
-        _snug.autoSetup.AutoSetup();
+        if (!context.embody.activeJSON.val)
+            _snug.autoSetup.AutoSetup();
 
         CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
         CreateToggle(_snug.disableSelfGrabJSON).label = "Disable Person Grab";
@@ -38,13 +39,21 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
     private void InitHandsSettingsUI()
     {
-        CreateSlider(_snug.falloffJSON, false);
+        CreateSlider(_snug.falloffJSON, false).label = "Effect Falloff Distance";
     }
 
     private void InitAnchorsUI()
     {
-        _selectedAnchorsJSON = new JSONStorableStringChooser("Selected Anchor", _snug.anchorPoints.Select(a => a.Label).ToList(), "Chest", "Anchor", SyncSelectedAnchorJSON)
-            {isStorable = false};
+        _selectedAnchorsJSON = new JSONStorableStringChooser(
+            "Selected Anchor",
+            _snug.anchorPoints
+                .Where(a => !a.Locked)
+                .Select(a => a.Label)
+                .ToList(),
+            "Chest",
+            "Anchor",
+            SyncSelectedAnchorJSON
+        );
         CreateScrollablePopup(_selectedAnchorsJSON, true);
 
         _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};

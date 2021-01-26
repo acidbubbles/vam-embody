@@ -73,8 +73,6 @@ public class SnugAutoSetup
 
         anchor.InGameSize = size + padding;
         anchor.InGameOffset = offset;
-        anchor.RealLifeSize = anchor.InGameSize;
-        anchor.RealLifeOffset = Vector3.zero;
         anchor.Update();
     }
 

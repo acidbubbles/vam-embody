@@ -71,16 +71,15 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitAnchors()
     {
-        var defaultSize = new Vector3(0.2f, 0.2f, 0.2f);
         anchorPoints.Add(new ControllerAnchorPoint
         {
             Id = "Crown",
             Label = "Crown",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
             InGameOffset = new Vector3(0, 0.2f, 0),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.2f, 0, 0.2f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.2f, 0, 0.2f),
             Active = true,
             Locked = true
         });
@@ -90,9 +89,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Label = "Lips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
             InGameOffset = new Vector3(0, 0, -0.07113313f),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.15f, 0, 0.2f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.18f, 0, 0.24f),
             Active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
@@ -101,9 +100,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Label = "Chest",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
             InGameOffset = new Vector3(0, 0.0682705f, 0.04585214f),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.28f, 0, 0.26f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.2f, 0, 0.3f),
             Active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
@@ -112,9 +111,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Label = "Abdomen",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
             InGameOffset = new Vector3(0, 0.0770329f, 0.04218798f),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.24f, 0, 0.18f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.26f, 0, 0.28f),
             Active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
@@ -123,9 +122,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Label = "Hips",
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
             InGameOffset = new Vector3(0, -0.08762675f, -0.009161186f),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.36f, 0, 0.24f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.32f, 0, 0.3f),
             Active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
@@ -135,9 +134,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             // TODO: We could try and average this instead, OR define an absolute value
             RigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
             InGameOffset = new Vector3(0, 0, 0),
-            InGameSize = defaultSize,
+            InGameSize = new Vector3(0.2f, 0, 0.2f),
             RealLifeOffset = Vector3.zero,
-            RealLifeSize = defaultSize,
+            RealLifeSize = new Vector3(0.2f, 0, 0.2f),
             Active = true,
             Locked = true
         });
@@ -210,7 +209,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         _previousState.Clear();
     }
 
-    private static void DisableHand(SnugHand hand)
+    private void DisableHand(SnugHand hand)
     {
         if (!hand.active) return;
         hand.controller.possessed = false;
@@ -218,7 +217,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.active = false;
         if (hand.snapshot != null)
         {
-            hand.snapshot.Restore();
+            if (trackers.restorePoseAfterPossessJSON.val)
+                hand.snapshot.Restore();
             hand.snapshot = null;
         }
         hand.showCueLine = false;
