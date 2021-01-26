@@ -15,14 +15,14 @@
 
         CreateText(new JSONStorableString("", "Changes the world scale based on your measurements and the person's measurement."), true);
 
-        CreateScrollablePopup(_worldScale.worldScaleMethod, true);
-        CreateSlider(_worldScale.playerHeight, true);
+        CreateScrollablePopup(_worldScale.worldScaleMethodJSON, true);
+        CreateSlider(_worldScale.playerHeightJSON, true);
         CreateButton("Record current player height (stand straight)", true).button.onClick.AddListener(RecordPlayerHeight);
     }
 
     private void RecordPlayerHeight()
     {
-        _worldScale.playerHeight.val = RecordPlayerHeightStep.GetPlayerHeight();
-        _worldScale.worldScaleMethod.val = WorldScaleModule.PlayerHeightMethod;
+        _worldScale.playerHeightJSON.val = RecordPlayerHeightStep.GetPlayerHeight();
+        _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
     }
 }

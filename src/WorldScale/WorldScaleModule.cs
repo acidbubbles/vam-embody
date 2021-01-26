@@ -6,8 +6,9 @@ using UnityEngine;
 
 public interface IWorldScaleModule : IEmbodyModule
 {
-    JSONStorableStringChooser worldScaleMethod { get; }
-    JSONStorableFloat playerHeight { get; }
+    JSONStorableStringChooser worldScaleMethodJSON { get; }
+    JSONStorableFloat playerHeightJSON { get; }
+    void ClearPersonalData();
 }
 
 public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
@@ -21,8 +22,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public override string storeId => "WorldScale";
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
-    public JSONStorableStringChooser worldScaleMethod { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
-    public JSONStorableFloat playerHeight { get; } = new JSONStorableFloat("PlayerHeight", 1.7f, 0f, 2f, false);
+    public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
+    public JSONStorableFloat playerHeightJSON { get; } = new JSONStorableFloat("PlayerHeight", 1.7f, 0f, 2f, false);
 
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
@@ -46,7 +47,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         SuperController.singleton.showNavigationHologrid = false;
 
-        switch (worldScaleMethod.val)
+        switch (worldScaleMethodJSON.val)
         {
             case EyeDistanceMethod:
                 UseEyeDistanceMethod();
@@ -110,7 +111,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     private void UsePersonHeightMethod()
     {
-        if (playerHeight.val == 0) return;
+        if (playerHeightJSON.val == 0) return;
 
         var measure = Distance(
             Get("head"),
@@ -132,7 +133,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         measure += eyesToHeadDistance + _feetToGroundDistance;
         measure *= _skeletonSumToStandHeightRatio;
 
-        var ratio = measure / playerHeight.val;
+        var ratio = measure / playerHeightJSON.val;
         SuperController.singleton.worldScale = ratio;
     }
 
@@ -151,19 +152,25 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         return context.containingAtom.rigidbodies.First(rb => rb.name == rbName);
     }
 
+    public void ClearPersonalData()
+    {
+        playerHeightJSON.valNoCallback = playerHeightJSON.defaultVal;
+        worldScaleMethodJSON.valNoCallback = EyeDistanceMethod;
+    }
+
     public override void StoreJSON(JSONClass jc)
     {
         base.StoreJSON(jc);
 
-        worldScaleMethod.StoreJSON(jc);
-        playerHeight.StoreJSON(jc);
+        worldScaleMethodJSON.StoreJSON(jc);
+        playerHeightJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc)
     {
         base.RestoreFromJSON(jc);
 
-        worldScaleMethod.RestoreFromJSON(jc);
-        playerHeight.RestoreFromJSON(jc);
+        worldScaleMethodJSON.RestoreFromJSON(jc);
+        playerHeightJSON.RestoreFromJSON(jc);
     }
 }

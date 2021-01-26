@@ -67,7 +67,7 @@ public class Embody : MVRScript, IEmbody
             _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
             _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
             _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
-            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this));
+            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
             _screensManager.Add(UtilitiesScreen.ScreenName, new UtilitiesScreen(_context));
 
             activeJSON.setCallbackFunction = val =>

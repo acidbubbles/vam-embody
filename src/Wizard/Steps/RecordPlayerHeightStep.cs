@@ -11,8 +11,8 @@
 
     public void Run()
     {
-        _worldScale.playerHeight.val = GetPlayerHeight();
-        _worldScale.worldScaleMethod.val = WorldScaleModule.PlayerHeightMethod;
+        _worldScale.playerHeightJSON.val = GetPlayerHeight();
+        _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
     }
 
     public static float GetPlayerHeight()

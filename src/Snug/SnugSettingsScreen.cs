@@ -8,8 +8,6 @@ public class SnugSettingsScreen : ScreenBase, IScreen
     public const string ScreenName = SnugModule.Label;
 
     private JSONStorableStringChooser _selectedAnchorsJSON;
-    // private JSONStorableFloat _anchorVirtSizeXJSON, _anchorVirtSizeZJSON;
-    // private JSONStorableFloat _anchorVirtOffsetXJSON, _anchorVirtOffsetYJSON, _anchorVirtOffsetZJSON;
     private JSONStorableBool _anchorActiveJSON;
     private JSONStorableFloat _anchorRealOffsetXJSON, _anchorRealOffsetYJSON, _anchorRealOffsetZJSON;
     private JSONStorableFloat _anchorRealSizeXJSON, _anchorRealSizeZJSON;
@@ -47,8 +45,8 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         _selectedAnchorsJSON = new JSONStorableStringChooser(
             "Selected Anchor",
             _snug.anchorPoints
-                .Where(a => !a.Locked)
-                .Select(a => a.Label)
+                .Where(a => !a.locked)
+                .Select(a => a.label)
                 .ToList(),
             "Chest",
             "Anchor",
@@ -70,57 +68,38 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         CreateSlider(_anchorRealOffsetYJSON, true);
         _anchorRealOffsetZJSON = new JSONStorableFloat("Offset Z (Forw./Back.)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
         CreateSlider(_anchorRealOffsetZJSON, true);
-
-        // TODO: Since we don't need this, should even try saving it at all?
-        /*
-        _anchorVirtSizeXJSON = new JSONStorableFloat("In-Game Size X", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorVirtSizeXJSON, true);
-        _anchorVirtSizeZJSON = new JSONStorableFloat("In-Game Size Z", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-
-        CreateSlider(_anchorVirtSizeZJSON, true);
-        _anchorVirtOffsetXJSON = new JSONStorableFloat("In-Game Offset X", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetXJSON, true);
-        _anchorVirtOffsetYJSON = new JSONStorableFloat("In-Game Offset Y", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetYJSON, true);
-        _anchorVirtOffsetZJSON = new JSONStorableFloat("In-Game Offset Z", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorVirtOffsetZJSON, true);
-        */
     }
 
     private void SyncSelectedAnchorJSON(string _)
     {
-        var anchor = _snug.anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
+        var anchor = _snug.anchorPoints.FirstOrDefault(a => a.label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        _anchorActiveJSON.valNoCallback = anchor.Active;
-        _anchorRealSizeXJSON.valNoCallback = anchor.RealLifeSize.x;
-        _anchorRealSizeZJSON.valNoCallback = anchor.RealLifeSize.z;
-        _anchorRealOffsetXJSON.valNoCallback = anchor.RealLifeOffset.x;
-        _anchorRealOffsetYJSON.valNoCallback = anchor.RealLifeOffset.y;
-        _anchorRealOffsetZJSON.valNoCallback = anchor.RealLifeOffset.z;
-        /*
-        _anchorVirtSizeXJSON.valNoCallback = anchor.InGameSize.x;
-        _anchorVirtSizeZJSON.valNoCallback = anchor.InGameSize.z;
-        _anchorVirtOffsetXJSON.valNoCallback = anchor.InGameOffset.x;
-        _anchorVirtOffsetYJSON.valNoCallback = anchor.InGameOffset.y;
-        _anchorVirtOffsetZJSON.valNoCallback = anchor.InGameOffset.z;
-        */
+        _anchorActiveJSON.valNoCallback = anchor.active;
+        _anchorRealSizeXJSON.defaultVal = anchor.realLifeSizeDefault.x;
+        _anchorRealSizeXJSON.valNoCallback = anchor.realLifeSize.x;
+        _anchorRealSizeZJSON.defaultVal = anchor.realLifeSizeDefault.z;
+        _anchorRealSizeZJSON.valNoCallback = anchor.realLifeSize.z;
+        _anchorRealOffsetXJSON.defaultVal = anchor.realLifeOffsetDefault.x;
+        _anchorRealOffsetXJSON.valNoCallback = anchor.realLifeOffset.x;
+        _anchorRealOffsetYJSON.defaultVal = anchor.realLifeOffsetDefault.y;
+        _anchorRealOffsetYJSON.valNoCallback = anchor.realLifeOffset.y;
+        _anchorRealOffsetZJSON.defaultVal = anchor.realLifeSizeDefault.z;
+        _anchorRealOffsetZJSON.valNoCallback = anchor.realLifeOffset.z;
     }
 
     private void UpdateAnchor(float _)
     {
-        var anchor = _snug.anchorPoints.FirstOrDefault(a => a.Label == _selectedAnchorsJSON.val);
+        var anchor = _snug.anchorPoints.FirstOrDefault(a => a.label == _selectedAnchorsJSON.val);
         if (anchor == null) throw new NullReferenceException($"Could not find the selected anchor {_selectedAnchorsJSON.val}");
-        // anchor.InGameSize = new Vector3(_anchorVirtSizeXJSON.val, 1f, _anchorVirtSizeZJSON.val);
-        // anchor.InGameOffset = new Vector3(_anchorVirtOffsetXJSON.val, _anchorVirtOffsetYJSON.val, _anchorVirtOffsetZJSON.val);
-        anchor.RealLifeSize = new Vector3(_anchorRealSizeXJSON.val, 1f, _anchorRealSizeZJSON.val);
-        anchor.RealLifeOffset = new Vector3(_anchorRealOffsetXJSON.val, _anchorRealOffsetYJSON.val, _anchorRealOffsetZJSON.val);
-        if (anchor.Locked && !_anchorActiveJSON.val)
+        anchor.realLifeSize = new Vector3(_anchorRealSizeXJSON.val, 1f, _anchorRealSizeZJSON.val);
+        anchor.realLifeOffset = new Vector3(_anchorRealOffsetXJSON.val, _anchorRealOffsetYJSON.val, _anchorRealOffsetZJSON.val);
+        if (anchor.locked && !_anchorActiveJSON.val)
         {
             _anchorActiveJSON.valNoCallback = true;
         }
-        else if (anchor.Active != _anchorActiveJSON.val)
+        else if (anchor.active != _anchorActiveJSON.val)
         {
-            anchor.Active = _anchorActiveJSON.val;
+            anchor.active = _anchorActiveJSON.val;
             anchor.Update();
         }
 

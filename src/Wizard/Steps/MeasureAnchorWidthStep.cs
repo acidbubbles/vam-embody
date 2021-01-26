@@ -24,12 +24,12 @@ public class MeasureAnchorWidthStep : IWizardStep, IWizardUpdate
     {
         // VisualCuesHelper.Cross(Color.green).transform.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
         // TODO: Cancel out the hand size, whatever that is. Figure out if we should compute it or just hardcode it.
-        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
-        _leftHandControl.control.eulerAngles = _anchor.RigidBody.rotation.eulerAngles;
+        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.rigidBody.transform.right * (_anchor.inGameSize.x / 2f + _context.handsDistance / 2f));
+        _leftHandControl.control.eulerAngles = _anchor.rigidBody.rotation.eulerAngles;
         _leftHandControl.control.Rotate(new Vector3(0, 0, 90));
 
-        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
-        _rightHandControl.control.eulerAngles = _anchor.RigidBody.rotation.eulerAngles;
+        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.rigidBody.transform.right * (_anchor.inGameSize.x / 2f + _context.handsDistance / 2f));
+        _rightHandControl.control.eulerAngles = _anchor.rigidBody.rotation.eulerAngles;
         _rightHandControl.control.Rotate(new Vector3(0, 0, -90));
     }
 
@@ -42,10 +42,10 @@ public class MeasureAnchorWidthStep : IWizardStep, IWizardUpdate
         // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
         var realHipsWidth = Vector3.Distance(_context.context.leftHand.position, _context.context.rightHand.position) - _context.handsDistance;
         var realHipsXCenter = (_context.context.leftHand.position + _context.context.rightHand.position) / 2f;
-        _anchor.RealLifeSize = new Vector3(realHipsWidth, 0f, _anchor.InGameSize.z);
-        _anchor.RealLifeOffset = realHipsXCenter - gameHipsCenter;
+        _anchor.realLifeSize = new Vector3(realHipsWidth, 0f, _anchor.inGameSize.z);
+        _anchor.realLifeOffset = realHipsXCenter - gameHipsCenter;
         SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");
-        SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {_anchor.RealLifeSize.x}");
+        SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {_anchor.realLifeSize.x}");
         SuperController.LogMessage($"Real Hips center: {realHipsXCenter}, Game Hips center: {gameHipsCenter}");
     }
 }

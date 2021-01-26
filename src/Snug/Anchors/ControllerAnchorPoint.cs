@@ -2,42 +2,54 @@
 
 public class ControllerAnchorPoint
 {
-    public string Id { get; set; }
-    public string Label { get; set; }
-    public Rigidbody RigidBody { get; set; }
-    public Vector3 RealLifeOffset { get; set; }
-    public Vector3 RealLifeSize { get; set; }
-    public Vector3 InGameOffset { get; set; }
-    public Vector3 InGameSize { get; set; }
-    public ControllerAnchorPointVisualCue VirtualCue { get; set; }
-    public ControllerAnchorPointVisualCue PhysicalCue { get; set; }
-    public bool Active { get; set; }
-    public bool Locked { get; set; }
+    public string id { get; set; }
+    public string label { get; set; }
+    public Rigidbody rigidBody { get; set; }
+    public Vector3 realLifeOffsetDefault { get; set; }
+    public Vector3 realLifeOffset { get; set; }
+    public Vector3 realLifeSizeDefault { get; set; }
+    public Vector3 realLifeSize { get; set; }
+    public Vector3 inGameOffsetDefault { get; set; }
+    public Vector3 inGameOffset { get; set; }
+    public Vector3 inGameSizeDefault { get; set; }
+    public Vector3 inGameSize { get; set; }
+    public ControllerAnchorPointVisualCue inGameCue { get; set; }
+    public ControllerAnchorPointVisualCue realLifeCue { get; set; }
+    public bool active { get; set; }
+    public bool locked { get; set; }
 
     public Vector3 GetInGameWorldPosition()
     {
-        var rigidBodyTransform = RigidBody.transform;
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * InGameOffset;
+        var rigidBodyTransform = rigidBody.transform;
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * inGameOffset;
     }
 
     public Vector3 GetAdjustedWorldPosition()
     {
-        var rigidBodyTransform = RigidBody.transform;
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * (InGameOffset + RealLifeOffset);
+        var rigidBodyTransform = rigidBody.transform;
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset + realLifeOffset);
     }
 
     public void Update()
     {
-        if (VirtualCue != null)
+        if (inGameCue != null)
         {
-            VirtualCue.gameObject.SetActive(Active);
-            VirtualCue.Update(InGameOffset, InGameSize);
+            inGameCue.gameObject.SetActive(active);
+            inGameCue.Update(inGameOffset, inGameSize);
         }
 
-        if (PhysicalCue != null)
+        if (realLifeCue != null)
         {
-            PhysicalCue.gameObject.SetActive(Active);
-            PhysicalCue.Update(InGameOffset + RealLifeOffset, RealLifeSize);
+            realLifeCue.gameObject.SetActive(active);
+            realLifeCue.Update(inGameOffset + realLifeOffset, realLifeSize);
         }
+    }
+
+    public void InitFromDefault()
+    {
+        inGameOffset = inGameOffsetDefault;
+        inGameSize = inGameSizeDefault;
+        realLifeOffset = realLifeOffsetDefault;
+        realLifeSize = realLifeSizeDefault;
     }
 }

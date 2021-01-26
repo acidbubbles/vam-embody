@@ -19,8 +19,8 @@ public class SnugAutoSetup
         var colliders = ScanBodyColliders().ToList();
         foreach (var anchor in _snug.anchorPoints)
         {
-            if (anchor.Locked) continue;
-            AutoSetup(anchor.RigidBody, anchor, colliders);
+            if (anchor.locked) continue;
+            AutoSetup(anchor.rigidBody, anchor, colliders);
         }
     }
 
@@ -29,7 +29,7 @@ public class SnugAutoSetup
         const float raycastDistance = 100f;
         var rbTransform = rb.transform;
         var rbUp = rbTransform.up;
-        var rbOffsetPosition = rbTransform.position + rbUp * anchor.InGameOffset.y;
+        var rbOffsetPosition = rbTransform.position + rbUp * anchor.inGameOffset.y;
         var rbForward = rbTransform.forward;
 
         var rays = new List<Ray>();
@@ -71,8 +71,8 @@ public class SnugAutoSetup
 
         var padding = new Vector3(0.02f, 0f, 0.02f);
 
-        anchor.InGameSize = size + padding;
-        anchor.InGameOffset = offset;
+        anchor.inGameSize = size + padding;
+        anchor.inGameOffset = offset;
         anchor.Update();
     }
 

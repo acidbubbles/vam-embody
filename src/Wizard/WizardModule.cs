@@ -108,7 +108,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             // TODO: Load pose
             steps.Add(new MeasureHandsPaddingStep(wizardContext));
             steps.Add(new ActivateWithoutSnugStep(embody, snug));
-            var hipsAnchor = snug.anchorPoints.First(a => a.Label == "Hips");
+            var hipsAnchor = snug.anchorPoints.First(a => a.label == "Hips");
             steps.Add(new MeasureAnchorWidthStep(wizardContext, "hips", hipsAnchor));
             steps.Add(new MeasureAnchorDepthAndOffsetStep(wizardContext, "hips", hipsAnchor));
             steps.Add(new EnableSnugStep(embody, snug));

@@ -6,11 +6,15 @@ public class ImportExportScreen : ScreenBase, IScreen
     public const string ScreenName = "Import / Export";
 
     private readonly IEmbody _embody;
+    private readonly IWorldScaleModule _worldScale;
+    private readonly ISnugModule _snug;
 
-    public ImportExportScreen(EmbodyContext context, IEmbody embody)
+    public ImportExportScreen(EmbodyContext context, IEmbody embody, IWorldScaleModule worldScale, ISnugModule snug)
         : base(context)
     {
         _embody = embody;
+        _worldScale = worldScale;
+        _snug = snug;
     }
 
     public void Show()
@@ -44,11 +48,14 @@ public class ImportExportScreen : ScreenBase, IScreen
             fileBrowserUI.ActivateFileNameField();
         });
 
-        var makeDefaults = CreateButton("Make Default", true);
+        var makeDefaults = CreateButton("Make Default (Saves)", true);
         makeDefaults.button.onClick.AddListener(MakeDefault);
 
-        var clearDefaults = CreateButton("Clear Default", true);
+        var clearDefaults = CreateButton("Clear Default (Saves)", true);
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
+
+        var clearPersonalData = CreateButton("Clear Personal Data (Plugin)", true);
+        clearPersonalData.button.onClick.AddListener(() => ClearPersonalData());
     }
 
     private void SaveCallback(string path)
@@ -74,5 +81,12 @@ public class ImportExportScreen : ScreenBase, IScreen
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
         var jc = context.plugin.GetJSON();
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
+    }
+
+    private void ClearPersonalData()
+    {
+        _embody.activeJSON.val = false;
+        _snug.ClearPersonalData();
+        _worldScale.ClearPersonalData();
     }
 }
