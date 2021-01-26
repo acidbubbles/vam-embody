@@ -325,7 +325,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var realLifeSize = Vector3.Lerp(upper.realLifeSize, lower.realLifeSize, lowerWeight);
-        // TODO: This seemed wrong in testing, I could not bring the hand in the expected position
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
         var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
@@ -358,7 +357,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         visualCueLinePoints[0] = finalPosition;
         visualCueLinePoints[1] = motionControlPosition;
 
-        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);// + hand.motionControl.possessPointTransform.position * hand.motionControl.baseOffset;
+        // TODO: Compute for both anchors and average them using smooth lerp
+        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);
 
         if (previewSnugOffsetJSON.val)
         {

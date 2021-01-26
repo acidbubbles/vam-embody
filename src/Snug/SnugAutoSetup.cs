@@ -14,8 +14,6 @@ public class SnugAutoSetup
 
     public void AutoSetup()
     {
-        // TODO: Recalculate when the y offset is changed
-        // TODO: Check when the person scale changes
         var colliders = ScanBodyColliders().ToList();
         foreach (var anchor in _snug.anchorPoints)
         {

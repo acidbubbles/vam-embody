@@ -100,9 +100,8 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         else if (anchor.active != _anchorActiveJSON.val)
         {
             anchor.active = _anchorActiveJSON.val;
-            anchor.Update();
         }
-
         anchor.Update();
+        _snug.autoSetup.AutoSetup();
     }
 }

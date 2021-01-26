@@ -83,7 +83,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var controller = FindController(motionControl)?.controller;
         if (controller == null) return;
 
-        // TODO: Make sure this is right? Also when the head has rotation, it will possess at an angle
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
         motionControl.baseOffset = -controller.control.InverseTransformPoint(eyesCenter);

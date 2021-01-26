@@ -2,23 +2,10 @@
 
 - Finish the wizard
 - Connect to the leap motion when possessing hands
-- Without leap, see if we could animate hands when grabbing
-- When building the base offset for tracker hands, measure wrist to middle finger base to determine offset and rotation
 - Measure hand padding using a collider height instead of manually
 - Support non-person atoms (keep passenger)
 - Determine some useful storables to make available
-- Make a setting to show the offset lines in MotionControllerWithCustomPossessPoint (showLine)
-- Cleanup Passenger
-- Cleanup Snug
 - Use overlays to show the wizard message and how to exit Passenger
 - Auto bind vive controllers by checking the closest freecontroller from each, and recording the current rotation. This can be part of the wizard.
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
-- Male Snug?
-- Start recording all tracked controllers (arm, clear and start record)
-- Global plugin to share settings like player height (for world scale)
-- In snug, show a ring for each hand so users can see what the proportions are at any point
-- Use next/previous buttons and slider drop down in trackers for quicker nav
-
-BUGS
-
-- Point rotate seems broken
+- Male Snug? Or maybe an additional anchor between thighs.
