@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Linq;
 
 public class UtilitiesScreen : ScreenBase, IScreen
 {
@@ -36,5 +37,14 @@ public class UtilitiesScreen : ScreenBase, IScreen
             mac.armedForRecord = true;
         }
         SuperController.singleton.SelectModeAnimationRecord();
+        SuperController.singleton.StartCoroutine(WaitForRecordComplete());
+    }
+
+    private IEnumerator WaitForRecordComplete()
+    {
+        while (!string.IsNullOrEmpty(SuperController.singleton.helpText))
+            yield return 0;
+        SuperController.singleton.motionAnimationMaster.StopPlayback();
+        SuperController.singleton.motionAnimationMaster.ResetAnimation();
     }
 }
