@@ -190,7 +190,7 @@ public class Embody : MVRScript, IEmbody
 
     public void OnEnable()
     {
-#if(VAM_GT_1_20_6_0)
+#if(VAM_GT_1_20_77_0)
         SuperController.singleton.onBeforeSceneSaveHandlers += OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers += OnSceneSaved;
 #endif
@@ -198,7 +198,7 @@ public class Embody : MVRScript, IEmbody
 
     public void OnDisable()
     {
-#if(VAM_GT_1_20_6_0)
+#if(VAM_GT_1_20_77_0)
         SuperController.singleton.onBeforeSceneSaveHandlers -= OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
