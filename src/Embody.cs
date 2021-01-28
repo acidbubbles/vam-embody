@@ -129,7 +129,7 @@ public class Embody : MVRScript, IEmbody
             if(FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
             {
                 var profile = LoadJSON(SaveFormat.DefaultsPath);
-                SuperController.LogMessage(profile.ToString());
+                RestoreFromJSON(profile.AsObject, false, false, null, false);
             }
         }
 

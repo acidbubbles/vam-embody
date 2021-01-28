@@ -137,10 +137,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
         if (snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return null;
         var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
-        if (controllerWithSnapshot == null) return null;
+        if (controllerWithSnapshot == null){SuperController.LogError("A"); return null;}
         var controller = controllerWithSnapshot.controller;
-        if (controller.possessed) return null;
-        if (!controller.possessable) return null;
+        if (controller.possessed) {SuperController.LogError("B");return null;}
+        if (!controller.possessable) {SuperController.LogError("C");return null;}
         if (!motionControl.SyncMotionControl()) return null;
         return controllerWithSnapshot;
     }
