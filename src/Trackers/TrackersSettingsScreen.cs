@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Leap.Unity;
 using UnityEngine;
 
 public class TrackersSettingsScreen : ScreenBase, IScreen
@@ -151,19 +150,19 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
         {
-            if (motionControl.mappedControllerName != null)
+            if(!motionControl.SyncMotionControl())
             {
-                SuperController.LogError($"Embody: {motionControl.name} Already attached to {motionControl.mappedControllerName}");
+                SuperController.LogError($"Embody: {motionControl.name} does not seem to be attached to a VR motion control.");
                 return;
             }
 
-            var possessPoint = motionControl.possessPointTransform.position;
+            var position = motionControl.currentMotionControl.position;
 
             var closestDistance = float.PositiveInfinity;
             Rigidbody closest = null;
             foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Select(fc => fc.GetComponent<Rigidbody>()))
             {
-                var distance = Vector3.Distance(possessPoint, controller.position);
+                var distance = Vector3.Distance(position, controller.position);
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
@@ -173,8 +172,9 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
 
             motionControl.mappedControllerName = closest.name;
-            motionControl.customOffset =  motionControl.possessPointTransform.InverseTransformDirection(closest.position - possessPoint);
+            motionControl.customOffset =  motionControl.possessPointTransform.InverseTransformDirection(closest.position - position);
             motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
+            ShowMotionControl(motionControl);
             context.Refresh();
         });
     }
