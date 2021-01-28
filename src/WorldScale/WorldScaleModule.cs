@@ -81,7 +81,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         var atomEyeDistance = Vector3.Distance(lEye.transform.position, rEye.transform.position);
 
         var rigEyesDistance = GetRigEyesDistance();
-        if (rigEyesDistance == 0)
+        if (rigEyesDistance <= float.Epsilon)
             return;
 
         var scale = atomEyeDistance / rigEyesDistance;
@@ -102,9 +102,12 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     private static float GetRigEyesDistance()
     {
         // TODO: Do it for Steam too
-        var ovrRig = SuperController.singleton.OVRRig.GetComponent<OVRCameraRig>();
-        if (ovrRig != null)
-            return Vector3.Distance(ovrRig.leftEyeAnchor.transform.position, ovrRig.rightEyeAnchor.transform.position);
+        if (SuperController.singleton.OVRRig != null)
+        {
+            var ovrRig = SuperController.singleton.OVRRig.GetComponent<OVRCameraRig>();
+            if (ovrRig != null)
+                return Vector3.Distance(ovrRig.leftEyeAnchor.transform.position, ovrRig.rightEyeAnchor.transform.position);
+        }
 
         return 0;
     }
