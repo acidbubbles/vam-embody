@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEngine;
@@ -8,6 +9,15 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     public const string ScreenName = TrackersModule.Label;
 
     private const string _none = "None";
+
+    private static HashSet<string> _skipAutoBindControllers = new HashSet<string>(new[]
+    {
+        "lNippleControl", "rNippleControl",
+        "eyeTargetControl",
+        "testesControl",
+        "penisMidControl", "penisTipControl",
+        "lToeControl", "rToeControl",
+    });
 
     private readonly ITrackersModule _trackers;
     private CollapsibleSection _section;
@@ -148,34 +158,38 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             180,
             false), false);
 
-        _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
+        _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() => { AttachToClosestNode(motionControl); });
+    }
+
+    private void AttachToClosestNode(MotionControllerWithCustomPossessPoint motionControl)
+    {
+        if (!motionControl.SyncMotionControl())
         {
-            if(!motionControl.SyncMotionControl())
+            SuperController.LogError($"Embody: {motionControl.name} does not seem to be attached to a VR motion control.");
+            return;
+        }
+
+        var position = motionControl.currentMotionControl.position;
+
+        var closestDistance = float.PositiveInfinity;
+        Rigidbody closest = null;
+        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Select(fc => fc.GetComponent<Rigidbody>()))
+        {
+            if (_skipAutoBindControllers.Contains(controller.name)) continue;
+            var distance = Vector3.Distance(position, controller.position);
+            if (distance < closestDistance)
             {
-                SuperController.LogError($"Embody: {motionControl.name} does not seem to be attached to a VR motion control.");
-                return;
+                closestDistance = distance;
+                closest = controller;
             }
+        }
 
-            var position = motionControl.currentMotionControl.position;
+        if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
 
-            var closestDistance = float.PositiveInfinity;
-            Rigidbody closest = null;
-            foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Select(fc => fc.GetComponent<Rigidbody>()))
-            {
-                var distance = Vector3.Distance(position, controller.position);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closest = controller;
-                }
-            }
-            if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
-
-            motionControl.mappedControllerName = closest.name;
-            motionControl.customOffset =  motionControl.possessPointTransform.InverseTransformDirection(closest.position - position);
-            motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
-            ShowMotionControl(motionControl);
-            context.Refresh();
-        });
+        motionControl.mappedControllerName = closest.name;
+        motionControl.customOffset = motionControl.possessPointTransform.InverseTransformDirection(closest.position - position);
+        motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
+        ShowMotionControl(motionControl);
+        context.Refresh();
     }
 }
