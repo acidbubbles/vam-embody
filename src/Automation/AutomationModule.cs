@@ -36,12 +36,32 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         // ReSharper disable once RedundantJumpStatement
 
-        if (!embody.activeJSON.val)
+        if (embody.activeJSON.val)
+        {
+            if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
+                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
+                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
+            {
+                SuperController.singleton.SelectModeOff();
+                embody.activeJSON.val = false;
+                return;
+            }
+        }
+        else
         {
             if (headPossessedInVam)
             {
                 embody.activeJSON.val = true;
                 _activatedByVam = true;
+                return;
+            }
+
+            if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
+                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
+                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
+            {
+                SuperController.singleton.SelectModeOff();
+                embody.activeJSON.val = true;
                 return;
             }
 
