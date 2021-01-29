@@ -101,7 +101,6 @@
     <Compile Include="src\Screens\ScreensManager.cs" />
     <Compile Include="src\Snug\Anchors\ControllerAnchorPoint.cs" />
     <Compile Include="src\Snug\Anchors\ControllerAnchorPointVisualCue.cs" />
-    <Compile Include="src\Snug\FreeControllerV3GrabSnapshot.cs" />
     <Compile Include="src\Snug\SnugHand.cs" />
     <Compile Include="src\Snug\SnugModule.cs" />
     <Compile Include="src\Snug\SnugAutoSetup.cs" />

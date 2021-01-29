@@ -170,7 +170,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (_headControlSnapshot != null)
         {
-            _headControlSnapshot.Restore();
+            _headControlSnapshot.Restore(true);
             _headControlSnapshot = null;
         }
 

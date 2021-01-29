@@ -32,7 +32,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
 
-    private readonly List<FreeControllerV3GrabSnapshot> _previousState = new List<FreeControllerV3GrabSnapshot>();
+    private readonly List<FreeControllerV3Snapshot> _previousState = new List<FreeControllerV3Snapshot>();
 
     public override void Awake()
     {
@@ -184,7 +184,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 if (fc == _lHand.controller || fc == _rHand.controller) continue;
                 if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
                 if (!fc.name.EndsWith("Control")) continue;
-                _previousState.Add(new FreeControllerV3GrabSnapshot {controller = fc, canGrabPosition = fc.canGrabPosition, canGrabRotation = fc.canGrabRotation});
+                if (!trackers.motionControls.Any(mc => mc.mappedControllerName == fc.name && mc.enabled))
+                    _previousState.Add(FreeControllerV3Snapshot.Snap(fc));
                 fc.canGrabPosition = false;
                 fc.canGrabRotation = false;
             }
@@ -199,9 +200,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
         if (motionControl == null || !motionControl.SyncMotionControl()) return;
         hand.motionControl = motionControl;
-        if (trackers.restorePoseAfterPossessJSON.val)
-            hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
-        _previousState.Add(new FreeControllerV3GrabSnapshot {controller = hand.controller, canGrabPosition = hand.controller.canGrabPosition, canGrabRotation = hand.controller.canGrabRotation});
+        hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
         hand.active = true;
         hand.controller.canGrabPosition = false;
         hand.controller.canGrabRotation = false;
@@ -219,8 +218,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         foreach (var c in _previousState)
         {
-            c.controller.canGrabPosition = c.canGrabPosition;
-            c.controller.canGrabRotation = c.canGrabRotation;
+            c._controller.canGrabPosition = c._canGrabPosition;
+            c._controller.canGrabRotation = c._canGrabRotation;
         }
         _previousState.Clear();
     }
@@ -233,8 +232,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.active = false;
         if (hand.snapshot != null)
         {
-            if (trackers.restorePoseAfterPossessJSON.val)
-                hand.snapshot.Restore();
+            hand.snapshot.Restore(trackers.restorePoseAfterPossessJSON.val);
             hand.snapshot = null;
         }
         hand.showCueLine = false;

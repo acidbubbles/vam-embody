@@ -100,8 +100,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             var controllerWithSnapshot = FindController(motionControl);
             if (controllerWithSnapshot == null) continue;
             var controller = controllerWithSnapshot.controller;
-            if (restorePoseAfterPossessJSON.val)
-                controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
+            controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
 
             if (motionControl.name == MotionControlNames.Head)
             {
@@ -164,8 +163,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (c.snapshot != null)
             {
-                if (restorePoseAfterPossessJSON.val)
-                    c.snapshot.Restore();
+                c.snapshot.Restore(restorePoseAfterPossessJSON.val);
                 c.snapshot = null;
             }
 
