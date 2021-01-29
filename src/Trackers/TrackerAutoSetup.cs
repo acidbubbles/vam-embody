@@ -58,8 +58,8 @@ public class TrackerAutoSetup
         if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
 
         motionControl.mappedControllerName = closest.name;
-        motionControl.customOffset = motionControl.possessPointTransform.InverseTransformDirection(closest.position - position);
-        motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
+        motionControl.customOffset = motionControl.currentMotionControl.InverseTransformDirection(closest.position - position);
+        motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * closest.rotation).eulerAngles;
         // TODO: motionControl.possessPointRotation
         motionControl.controlRotation = !_disableRotationControllers.Contains(closest.name);
     }
