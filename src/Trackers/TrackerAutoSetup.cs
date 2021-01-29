@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Leap.Unity;
 using UnityEngine;
 
 public class TrackerAutoSetup
@@ -65,7 +66,7 @@ public class TrackerAutoSetup
             customOffsetRotation.y > 180 ? customOffsetRotation.y - 360 : customOffsetRotation.y,
             customOffsetRotation.z > 180 ? customOffsetRotation.z - 360 : customOffsetRotation.z
         );
-        // TODO: motionControl.possessPointRotation
+        motionControl.possessPointRotation = Vector3.zero;
         motionControl.controlRotation = !_disableRotationControllers.Contains(closest.name);
     }
 }
