@@ -59,7 +59,12 @@ public class TrackerAutoSetup
 
         motionControl.mappedControllerName = closest.name;
         motionControl.customOffset = motionControl.currentMotionControl.InverseTransformDirection(closest.position - position);
-        motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * closest.rotation).eulerAngles;
+        var customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * closest.rotation).eulerAngles;
+        motionControl.customOffsetRotation = new Vector3(
+            customOffsetRotation.x > 180 ? customOffsetRotation.x - 360 : customOffsetRotation.x,
+            customOffsetRotation.y > 180 ? customOffsetRotation.y - 360 : customOffsetRotation.y,
+            customOffsetRotation.z > 180 ? customOffsetRotation.z - 360 : customOffsetRotation.z
+        );
         // TODO: motionControl.possessPointRotation
         motionControl.controlRotation = !_disableRotationControllers.Contains(closest.name);
     }
