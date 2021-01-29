@@ -257,16 +257,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         restorePoseAfterPossessJSON.StoreJSON(jc);
 
         var motionControlsJSON = new JSONClass();
-        foreach (var customized in motionControls)
+        foreach (var motionControl in motionControls)
         {
             var motionControlJSON = new JSONClass
             {
-                {"OffsetPosition", customized.possessPointTransform.localPosition.ToJSON()},
-                {"OffsetRotation", customized.possessPointTransform.localEulerAngles.ToJSON()},
-                {"Controller", customized.mappedControllerName},
-                {"Enabled", customized.enabled ? "true" : "false"}
+                {"OffsetPosition", motionControl.possessPointTransform.localPosition.ToJSON()},
+                {"OffsetRotation", motionControl.possessPointTransform.localEulerAngles.ToJSON()},
+                {"Controller", motionControl.mappedControllerName},
+                {"Enabled", motionControl.enabled ? "true" : "false"},
+                {"ControlRotation", motionControl.controlRotation ? "true" : "false"},
             };
-            motionControlsJSON[customized.name] = motionControlJSON;
+            motionControlsJSON[motionControl.name] = motionControlJSON;
         }
         jc["MotionControls"] = motionControlsJSON;
     }
@@ -281,13 +282,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         foreach (var motionControlName in motionControlsJSON.Keys)
         {
             var controllerJSON = motionControlsJSON[motionControlName];
-            var customized = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
-            if (customized == null) continue;
-            customized.possessPointTransform.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
-            customized.possessPointTransform.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
-            customized.mappedControllerName = controllerJSON["Controller"].Value;
-            customized.enabled = controllerJSON["Enabled"].Value != "false";
-            if (customized.mappedControllerName == "") customized.mappedControllerName = null;
+            var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
+            if (motionControl == null) continue;
+            motionControl.possessPointTransform.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+            motionControl.possessPointTransform.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            motionControl.mappedControllerName = controllerJSON["Controller"].Value;
+            motionControl.enabled = controllerJSON["Enabled"].Value != "false";
+            motionControl.controlRotation = controllerJSON["ControlRotation"].Value != "false";
+            if (motionControl.mappedControllerName == "") motionControl.mappedControllerName = null;
         }
     }
 }

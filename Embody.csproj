@@ -110,6 +110,7 @@
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
     <Compile Include="src\Trackers\MotionControlNames.cs" />
     <Compile Include="src\Trackers\OffsetPreview.cs" />
+    <Compile Include="src\Trackers\TrackerAutoSetup.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\Utilities\Utilities.cs" />

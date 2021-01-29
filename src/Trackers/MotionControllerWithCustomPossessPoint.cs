@@ -10,7 +10,8 @@ public class MotionControllerWithCustomPossessPoint
     public Rigidbody customRigidbody;
     public Transform currentMotionControl { get; private set; }
     public bool enabled = true;
-    public string mappedControllerName { get; set; }
+    public bool controlRotation = true;
+    public string mappedControllerName;
     private Func<Transform> _getMotionControl;
     private OffsetPreview _offsetPreview;
     private Vector3 _baseOffset;
