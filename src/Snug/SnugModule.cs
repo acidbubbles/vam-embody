@@ -317,12 +317,34 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var lowerWeight = 1f - upperWeight;
         var lowerRotation = lower.rigidBody.transform.rotation;
         var upperRotation = upper.rigidBody.transform.rotation;
-        // TODO: We can use a bezier curve or similar to make a curve following the angle of the upper/lower controls
-        var anchorPosition = Vector3.Lerp(upperPosition, lowerPosition, lowerWeight);
-        var anchorRotation = Quaternion.Lerp(upperRotation, lowerRotation, lowerWeight);
 
+        var finalPositionUpper =  ComputeHandPositionFromAnchor(upperPosition, upperRotation, motionControlPosition, upper);
+        var finalPositionLower =  ComputeHandPositionFromAnchor(lowerPosition, lowerRotation, motionControlPosition, lower);
+        var finalPosition = new Vector3(
+            Mathf.SmoothStep(finalPositionUpper.x, finalPositionLower.x, lowerWeight),
+            Mathf.SmoothStep(finalPositionUpper.y, finalPositionLower.y, lowerWeight),
+            Mathf.SmoothStep(finalPositionUpper.z, finalPositionLower.z, lowerWeight)
+        );
+
+        // TODO: Compute for both anchors and average them using smooth lerp
+        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);
+
+        if (previewSnugOffsetJSON.val)
+        {
+            visualCueLinePoints[0] = motionControlPosition;
+            visualCueLinePoints[1] = finalPosition;
+        }
+
+        hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
+        hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
+    }
+
+    private Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Quaternion upperRotation, Vector3 motionControlPosition, ControllerAnchorPoint upper)
+    {
+        var anchorPosition = upperPosition;
+        var anchorRotation = upperRotation;
         var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
-        var realLifeSize = Vector3.Lerp(upper.realLifeSize, lower.realLifeSize, lowerWeight);
+        var realLifeSize = upper.realLifeSize;
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
 
         var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
@@ -345,27 +367,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
         }
 
-        var realOffset = Vector3.Lerp(upper.realLifeOffset, lower.realLifeOffset, lowerWeight);
-        var inGameSize = Vector3.Lerp(upper.inGameSize, lower.inGameSize, lowerWeight);
+        var realOffset = upper.realLifeOffset;
+        var inGameSize = upper.inGameSize;
         var scale = new Vector3(inGameSize.x / realLifeSize.x, 1f, inGameSize.z / realLifeSize.z);
         var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);
         var finalPosition = Vector3.Lerp(motionControlPosition, anchorPosition + scaled - realOffset, effectWeight);
 
-        visualCueLinePoints[0] = finalPosition;
-        visualCueLinePoints[1] = motionControlPosition;
-
-        // TODO: Compute for both anchors and average them using smooth lerp
-        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);
-
-        if (previewSnugOffsetJSON.val)
-        {
-            visualCueLinePoints[0] = motionControl.currentMotionControl.position;
-            visualCueLinePoints[1] = finalPosition;
-        }
-
-        hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
-        hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
+        return finalPosition;
     }
 
     #endregion
