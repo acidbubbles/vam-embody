@@ -205,11 +205,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         motionAnimationControl.suspendPositionPlayback = true;
         controller.RBHoldPositionSpring = sc.possessPositionSpring;
 
-        controller.canGrabRotation = true;
+        controller.canGrabRotation = motionControl.controlRotation;
         motionAnimationControl.suspendRotationPlayback = true;
         controller.RBHoldRotationSpring = sc.possessRotationSpring;
 
-        controller.SelectLinkToRigidbody(motionControllerHeadRigidbody, FreeControllerV3.SelectLinkState.PositionAndRotation);
+        controller.SelectLinkToRigidbody(
+            motionControllerHeadRigidbody,
+            motionControl.controlRotation
+                ? FreeControllerV3.SelectLinkState.PositionAndRotation
+                : FreeControllerV3.SelectLinkState.Position
+        );
     }
 
     private static void AlignRigAndController(FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl)

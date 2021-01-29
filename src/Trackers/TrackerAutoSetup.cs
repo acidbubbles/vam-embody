@@ -14,6 +14,17 @@ public class TrackerAutoSetup
         "lToeControl", "rToeControl",
     });
 
+    private static readonly HashSet<string> _disableRotationControllers = new HashSet<string>(new[]
+    {
+        "lNippleControl", "rNippleControl",
+        "testesControl",
+        "lKneeControl", "rKneeControl",
+        "lShoulderControl", "rKneeControl",
+        "lElbowControl", "rElbowControl",
+        "penisMidControl", "penisTipControl",
+        "lToeControl", "rToeControl",
+    });
+
     private readonly Atom _containingAtom;
 
     public TrackerAutoSetup(Atom containingAtom)
@@ -49,5 +60,7 @@ public class TrackerAutoSetup
         motionControl.mappedControllerName = closest.name;
         motionControl.customOffset = motionControl.possessPointTransform.InverseTransformDirection(closest.position - position);
         motionControl.customOffsetRotation = (Quaternion.Inverse(motionControl.possessPointTransform.rotation) * closest.rotation).eulerAngles;
+        // TODO: motionControl.possessPointRotation
+        motionControl.controlRotation = !_disableRotationControllers.Contains(closest.name);
     }
 }

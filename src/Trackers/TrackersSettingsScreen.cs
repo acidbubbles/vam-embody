@@ -34,7 +34,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             "",
             _trackers.motionControls.Select(mc => mc.name).ToList(),
             _trackers.motionControls[0].name ?? _none,
-            "Motion control",
+            "Tracker",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
         );
         CreateScrollablePopup(_motionControlJSON);
@@ -56,8 +56,18 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         if (motionControl == null) return;
 
+        if (!MotionControlNames.IsHeadOrHands(motionControl.name))
+        {
+            _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
+            {
+                _trackerAutoSetup.AttachToClosestNode(motionControl);
+                ShowMotionControl(motionControl);
+                context.Refresh();
+            });
+        }
+
         _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name}  Enabled",
+            $" Enabled",
             motionControl.enabled,
             val =>
             {
@@ -66,19 +76,28 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             }
         ));
 
-        _section.CreateFilterablePopup(new JSONStorableStringChooser(
-            "",
-            new[]{_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),
-            motionControl.mappedControllerName,
-            "Map to control",
-            val =>
-            {
-                motionControl.mappedControllerName = val == _none ? null : val;
-                context.Refresh();
-            }), false);
+        if (!MotionControlNames.IsHeadOrHands(motionControl.name))
+        {
+            _section.CreateFilterablePopup(new JSONStorableStringChooser(
+                "",
+                new[] {_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),
+                motionControl.mappedControllerName,
+                "Map to control",
+                val =>
+                {
+                    motionControl.mappedControllerName = val == _none ? null : val;
+                    context.Refresh();
+                }), false);
+
+            _section.CreateToggle(new JSONStorableBool(
+                $"Control Rotation",
+                motionControl.controlRotation,
+                val => motionControl.controlRotation = val
+            ), false);
+        }
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset X",
+            $"Offset X",
             motionControl.customOffset.x,
             val => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
             -0.5f,
@@ -86,7 +105,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset Y",
+            $"Offset Y",
             motionControl.customOffset.y,
             val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
             -0.5f,
@@ -94,7 +113,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset Z",
+            $"Offset Z",
             motionControl.customOffset.z,
             val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
             -0.5f,
@@ -102,7 +121,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset Rotate X",
+            $"Offset Rotate X",
             motionControl.customOffsetRotation.x,
             val => motionControl.customOffsetRotation = new Vector3(val, motionControl.customOffsetRotation.y, motionControl.customOffsetRotation.z),
             -180,
@@ -110,7 +129,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset Rotate Y",
+            $"Offset Rotate Y",
             motionControl.customOffsetRotation.y,
             val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, val, motionControl.customOffsetRotation.z),
             -180,
@@ -118,7 +137,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Offset Rotate Z",
+            $"Offset Rotate Z",
             motionControl.customOffsetRotation.z,
             val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, motionControl.customOffsetRotation.y, val),
             -180,
@@ -126,7 +145,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Point Rotate X",
+            $"Point Rotate X",
             motionControl.possessPointRotation.x,
             val => motionControl.possessPointRotation = new Vector3(val, motionControl.possessPointRotation.y, motionControl.possessPointRotation.z),
             -180,
@@ -134,7 +153,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Point Rotate Y",
+            $"Point Rotate Y",
             motionControl.possessPointRotation.y,
             val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, val, motionControl.possessPointRotation.z),
             -180,
@@ -142,24 +161,11 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"{motionControl.name} Point Rotate Z",
+            $"Point Rotate Z",
             motionControl.possessPointRotation.z,
             val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, motionControl.possessPointRotation.y, val),
             -180,
             180,
             false), false);
-
-        _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name} Control Rotation",
-            motionControl.controlRotation,
-            val => motionControl.controlRotation = val
-            ), false);
-
-        _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
-        {
-            _trackerAutoSetup.AttachToClosestNode(motionControl);
-            ShowMotionControl(motionControl);
-            context.Refresh();
-        });
     }
 }
