@@ -140,7 +140,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (controllerWithSnapshot == null) return null;
         var controller = controllerWithSnapshot.controller;
         if (controller.possessed) return null;
-        if (!controller.possessable) return null;
         if (!motionControl.SyncMotionControl()) return null;
         return controllerWithSnapshot;
     }
