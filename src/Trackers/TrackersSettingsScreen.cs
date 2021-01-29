@@ -58,9 +58,16 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         if (!MotionControlNames.IsHeadOrHands(motionControl.name))
         {
-            _section.CreateButton("Attach and align to closest node", true).button.onClick.AddListener(() =>
+            _section.CreateButton("Map to Closest Control", true).button.onClick.AddListener(() =>
             {
                 _trackerAutoSetup.AttachToClosestNode(motionControl);
+                ShowMotionControl(motionControl);
+                context.Refresh();
+            });
+
+            _section.CreateButton("Align to Mapped Control", true).button.onClick.AddListener(() =>
+            {
+                _trackerAutoSetup.AlignToNode(motionControl, context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == motionControl.mappedControllerName)?.GetComponent<Rigidbody>());
                 ShowMotionControl(motionControl);
                 context.Refresh();
             });
