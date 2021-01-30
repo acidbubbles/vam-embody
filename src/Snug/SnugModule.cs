@@ -8,6 +8,7 @@ public interface ISnugModule : IEmbodyModule
 {
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
+    JSONStorableFloat pullSmoothingJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
     JSONStorableBool disableSelfGrabJSON { get; }
     SnugAutoSetup autoSetup { get; }
@@ -28,6 +29,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     public JSONStorableBool disableSelfGrabJSON { get; set; }
     public JSONStorableFloat falloffJSON { get; private set; }
+    public JSONStorableFloat pullSmoothingJSON { get; private set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
@@ -43,7 +45,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
             disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", false);
-            falloffJSON = new JSONStorableFloat("Falloff", 0.3f, 0f, 5f, false);
+            falloffJSON = new JSONStorableFloat("Falloff", 0.25f, 0f, 5f, false);
+            pullSmoothingJSON = new JSONStorableFloat("PullSmoothing", 0.4f, 0f, 1f, false);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
@@ -326,8 +329,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Mathf.SmoothStep(finalPositionUpper.z, finalPositionLower.z, lowerWeight)
         );
 
-        // TODO: Compute for both anchors and average them using smooth lerp
-        var finalPositionToControlPoint = finalPosition + (hand.motionControl.possessPointTransform.position - motionControlPosition);
+        var possessPointPosition = hand.motionControl.possessPointTransform.position;
+        var finalPositionToControlPoint = finalPosition + (possessPointPosition - motionControlPosition);
 
         if (previewSnugOffsetJSON.val)
         {
@@ -335,7 +338,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             visualCueLinePoints[1] = finalPosition;
         }
 
-        hand.controllerRigidbody.MovePosition(finalPositionToControlPoint);
+        var distance = Vector3.Distance(possessPointPosition, finalPositionToControlPoint);
+        hand.pull = Mathf.SmoothDamp(hand.pull, distance, ref hand.pullVelocity, pullSmoothingJSON.val);
+        var pullRatio = distance == 0 ? 1 : hand.pull / distance;
+
+        hand.controllerRigidbody.MovePosition(Vector3.Lerp(possessPointPosition, finalPositionToControlPoint, pullRatio));
         hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
     }
 

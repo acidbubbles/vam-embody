@@ -27,17 +27,11 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
         CreateToggle(_snug.disableSelfGrabJSON).label = "Disable Person Grab";
-        CreateSpacer().height = 10f;
-        CreateSpacer().height = 10f;
-        InitHandsSettingsUI();
+        CreateSlider(_snug.falloffJSON, false).label = "Effect Falloff Distance";
+        CreateSlider(_snug.pullSmoothingJSON, false).label = "Pull Smoothing";
         InitAnchorsUI();
 
         SyncSelectedAnchorJSON("");
-    }
-
-    private void InitHandsSettingsUI()
-    {
-        CreateSlider(_snug.falloffJSON, false).label = "Effect Falloff Distance";
     }
 
     private void InitAnchorsUI()
