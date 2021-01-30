@@ -55,6 +55,7 @@ src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
+src\Wizard\Steps\RecordViveTrackersStep.cs
 src\Wizard\IWizardStep.cs
 src\Wizard\WizardContext.cs
 src\Wizard\WizardModule.cs

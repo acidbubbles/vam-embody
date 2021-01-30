@@ -118,6 +118,7 @@
     <Compile Include="src\Wizard\Steps\ActivateStep.cs" />
     <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\IWizardUpdate.cs" />
+    <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\WizardModule.cs" />
     <Compile Include="src\Wizard\WizardContext.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs" />

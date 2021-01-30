@@ -26,6 +26,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public IEmbody embody { get; set; }
     public IPassengerModule passenger { get; set; }
     public IWorldScaleModule worldScale { get; set; }
+    public ITrackersModule trackers { get; set; }
     public ISnugModule snug { get; set; }
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
@@ -101,6 +102,15 @@ public class WizardModule : EmbodyModuleBase, IWizard
         if (worldScale.selectedJSON.val)
         {
             steps.Add(new RecordPlayerHeightStep(worldScale));
+        }
+
+        if (trackers.selectedJSON.val)
+        {
+            var hasViveTrackers = trackers.motionControls
+                .Where(t => MotionControlNames.IsHeadOrHands(t.name))
+                .Any(t => t.SyncMotionControl());
+            if(hasViveTrackers)
+                steps.Add(new RecordViveTrackersStep());
         }
 
         if (snug.selectedJSON.val)
