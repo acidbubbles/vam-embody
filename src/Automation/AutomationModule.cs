@@ -60,9 +60,12 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
             {
-                SuperController.singleton.SelectModeOff();
-                embody.activeJSON.val = true;
-                return;
+                if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
+                {
+                    SuperController.singleton.SelectModeOff();
+                    embody.activeJSON.val = true;
+                    return;
+                }
             }
 
             if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
