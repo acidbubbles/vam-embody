@@ -8,7 +8,6 @@ public interface ISnugModule : IEmbodyModule
 {
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
-    JSONStorableFloat pullSmoothingJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
     JSONStorableBool disableSelfGrabJSON { get; }
     SnugAutoSetup autoSetup { get; }
@@ -29,7 +28,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     public JSONStorableBool disableSelfGrabJSON { get; set; }
     public JSONStorableFloat falloffJSON { get; private set; }
-    public JSONStorableFloat pullSmoothingJSON { get; private set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
@@ -45,8 +43,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
             disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", false);
-            falloffJSON = new JSONStorableFloat("Falloff", 0.25f, 0f, 5f, false);
-            pullSmoothingJSON = new JSONStorableFloat("PullSmoothing", 0.4f, 0f, 1f, false);
+            falloffJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
@@ -201,7 +198,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private void EnableHand(SnugHand hand, string motionControlName)
     {
         var motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
-        if (motionControl == null || !motionControl.SyncMotionControl()) return;
+        if (motionControl == null) return;
+        if (!motionControl.enabled) return;
+        if (!motionControl.SyncMotionControl()) return;
         hand.motionControl = motionControl;
         hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
         hand.active = true;
@@ -281,6 +280,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void ProcessHand(SnugHand hand)
     {
+        if (!hand.active) return;
+
         var motionControl = hand.motionControl;
         var motionControlPosition = motionControl.currentMotionControl.position;
         var visualCueLinePoints = hand.visualCueLinePoints;
@@ -329,6 +330,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             Mathf.SmoothStep(finalPositionUpper.z, finalPositionLower.z, lowerWeight)
         );
 
+        var effectWeight = ComputeEffectWeight(upper, lower, lowerWeight, motionControlPosition);
+
         var possessPointPosition = hand.motionControl.possessPointTransform.position;
         var finalPositionToControlPoint = finalPosition + (possessPointPosition - motionControlPosition);
 
@@ -338,48 +341,37 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             visualCueLinePoints[1] = finalPosition;
         }
 
-        var distance = Vector3.Distance(possessPointPosition, finalPositionToControlPoint);
-        hand.pull = Mathf.SmoothDamp(hand.pull, distance, ref hand.pullVelocity, pullSmoothingJSON.val);
-        var pullRatio = distance == 0 ? 1 : hand.pull / distance;
-
-        hand.controllerRigidbody.MovePosition(Vector3.Lerp(possessPointPosition, finalPositionToControlPoint, pullRatio));
+        hand.controllerRigidbody.MovePosition(Vector3.Lerp(possessPointPosition, finalPositionToControlPoint, effectWeight));
         hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
     }
 
-    private Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Quaternion upperRotation, Vector3 motionControlPosition, ControllerAnchorPoint upper)
+    private float ComputeEffectWeight(ControllerAnchorPoint upper, ControllerAnchorPoint lower, float lowerWeight, Vector3 motionControlPosition)
+    {
+        if (falloffJSON.val == 0)
+            return 1f;
+        var realLifeSize = Vector3.Lerp(upper.realLifeSize, lower.realLifeSize, lowerWeight);
+        var anchorPosition = Vector3.Lerp(upper.GetAdjustedWorldPosition(), lower.GetAdjustedWorldPosition(), lowerWeight);
+        var anchorRotation = Quaternion.Slerp(upper.rigidBody.transform.rotation, lower.rigidBody.transform.rotation, lowerWeight);
+
+        var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
+        var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
+        var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
+        var distanceFromAnchorHook = Vector3.Distance(anchorPosition, motionControlPosition) - hookDistanceFromAnchor;
+        var effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
+        return effectWeight;
+    }
+
+    private static Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Quaternion upperRotation, Vector3 motionControlPosition, ControllerAnchorPoint upper)
     {
         var anchorPosition = upperPosition;
-        var anchorRotation = upperRotation;
-        var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var realLifeSize = upper.realLifeSize;
-        var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
-
-        var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
-        var motionControlDistanceFromAnchor = Vector3.Distance(anchorPosition, motionControlPosition);
-        float effectWeight;
-        if (motionControlDistanceFromAnchor < hookDistanceFromAnchor)
-        {
-            effectWeight = 1f;
-        }
-        else if (falloffJSON.val == 0)
-        {
-            effectWeight = 0f;
-        }
-        else
-        {
-            var distanceFromAnchorHook = Vector3.Distance(anchorHook, motionControlPosition);
-            if (distanceFromAnchorHook > falloffJSON.val)
-                effectWeight = 0f;
-            else
-                effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
-        }
 
         var realOffset = upper.realLifeOffset;
         var inGameSize = upper.inGameSize;
         var scale = new Vector3(inGameSize.x / realLifeSize.x, 1f, inGameSize.z / realLifeSize.z);
         var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);
-        var finalPosition = Vector3.Lerp(motionControlPosition, anchorPosition + scaled - realOffset, effectWeight);
+        var finalPosition = anchorPosition + scaled - realOffset;
 
         return finalPosition;
     }

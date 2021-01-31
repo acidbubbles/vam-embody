@@ -125,6 +125,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
         if (context.containingAtom.type == "Person")
         {
+            // TODO: Validate if this really works (it didn't look like it)
             var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;

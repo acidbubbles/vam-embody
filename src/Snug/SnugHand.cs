@@ -13,6 +13,7 @@ public class SnugHand
     public readonly Vector3[] visualCueLinePoints = new Vector3[2];
     public float pull;
     public float pullVelocity;
+    public float previousDistance;
 
     public FreeControllerV3 controller
     {
