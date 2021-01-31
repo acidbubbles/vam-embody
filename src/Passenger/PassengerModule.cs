@@ -48,6 +48,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         set { _cameraCenterTarget.localEulerAngles = value; }
     }
 
+    protected override bool shouldBeSelectedByDefault => context.containingAtom.type != "Person";
+
     private Rigidbody _headRigidbody;
     private FreeControllerV3 _headControl;
     private Quaternion _currentRotationVelocity;
@@ -66,8 +68,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         base.Awake();
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
-        _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl");
-        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object");
+        _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
+        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault();
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
         if (_headRigidbody == null) throw new NullReferenceException("Embody: Could not find a link");
 

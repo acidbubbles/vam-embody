@@ -27,6 +27,7 @@ public class Embody : MVRScript, IEmbody
         try
         {
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
+            var isPerson = containingAtom.type == "Person";
 
             _modules = new GameObject();
             _modules.transform.SetParent(transform, false);
@@ -36,39 +37,49 @@ public class Embody : MVRScript, IEmbody
             _context.Initialize();
 
             var automationModule = CreateModule<AutomationModule>(_context);
-            var worldScaleModule = CreateModule<WorldScaleModule>(_context);
-            var hideGeometryModule = CreateModule<HideGeometryModule>(_context);
-            var offsetCameraModule = CreateModule<OffsetCameraModule>(_context);
+            var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
+            var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
+            var offsetCameraModule = isPerson ? CreateModule<OffsetCameraModule>(_context) : null;
             var passengerModule = CreateModule<PassengerModule>(_context);
-            var trackersModule = CreateModule<TrackersModule>(_context);
-            var snugModule = CreateModule<SnugModule>(_context);
-            var eyeTargetModule = CreateModule<EyeTargetModule>(_context);
-            var wizardModule = CreateModule<WizardModule>(_context);
+            var trackersModule = isPerson ? CreateModule<TrackersModule>(_context) : null;
+            var snugModule = isPerson ? CreateModule<SnugModule>(_context) : null;
+            var eyeTargetModule = isPerson ? CreateModule<EyeTargetModule>(_context) : null;
+            var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
             automationModule.embody = this;
-            trackersModule.snug = snugModule;
-            trackersModule.passenger = passengerModule;
-            snugModule.trackers = trackersModule;
-            wizardModule.embody = this;
-            wizardModule.passenger = passengerModule;
-            wizardModule.worldScale = worldScaleModule;
-            wizardModule.snug = snugModule;
+            if (isPerson)
+            {
+                trackersModule.snug = snugModule;
+                trackersModule.passenger = passengerModule;
+                snugModule.trackers = trackersModule;
+                wizardModule.embody = this;
+                wizardModule.passenger = passengerModule;
+                wizardModule.worldScale = worldScaleModule;
+                wizardModule.snug = snugModule;
+            }
 
             _modules.SetActive(true);
 
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
-            _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
-            _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
-            _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(_context, snugModule));
-            _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(_context, hideGeometryModule));
-            _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(_context, offsetCameraModule));
-            _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
-            _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
-            _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
-            _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
-            _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
-            _screensManager.Add(UtilitiesScreen.ScreenName, new UtilitiesScreen(_context));
+            if (isPerson)
+            {
+                _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
+                _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
+                _screensManager.Add(SnugSettingsScreen.ScreenName, new SnugSettingsScreen(_context, snugModule));
+                _screensManager.Add(HideGeometrySettingsScreen.ScreenName, new HideGeometrySettingsScreen(_context, hideGeometryModule));
+                _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(_context, offsetCameraModule));
+                _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
+                _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
+                _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
+                _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
+                _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
+                _screensManager.Add(UtilitiesScreen.ScreenName, new UtilitiesScreen(_context));
+            }
+            else
+            {
+                _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
+            }
 
             activeJSON.setCallbackFunction = val =>
             {
@@ -140,7 +151,7 @@ public class Embody : MVRScript, IEmbody
     {
         base.InitUI();
         if (UITransform == null) return;
-        _screensManager.Show(MainScreen.ScreenName);
+        _screensManager?.Show(MainScreen.ScreenName);
     }
 
     public void OnBindingsListRequested(List<object> bindings)
