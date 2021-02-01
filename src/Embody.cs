@@ -179,6 +179,7 @@ public class Embody : MVRScript, IEmbody
         #else
         SuperController.singleton.SelectController(containingAtom.mainController);
         #endif
+        SuperController.singleton.ShowMainHUDMonitor();
         StartCoroutine(WaitForUI());
     }
 
@@ -191,7 +192,7 @@ public class Embody : MVRScript, IEmbody
             var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
             if(selector == null) continue;
             selector.SetActiveTab("Plugins");
-            if (UITransform == null) SuperController.LogError("Timeline: No UI");
+            if (UITransform == null) SuperController.LogError("Embody: No UI");
             UITransform.gameObject.SetActive(true);
             yield break;
         }
