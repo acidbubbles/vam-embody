@@ -27,7 +27,8 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
         }
 
-        CreateSlider(_passenger.lookAtWeightJSON).label = "Look at weight";
+        if (context.containingAtom.type == "Person")
+            CreateSlider(_passenger.lookAtWeightJSON).label = "Look at weight";
         CreateToggle(_passenger.positionLockJSON).label = "Control camera position";
         CreateToggle(_passenger.rotationLockJSON).label = "Control camera rotation";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent camera roll";

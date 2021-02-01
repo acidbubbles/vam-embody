@@ -18,11 +18,14 @@ public class MainScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateSpacer().height = 10f;
-        CreateButton($"Import, Export & Default Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
-        CreateButton("Automatic Setup Wizard...").button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
+        if (context.containingAtom.type == "Person")
+        {
+            CreateSpacer().height = 10f;
 
-        CreateText(new JSONStorableString("", @"
+            CreateButton($"Import, Export & Default Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
+            CreateButton("Automatic Setup Wizard...").button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
+
+            CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
 
 Scroll for more information.
@@ -45,6 +48,15 @@ This further builds on previous features, but also adds body proportion adjustme
 
 Instead of you possessing the VR model, the VR model will ""possess you"". This means that if the VR model is moving, e.g. with Timeline or animation patterns, your VR view will move. This can be an extremely satisfying experience, but can also make some people sick. Only try this if you are comfortable with VR camera movement.
 ".Trim()), true);
+        }
+        else
+        {
+            CreateSpacer().height = 26f;
+
+            CreateText(new JSONStorableString("", @"
+Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, only Passenger is available.
+".Trim()), true);
+        }
 
         var presetsJSON = new JSONStorableStringChooser("Presets", new List<string>
         {
@@ -89,7 +101,8 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
                     break;
             }
         });
-        CreateScrollablePopup(presetsJSON, true);
+        if (context.containingAtom.type == "Person")
+            CreateScrollablePopup(presetsJSON, true);
 
         CreateSpacer(false).height = 0f;
         CreateSpacer(true).height = 6f;
@@ -105,8 +118,11 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
         }
 
-        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts & Automation...");
-        CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
+        if (context.containingAtom.type == "Person")
+        {
+            CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts & Automation...");
+            CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
+        }
 
 #warning For debugging purposes
         // context.plugin.StartCoroutine(DebugCo());
