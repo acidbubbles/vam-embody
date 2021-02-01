@@ -22,7 +22,7 @@ public class UtilitiesScreen : ScreenBase, IScreen
 
     private void CreateMirror()
     {
-        SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.containingAtom));
+        SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom));
     }
 
     private void StartRecord()

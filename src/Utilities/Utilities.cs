@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static class Utilities
 {
-    public static IEnumerator CreateMirror(Atom containingAtom)
+    public static IEnumerator CreateMirror(IEyeTargetModule eyeTarget, Atom containingAtom)
     {
         var uid = CreateUid("Mirror");
         var enumerator = SuperController.singleton.AddAtomByType("Glass", uid, true);
@@ -41,6 +41,11 @@ public static class Utilities
             reflection.textureSize = 2048;
             reflection.SetReflectionColor(new HSVColor {V = 1});
         }
+
+        yield return 0;
+
+        if (eyeTarget.activeJSON.val)
+            eyeTarget.Rescan();
     }
 
     private static string CreateUid(string source)

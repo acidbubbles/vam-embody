@@ -4,6 +4,7 @@ using UnityEngine;
 
 public interface IEyeTargetModule : IEmbodyModule
 {
+    void Rescan();
 }
 
 public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
@@ -45,10 +46,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public override bool BeforeEnable()
     {
-        _mirrors = GetMirrors();
-        _windowCamera = GetWindowCamera();
+        Rescan();
 
         return _mirrors.Count > 0 || !ReferenceEquals(_windowCamera, null);
+    }
+
+    public void Rescan()
+    {
+        _mirrors = GetMirrors();
+        _windowCamera = GetWindowCamera();
     }
 
     public override void OnEnable()
@@ -87,6 +93,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
          _eyeTarget.control.position = _eyeTargetRestorePosition;
          if(_eyeBehavior.currentLookMode != EyesControl.LookMode.Target)
              _eyeBehavior.currentLookMode = _eyeBehaviorRestoreLookMode;
+
+         _mirrors.Clear();
+         _windowCamera = null;
     }
 
     public void Update()
