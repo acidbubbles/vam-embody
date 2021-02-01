@@ -18,9 +18,9 @@ public class AutomationSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(
-            new JSONStorableString("",
-                "This module controls when Embody enables/disabled when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
+        CreateText( new JSONStorableString("", "This module controls when Embody enables/disabled when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
+
+        CreateToggle(_automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possess";
 
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
             val => { _automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });

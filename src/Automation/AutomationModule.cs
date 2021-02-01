@@ -6,6 +6,7 @@ using UnityEngine;
 public interface IAutomationModule : IEmbodyModule
 {
     KeyCode toggleKey { get; set; }
+    JSONStorableBool takeOverVamPossess { get; }
 }
 
 public class AutomationModule : EmbodyModuleBase, IAutomationModule
@@ -15,8 +16,10 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public override string label => Label;
     public override bool alwaysEnabled => true;
 
-    public bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
+    public JSONStorableBool takeOverVamPossess { get; } = new JSONStorableBool("TakeOverVamPossess", true);
     public KeyCode toggleKey { get; set; } = KeyCode.None;
+
+    private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
     private FreeControllerV3 _headControl;
     private bool _activatedByVam;
 
@@ -55,15 +58,18 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 return;
             }
 
-            if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
-                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
-                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
+            if (takeOverVamPossess.val)
             {
-                if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
+                if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
+                    || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
+                    || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
                 {
-                    SuperController.singleton.SelectModeOff();
-                    context.embody.activeJSON.val = true;
-                    return;
+                    if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
+                    {
+                        SuperController.singleton.SelectModeOff();
+                        context.embody.activeJSON.val = true;
+                        return;
+                    }
                 }
             }
 

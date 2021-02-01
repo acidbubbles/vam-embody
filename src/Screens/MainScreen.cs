@@ -48,11 +48,11 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
 
         var presetsJSON = new JSONStorableStringChooser("Presets", new List<string>
         {
-            "Native VaM possession",
-            "Improved possession",
+            "VaM Possession",
+            "Improved Possession",
             "Snug",
             "Passenger",
-        }, "", "Apply preset", (string val) =>
+        }, "(Select to apply)", "Apply preset", (string val) =>
         {
             foreach (var module in _modules)
             {
@@ -60,17 +60,20 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             }
             switch (val)
             {
-                case "Native VaM possession":
+                case "VaM Possession":
+                    context.automation.takeOverVamPossess.val = false;
                     SelectModule("HideGeometry", true);
                     SelectModule("OffsetCamera", true);
                     break;
-                case "Improved possession":
+                case "Improved Possession":
+                    context.automation.takeOverVamPossess.val = true;
                     SelectModule("Trackers", true);
                     SelectModule("HideGeometry", true);
                     SelectModule("WorldScale", true);
                     SelectModule("EyeTarget", true);
                     break;
                 case "Snug":
+                    context.automation.takeOverVamPossess.val = true;
                     SelectModule("Trackers", true);
                     SelectModule("HideGeometry", true);
                     SelectModule("Snug", true);
@@ -78,6 +81,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
                     SelectModule("EyeTarget", true);
                     break;
                 case "Passenger":
+                    context.automation.takeOverVamPossess.val = true;
                     SelectModule("HideGeometry", true);
                     SelectModule("Passenger", true);
                     SelectModule("WorldScale", true);
@@ -101,7 +105,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
         }
 
-        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Toggle Shortcut...");
+        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts & Automation...");
         CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
 
 #warning For debugging purposes
