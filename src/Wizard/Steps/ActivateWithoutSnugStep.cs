@@ -1,6 +1,6 @@
-﻿public class ActivateWithoutSnugStep : IWizardStep
+﻿public class ActivateWithoutSnugStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "We will now start possession (except hands). Press select when ready.";
+    public string helpText => "We will now start possession (except hands). Press next when ready.";
     private readonly IEmbody _embody;
     private readonly ISnugModule _snug;
 
@@ -10,7 +10,7 @@
         _snug = snug;
     }
 
-    public void Run()
+    public void Apply()
     {
         #warning Skip for now
         // TODO: We do not want that. We want to enable head _only_, make sure the model is standing straight, and enable hide geometry and offset camera too.

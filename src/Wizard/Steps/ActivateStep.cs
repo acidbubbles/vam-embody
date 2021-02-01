@@ -1,15 +1,14 @@
-﻿public class ActivateStep : IWizardStep
+﻿public class ActivateStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "We will now start possession. Press select when ready.";
+    public string helpText => "We will now start possession. Press next when ready.";
     private readonly IEmbody _embody;
-    private readonly ISnugModule _snug;
 
     public ActivateStep(IEmbody embody)
     {
         _embody = embody;
     }
 
-    public void Run()
+    public void Apply()
     {
         _embody.activeJSON.val = true;
     }

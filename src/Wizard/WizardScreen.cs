@@ -1,4 +1,5 @@
-﻿using UnityEngine.Events;
+﻿using UnityEngine;
+using UnityEngine.Events;
 
 public class WizardScreen : ScreenBase, IScreen
 {
@@ -18,21 +19,28 @@ public class WizardScreen : ScreenBase, IScreen
 
         var startButton = CreateButton("Start Wizard", true);
         startButton.button.onClick.AddListener(() => _wizard.StartWizard());
+        startButton.buttonColor = Color.green;
 
         var stopButton = CreateButton("Stop Wizard", true);
         stopButton.button.onClick.AddListener(() => _wizard.StopWizard("Stopped"));
+        stopButton.buttonColor = Color.red;
 
         var statusText = CreateText(_wizard.statusJSON, true);
         statusText.height = 600;
 
-        var nextButton = CreateButton("Next", true);
+        var nextButton = CreateButton("Next Step >", true);
         nextButton.button.onClick.AddListener(() => _wizard.Next());
+        nextButton.buttonColor = Color.green;
+
+        var skipButton = CreateButton("Skip Step", true);
+        skipButton.button.onClick.AddListener(() => _wizard.Skip());
 
         _onStatusChanged = isRunning =>
         {
             startButton.button.interactable = !isRunning;
             stopButton.button.interactable = isRunning;
             nextButton.button.interactable = isRunning;
+            skipButton.button.interactable = isRunning;
         };
         _wizard.statusChanged.AddListener(_onStatusChanged);
         _onStatusChanged(_wizard.isRunning);
@@ -42,6 +50,7 @@ public class WizardScreen : ScreenBase, IScreen
     {
         base.Hide();
 
+        _wizard.StopWizard("");
         _wizard.statusChanged.RemoveListener(_onStatusChanged);
     }
 }

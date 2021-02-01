@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using SimpleJSON;
 using UnityEngine;
 
@@ -14,7 +15,6 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public override string label => Label;
     public override bool alwaysEnabled => true;
 
-    public IEmbody embody { get; set; }
     public bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
     public KeyCode toggleKey { get; set; } = KeyCode.None;
     private FreeControllerV3 _headControl;
@@ -32,18 +32,17 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
     }
 
+    [SuppressMessage("ReSharper", "RedundantJumpStatement")]
     public void Update()
     {
-        // ReSharper disable once RedundantJumpStatement
-
-        if (embody.activeJSON.val)
+        if (context.embody.activeJSON.val)
         {
             if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
             {
                 SuperController.singleton.SelectModeOff();
-                embody.activeJSON.val = false;
+                context.embody.activeJSON.val = false;
                 return;
             }
         }
@@ -51,7 +50,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         {
             if (headPossessedInVam)
             {
-                embody.activeJSON.val = true;
+                context.embody.activeJSON.val = true;
                 _activatedByVam = true;
                 return;
             }
@@ -63,27 +62,27 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
                 {
                     SuperController.singleton.SelectModeOff();
-                    embody.activeJSON.val = true;
+                    context.embody.activeJSON.val = true;
                     return;
                 }
             }
 
             if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
             {
-                embody.activeJSON.val = true;
+                context.embody.activeJSON.val = true;
                 return;
             }
         }
 
-        if (_activatedByVam && embody.activeJSON.val && !_headControl.possessed)
+        if (_activatedByVam && context.embody.activeJSON.val && !_headControl.possessed)
         {
-            embody.activeJSON.val = false;
+            context.embody.activeJSON.val = false;
             return;
         }
 
         if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
         {
-            embody.activeJSON.val = false;
+            context.embody.activeJSON.val = false;
             return;
         }
     }

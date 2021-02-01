@@ -1,4 +1,4 @@
-﻿public class RecordPlayerHeightStep : IWizardStep
+﻿public class RecordPlayerHeightStep : WizardStepBase, IWizardStep
 {
     public string helpText => "We will record your height.\n\nStand straight, and press next when ready.";
 
@@ -9,7 +9,7 @@
         _worldScale = worldScale;
     }
 
-    public void Run()
+    public void Apply()
     {
         _worldScale.playerHeightJSON.val = GetPlayerHeight();
         _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;

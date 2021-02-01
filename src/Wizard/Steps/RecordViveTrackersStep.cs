@@ -1,13 +1,24 @@
-﻿public class RecordViveTrackersStep : IWizardStep, IWizardUpdate
+﻿public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 {
     public string helpText => "Vive trackers detected. Take the same pose as the person you want to possess, and press Next";
 
-    public void Run()
+    public RecordViveTrackersStep(EmbodyContext context)
+        : base(context)
     {
-        // TODO: Snap all motion control position using TrackersAutoSetup
+
     }
 
-    public void Update()
+    public void Apply()
+    {
+        var autoSetup = new TrackerAutoSetup(context.containingAtom);
+        foreach (var mc in context.trackers.viveTrackers)
+        {
+            if (!mc.SyncMotionControl()) continue;
+            autoSetup.AttachToClosestNode(mc);
+        }
+    }
+
+    public override void Update()
     {
         // TODO: Enable and disable the preview
         // TODO: Draw lines connecting trackers with their closest target

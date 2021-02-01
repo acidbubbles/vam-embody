@@ -105,7 +105,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         CreateConfigButton(UtilitiesScreen.ScreenName, "Animation & Utilities...");
 
 #warning For debugging purposes
-        //context.plugin.StartCoroutine(DebugCo());
+        // context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -126,21 +126,21 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
         _once = true;
         yield return new WaitForSecondsRealtime(0.2f);
         // Enable Snug
-        (_modules.First(m => m.storeId == "Snug") as SnugModule).previewSnugOffsetJSON.val = true;
+        //(_modules.First(m => m.storeId == "Snug") as SnugModule).previewSnugOffsetJSON.val = true;
         // Show 3d trackers
-        (_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
+        //(_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
         // Activate
-        context.embody.activeJSON.val = true;
+        //context.embody.activeJSON.val = true;
         // Wizard
-        /*
-        _modules.First(m => m.storeId == "Snug").selectedJSON.val = true;
-        _modules.First(m => m.storeId == "Trackers").selectedJSON.val = false;
+        _modules.First(m => m.storeId == "Snug").selectedJSON.val = false;
+        _modules.First(m => m.storeId == "Trackers").selectedJSON.val = true;
         _modules.First(m => m.storeId == "WorldScale").selectedJSON.val = false;
         _modules.First(m => m.storeId == "HideGeometry").selectedJSON.val = false;
         yield return new WaitForSecondsRealtime(0.2f);
         screensManager.Show(WizardScreen.ScreenName);
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.StartWizard();
+        /*
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.Next();
         yield return new WaitForSecondsRealtime(0.2f);

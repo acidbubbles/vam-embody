@@ -5,7 +5,18 @@ public class EmbodyContext
 {
     public readonly MVRScript plugin;
     public readonly IEmbody embody;
+
     public Atom containingAtom => plugin.containingAtom;
+
+    public IAutomationModule automation;
+    public IWorldScaleModule worldScale;
+    public IHideGeometryModule hideGeometry;
+    public IOffsetCameraModule offsetCamera;
+    public IPassengerModule passenger;
+    public ITrackersModule trackers;
+    public ISnugModule snug;
+    public IEyeTargetModule eyeTarget;
+    public IWizard wizard;
 
     public Transform head { get; private set; }
     public Transform leftHand { get; private set; }

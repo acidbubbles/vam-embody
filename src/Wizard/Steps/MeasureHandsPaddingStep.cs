@@ -1,23 +1,22 @@
 ﻿using System.Linq;
 using UnityEngine;
 
-public class MeasureHandsPaddingStep : IWizardStep, IWizardUpdate
+public class MeasureHandsPaddingStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Now put your hands together like you're praying, and press select when ready.";
-    private readonly WizardContext _context;
-    private FreeControllerV3 _leftHandControl;
-    private FreeControllerV3 _rightHandControl;
-    private Rigidbody _head;
+    public string helpText => "Now put your hands together like you're praying, and Press next when ready.";
+    private readonly FreeControllerV3 _leftHandControl;
+    private readonly FreeControllerV3 _rightHandControl;
+    private readonly Rigidbody _head;
 
-    public MeasureHandsPaddingStep(WizardContext context)
+    public MeasureHandsPaddingStep(EmbodyContext context)
+        : base(context)
     {
-        _context = context;
         _head = context.containingAtom.rigidbodies.First(fc => fc.name == "head");
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
     }
 
-    public void Update()
+    public override void Update()
     {
         _leftHandControl.control.position = _head.position + _head.transform.forward * 0.3f + Vector3.down * 0.2f + _head.transform.right * -0.01f;
         _leftHandControl.control.eulerAngles = _head.rotation.eulerAngles;
@@ -28,11 +27,8 @@ public class MeasureHandsPaddingStep : IWizardStep, IWizardUpdate
         _rightHandControl.control.Rotate(new Vector3(180, 0, 270 - 10));
     }
 
-    public void Run()
+    public void Apply()
     {
-        _context.handsDistance = Vector3.Distance(_context.context.leftHand.position, _context.context.rightHand.position);
-        // TODO: Measure hand center?
-        #warning Debug
-        _context.handsDistance = 0.03f;
+        SuperController.LogMessage($"Hands distance: {Vector3.Distance(context.leftHand.position, context.rightHand.position)}");
     }
 }

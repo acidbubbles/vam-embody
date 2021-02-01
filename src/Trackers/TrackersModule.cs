@@ -9,6 +9,8 @@ public interface ITrackersModule : IEmbodyModule
     JSONStorableBool restorePoseAfterPossessJSON { get; }
     JSONStorableBool previewTrackerOffsetJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
+    IEnumerable<MotionControllerWithCustomPossessPoint> viveTrackers { get; }
+    IEnumerable<MotionControllerWithCustomPossessPoint> headAndHands { get; }
     List<FreeControllerV3WithSnapshot> controllers { get; }
 }
 
@@ -21,10 +23,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     protected override bool shouldBeSelectedByDefault => true;
 
-    public IPassengerModule passenger { get; set; }
-    public ISnugModule snug { get; set; }
-
     public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
+
+    public IEnumerable<MotionControllerWithCustomPossessPoint> viveTrackers => motionControls
+        .Where(t => MotionControlNames.IsViveTracker(t.name));
+
+    public IEnumerable<MotionControllerWithCustomPossessPoint> headAndHands => motionControls
+        .Where(t => MotionControlNames.IsHeadOrHands(t.name));
+
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
@@ -37,14 +43,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
         AddMotionControl(MotionControlNames.LeftHand, () => context.leftHand, "lHandControl", new Vector3(-0.03247f, -0.03789f, -0.10116f), new Vector3(-90, 90, 0));
         AddMotionControl(MotionControlNames.RightHand, () => context.rightHand, "rHandControl", new Vector3(0.03247f, -0.03789f, -0.10116f), new Vector3(-90, -90, 0));
-        AddMotionControl("ViveTracker1", () => context.viveTracker1);
-        AddMotionControl("ViveTracker2", () => context.viveTracker2);
-        AddMotionControl("ViveTracker3", () => context.viveTracker3);
-        AddMotionControl("ViveTracker4", () => context.viveTracker4);
-        AddMotionControl("ViveTracker5", () => context.viveTracker5);
-        AddMotionControl("ViveTracker6", () => context.viveTracker6);
-        AddMotionControl("ViveTracker7", () => context.viveTracker7);
-        AddMotionControl("ViveTracker8", () => context.viveTracker8);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}4", () => context.viveTracker4);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}5", () => context.viveTracker5);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}6", () => context.viveTracker6);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}7", () => context.viveTracker7);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}8", () => context.viveTracker8);
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {
@@ -132,8 +138,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         if (!motionControl.enabled) return null;
         if (motionControl.mappedControllerName == null) return null;
-        if (passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
-        if (snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return null;
+        if (context.passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
+        if (context.snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return null;
         var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
         if (controllerWithSnapshot == null) return null;
         var controller = controllerWithSnapshot.controller;

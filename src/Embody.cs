@@ -36,27 +36,25 @@ public class Embody : MVRScript, IEmbody
             _context = new EmbodyContext(this, this);
             _context.Initialize();
 
-            var automationModule = CreateModule<AutomationModule>(_context);
-            var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
-            var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
-            var offsetCameraModule = isPerson ? CreateModule<OffsetCameraModule>(_context) : null;
-            var passengerModule = CreateModule<PassengerModule>(_context);
-            var trackersModule = isPerson ? CreateModule<TrackersModule>(_context) : null;
-            var snugModule = isPerson ? CreateModule<SnugModule>(_context) : null;
-            var eyeTargetModule = isPerson ? CreateModule<EyeTargetModule>(_context) : null;
-            var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
+             var automationModule = CreateModule<AutomationModule>(_context);
+             var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
+             var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
+             var offsetCameraModule = isPerson ? CreateModule<OffsetCameraModule>(_context) : null;
+             var passengerModule = CreateModule<PassengerModule>(_context);
+             var trackersModule = isPerson ? CreateModule<TrackersModule>(_context) : null;
+             var snugModule = isPerson ? CreateModule<SnugModule>(_context) : null;
+             var eyeTargetModule = isPerson ? CreateModule<EyeTargetModule>(_context) : null;
+             var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
-            automationModule.embody = this;
-            if (isPerson)
-            {
-                trackersModule.snug = snugModule;
-                trackersModule.passenger = passengerModule;
-                snugModule.trackers = trackersModule;
-                wizardModule.embody = this;
-                wizardModule.passenger = passengerModule;
-                wizardModule.worldScale = worldScaleModule;
-                wizardModule.snug = snugModule;
-            }
+            _context.automation = automationModule;
+            _context.worldScale = worldScaleModule;
+            _context.hideGeometry = hideGeometryModule;
+            _context.offsetCamera = offsetCameraModule;
+            _context.passenger = passengerModule;
+            _context.trackers = trackersModule;
+            _context.snug = snugModule;
+            _context.eyeTarget = eyeTargetModule;
+            _context.wizard = wizardModule;
 
             _modules.SetActive(true);
 
@@ -216,6 +214,7 @@ public class Embody : MVRScript, IEmbody
         activeJSON.val = false;
     }
 
+    // ReSharper disable once UnusedMember.Local
     private void OnBeforeSceneSave()
     {
         if (activeJSON.val)
@@ -225,6 +224,7 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
+    // ReSharper disable once UnusedMember.Local
     private void OnSceneSaved()
     {
         if (_activateAfterSaveComplete)
@@ -244,6 +244,7 @@ public class Embody : MVRScript, IEmbody
 
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
+        _context.wizard.StopWizard("");
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())

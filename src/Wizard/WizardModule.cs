@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,6 +13,7 @@ public interface IWizard : IEmbodyModule
     void StartWizard();
     void StopWizard(string message);
     void Next();
+    void Skip();
 }
 
 public class WizardStatusChangedEvent : UnityEvent<bool> { }
@@ -23,17 +25,14 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public override string label => Label;
     public override bool alwaysEnabled => true;
 
-    public IEmbody embody { get; set; }
-    public IPassengerModule passenger { get; set; }
-    public IWorldScaleModule worldScale { get; set; }
-    public ITrackersModule trackers { get; set; }
-    public ISnugModule snug { get; set; }
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
     public bool isRunning => _coroutine != null;
 
     private Coroutine _coroutine;
+    private EmbodySelectionSnapshot _snapshot;
     private bool _next;
+    private bool _skip;
 
     public override void Awake()
     {
@@ -57,8 +56,15 @@ public class WizardModule : EmbodyModuleBase, IWizard
             _coroutine = null;
         }
 
+        if (_snapshot != null)
+        {
+            _snapshot.Restore();
+            _snapshot = null;
+        }
+
         statusJSON.val = message;
         _next = false;
+        _skip = false;
         statusChanged.Invoke(false);
     }
 
@@ -67,65 +73,71 @@ public class WizardModule : EmbodyModuleBase, IWizard
         _next = true;
     }
 
+    public void Skip()
+    {
+        _skip = true;
+    }
+
     private IEnumerator StartWizardCo()
     {
-        embody.activeJSON.val = false;
+        context.embody.activeJSON.val = false;
         context.Initialize();
+        _snapshot = EmbodySelectionSnapshot.Snap(context);
 
         yield return 0;
 
-        var wizardContext = new WizardContext
-        {
-            embody = embody,
-            context = context
-        };
-
-        if (worldScale.selectedJSON.val)
+        if (_snapshot.worldScale)
         {
             SuperController.singleton.worldScale = 1f;
         }
 
-        if (snug.selectedJSON.val)
+        if (_snapshot.snug)
         {
-            if (passenger.selectedJSON.val)
+            if (_snapshot.passenger)
             {
                 StopWizard("You cannot run the wizard with Passenger selected.");
                 yield break;
             }
 
-            var autoSetup = new SnugAutoSetup(context.containingAtom, snug);
+            var autoSetup = new SnugAutoSetup(context.containingAtom, context.snug);
             autoSetup.AutoSetup();
         }
 
+        _snapshot.DisableAll();
+
         var steps = new List<IWizardStep>();
 
-        if (worldScale.selectedJSON.val)
+        if (_snapshot.worldScale)
         {
-            steps.Add(new RecordPlayerHeightStep(worldScale));
+            steps.Add(new RecordPlayerHeightStep(context.worldScale));
         }
 
-        if (trackers.selectedJSON.val)
+        if (_snapshot.trackers)
         {
-            var hasViveTrackers = trackers.motionControls
-                .Where(t => MotionControlNames.IsHeadOrHands(t.name))
-                .Any(t => t.SyncMotionControl());
-            if(hasViveTrackers)
-                steps.Add(new RecordViveTrackersStep());
+            // NOTE: We use Count because we want to sync all available motion controls, not only the first one
+            // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
+            if (context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0)
+            {
+                steps.Add(new ActivateHeadAndHandsStep(context, _snapshot));
+                steps.Add(new RecordViveTrackersStep(context));
+                steps.Add(new DeactivateStep(context));
+            }
         }
 
-        if (snug.selectedJSON.val)
+        // TODO: Implement Snug wizard
+        if (_snapshot.snug && false)
         {
             // TODO: Load pose
-            steps.Add(new MeasureHandsPaddingStep(wizardContext));
-            steps.Add(new ActivateWithoutSnugStep(embody, snug));
-            var hipsAnchor = snug.anchorPoints.First(a => a.label == "Hips");
-            steps.Add(new MeasureAnchorWidthStep(wizardContext, "hips", hipsAnchor));
-            steps.Add(new MeasureAnchorDepthAndOffsetStep(wizardContext, "hips", hipsAnchor));
-            steps.Add(new EnableSnugStep(embody, snug));
+            // steps.Add(new MeasureHandsPaddingStep(context));
+            steps.Add(new ActivateWithoutSnugStep(context.embody, context.snug));
+            var hipsAnchor = context.snug.anchorPoints.First(a => a.label == "Hips");
+            steps.Add(new MeasureAnchorWidthStep(context, "hips", hipsAnchor));
+            steps.Add(new MeasureAnchorDepthAndOffsetStep(context, "hips", hipsAnchor));
+            // steps.Add(new EnableSnugStep(context.embody, context.snug));
         }
         else
         {
-            steps.Add(new ActivateStep(embody));
+            // steps.Add(new ActivateStep(context.embody));
         }
 
         if (steps.Count == 0)
@@ -137,21 +149,20 @@ public class WizardModule : EmbodyModuleBase, IWizard
         for (var i = 0; i < steps.Count; i++)
         {
             var step = steps[i];
-            var stepUpdate = step as IWizardUpdate;
             statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{step.helpText}";
             while (!AreAnyStartRecordKeysDown())
             {
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (_skip)
                 {
                     StopWizard("Wizard canceled");
                     yield break;
                 }
 
                 yield return 0;
-                stepUpdate?.Update();
+                step.Update();
             }
 
-            step.Run();
+            step.Apply();
         }
 
         StopWizard("All done! You can now activate Embody.");
@@ -160,9 +171,14 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
     private bool AreAnyStartRecordKeysDown()
     {
-        if (_next)
+        if (_next || _skip)
         {
             _next = false;
+            return true;
+        }
+        if (Input.GetKey(KeyCode.Escape))
+        {
+            _skip = true;
             return true;
         }
         var sc = SuperController.singleton;

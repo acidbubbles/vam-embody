@@ -21,8 +21,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public override string storeId => "Snug";
     public override string label => Label;
 
-    public ITrackersModule trackers;
-
     public SnugAutoSetup autoSetup { get; private set; }
 
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
@@ -162,7 +160,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public override bool BeforeEnable()
     {
-        if (!trackers.selectedJSON.val)
+        if (!context.trackers.selectedJSON.val)
         {
             SuperController.LogError("Embody: Snug requires the Trackers module.");
             return false;
@@ -184,7 +182,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 if (fc == _lHand.controller || fc == _rHand.controller) continue;
                 if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
                 if (!fc.name.EndsWith("Control")) continue;
-                if (!trackers.motionControls.Any(mc => mc.mappedControllerName == fc.name && mc.enabled))
+                if (!context.trackers.motionControls.Any(mc => mc.mappedControllerName == fc.name && mc.enabled))
                     _previousState.Add(FreeControllerV3Snapshot.Snap(fc));
                 fc.canGrabPosition = false;
                 fc.canGrabRotation = false;
@@ -197,7 +195,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void EnableHand(SnugHand hand, string motionControlName)
     {
-        var motionControl = trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
+        var motionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
         if (motionControl == null) return;
         if (!motionControl.enabled) return;
         if (!motionControl.SyncMotionControl()) return;
@@ -234,7 +232,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.active = false;
         if (hand.snapshot != null)
         {
-            hand.snapshot.Restore(trackers.restorePoseAfterPossessJSON.val);
+            hand.snapshot.Restore(context.trackers.restorePoseAfterPossessJSON.val);
             hand.snapshot = null;
         }
         hand.showCueLine = false;
@@ -319,11 +317,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var totalDelta = yLowerDelta + yUpperDelta;
         var upperWeight = totalDelta == 0 ? 1f : yLowerDelta / totalDelta;
         var lowerWeight = 1f - upperWeight;
-        var lowerRotation = lower.rigidBody.transform.rotation;
-        var upperRotation = upper.rigidBody.transform.rotation;
 
-        var finalPositionUpper =  ComputeHandPositionFromAnchor(upperPosition, upperRotation, motionControlPosition, upper);
-        var finalPositionLower =  ComputeHandPositionFromAnchor(lowerPosition, lowerRotation, motionControlPosition, lower);
+        var finalPositionUpper =  ComputeHandPositionFromAnchor(upperPosition, motionControlPosition, upper);
+        var finalPositionLower =  ComputeHandPositionFromAnchor(lowerPosition, motionControlPosition, lower);
         var finalPosition = new Vector3(
             Mathf.SmoothStep(finalPositionUpper.x, finalPositionLower.x, lowerWeight),
             Mathf.SmoothStep(finalPositionUpper.y, finalPositionLower.y, lowerWeight),
@@ -361,7 +357,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         return effectWeight;
     }
 
-    private static Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Quaternion upperRotation, Vector3 motionControlPosition, ControllerAnchorPoint upper)
+    private static Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Vector3 motionControlPosition, ControllerAnchorPoint upper)
     {
         var anchorPosition = upperPosition;
         var realLifeSize = upper.realLifeSize;
