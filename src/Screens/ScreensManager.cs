@@ -12,6 +12,8 @@ public class ScreensManager : IScreensManager
     private readonly List<string> _screenNames = new List<string>();
     private readonly Dictionary<string, IScreen> _screens = new Dictionary<string, IScreen>();
     private string _currentScreenName;
+    private UIDynamicButton _backButton;
+    private string _mainScreenName;
 
     public ScreensManager()
     {
@@ -26,6 +28,15 @@ public class ScreensManager : IScreensManager
         screen.screensManager = this;
         _screenNames.Add(screenName);
         _screens.Add(screenName, screen);
+    }
+
+    public void Init(MVRScript plugin, string mainScreen)
+    {
+        _mainScreenName = mainScreen;
+        _backButton = plugin.CreateButton("< Back");
+        _backButton.button.onClick.AddListener(() => Show(mainScreen));
+        _backButton.height = 100f;
+        Show(mainScreen);
     }
 
     public bool Show(string screenName)
@@ -47,6 +58,9 @@ public class ScreensManager : IScreensManager
         screen.Show();
         _currentScreenName = screenName;
         screensJSON.valNoCallback = screenName;
+        _backButton.button.interactable = screenName != _mainScreenName;
+        _backButton.label = _backButton.button.interactable ? "< Back" : "Welcome to Embody <3";
+
         return true;
     }
 }

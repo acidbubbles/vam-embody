@@ -20,7 +20,7 @@ public class AutomationSettingsScreen : ScreenBase, IScreen
     {
         CreateText(
             new JSONStorableString("",
-                "This module automatically enables/disabled Embody when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
+                "This module controls when Embody enables/disabled when VaM possession is activated. You can also press <b>Esc</b> to exit Embody at any time."), true);
 
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
             val => { _automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });

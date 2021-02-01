@@ -19,8 +19,8 @@ public class MainScreen : ScreenBase, IScreen
     public void Show()
     {
         CreateSpacer().height = 10f;
-        CreateButton($"Import / Export Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
-        CreateButton("Setup Wizard").button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
+        CreateButton($"Import, Export & Default Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
+        CreateButton("Automatic Setup Wizard...").button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
 
         CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
@@ -52,7 +52,7 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             "Improved possession",
             "Snug",
             "Passenger",
-        }, "", "Apply a preset", (string val) =>
+        }, "", "Apply preset", (string val) =>
         {
             foreach (var module in _modules)
             {
@@ -101,8 +101,8 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
             selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
         }
 
-        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts...");
-        CreateConfigButton(UtilitiesScreen.ScreenName, "Animation & Utilities...");
+        CreateConfigButton(AutomationSettingsScreen.ScreenName, "Toggle Shortcut...");
+        CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
 
 #warning For debugging purposes
         // context.plugin.StartCoroutine(DebugCo());

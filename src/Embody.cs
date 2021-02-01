@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Common;
 using MVR.FileManagementSecure;
 using SimpleJSON;
 using UnityEngine;
@@ -112,9 +111,6 @@ public class Embody : MVRScript, IEmbody
             activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
-            var popup = CreateScrollablePopup(_screensManager.screensJSON);
-            popup.popupPanelHeight = 700f;
-            popup.AddNav(this);
 
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
@@ -149,7 +145,7 @@ public class Embody : MVRScript, IEmbody
     {
         base.InitUI();
         if (UITransform == null) return;
-        _screensManager?.Show(MainScreen.ScreenName);
+        _screensManager?.Init(this, MainScreen.ScreenName);
     }
 
     public void OnBindingsListRequested(List<object> bindings)
