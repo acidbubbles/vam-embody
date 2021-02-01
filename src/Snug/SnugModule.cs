@@ -40,7 +40,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
-            disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", false);
+            disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", true);
             falloffJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
