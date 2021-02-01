@@ -14,7 +14,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableBool positionLockJSON { get; }
     JSONStorableFloat positionSmoothingJSON { get; }
     JSONStorableBool allowPersonHeadRotationJSON { get; }
-    JSONStorableFloat eyesToHeadDistanceJSON { get; }
+    JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }
     Vector3 positionOffset { get; set; }
     Vector3 rotationOffset { get; set; }
 }
@@ -34,7 +34,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableBool positionLockJSON { get; set; }
     public JSONStorableFloat positionSmoothingJSON { get; set; }
     public JSONStorableBool allowPersonHeadRotationJSON { get; set; }
-    public JSONStorableFloat eyesToHeadDistanceJSON { get; set; }
+    public JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; set; }
 
     public Vector3 positionOffset
     {
@@ -105,11 +105,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             Reapply();
         });
 
-        rotationSmoothingJSON = new JSONStorableFloat("Rotation Smoothing", 0f, 0f, 1f, true);
+        rotationSmoothingJSON = new JSONStorableFloat("RotationSmoothing", 0f, 0f, 1f, true);
 
-        positionSmoothingJSON = new JSONStorableFloat("Position Smoothing", 0f, 0f, 1f, true);
+        positionSmoothingJSON = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
 
-        eyesToHeadDistanceJSON = new JSONStorableFloat("Eyes-To-Head Distance", 0f, (float val) => Reapply(), -0.1f, 0.2f, false);
+        eyesToHeadDistanceOffsetJSON = new JSONStorableFloat("EyesToHeadDistanceOffset", 0f, (float val) => Reapply(), -0.1f, 0.2f, false);
     }
 
     private void Reapply()
@@ -135,7 +135,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             var eyesCenter = (lEye.position + rEye.position) / 2f;
             var upDelta = Vector3.Dot(_headTransform.InverseTransformPoint(eyesCenter), _headTransform.up);
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
-            _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
+            _headToEyesDistance = eyesToHeadDistanceOffsetJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
         else
         {
@@ -274,7 +274,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionLockJSON.StoreJSON(jc);
         positionSmoothingJSON.StoreJSON(jc);
         allowPersonHeadRotationJSON.StoreJSON(jc);
-        eyesToHeadDistanceJSON.StoreJSON(jc);
+        eyesToHeadDistanceOffsetJSON.StoreJSON(jc);
         jc["PositionOffset"] = positionOffset.ToJSON();
         jc["RotationOffset"] = rotationOffset.ToJSON();
     }
@@ -291,7 +291,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionLockJSON.RestoreFromJSON(jc);
         positionSmoothingJSON.RestoreFromJSON(jc);
         allowPersonHeadRotationJSON.RestoreFromJSON(jc);
-        eyesToHeadDistanceJSON.RestoreFromJSON(jc);
+        eyesToHeadDistanceOffsetJSON.RestoreFromJSON(jc);
         positionOffset = jc["PositionOffset"].ToVector3(Vector3.zero);
         rotationOffset = jc["RotationOffset"].ToVector3(Vector3.zero);
     }
