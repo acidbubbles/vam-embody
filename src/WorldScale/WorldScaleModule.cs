@@ -105,7 +105,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         if (SuperController.singleton.OVRRig != null)
         {
             var ovrRig = SuperController.singleton.OVRRig.GetComponent<OVRCameraRig>();
-            if (ovrRig != null)
+            if (ovrRig != null && ovrRig.leftEyeAnchor != null && ovrRig.rightEyeAnchor != null)
                 return Vector3.Distance(ovrRig.leftEyeAnchor.transform.position, ovrRig.rightEyeAnchor.transform.position);
         }
 
