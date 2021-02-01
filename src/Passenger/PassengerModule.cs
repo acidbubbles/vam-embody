@@ -136,14 +136,16 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
             _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
+        else
+        {
+            _cameraCenter.localPosition = Vector3.zero;
+        }
         return true;
     }
 
     public override void OnEnable()
     {
         base.OnEnable();
-
-        _cameraCenter.localPosition = Vector3.zero;
 
         _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;
