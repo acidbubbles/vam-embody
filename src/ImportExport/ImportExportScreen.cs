@@ -19,7 +19,7 @@ public class ImportExportScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms."), true);
+        CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms.\n\nMake Default will save your settings so that whenever you load this plugin on a new atom, the parameters will be automatically applied.\n\nTo clear your height and body proportions from this instance, e.g. before making a scene public, use Clear Personal Data."), true);
 
         var loadPresetUI = CreateButton("Import", true);
         loadPresetUI.button.onClick.AddListener(() =>

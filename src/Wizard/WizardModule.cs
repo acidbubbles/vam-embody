@@ -165,7 +165,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             step.Apply();
         }
 
-        StopWizard("All done! You can now activate Embody.");
+        StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
     }
 
 
