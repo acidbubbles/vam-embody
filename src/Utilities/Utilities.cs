@@ -21,7 +21,8 @@ public static class Utilities
         var head = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head")?.transform ?? containingAtom.mainController.transform;
         var atomControl = atom.mainController.transform;
         var rotation = new Vector3(0, atomControl.eulerAngles.y, 0);
-        atomControl.position = head.position - (new Vector3(0, head.position.y, 0) / 2f) + Quaternion.Euler(rotation) * (Vector3.forward * 0.5f);
+        var headPosition = head.position;
+        atomControl.position = headPosition - (new Vector3(0, headPosition.y, 0) / 2f) + Quaternion.Euler(rotation) * (Vector3.forward * 0.5f);
         atomControl.eulerAngles = rotation;
         atomControl.Rotate(Vector3.right, -90);
 

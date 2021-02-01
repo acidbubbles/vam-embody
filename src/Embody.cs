@@ -160,7 +160,7 @@ public class Embody : MVRScript, IEmbody
         });
         bindings.Add(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
-        bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(containingAtom))));
+        bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
