@@ -91,7 +91,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
-        motionControl.baseOffset = -controller.control.InverseTransformPoint(eyesCenter);
+        var head= eyes[0].transform.parent;
+        motionControl.baseOffset = -head.InverseTransformPoint(eyesCenter);
     }
 
     public override void OnEnable()

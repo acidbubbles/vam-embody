@@ -51,6 +51,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     protected override bool shouldBeSelectedByDefault => context.containingAtom.type != "Person";
 
     private Rigidbody _headRigidbody;
+    private Transform _headTransform;
     private FreeControllerV3 _headControl;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
@@ -69,12 +70,13 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
-        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault();
+        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.First();
+        // ReSharper disable once Unity.NoNullPropagation
+        _headTransform = (containingAtom.type == "Person" ? containingAtom.GetComponentInChildren<LookAtWithLimits>()?.transform?.parent : null) ?? _headRigidbody.transform;
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-        if (_headRigidbody == null) throw new NullReferenceException("Embody: Could not find a link");
 
         _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
-        _cameraCenter.SetParent(_headRigidbody.transform, false);
+        _cameraCenter.SetParent(_headTransform, false);
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
 
@@ -127,12 +129,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
         if (context.containingAtom.type == "Person")
         {
-            // TODO: Validate if this really works (it didn't look like it)
-            var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
+            var eyes = _headTransform.GetComponentsInChildren<LookAtWithLimits>();
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;
             var eyesCenter = (lEye.position + rEye.position) / 2f;
-            var upDelta = Vector3.Dot(_cameraCenter.InverseTransformPoint(eyesCenter), _headRigidbody.transform.up);
+            var upDelta = Vector3.Dot(_cameraCenter.InverseTransformPoint(eyesCenter), _headTransform.up);
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
             _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
