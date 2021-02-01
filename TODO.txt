@@ -5,8 +5,6 @@
 - Measure hand padding using a collider height instead of manually
 - Determine some useful storables to make available
 - Use overlays to show the wizard message and how to exit Passenger
-- Auto bind vive controllers by checking the closest freecontroller from each, and recording the current rotation. This can be part of the wizard
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
 - Male Snug? Or maybe an additional anchor between thighs
-- When applying Snug, apply it for each anchor and smooth lerp the effect based on each other's weight (so y is not affected but pull is)
 - When using Snug, only allow a maximum pull effect and increase it every frame so fast movements are not as affected as slow movements

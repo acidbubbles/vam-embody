@@ -8,6 +8,7 @@ public interface ISnugModule : IEmbodyModule
 {
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffJSON { get; }
+    JSONStorableFloat falloffMidPointJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
     JSONStorableBool disableSelfGrabJSON { get; }
     SnugAutoSetup autoSetup { get; }
@@ -26,6 +27,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     public JSONStorableBool disableSelfGrabJSON { get; set; }
     public JSONStorableFloat falloffJSON { get; private set; }
+    public JSONStorableFloat falloffMidPointJSON { get; private set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
@@ -42,6 +44,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", true);
             falloffJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
+            falloffMidPointJSON = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
@@ -355,7 +358,17 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
         var distanceFromAnchorHook = Vector3.Distance(anchorPosition, motionControlPosition) - hookDistanceFromAnchor;
         var effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
-        return effectWeight;
+        var exponentialWeight = ExponentialScale(effectWeight, falloffMidPointJSON.val);
+        return exponentialWeight;
+    }
+
+    private static float ExponentialScale(float inputValue, float midValue)
+    {
+        var m = 1f / midValue;
+        var c = Mathf.Log(Mathf.Pow(m - 1, 2));
+        var b = 1f / (Mathf.Exp(c) - 1);
+        var a = -1 * b;
+        return a + b * Mathf.Exp(c * inputValue);
     }
 
     private static Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Vector3 motionControlPosition, ControllerAnchorPoint upper)
