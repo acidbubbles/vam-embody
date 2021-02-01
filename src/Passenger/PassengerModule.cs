@@ -133,7 +133,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;
             var eyesCenter = (lEye.position + rEye.position) / 2f;
-            var upDelta = Vector3.Dot(_cameraCenter.InverseTransformPoint(eyesCenter), _headTransform.up);
+            var upDelta = Vector3.Dot(_headTransform.InverseTransformPoint(eyesCenter), _headTransform.up);
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
             _headToEyesDistance = eyesToHeadDistanceJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
         }
