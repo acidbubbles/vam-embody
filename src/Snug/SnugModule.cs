@@ -205,7 +205,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.canGrabPosition = false;
         hand.controller.canGrabRotation = false;
         hand.controller.possessed = true;
-        (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
+        if (context.trackers.enableHandsGraspJSON.val)
+            (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
         if (previewSnugOffsetJSON.val) hand.showCueLine = true;
     }
 

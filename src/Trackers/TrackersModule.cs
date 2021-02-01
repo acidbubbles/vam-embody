@@ -8,6 +8,7 @@ public interface ITrackersModule : IEmbodyModule
 {
     JSONStorableBool restorePoseAfterPossessJSON { get; }
     JSONStorableBool previewTrackerOffsetJSON { get; }
+    JSONStorableBool enableHandsGraspJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
     IEnumerable<MotionControllerWithCustomPossessPoint> viveTrackers { get; }
     IEnumerable<MotionControllerWithCustomPossessPoint> headAndHands { get; }
@@ -34,6 +35,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
+    public JSONStorableBool enableHandsGraspJSON { get; } = new JSONStorableBool("EnableHandsGrasp", true);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Awake()
@@ -127,7 +129,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             else
             {
                 controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
-                if (controllerWithSnapshot.handControl != null)
+                if (enableHandsGraspJSON.val && controllerWithSnapshot.handControl != null)
                     controllerWithSnapshot.handControl.possessed = true;
             }
 
@@ -263,6 +265,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.StoreJSON(jc);
 
         restorePoseAfterPossessJSON.StoreJSON(jc);
+        enableHandsGraspJSON.StoreJSON(jc);
 
         var motionControlsJSON = new JSONClass();
         foreach (var motionControl in motionControls)
@@ -285,6 +288,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.RestoreFromJSON(jc);
 
         restorePoseAfterPossessJSON.RestoreFromJSON(jc);
+        enableHandsGraspJSON.StoreJSON(jc);
 
         var motionControlsJSON = jc["MotionControls"].AsObject;
         foreach (var motionControlName in motionControlsJSON.Keys)
