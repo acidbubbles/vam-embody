@@ -4,7 +4,7 @@ public class ControllerAnchorPoint
 {
     public string id { get; set; }
     public string label { get; set; }
-    public Rigidbody rigidBody { get; set; }
+    public Transform bone { get; set; }
     public Vector3 realLifeOffsetDefault { get; set; }
     public Vector3 realLifeOffset { get; set; }
     public Vector3 realLifeSizeDefault { get; set; }
@@ -20,13 +20,13 @@ public class ControllerAnchorPoint
 
     public Vector3 GetInGameWorldPosition()
     {
-        var rigidBodyTransform = rigidBody.transform;
+        var rigidBodyTransform = bone.transform;
         return rigidBodyTransform.position + rigidBodyTransform.rotation * inGameOffset;
     }
 
     public Vector3 GetAdjustedWorldPosition()
     {
-        var rigidBodyTransform = rigidBody.transform;
+        var rigidBodyTransform = bone.transform;
         return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset + realLifeOffset);
     }
 

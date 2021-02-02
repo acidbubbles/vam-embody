@@ -74,12 +74,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitAnchors()
     {
+        var bones = containingAtom.GetComponentsInChildren<DAZBone>();
+
         anchorPoints.Add(new ControllerAnchorPoint
         {
             id = "Crown",
             label = "Crown",
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "head"),
-            inGameOffsetDefault = new Vector3(0, 0.2f, 0),
+            bone = bones.First(rb => rb.name == "head").transform,
+            inGameOffsetDefault = new Vector3(0, 0.18f, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
@@ -90,8 +92,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             id = "Lips",
             label = "Lips",
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "LipTrigger"),
-            inGameOffsetDefault = new Vector3(0, 0, -0.07113313f),
+            bone = bones.First(rb => rb.name == "head").transform,
+            inGameOffsetDefault = new Vector3(0, -0.01f, -0.071f),
             inGameSizeDefault = new Vector3(0.15f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.18f, 0, 0.24f),
@@ -101,8 +103,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             id = "Chest",
             label = "Chest",
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "chest"),
-            inGameOffsetDefault = new Vector3(0, 0.0682705f, 0.04585214f),
+            bone = bones.First(rb => rb.name == "chest").transform,
+            inGameOffsetDefault = new Vector3(0, 0.05f, 0.046f),
             inGameSizeDefault = new Vector3(0.28f, 0, 0.26f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.3f),
@@ -112,8 +114,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             id = "Abdomen",
             label = "Abdomen",
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "abdomen"),
-            inGameOffsetDefault = new Vector3(0, 0.0770329f, 0.04218798f),
+            bone = bones.First(rb => rb.name == "abdomen").transform,
+            inGameOffsetDefault = new Vector3(0, 0.078f, 0.042f),
             inGameSizeDefault = new Vector3(0.24f, 0, 0.18f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.26f, 0, 0.28f),
@@ -121,10 +123,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            id = "Hips",
-            label = "Hips",
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "hip"),
-            inGameOffsetDefault = new Vector3(0, -0.08762675f, -0.009161186f),
+            id = "Pelvis",
+            label = "Pelvis",
+            bone = bones.First(rb => rb.name == "pelvis").transform,
+            inGameOffsetDefault = new Vector3(0, -0.088f, -0.009f),
             inGameSizeDefault = new Vector3(0.36f, 0, 0.24f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.32f, 0, 0.3f),
@@ -135,7 +137,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             id = "Feet",
             label = "Feet",
             // TODO: We could try and average this instead, OR define an absolute value
-            rigidBody = containingAtom.rigidbodies.First(rb => rb.name == "object"),
+            bone = bones.First(rb => rb.name == "lFoot").transform,
             inGameOffsetDefault = new Vector3(0, 0, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
@@ -143,6 +145,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             active = true,
             locked = true
         });
+
         foreach (var anchorPoint in anchorPoints)
         {
             anchorPoint.InitFromDefault();
@@ -291,8 +294,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
         ControllerAnchorPoint upper = null;
-        foreach (var anchorPoint in anchorPoints)
+        for (var i = anchorPoints.Count - 1; i >= 0; i--)
         {
+            var anchorPoint = anchorPoints[i];
             if (!anchorPoint.active) continue;
             var anchorPointPos = anchorPoint.GetAdjustedWorldPosition();
             if (motionControlPosition.y > anchorPointPos.y && (lower == null || anchorPointPos.y > lower.GetAdjustedWorldPosition().y))
@@ -310,7 +314,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         else if (upper == null)
             upper = lower;
 
-        // TODO: If an anchor is higher than one that should be higher, ignore it
         // Find the weight of both anchors (closest = strongest effect)
         // ReSharper disable once PossibleNullReferenceException
         var upperPosition = upper.GetAdjustedWorldPosition();
@@ -351,7 +354,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             return 1f;
         var realLifeSize = Vector3.Lerp(upper.realLifeSize, lower.realLifeSize, lowerWeight);
         var anchorPosition = Vector3.Lerp(upper.GetAdjustedWorldPosition(), lower.GetAdjustedWorldPosition(), lowerWeight);
-        var anchorRotation = Quaternion.Slerp(upper.rigidBody.transform.rotation, lower.rigidBody.transform.rotation, lowerWeight);
+        var anchorRotation = Quaternion.Slerp(upper.bone.transform.rotation, lower.bone.transform.rotation, lowerWeight);
 
         var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
@@ -403,10 +406,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             if (anchorPoint.locked) continue;
 
-            anchorPoint.inGameCue = new ControllerAnchorPointVisualCue(anchorPoint.rigidBody.transform, Color.gray);
+            anchorPoint.inGameCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, Color.gray);
             anchorPoint.Update();
 
-            anchorPoint.realLifeCue = new ControllerAnchorPointVisualCue(anchorPoint.rigidBody.transform, Color.white);
+            anchorPoint.realLifeCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, Color.white);
             anchorPoint.Update();
         }
     }

@@ -23,12 +23,12 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     {
         // VisualCuesHelper.Cross(Color.green).transform.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
         // TODO: Cancel out the hand size, whatever that is. Figure out if we should compute it or just hardcode it.
-        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.rigidBody.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-        _leftHandControl.control.eulerAngles = _anchor.rigidBody.rotation.eulerAngles;
+        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+        _leftHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles;
         _leftHandControl.control.Rotate(new Vector3(0, 0, 90));
 
-        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.rigidBody.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-        _rightHandControl.control.eulerAngles = _anchor.rigidBody.rotation.eulerAngles;
+        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+        _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles;
         _rightHandControl.control.Rotate(new Vector3(0, 0, -90));
     }
 

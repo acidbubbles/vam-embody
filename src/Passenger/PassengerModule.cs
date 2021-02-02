@@ -261,8 +261,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             navigationRigTransform.position = navigationRigPosition;
         }
-
-        // TODO: If we can move the navigation rig during fixed update (see ovr) we could stabilize before vam does raycasting & positioning
     }
 
     public override void StoreJSON(JSONClass jc)

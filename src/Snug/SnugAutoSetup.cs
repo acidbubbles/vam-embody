@@ -18,19 +18,18 @@ public class SnugAutoSetup
         foreach (var anchor in _snug.anchorPoints)
         {
             if (anchor.locked) continue;
-            AutoSetup(anchor.rigidBody, anchor, colliders);
+            AutoSetup(anchor.bone, anchor, colliders);
         }
     }
 
-    private static void AutoSetup(Component rb, ControllerAnchorPoint anchor, IEnumerable<Collider> colliders)
+    private static void AutoSetup(Transform bone, ControllerAnchorPoint anchor, IEnumerable<Collider> colliders)
     {
         const float raycastDistance = 100f;
-        var rbTransform = rb.transform;
-        var rbUp = rbTransform.up;
-        var rbOffsetPosition = rbTransform.position + rbUp * anchor.inGameOffset.y;
-        var rbForward = rbTransform.forward;
+        var rbUp = bone.up;
+        var rbOffsetPosition = bone.position + rbUp * anchor.inGameOffsetDefault.y;
+        var rbForward = bone.forward;
 
-        var rays = new List<Ray>();
+        var rays = new List<Ray>(360 / 5);
         for (var i = 0; i < 360; i += 5)
         {
             var rotation = Quaternion.AngleAxis(i, rbUp);
@@ -48,13 +47,13 @@ public class SnugAutoSetup
                 RaycastHit hit;
                 if (!collider.Raycast(ray, out hit, raycastDistance)) continue;
                 isHit = true;
-                var localPoint = rbTransform.InverseTransformPoint(hit.point);
+                var localPoint = bone.InverseTransformPoint(hit.point);
                 min = Vector3.Min(min, localPoint);
                 max = Vector3.Max(max, localPoint);
 
-                // var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
-                // hitCue.transform.localScale = Vector3.one * 0.002f;
-                // hitCue.transform.position = hit.point;
+                 // var hitCue = VisualCuesHelper.CreatePrimitive(null, PrimitiveType.Cube, new Color(0f, 1f, 0f, 0.2f));
+                 // hitCue.transform.localScale = Vector3.one * 0.002f;
+                 // hitCue.transform.position = hit.point;
             }
         }
 
