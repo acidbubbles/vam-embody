@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using MeshVR;
 using SimpleJSON;
 using UnityEngine;
@@ -72,7 +73,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
         _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.First();
         // ReSharper disable once Unity.NoNullPropagation
-        _headTransform = (containingAtom.type == "Person" ? containingAtom.GetComponentInChildren<LookAtWithLimits>()?.transform?.parent : null) ?? _headRigidbody.transform;
+        _headTransform = (containingAtom.type == "Person" ? containingAtom.GetComponentInChildren<LookAtWithLimits>()?.transform.parent : null) ?? _headRigidbody.transform;
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
 
         _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
@@ -148,7 +149,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.OnEnable();
 
-        _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
+        if (allowPersonHeadRotationJSON.val)
+            _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;
         _headControl.canGrabRotation = false;
 
@@ -203,6 +205,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
     }
 
+    [MethodImpl(256)]
     private void UpdateNavigationRig(bool force)
     {
         // Context
