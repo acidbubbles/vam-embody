@@ -225,8 +225,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         foreach (var c in _previousState)
         {
-            c._controller.canGrabPosition = c._canGrabPosition;
-            c._controller.canGrabRotation = c._canGrabRotation;
+            c.controller.canGrabPosition = c.canGrabPosition;
+            c.controller.canGrabRotation = c.canGrabRotation;
         }
         _previousState.Clear();
     }

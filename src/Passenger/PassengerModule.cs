@@ -149,8 +149,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.OnEnable();
 
-        if (allowPersonHeadRotationJSON.val)
-            _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
+        _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;
         _headControl.canGrabRotation = false;
 
@@ -178,7 +177,16 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (_headControlSnapshot != null)
         {
-            _headControlSnapshot.Restore(true);
+            if (allowPersonHeadRotationJSON.val)
+            {
+                _headControlSnapshot.Restore(true);
+            }
+            else
+            {
+                _headControl.canGrabPosition = _headControlSnapshot.canGrabPosition;
+                _headControl.canGrabRotation = _headControlSnapshot.canGrabRotation;
+            }
+
             _headControlSnapshot = null;
         }
 
