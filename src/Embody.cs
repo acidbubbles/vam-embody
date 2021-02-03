@@ -9,11 +9,13 @@ using UnityEngine;
 public interface IEmbody
 {
     JSONStorableBool activeJSON { get; }
+    JSONStorableStringChooser presetsJSON { get; }
 }
 
 public class Embody : MVRScript, IEmbody
 {
     public JSONStorableBool activeJSON { get; private set; }
+    public JSONStorableStringChooser presetsJSON { get; private set; }
 
     private GameObject _modules;
     private ScreensManager _screensManager;
@@ -57,8 +59,12 @@ public class Embody : MVRScript, IEmbody
 
             _modules.SetActive(true);
 
+            var modules = _modules.GetComponents<IEmbodyModule>();
+            presetsJSON = InitPresets(modules);
+            RegisterStringChooser(presetsJSON);
+
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, _modules.GetComponents<IEmbodyModule>(), wizardModule));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));
             if (isPerson)
             {
                 _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
@@ -205,6 +211,55 @@ public class Embody : MVRScript, IEmbody
         while (waitForUI.MoveNext())
             yield return waitForUI.Current;
         _screensManager.Show(WizardScreen.ScreenName);
+    }
+
+    private JSONStorableStringChooser InitPresets(IEmbodyModule[] modules)
+    {
+        return new JSONStorableStringChooser("Presets", new List<string>
+        {
+            "VaM Possession",
+            "Improved Possession",
+            "Snug",
+            "Passenger",
+        }, "(Select to apply)", "Apply preset", (string val) =>
+        {
+            foreach (var module in modules)
+            {
+                if (module.alwaysEnabled) continue;
+                module.selectedJSON.val = false;
+            }
+
+            switch (val)
+            {
+                case "VaM Possession":
+                    _context.automation.takeOverVamPossess.val = false;
+                    _context.hideGeometry.selectedJSON.val = true;
+                    _context.offsetCamera.selectedJSON.val = true;
+                    break;
+                case "Improved Possession":
+                    _context.automation.takeOverVamPossess.val = true;
+                    _context.trackers.selectedJSON.val = true;
+                    _context.hideGeometry.selectedJSON.val = true;
+                    _context.worldScale.selectedJSON.val = true;
+                    _context.eyeTarget.selectedJSON.val = true;
+                    break;
+                case "Snug":
+                    _context.automation.takeOverVamPossess.val = true;
+                    _context.trackers.selectedJSON.val = true;
+                    _context.hideGeometry.selectedJSON.val = true;
+                    _context.snug.selectedJSON.val = true;
+                    _context.worldScale.selectedJSON.val = true;
+                    _context.eyeTarget.selectedJSON.val = true;
+                    break;
+                case "Passenger":
+                    _context.automation.takeOverVamPossess.val = true;
+                    _context.hideGeometry.selectedJSON.val = true;
+                    _context.passenger.selectedJSON.val = true;
+                    _context.worldScale.selectedJSON.val = true;
+                    _context.eyeTarget.selectedJSON.val = true;
+                    break;
+            }
+        });
     }
 
     public void OnEnable()

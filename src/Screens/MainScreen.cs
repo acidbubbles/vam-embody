@@ -1,19 +1,15 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class MainScreen : ScreenBase, IScreen
 {
     private readonly IEmbodyModule[] _modules;
-    private readonly WizardModule _wizard;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(EmbodyContext context, IEmbodyModule[] modules, WizardModule wizard)
+    public MainScreen(EmbodyContext context, IEmbodyModule[] modules)
         : base(context)
     {
         _modules = modules;
-        _wizard = wizard;
     }
 
     public void Show()
@@ -58,51 +54,8 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
 ".Trim()), true);
         }
 
-        var presetsJSON = new JSONStorableStringChooser("Presets", new List<string>
-        {
-            "VaM Possession",
-            "Improved Possession",
-            "Snug",
-            "Passenger",
-        }, "(Select to apply)", "Apply preset", (string val) =>
-        {
-            foreach (var module in _modules)
-            {
-                module.selectedJSON.val = false;
-            }
-            switch (val)
-            {
-                case "VaM Possession":
-                    context.automation.takeOverVamPossess.val = false;
-                    SelectModule("HideGeometry", true);
-                    SelectModule("OffsetCamera", true);
-                    break;
-                case "Improved Possession":
-                    context.automation.takeOverVamPossess.val = true;
-                    SelectModule("Trackers", true);
-                    SelectModule("HideGeometry", true);
-                    SelectModule("WorldScale", true);
-                    SelectModule("EyeTarget", true);
-                    break;
-                case "Snug":
-                    context.automation.takeOverVamPossess.val = true;
-                    SelectModule("Trackers", true);
-                    SelectModule("HideGeometry", true);
-                    SelectModule("Snug", true);
-                    SelectModule("WorldScale", true);
-                    SelectModule("EyeTarget", true);
-                    break;
-                case "Passenger":
-                    context.automation.takeOverVamPossess.val = true;
-                    SelectModule("HideGeometry", true);
-                    SelectModule("Passenger", true);
-                    SelectModule("WorldScale", true);
-                    SelectModule("EyeTarget", true);
-                    break;
-            }
-        });
         if (context.containingAtom.type == "Person")
-            CreateScrollablePopup(presetsJSON, true);
+            CreateScrollablePopup(context.embody.presetsJSON, true);
 
         CreateSpacer(false).height = 0f;
         CreateSpacer(true).height = 6f;
@@ -124,8 +77,8 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
             CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
         }
 
-#warning For debugging purposes
-        // context.plugin.StartCoroutine(DebugCo());
+        #warning For debugging purposes
+        //context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -145,33 +98,22 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (_once) yield break;
         _once = true;
         yield return new WaitForSecondsRealtime(0.2f);
-        // Enable Snug
-        //(_modules.First(m => m.storeId == "Snug") as SnugModule).previewSnugOffsetJSON.val = true;
-        // Show 3d trackers
-        //(_modules.First(m => m.storeId == "Trackers") as TrackersModule).previewTrackerOffsetJSON.val = true;
         // Activate
         //context.embody.activeJSON.val = true;
         // Wizard
-        _modules.First(m => m.storeId == "Snug").selectedJSON.val = false;
-        _modules.First(m => m.storeId == "Trackers").selectedJSON.val = true;
-        _modules.First(m => m.storeId == "WorldScale").selectedJSON.val = false;
-        _modules.First(m => m.storeId == "HideGeometry").selectedJSON.val = false;
+        /*
+        _context.snug.selectedJSON.val = false;
+        _context.trackers.selectedJSON.val = true;
+        _context.worldScale.selectedJSON.val = false;
+        _context.hideGeometry.selectedJSON.val = false;
         yield return new WaitForSecondsRealtime(0.2f);
         screensManager.Show(WizardScreen.ScreenName);
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.StartWizard();
-        /*
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.Next();
         yield return new WaitForSecondsRealtime(0.2f);
         _wizard.Next();
         */
-    }
-
-    private void SelectModule(string storeId, bool selected)
-    {
-        var module = _modules.FirstOrDefault(m => m.storeId == storeId);
-        if (module == null) return;
-        module.selectedJSON.val = selected;
     }
 }
