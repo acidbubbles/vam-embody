@@ -36,7 +36,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         base.Awake();
 
-        statusJSON.val = "";
+        statusJSON.val = "Select 'Start' to launch the wizard.";
     }
 
     public void StartWizard()
@@ -81,11 +81,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         context.embody.presetsJSON.val = "Improved Possession";
 
-        var autoSetup = new SnugAutoSetup(context.containingAtom, context.snug);
-        autoSetup.AutoSetup();
-
         // ReSharper disable once UseObjectOrCollectionInitializer
         var steps = new List<IWizardStep>();
+
+        // TODO: Disable all controllers except hand and feet, ground feet, and rotate head so it looks straight forward. Make head look at average feet direction, or align feet to head.
 
         steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
@@ -98,18 +97,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             steps.Add(new DeactivateStep(context));
         }
 
-        // TODO: Implement Snug wizard
-        // TODO: Load pose
-        steps.Add(new AskSnugStep(context));
-        steps.Add(new ActivateWithoutSnugStep(context));
-        steps.Add(new MeasureHandsPaddingStep(context));
-        foreach (var anchor in context.snug.anchorPoints.Where(a => !a.locked && a.active))
-        {
-            steps.Add(new MeasureAnchorWidthStep(context, anchor));
-            steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor));
-        }
-        steps.Add(new DeactivateAndRestoreSnugStep(context));
-        // steps.Add(new EnableSnugStep(context.embody, context.snug));
+        steps.Add(new AskSnugStep(context, steps));
 
         for (var i = 0; i < steps.Count; i++)
         {
@@ -118,16 +106,16 @@ public class WizardModule : EmbodyModuleBase, IWizard
             while (!AreAnyStartRecordKeysDown())
             {
                 if (_skip)
-                {
-                    StopWizard("Wizard canceled");
-                    yield break;
-                }
+                    break;
 
                 yield return 0;
                 step.Update();
             }
 
-            step.Apply();
+            if (_skip)
+                _skip = false;
+            else
+                step.Apply();
         }
 
         StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
