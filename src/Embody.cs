@@ -112,6 +112,9 @@ public class Embody : MVRScript, IEmbody
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
 
+            var launchWizardJSON = new JSONStorableAction("LaunchWizard", () => StartCoroutine(LaunchWizard()));
+            RegisterAction(launchWizardJSON);
+
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
         catch (Exception)
@@ -192,6 +195,16 @@ public class Embody : MVRScript, IEmbody
             UITransform.gameObject.SetActive(true);
             yield break;
         }
+    }
+
+    private IEnumerator LaunchWizard()
+    {
+        SuperController.singleton.SelectController(containingAtom.mainController);
+        SuperController.singleton.ShowMainHUDMonitor();
+        var waitForUI = WaitForUI();
+        while (waitForUI.MoveNext())
+            yield return waitForUI.Current;
+        _screensManager.Show(WizardScreen.ScreenName);
     }
 
     public void OnEnable()
