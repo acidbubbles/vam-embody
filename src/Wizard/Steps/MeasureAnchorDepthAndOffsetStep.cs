@@ -2,15 +2,13 @@
 
 public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"Now put your right hand at the same level as your {_part} but on the front, squeezed on you.";
+    public string helpText => $"Now put your right hand at the same level as your {_anchor.label} but on the front, squeezed on you.";
 
-    private readonly string _part;
     private readonly ControllerAnchorPoint _anchor;
 
-    public MeasureAnchorDepthAndOffsetStep(EmbodyContext context, string part, ControllerAnchorPoint anchor)
+    public MeasureAnchorDepthAndOffsetStep(EmbodyContext context, ControllerAnchorPoint anchor)
         : base(context)
     {
-        _part = part;
         _anchor = anchor;
     }
 

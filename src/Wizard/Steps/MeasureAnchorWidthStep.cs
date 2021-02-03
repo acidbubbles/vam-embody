@@ -3,17 +3,15 @@ using UnityEngine;
 
 public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"Possession activated. Now put your hands on your real {_part}, and Press next when ready.";
+    public string helpText => $"Possession activated. Now put your hands on your real {_anchor.label}, and Press next when ready.";
 
-    private readonly string _part;
     private readonly ControllerAnchorPoint _anchor;
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
 
-    public MeasureAnchorWidthStep(EmbodyContext context, string part, ControllerAnchorPoint anchor)
+    public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor)
         : base(context)
     {
-        _part = part;
         _anchor = anchor;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");

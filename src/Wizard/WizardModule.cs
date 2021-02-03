@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -30,7 +29,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public bool isRunning => _coroutine != null;
 
     private Coroutine _coroutine;
-    private EmbodySelectionSnapshot _snapshot;
     private bool _next;
     private bool _skip;
 
@@ -56,12 +54,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
             _coroutine = null;
         }
 
-        if (_snapshot != null)
-        {
-            _snapshot.Restore();
-            _snapshot = null;
-        }
-
         statusJSON.val = message;
         _next = false;
         _skip = false;
@@ -82,69 +74,42 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         context.embody.activeJSON.val = false;
         context.Initialize();
-        _snapshot = EmbodySelectionSnapshot.Snap(context);
 
         yield return 0;
 
-        if (_snapshot.worldScale)
-        {
-            SuperController.singleton.worldScale = 1f;
-        }
+        SuperController.singleton.worldScale = 1f;
 
-        if (_snapshot.snug)
-        {
-            if (_snapshot.passenger)
-            {
-                StopWizard("You cannot run the wizard with Passenger selected.");
-                yield break;
-            }
+        context.embody.presetsJSON.val = "Improved Possession";
 
-            var autoSetup = new SnugAutoSetup(context.containingAtom, context.snug);
-            autoSetup.AutoSetup();
-        }
+        var autoSetup = new SnugAutoSetup(context.containingAtom, context.snug);
+        autoSetup.AutoSetup();
 
-        _snapshot.DisableAll();
-
+        // ReSharper disable once UseObjectOrCollectionInitializer
         var steps = new List<IWizardStep>();
 
-        if (_snapshot.worldScale)
-        {
-            steps.Add(new RecordPlayerHeightStep(context.worldScale));
-        }
+        steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
-        if (_snapshot.trackers)
+        // NOTE: We use Count because we want to sync all available motion controls, not only the first one
+        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
+        if (context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0)
         {
-            // NOTE: We use Count because we want to sync all available motion controls, not only the first one
-            // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
-            if (context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0)
-            {
-                steps.Add(new ActivateHeadAndHandsStep(context, _snapshot));
-                steps.Add(new RecordViveTrackersStep(context));
-                steps.Add(new DeactivateStep(context));
-            }
+            steps.Add(new ActivateHeadAndHandsStep(context));
+            steps.Add(new RecordViveTrackersStep(context));
+            steps.Add(new DeactivateStep(context));
         }
 
         // TODO: Implement Snug wizard
-        if (_snapshot.snug && false)
+        // TODO: Load pose
+        steps.Add(new AskSnugStep(context));
+        steps.Add(new ActivateWithoutSnugStep(context));
+        steps.Add(new MeasureHandsPaddingStep(context));
+        foreach (var anchor in context.snug.anchorPoints.Where(a => !a.locked && a.active))
         {
-            // TODO: Load pose
-            // steps.Add(new MeasureHandsPaddingStep(context));
-            steps.Add(new ActivateWithoutSnugStep(context.embody, context.snug));
-            var hipsAnchor = context.snug.anchorPoints.First(a => a.label == "Hips");
-            steps.Add(new MeasureAnchorWidthStep(context, "hips", hipsAnchor));
-            steps.Add(new MeasureAnchorDepthAndOffsetStep(context, "hips", hipsAnchor));
-            // steps.Add(new EnableSnugStep(context.embody, context.snug));
+            steps.Add(new MeasureAnchorWidthStep(context, anchor));
+            steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor));
         }
-        else
-        {
-            // steps.Add(new ActivateStep(context.embody));
-        }
-
-        if (steps.Count == 0)
-        {
-            StopWizard("None of the selected modules use the wizard.\n\nNothing to setup, moving on!");
-            yield break;
-        }
+        steps.Add(new DeactivateAndRestoreSnugStep(context));
+        // steps.Add(new EnableSnugStep(context.embody, context.snug));
 
         for (var i = 0; i < steps.Count; i++)
         {

@@ -1,21 +1,18 @@
-﻿public class ActivateWithoutSnugStep : WizardStepBase, IWizardStep
+﻿using System.Linq;
+
+public class ActivateWithoutSnugStep : WizardStepBase, IWizardStep
 {
     public string helpText => "We will now start possession (except hands). Press next when ready.";
-    private readonly IEmbody _embody;
-    private readonly ISnugModule _snug;
 
-    public ActivateWithoutSnugStep(IEmbody embody, ISnugModule snug)
+    public ActivateWithoutSnugStep(EmbodyContext context)
+        : base(context)
     {
-        _embody = embody;
-        _snug = snug;
     }
 
     public void Apply()
     {
-        #warning Skip for now
-        // TODO: We do not want that. We want to enable head _only_, make sure the model is standing straight, and enable hide geometry and offset camera too.
-        // TODO: We want Snug to work sitting too. We only need the upper body to stand straight.
-        _embody.activeJSON.val = true;
-        _snug.enabledJSON.val = false;
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = false;
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = false;
+        context.embody.activeJSON.val = true;
     }
 }

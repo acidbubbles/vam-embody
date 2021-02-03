@@ -4,12 +4,9 @@ public class ActivateHeadAndHandsStep : WizardStepBase, IWizardStep
 {
     public string helpText => "We will now start possession of head and hands, and unmap all vive trackers. Press next when ready.";
 
-    private readonly EmbodySelectionSnapshot _snapshot;
-
-    public ActivateHeadAndHandsStep(EmbodyContext context, EmbodySelectionSnapshot snapshot)
+    public ActivateHeadAndHandsStep(EmbodyContext context)
         : base(context)
     {
-        _snapshot = snapshot;
     }
 
     public void Apply()
@@ -26,11 +23,6 @@ public class ActivateHeadAndHandsStep : WizardStepBase, IWizardStep
 
         foreach (var mc in context.trackers.headAndHands)
             mc.enabled = true;
-
-        context.worldScale.selectedJSON.val = _snapshot.worldScale;
-        context.hideGeometry.selectedJSON.val = true;
-        context.trackers.selectedJSON.val = true;
-        context.eyeTarget.selectedJSON.val = _snapshot.eyeTarget;
 
         context.embody.activeJSON.val = true;
     }

@@ -116,10 +116,11 @@
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
     <Compile Include="src\Utilities\Utilities.cs" />
     <Compile Include="src\Utilities\UtilitiesScreen.cs" />
-    <Compile Include="src\Wizard\EmbodySelectionSnapshot.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />
     <Compile Include="src\Wizard\Steps\ActivateHeadAndHandsStep.cs" />
     <Compile Include="src\Wizard\Steps\ActivateStep.cs" />
+    <Compile Include="src\Wizard\Steps\AskSnugStep.cs" />
+    <Compile Include="src\Wizard\Steps\DeactivateAndRestoreSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\DeactivateStep.cs" />
     <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
