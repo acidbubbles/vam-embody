@@ -13,11 +13,11 @@
     {
         if (ShowNotSelected(_worldScale.selectedJSON.val)) return;
 
-        CreateText(new JSONStorableString("", "Changes the world scale based on your measurements and the person's measurement."), true);
+        CreateText(new JSONStorableString("", "Changes the world scale based on your real height and the in-game model height.\n\nUse the Record Player Height button while standing straight to get accurate world scale."), true);
 
         CreateScrollablePopup(_worldScale.worldScaleMethodJSON, true);
-        CreateSlider(_worldScale.playerHeightJSON, true);
-        CreateButton("Record current player height (stand straight)", true).button.onClick.AddListener(RecordPlayerHeight);
+        CreateSlider(_worldScale.playerHeightJSON, true).label = "Player Height";
+        CreateButton("Record Player Height (stand straight)", true).button.onClick.AddListener(RecordPlayerHeight);
     }
 
     private void RecordPlayerHeight()
