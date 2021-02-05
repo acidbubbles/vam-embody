@@ -210,6 +210,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.active = true;
         hand.controller.canGrabPosition = false;
         hand.controller.canGrabRotation = false;
+        hand.controller.currentPositionState = FreeControllerV3.PositionState.On;
+        hand.controller.currentRotationState = FreeControllerV3.RotationState.On;
         hand.controller.possessed = true;
         if (context.trackers.enableHandsGraspJSON.val)
             (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
