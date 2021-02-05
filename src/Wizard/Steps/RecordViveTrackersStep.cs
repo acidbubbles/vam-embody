@@ -1,6 +1,6 @@
 ﻿public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Vive trackers detected. Take the same pose as the person you want to possess, and press Next";
+    public string helpText => "Take the same pose as the person you want to possess, and press Next";
 
     public RecordViveTrackersStep(EmbodyContext context)
         : base(context)

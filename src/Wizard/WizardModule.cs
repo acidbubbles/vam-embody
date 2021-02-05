@@ -29,6 +29,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public bool isRunning => _coroutine != null;
 
     private Coroutine _coroutine;
+    private IWizardStep _step;
     private bool _next;
     private bool _skip;
 
@@ -52,6 +53,12 @@ public class WizardModule : EmbodyModuleBase, IWizard
         {
             StopCoroutine(_coroutine);
             _coroutine = null;
+        }
+
+        if (_step != null)
+        {
+            _step.Leave();
+            _step = null;
         }
 
         statusJSON.val = message;
@@ -102,21 +109,24 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         for (var i = 0; i < steps.Count; i++)
         {
-            var step = steps[i];
-            statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{step.helpText}";
+            _step = steps[i];
+            statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{_step.helpText}";
+            _step.Enter();
             while (!AreAnyStartRecordKeysDown())
             {
                 if (_skip)
                     break;
 
                 yield return 0;
-                step.Update();
+                _step.Update();
             }
 
             if (_skip)
                 _skip = false;
             else
-                step.Apply();
+                _step.Apply();
+
+            _step.Leave();
         }
 
         StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");

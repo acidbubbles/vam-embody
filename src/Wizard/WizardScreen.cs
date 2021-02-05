@@ -21,10 +21,6 @@ public class WizardScreen : ScreenBase, IScreen
         startButton.button.onClick.AddListener(() => _wizard.StartWizard());
         startButton.buttonColor = Color.green;
 
-        var stopButton = CreateButton("Stop Wizard", true);
-        stopButton.button.onClick.AddListener(() => _wizard.StopWizard("Stopped"));
-        stopButton.buttonColor = Color.red;
-
         var statusText = CreateText(_wizard.statusJSON, true);
         statusText.height = 600;
 
@@ -32,8 +28,13 @@ public class WizardScreen : ScreenBase, IScreen
         nextButton.button.onClick.AddListener(() => _wizard.Next());
         nextButton.buttonColor = Color.green;
 
-        var skipButton = CreateButton("Skip Step", true);
+        var skipButton = CreateButton("Skip Step >", true);
         skipButton.button.onClick.AddListener(() => _wizard.Skip());
+        skipButton.buttonColor = Color.gray;
+
+        var stopButton = CreateButton("Stop Wizard", true);
+        stopButton.button.onClick.AddListener(() => _wizard.StopWizard("Stopped"));
+        stopButton.buttonColor = Color.red;
 
         _onStatusChanged = isRunning =>
         {

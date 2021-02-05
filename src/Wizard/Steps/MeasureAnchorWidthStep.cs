@@ -8,6 +8,8 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private readonly ControllerAnchorPoint _anchor;
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
+    private FreeControllerV3Snapshot _leftHandSnapshot;
+    private FreeControllerV3Snapshot _rightHandSnapshot;
 
     public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor)
         : base(context)
@@ -15,6 +17,12 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         _anchor = anchor;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
+    }
+
+    public override void Enter()
+    {
+        _leftHandSnapshot = FreeControllerV3Snapshot.Snap(_leftHandControl);
+        _rightHandSnapshot = FreeControllerV3Snapshot.Snap(_rightHandControl);
     }
 
     public override void Update()
@@ -44,5 +52,11 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");
         SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {_anchor.realLifeSize.x}");
         SuperController.LogMessage($"Real Hips center: {realHipsXCenter}, Game Hips center: {gameHipsCenter}");
+    }
+
+    public override void Leave()
+    {
+        _leftHandSnapshot.Restore(true);
+        _rightHandSnapshot.Restore(true);
     }
 }

@@ -16,7 +16,7 @@ public class AskSnugStep : WizardStepBase, IWizardStep
     public void Apply()
     {
         _steps.Add(new ActivateWithoutSnugStep(context));
-        _steps.Add(new MeasureHandsPaddingStep(context));
+        // _steps.Add(new MeasureHandsPaddingStep(context));
         foreach (var anchor in context.snug.anchorPoints.Where(a => !a.locked && a.active))
         {
             _steps.Add(new MeasureAnchorWidthStep(context, anchor));

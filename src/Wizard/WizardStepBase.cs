@@ -11,11 +11,15 @@
         this.context = context;
     }
 
-    public virtual void Setup()
+    public virtual void Enter()
     {
     }
 
     public virtual void Update()
+    {
+    }
+
+    public virtual void Leave()
     {
     }
 }
