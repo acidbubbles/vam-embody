@@ -304,4 +304,20 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionOffset = jc["PositionOffset"].ToVector3(Vector3.zero);
         rotationOffset = jc["RotationOffset"].ToVector3(Vector3.zero);
     }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+        positionOffset = Vector3.zero;
+        rotationOffset = Vector3.zero;
+        lookAtJSON.SetValToDefault();
+        positionLockJSON.SetValToDefault();
+        positionSmoothingJSON.SetValToDefault();
+        rotationLockJSON.SetValToDefault();
+        rotationSmoothingJSON.SetValToDefault();
+        lookAtWeightJSON.SetValToDefault();
+        allowPersonHeadRotationJSON.SetValToDefault();
+        rotationLockNoRollJSON.SetValToDefault();
+        eyesToHeadDistanceOffsetJSON.SetValToDefault();
+    }
 }

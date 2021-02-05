@@ -485,5 +485,16 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         disableSelfGrabJSON.RestoreFromJSON(jc);
     }
 
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        foreach (var anchor in anchorPoints)
+            anchor.InitFromDefault();
+
+        falloffDistanceJSON.SetValToDefault();
+        disableSelfGrabJSON.SetValToDefault();
+    }
+
     #endregion
 }

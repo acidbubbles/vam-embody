@@ -321,4 +321,13 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         hideHairJSON.RestoreFromJSON(jc);
         hideClothingJSON.RestoreFromJSON(jc);
     }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        hideFaceJSON.SetValToDefault();
+        hideHairJSON.SetValToDefault();
+        hideClothingJSON.SetValToDefault();
+    }
 }

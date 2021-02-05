@@ -12,6 +12,7 @@ public interface IEmbodyModule
     JSONStorableBool activeJSON { get; set; }
 
     bool BeforeEnable();
+    void ResetToDefault();
 }
 
 public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
@@ -61,5 +62,10 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     public virtual void RestoreFromJSON(JSONClass jc)
     {
         selectedJSON.RestoreFromJSON(jc);
+    }
+
+    public virtual void ResetToDefault()
+    {
+        selectedJSON.val = shouldBeSelectedByDefault;
     }
 }

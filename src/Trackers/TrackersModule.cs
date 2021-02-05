@@ -304,4 +304,24 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             if (motionControl.mappedControllerName == "") motionControl.mappedControllerName = null;
         }
     }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        foreach (var mc in context.trackers.motionControls)
+        {
+            if (!MotionControlNames.IsHeadOrHands(mc.name))
+                mc.mappedControllerName = null;
+            mc.controlRotation = true;
+            mc.customOffset = Vector3.zero;
+            mc.customOffsetRotation = Vector3.zero;
+            mc.possessPointRotation = Vector3.zero;
+            mc.enabled = true;
+        }
+
+        enableHandsGraspJSON.SetValToDefault();
+        previewTrackerOffsetJSON.SetValToDefault();
+        restorePoseAfterPossessJSON.SetValToDefault();
+    }
 }

@@ -97,4 +97,14 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
         cameraPitchJSON.RestoreFromJSON(jc);
         clipDistanceJSON.RestoreFromJSON(jc);
     }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        cameraDepthJSON.SetValToDefault();
+        cameraHeightJSON.SetValToDefault();
+        cameraPitchJSON.SetValToDefault();
+        clipDistanceJSON.SetValToDefault();
+    }
 }

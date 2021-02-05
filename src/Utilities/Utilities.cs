@@ -6,6 +6,19 @@ using UnityEngine;
 
 public static class Utilities
 {
+    public static void ResetToDefaults(EmbodyContext context)
+    {
+        context.embody.activeJSON.val = false;
+        context.automation.ResetToDefault();
+        context.worldScale.ResetToDefault();
+        context.hideGeometry.ResetToDefault();
+        context.offsetCamera.ResetToDefault();
+        context.passenger.ResetToDefault();
+        context.trackers.ResetToDefault();
+        context.snug.ResetToDefault();
+        context.eyeTarget.ResetToDefault();
+    }
+
     public static IEnumerator CreateMirror(IEyeTargetModule eyeTarget, Atom containingAtom)
     {
         var uid = CreateUid("Mirror");

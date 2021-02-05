@@ -113,4 +113,11 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         _activatedByVam = false;
     }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+        toggleKey = KeyCode.None;
+        takeOverVamPossess.SetValToDefault();
+    }
 }
