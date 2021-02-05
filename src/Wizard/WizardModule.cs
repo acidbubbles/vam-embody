@@ -84,9 +84,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
         // ReSharper disable once UseObjectOrCollectionInitializer
         var steps = new List<IWizardStep>();
 
-        // TODO: Disable all controllers except hand and feet, ground feet, and rotate head so it looks straight forward. Make head look at average feet direction, or align feet to head.
-
         steps.Add(new RecordPlayerHeightStep(context.worldScale));
+
+        // TODO: Disable all controllers except hand and feet, ground feet, and rotate head so it looks straight forward. Make head look at average feet direction, or align feet to head.
+        steps.Add(new ResetPoseStep(context));
 
         // NOTE: We use Count because we want to sync all available motion controls, not only the first one
         // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0

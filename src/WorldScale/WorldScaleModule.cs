@@ -16,8 +16,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public const string Label = "World Scale";
     public const string PlayerHeightMethod = "Player Height";
     public const string EyeDistanceMethod = "Eyes Distance";
-    private const float _feetToGroundDistance = 0.059f;
-    private const float _skeletonSumToStandHeightRatio = 0.863f;
 
     public override string storeId => "WorldScale";
     public override string label => Label;
@@ -116,43 +114,11 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         if (playerHeightJSON.val == 0) return;
 
-        var measure = Distance(
-            Get("head"),
-            Get("neck"),
-            Get("chest"),
-            Get("abdomen2"),
-            Get("abdomen"),
-            Get("hip"),
-            Get("pelvis"),
-            Get("rThigh"),
-            Get("rShin"),
-            Get("rFoot")
-        );
-
-        var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-        var lEye = eyes.First(eye => eye.name == "lEye").transform;
-        var eyesToHeadDistance = Mathf.Abs(transform.InverseTransformPoint(lEye.position).y - transform.InverseTransformPoint(Get("head").position).y);
-
-        measure += eyesToHeadDistance + _feetToGroundDistance;
-        measure *= _skeletonSumToStandHeightRatio;
+        var measurements = new PersonMeasurements(containingAtom);
+        var measure = measurements.MeasureHeight();
 
         var ratio = measure / playerHeightJSON.val;
         SuperController.singleton.worldScale = ratio;
-    }
-
-    private static float Distance(params Rigidbody[] rigidbodies)
-    {
-        var total = 0f;
-        for (var i = 0; i < rigidbodies.Length - 1; i++)
-        {
-            total += Vector3.Distance(rigidbodies[i].position, rigidbodies[i + 1].position);
-        }
-        return total;
-    }
-
-    private Rigidbody Get(string rbName)
-    {
-        return context.containingAtom.rigidbodies.First(rb => rb.name == rbName);
     }
 
     public void ClearPersonalData()

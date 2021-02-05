@@ -18,6 +18,7 @@ public class UtilitiesScreen : ScreenBase, IScreen
 
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
 
+        CreateButton("Reset Pose").button.onClick.AddListener(ResetPose);
     }
 
     private void CreateMirror()
@@ -46,5 +47,11 @@ public class UtilitiesScreen : ScreenBase, IScreen
             yield return 0;
         SuperController.singleton.motionAnimationMaster.StopPlayback();
         SuperController.singleton.motionAnimationMaster.ResetAnimation();
+    }
+
+    private void ResetPose()
+    {
+        var step = new ResetPoseStep(context);
+        step.Apply();
     }
 }
