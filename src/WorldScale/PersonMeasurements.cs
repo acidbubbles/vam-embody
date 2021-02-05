@@ -4,7 +4,7 @@ using UnityEngine;
 public class PersonMeasurements
 {
     private const float _feetToGroundDistance = 0.059f;
-    private const float _skeletonSumToStandHeightRatio = 0.863f;
+    private const float _skeletonSumToStandHeightRatio = 0.930f;
 
     private readonly Atom _containingAtom;
 
@@ -17,17 +17,16 @@ public class PersonMeasurements
     {
         var bones = _containingAtom.GetComponentsInChildren<DAZBone>();
         var headBone = bones.First(b => b.name == "head");
-        var pelvisBone = bones.First(b => b.name == "pelvis");
+        var hipBone = bones.First(b => b.name == "hip");
         var lFootBone = bones.First(b => b.name == "lFoot");
         var rFootBone = bones.First(b => b.name == "rFoot");
-        var footToHead = Measure(headBone, pelvisBone) + (Measure(lFootBone, pelvisBone) + Measure(rFootBone, pelvisBone) / 2f);
+        var footToHead = Measure(headBone, hipBone) + ((Measure(lFootBone, hipBone) + Measure(rFootBone, hipBone)) / 2f);
 
-        var eyes = _containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-        var lEye = eyes.First(eye => eye.name == "lEye").transform;
+        var lEye = bones.First(eye => eye.name == "lEye").transform;
         var eyesToHeadDistance = headBone.transform.InverseTransformPoint(lEye.position).y;
 
         var measure = footToHead + eyesToHeadDistance + _feetToGroundDistance;
-        // measure *= _skeletonSumToStandHeightRatio;
+         measure *= _skeletonSumToStandHeightRatio;
 
         return measure;
     }
@@ -45,16 +44,6 @@ public class PersonMeasurements
             bone = bone.parentBone;
         }
         return length;
-    }
-
-    private static float Distance(params Rigidbody[] rigidbodies)
-    {
-        var total = 0f;
-        for (var i = 0; i < rigidbodies.Length - 1; i++)
-        {
-            total += Vector3.Distance(rigidbodies[i].position, rigidbodies[i + 1].position);
-        }
-        return total;
     }
 
     private Rigidbody Get(string rbName)
