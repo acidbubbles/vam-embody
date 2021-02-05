@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ResetPoseStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "We will now reset the pose so the model is standing straight, and only head and feet are on. Press next when ready, or skip if you'd like to run the wizard using the current pose instead.";
+    public string helpText => "We will now reset all Embody settings and load a pose so the model is standing straight. Press next when ready, or skip if you'd like to run the wizard using the current settings and pose instead.";
 
     public ResetPoseStep(EmbodyContext context)
         : base(context)
@@ -12,6 +12,8 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
 
     public void Apply()
     {
+        Utilities.ResetToDefaults(context);
+
         var measurements = new PersonMeasurements(context.containingAtom);
         var height = measurements.MeasureHeight();
         // TODO: Measure shoulders
