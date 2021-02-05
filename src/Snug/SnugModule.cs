@@ -7,7 +7,7 @@ using UnityEngine;
 public interface ISnugModule : IEmbodyModule
 {
     List<ControllerAnchorPoint> anchorPoints { get; }
-    JSONStorableFloat falloffJSON { get; }
+    JSONStorableFloat falloffDistanceJSON { get; }
     JSONStorableFloat falloffMidPointJSON { get; }
     JSONStorableBool previewSnugOffsetJSON { get; }
     JSONStorableBool disableSelfGrabJSON { get; }
@@ -26,7 +26,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public JSONStorableBool previewSnugOffsetJSON { get; private set; }
     public JSONStorableBool disableSelfGrabJSON { get; set; }
-    public JSONStorableFloat falloffJSON { get; private set; }
+    public JSONStorableFloat falloffDistanceJSON { get; private set; }
     public JSONStorableFloat falloffMidPointJSON { get; private set; }
     private SnugHand _lHand;
     private SnugHand _rHand;
@@ -43,7 +43,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
             disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", true);
-            falloffJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
+            falloffDistanceJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
             falloffMidPointJSON = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
@@ -352,7 +352,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private float ComputeEffectWeight(ControllerAnchorPoint upper, ControllerAnchorPoint lower, float lowerWeight, Vector3 motionControlPosition)
     {
-        if (falloffJSON.val == 0)
+        if (falloffDistanceJSON.val == 0)
             return 1f;
         var realLifeSize = Vector3.Lerp(upper.realLifeSize, lower.realLifeSize, lowerWeight);
         var anchorPosition = Vector3.Lerp(upper.GetAdjustedWorldPosition(), lower.GetAdjustedWorldPosition(), lowerWeight);
@@ -361,8 +361,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var angle = Mathf.Deg2Rad * Vector3.SignedAngle(anchorRotation * Vector3.forward, motionControlPosition - anchorPosition, anchorRotation * Vector3.up);
         var anchorHook = anchorPosition + new Vector3(Mathf.Sin(angle) * realLifeSize.x / 2f, 0f, Mathf.Cos(angle) * realLifeSize.z / 2f);
         var hookDistanceFromAnchor = Vector3.Distance(anchorPosition, anchorHook);
-        var distanceFromAnchorHook = Vector3.Distance(anchorPosition, motionControlPosition) - hookDistanceFromAnchor;
-        var effectWeight = 1f - (Mathf.Clamp(distanceFromAnchorHook, 0, falloffJSON.val) / falloffJSON.val);
+        var distanceFromAnchorHook = Mathf.Clamp(Vector3.Distance(anchorPosition, motionControlPosition) - hookDistanceFromAnchor, 0f, falloffDistanceJSON.val);
+        var effectWeight = 1f - (distanceFromAnchorHook / falloffDistanceJSON.val);
         var exponentialWeight = ExponentialScale(effectWeight, falloffMidPointJSON.val);
         return exponentialWeight;
     }
@@ -455,7 +455,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         jc["Anchors"] = anchors;
 
-        falloffJSON.StoreJSON(jc);
+        falloffDistanceJSON.StoreJSON(jc);
         disableSelfGrabJSON.StoreJSON(jc);
     }
 
@@ -481,7 +481,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             }
         }
 
-        falloffJSON.RestoreFromJSON(jc);
+        falloffDistanceJSON.RestoreFromJSON(jc);
         disableSelfGrabJSON.RestoreFromJSON(jc);
     }
 

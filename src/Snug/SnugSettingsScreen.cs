@@ -34,7 +34,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
         CreateToggle(_snug.disableSelfGrabJSON).label = "Disable Person Grab";
-        CreateSlider(_snug.falloffJSON, false).label = "Falloff Distance";
+        CreateSlider(_snug.falloffDistanceJSON, false).label = "Falloff Distance";
         CreateSlider(_snug.falloffMidPointJSON, false).label = "Falloff Mid-point";
         InitAnchorsUI();
 
