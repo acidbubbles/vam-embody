@@ -15,27 +15,36 @@ public class PersonMeasurements
 
     public float MeasureHeight()
     {
-        var measure = Distance(
-            Get("head"),
-            Get("neck"),
-            Get("chest"),
-            Get("abdomen2"),
-            Get("abdomen"),
-            Get("hip"),
-            Get("pelvis"),
-            Get("rThigh"),
-            Get("rShin"),
-            Get("rFoot")
-        );
+        var bones = _containingAtom.GetComponentsInChildren<DAZBone>();
+        var headBone = bones.First(b => b.name == "head");
+        var pelvisBone = bones.First(b => b.name == "pelvis");
+        var lFootBone = bones.First(b => b.name == "lFoot");
+        var rFootBone = bones.First(b => b.name == "rFoot");
+        var footToHead = Measure(headBone, pelvisBone) + (Measure(lFootBone, pelvisBone) + Measure(rFootBone, pelvisBone) / 2f);
 
         var eyes = _containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var lEye = eyes.First(eye => eye.name == "lEye").transform;
-        var eyesToHeadDistance = Mathf.Abs(lEye.position.y - Get("head").position.y);
+        var eyesToHeadDistance = headBone.transform.InverseTransformPoint(lEye.position).y;
 
-        measure += eyesToHeadDistance + _feetToGroundDistance;
-        measure *= _skeletonSumToStandHeightRatio;
+        var measure = footToHead + eyesToHeadDistance + _feetToGroundDistance;
+        // measure *= _skeletonSumToStandHeightRatio;
 
         return measure;
+    }
+
+    private static float Measure(DAZBone from, DAZBone to)
+    {
+        var bone = from;
+        var length = 0f;
+        while (true)
+        {
+            if (bone.parentBone == to || ReferenceEquals(bone.parentBone, null))
+                break;
+
+            length += Vector3.Distance(bone.parentBone.transform.position, bone.transform.position);
+            bone = bone.parentBone;
+        }
+        return length;
     }
 
     private static float Distance(params Rigidbody[] rigidbodies)
