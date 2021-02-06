@@ -16,7 +16,7 @@ public class UtilitiesScreen : ScreenBase, IScreen
 
         CreateButton("Create Mirror").button.onClick.AddListener(CreateMirror);
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
-        CreateButton("Load Possession Pose").button.onClick.AddListener(ResetPose);
+        CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(ResetPose);
         CreateButton("Reset All Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
     }
 

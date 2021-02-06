@@ -17,7 +17,7 @@ public class SnugAutoSetup
         var colliders = ScanBodyColliders().ToList();
         foreach (var anchor in _snug.anchorPoints)
         {
-            if (anchor.locked) continue;
+            if (anchor.locked || !anchor.auto) continue;
             AutoSetup(anchor.bone, anchor, colliders);
         }
     }

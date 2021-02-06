@@ -78,7 +78,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         }
 
         #warning For debugging purposes
-        // context.plugin.StartCoroutine(DebugCo());
+        context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -98,6 +98,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (_once) yield break;
         _once = true;
         yield return new WaitForSecondsRealtime(0.2f);
+        context.snug.previewSnugOffsetJSON.val = true;
         // new ResetPoseStep(context).Apply();
         // Activate
         //context.embody.activeJSON.val = true;

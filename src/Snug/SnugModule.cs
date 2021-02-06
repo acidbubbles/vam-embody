@@ -93,7 +93,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             id = "Lips",
             label = "Lips",
             bone = bones.First(rb => rb.name == "head").transform,
-            inGameOffsetDefault = new Vector3(0, -0.01f, -0.071f),
+            inGameOffsetDefault = new Vector3(0, -0.01f, 0.02f),
             inGameSizeDefault = new Vector3(0.15f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.18f, 0, 0.24f),
@@ -134,6 +134,20 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            id = "Thighs",
+            label = "Thighs",
+            // TODO: We could try and average this instead, OR define an absolute value
+            bone = bones.First(rb => rb.name == "pelvis").transform,
+            inGameOffsetDefault = new Vector3(0, -0.35f, 0),
+            inGameSizeDefault = new Vector3(0.38f, 0, 0.2f),
+            realLifeOffsetDefault = Vector3.zero,
+            realLifeSizeDefault = new Vector3(0.38f, 0, 0.2f),
+            auto = false,
+            active = true,
+            locked = false
+        });
+        anchorPoints.Add(new ControllerAnchorPoint
+        {
             id = "Feet",
             label = "Feet",
             // TODO: We could try and average this instead, OR define an absolute value
@@ -142,6 +156,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
+            auto = false,
             active = true,
             locked = true
         });
@@ -408,10 +423,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             if (anchorPoint.locked) continue;
 
-            anchorPoint.inGameCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, Color.gray);
+            anchorPoint.inGameCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, new Color(0.8f, 0.6f, 0.6f));
             anchorPoint.Update();
 
-            anchorPoint.realLifeCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, Color.white);
+            anchorPoint.realLifeCue = new ControllerAnchorPointVisualCue(anchorPoint.bone.transform, new Color(0.4f, 0.8f, 0.4f));
             anchorPoint.Update();
         }
     }

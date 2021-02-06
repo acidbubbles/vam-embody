@@ -23,8 +23,8 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         var footYaw = 16f;
         var footPitch = 18f;
         var footFloorDistance = 0.055f;
-        var headForwardOffset = 0.032f;
-        var feetForwardOffset = -0.040f;
+        var headForwardOffset = 0.050f;
+        var feetForwardOffset = 0.010f;
         var handsToHeightRatio = 0.75f;
         var handsForwardOffset = 0.2f;
         var handsRightOffset = 0.2f;
