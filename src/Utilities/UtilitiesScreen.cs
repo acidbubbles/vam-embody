@@ -50,7 +50,8 @@ public class UtilitiesScreen : ScreenBase, IScreen
 
     private void ResetPose()
     {
-        var step = new ResetPoseStep(context);
+        var useViveTrackers = context.trackers.viveTrackers.Any(t => t.SyncMotionControl());
+        var step = new ResetPoseStep(context, !useViveTrackers);
         step.Apply();
     }
 }

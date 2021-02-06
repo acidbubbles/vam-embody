@@ -3,11 +3,13 @@ using UnityEngine;
 
 public class ResetPoseStep : WizardStepBase, IWizardStep
 {
+    private readonly bool _preferToes;
     public string helpText => "We will now reset all Embody settings and load a pose so the model is standing straight. Press next when ready, or skip if you'd like to run the wizard using the current settings and pose instead.";
 
-    public ResetPoseStep(EmbodyContext context)
+    public ResetPoseStep(EmbodyContext context, bool preferToes)
         : base(context)
     {
+        _preferToes = preferToes;
     }
 
     public void Apply()
@@ -32,6 +34,8 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         var hip = context.containingAtom.freeControllers.First(fc => fc.name == "hipControl");
         var lFoot = context.containingAtom.freeControllers.First(fc => fc.name == "lFootControl");
         var rFoot = context.containingAtom.freeControllers.First(fc => fc.name == "rFootControl");
+        var lToe = context.containingAtom.freeControllers.First(fc => fc.name == "lToeControl");
+        var rToe = context.containingAtom.freeControllers.First(fc => fc.name == "rToeControl");
         var lHand = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         var rHand = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
 
@@ -68,6 +72,27 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         rFoot.control.position = position + headRight * footHalfDistance + Vector3.up * footFloorDistance + headForward * feetForwardOffset;
         rFoot.RBHoldPositionSpring = 10000f;
         rFoot.RBHoldRotationSpring = 1000f;
+
+        if (_preferToes)
+        {
+            // TODO: In theory it would be better if the feet sole moved but the toes didn't, but the toes have weird movements and it's had to get the sole to stay on the ground.
+            /*
+            var toeBone = context.containingAtom.GetComponentsInChildren<DAZBone>().First(b => b.name == "rToe");
+            var toeToFeetDistance = toeBone.transform.localPosition.magnitude;
+
+            SetState(lToe, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
+            lToe.control.localEulerAngles = lFoot.control.eulerAngles;
+            lToe.control.position = lFoot.control.position + lFoot.control.forward * toeToFeetDistance;
+            lToe.RBHoldPositionSpring = 10000f;
+            lToe.RBHoldRotationSpring = 500f;
+
+            SetState(rToe, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
+            rToe.control.localEulerAngles = rFoot.control.eulerAngles;
+            rToe.control.position = rFoot.control.position + rFoot.control.forward * toeToFeetDistance;
+            rToe.RBHoldPositionSpring = 10000f;
+            rToe.RBHoldRotationSpring = 500f;
+            */
+        }
 
         SetState(lHand, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
         lHand.control.localEulerAngles = headEulerAngles + context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).baseOffsetRotation;

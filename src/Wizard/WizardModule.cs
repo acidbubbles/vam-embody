@@ -88,17 +88,19 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         context.embody.presetsJSON.val = "Improved Possession";
 
+        // NOTE: We use Count because we want to sync all available motion controls, not only the first one
+        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
+        var useViveTrackers = context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0;
+
         // ReSharper disable once UseObjectOrCollectionInitializer
         var steps = new List<IWizardStep>();
 
         steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
         // TODO: Disable all controllers except hand and feet, ground feet, and rotate head so it looks straight forward. Make head look at average feet direction, or align feet to head.
-        steps.Add(new ResetPoseStep(context));
+        steps.Add(new ResetPoseStep(context, !useViveTrackers));
 
-        // NOTE: We use Count because we want to sync all available motion controls, not only the first one
-        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
-        if (context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0)
+        if (useViveTrackers)
         {
             steps.Add(new ActivateHeadAndHandsStep(context));
             steps.Add(new RecordViveTrackersStep(context));
