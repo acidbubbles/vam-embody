@@ -17,10 +17,25 @@ public class AskSnugStep : WizardStepBase, IWizardStep
     {
         _steps.Add(new ActivateWithoutSnugStep(context));
         // _steps.Add(new MeasureHandsPaddingStep(context));
-        foreach (var anchor in context.snug.anchorPoints.Where(a => !a.locked && a.active))
         {
-            _steps.Add(new MeasureAnchorWidthStep(context, anchor));
-            _steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor));
+            var anchor = context.snug.anchorPoints.First(a => a.id == "Head");
+            _steps.Add(new MeasureAnchorWidthStep(context, anchor, 100));
+            _steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor, -10));
+        }
+        {
+            var anchor = context.snug.anchorPoints.First(a => a.id == "Chest");
+            _steps.Add(new MeasureAnchorWidthStep(context, anchor, -20));
+            _steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor, -10));
+        }
+        {
+            var anchor = context.snug.anchorPoints.First(a => a.id == "Abdomen");
+            _steps.Add(new MeasureAnchorWidthStep(context, anchor, -20));
+            _steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor, 10));
+        }
+        {
+            var anchor = context.snug.anchorPoints.First(a => a.id == "Pelvis");
+            _steps.Add(new MeasureAnchorWidthStep(context, anchor, -60));
+            _steps.Add(new MeasureAnchorDepthAndOffsetStep(context, anchor, 70));
         }
         _steps.Add(new DeactivateAndRestoreSnugStep(context));
     }

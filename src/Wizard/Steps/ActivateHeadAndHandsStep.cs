@@ -25,5 +25,6 @@ public class ActivateHeadAndHandsStep : WizardStepBase, IWizardStep
             mc.enabled = true;
 
         context.embody.activeJSON.val = true;
+        context.trackers.previewTrackerOffsetJSON.val = true;
     }
 }

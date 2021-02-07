@@ -78,7 +78,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         }
 
         #warning For debugging purposes
-        context.plugin.StartCoroutine(DebugCo());
+        // context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -98,24 +98,25 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (_once) yield break;
         _once = true;
         yield return new WaitForSecondsRealtime(0.2f);
-        context.snug.previewSnugOffsetJSON.val = true;
+        // context.snug.previewSnugOffsetJSON.val = true;
         // new ResetPoseStep(context).Apply();
         // Activate
         //context.embody.activeJSON.val = true;
         // Wizard
-        /*
-        _context.snug.selectedJSON.val = false;
-        _context.trackers.selectedJSON.val = true;
-        _context.worldScale.selectedJSON.val = false;
-        _context.hideGeometry.selectedJSON.val = false;
-        yield return new WaitForSecondsRealtime(0.2f);
+        yield return new WaitForSecondsRealtime(0.1f);
         screensManager.Show(WizardScreen.ScreenName);
-        yield return new WaitForSecondsRealtime(0.2f);
-        _wizard.StartWizard();
-        yield return new WaitForSecondsRealtime(0.2f);
-        _wizard.Next();
-        yield return new WaitForSecondsRealtime(0.2f);
-        _wizard.Next();
-        */
+        yield return new WaitForSecondsRealtime(0.1f);
+        context.wizard.StartWizard();
+        yield return new WaitForSecondsRealtime(0.1f);
+        context.wizard.Skip();
+        yield return new WaitForSecondsRealtime(0.1f);
+        context.wizard.Skip();
+        yield return new WaitForSecondsRealtime(0.1f);
+        context.wizard.Next();
+        for (var i = 0; i < 8; i++)
+        {
+            yield return new WaitForSecondsRealtime(0.1f);
+            context.wizard.Next();
+        }
     }
 }

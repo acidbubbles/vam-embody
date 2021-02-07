@@ -277,6 +277,7 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
         activeJSON.val = false;
+        _modules.GetComponent<WizardModule>()?.StopWizard("");
     }
 
     // ReSharper disable once UnusedMember.Local

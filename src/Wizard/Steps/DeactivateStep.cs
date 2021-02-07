@@ -9,6 +9,7 @@
 
     public void Apply()
     {
+        context.trackers.previewTrackerOffsetJSON.val = false;
         context.embody.activeJSON.val = false;
     }
 }

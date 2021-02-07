@@ -9,6 +9,8 @@ public class FreeControllerV3Snapshot
     private Quaternion _rotation;
     private FreeControllerV3.PositionState _positionState;
     private FreeControllerV3.RotationState _rotationState;
+    public float _holdPositionSpring;
+    public float _holdRotationSpring;
 
     public static FreeControllerV3Snapshot Snap(FreeControllerV3 controller)
     {
@@ -21,7 +23,9 @@ public class FreeControllerV3Snapshot
             canGrabPosition = controller.canGrabPosition,
             canGrabRotation = controller.canGrabRotation,
             _positionState = controller.currentPositionState,
-            _rotationState = controller.currentRotationState
+            _rotationState = controller.currentRotationState,
+            _holdPositionSpring = controller.RBHoldPositionSpring,
+            _holdRotationSpring = controller.RBHoldRotationSpring
         };
     }
 
@@ -31,6 +35,8 @@ public class FreeControllerV3Snapshot
         controller.canGrabRotation = canGrabRotation;
         controller.currentPositionState = _positionState;
         controller.currentRotationState = _rotationState;
+        controller.RBHoldPositionSpring = _holdPositionSpring;
+        controller.RBHoldRotationSpring = _holdRotationSpring;
         if (!restorePose) return;
         var controlTransform = controller.control.transform;
         controlTransform.position = _position;

@@ -6,52 +6,65 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     public string helpText => $"Possession activated. Now put your hands on your real {_anchor.label}, and Press next when ready.";
 
     private readonly ControllerAnchorPoint _anchor;
+    private readonly float _handRotate;
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
+    private readonly MotionControllerWithCustomPossessPoint _leftHandMotion;
+    private readonly MotionControllerWithCustomPossessPoint _rightHandMotion;
     private FreeControllerV3Snapshot _leftHandSnapshot;
     private FreeControllerV3Snapshot _rightHandSnapshot;
+    private Vector3 _leftComparePointPosition;
+    private Vector3 _rightComparePointPosition;
 
-    public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor)
+    public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor, float handRotate)
         : base(context)
     {
         _anchor = anchor;
+        _handRotate = handRotate;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
+        _leftHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand);
+        _rightHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand);
     }
 
     public override void Enter()
     {
         _leftHandSnapshot = FreeControllerV3Snapshot.Snap(_leftHandControl);
         _rightHandSnapshot = FreeControllerV3Snapshot.Snap(_rightHandControl);
+        _leftHandControl.RBHoldPositionSpring = 10000;
+        _leftHandControl.RBHoldRotationSpring = 300;
+        _rightHandControl.RBHoldPositionSpring = 10000;
+        _rightHandControl.RBHoldRotationSpring = 300;
     }
 
     public override void Update()
     {
-        // VisualCuesHelper.Cross(Color.green).transform.position = _anchor.GetInGameWorldPosition() + (-_anchor.RigidBody.transform.right * (_anchor.InGameSize.x / 2f + _context.handsDistance / 2f));
-        // TODO: Cancel out the hand size, whatever that is. Figure out if we should compute it or just hardcode it.
-        _leftHandControl.control.position = _anchor.GetInGameWorldPosition() + (-_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-        _leftHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles;
-        _leftHandControl.control.Rotate(new Vector3(0, 0, 90));
+        {
+            _leftHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _leftHandMotion.baseOffsetRotation;
+            _leftComparePointPosition = _anchor.GetInGameWorldPosition() - (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+            _leftHandControl.control.position = _leftComparePointPosition + Quaternion.Inverse(_leftHandControl.control.rotation) * Quaternion.Euler(_leftHandMotion.baseOffsetRotation) * _leftHandMotion.baseOffset;
+            _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
+        }
 
-        _rightHandControl.control.position = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-        _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles;
-        _rightHandControl.control.Rotate(new Vector3(0, 0, -90));
+        {
+             _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _rightHandMotion.baseOffsetRotation;
+            _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+            _rightHandControl.control.position = _rightComparePointPosition + Quaternion.Inverse(_rightHandControl.control.rotation) * Quaternion.Euler(_rightHandMotion.baseOffsetRotation) * _rightHandMotion.baseOffset;
+            _rightHandControl.control.RotateAround(_rightComparePointPosition, _rightHandControl.control.up, -_handRotate);
+        }
     }
 
     public void Apply()
     {
-        // TODO: Highlight the ring where we want the hands to be.
-        // TODO: Make the model move their hand in the right position.
-        var gameHipsCenter = _anchor.GetInGameWorldPosition();
-        // TODO: Check the forward size too, and the offset.
-        // TODO: Don't check the _hand control_ distance, instead check the relevant distance (from inside the hands)
-        var realHipsWidth = Vector3.Distance(context.leftHand.position, context.rightHand.position) - TrackersConstants.handsDistance;
-        var realHipsXCenter = (context.leftHand.position + context.rightHand.position) / 2f;
-        _anchor.realLifeSize = new Vector3(realHipsWidth, 0f, _anchor.inGameSize.z);
-        _anchor.realLifeOffset = realHipsXCenter - gameHipsCenter;
-        SuperController.LogMessage($"Real Hips height: {realHipsXCenter.y}, Game Hips height: {gameHipsCenter}");
-        SuperController.LogMessage($"Real Hips width: {realHipsWidth}, Game Hips width: {_anchor.realLifeSize.x}");
-        SuperController.LogMessage($"Real Hips center: {realHipsXCenter}, Game Hips center: {gameHipsCenter}");
+        var inverseRotation = Quaternion.Inverse(_anchor.bone.rotation);
+        var compareCenter = (_leftComparePointPosition + _rightComparePointPosition) / 2f;
+        var handsCenter = (context.leftHand.position + context.rightHand.position) / 2f;
+        var realLifeOffset = inverseRotation * (handsCenter - compareCenter);
+        realLifeOffset.x = 0;
+        _anchor.realLifeOffset = realLifeOffset;
+
+        var realLifeWidth = Mathf.Abs((inverseRotation * context.rightHand.position).x - (inverseRotation * context.leftHand.position).x);
+        _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * realLifeWidth;
     }
 
     public override void Leave()

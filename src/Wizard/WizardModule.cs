@@ -95,10 +95,9 @@ public class WizardModule : EmbodyModuleBase, IWizard
         // ReSharper disable once UseObjectOrCollectionInitializer
         var steps = new List<IWizardStep>();
 
-        steps.Add(new RecordPlayerHeightStep(context.worldScale));
-
-        // TODO: Disable all controllers except hand and feet, ground feet, and rotate head so it looks straight forward. Make head look at average feet direction, or align feet to head.
         steps.Add(new ResetPoseStep(context, !useViveTrackers));
+
+        steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
         if (useViveTrackers)
         {
@@ -123,12 +122,19 @@ public class WizardModule : EmbodyModuleBase, IWizard
                 _step.Update();
             }
 
-            if (_skip)
-                _skip = false;
-            else
-                _step.Apply();
+            try
+            {
+                if (_skip)
+                    _skip = false;
+                else
+                    _step.Apply();
+            }
+            finally
+            {
+                _step.Leave();
+            }
 
-            _step.Leave();
+            yield return 0;
         }
 
         StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
