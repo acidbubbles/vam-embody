@@ -9,8 +9,21 @@ public class DeactivateAndRestoreSnugStep : WizardStepBase, IWizardStep
     {
     }
 
+    public override void Enter()
+    {
+        base.Enter();
+
+        context.snug.previewSnugOffsetJSON.val = true;
+    }
+
     public void Apply()
     {
+    }
+
+    public override void Leave()
+    {
+        base.Leave();
+
         context.embody.activeJSON.val = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;

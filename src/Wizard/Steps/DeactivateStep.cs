@@ -9,6 +9,12 @@
 
     public void Apply()
     {
+    }
+
+    public override void Leave()
+    {
+        base.Leave();
+
         context.trackers.previewTrackerOffsetJSON.val = false;
         context.embody.activeJSON.val = false;
     }
