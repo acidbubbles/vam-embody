@@ -88,6 +88,12 @@ public class Embody : MVRScript, IEmbody
             {
                 if (val)
                 {
+                    if (!enabled)
+                    {
+                        activeJSON.valNoCallback = false;
+                        return;
+                    }
+
                     _context.Initialize();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
@@ -288,6 +294,8 @@ public class Embody : MVRScript, IEmbody
             _activateAfterSaveComplete = true;
             activeJSON.val = false;
         }
+
+        _modules.GetComponent<WizardModule>()?.StopWizard("");
     }
 
     // ReSharper disable once UnusedMember.Local

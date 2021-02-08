@@ -49,11 +49,11 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
     public void StopWizard(string message)
     {
-        if (_coroutine != null)
-        {
-            StopCoroutine(_coroutine);
-            _coroutine = null;
-        }
+        if (_coroutine == null)
+            return;
+
+        StopCoroutine(_coroutine);
+        _coroutine = null;
 
         if (_step != null)
         {
@@ -65,6 +65,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
         _next = false;
         _skip = false;
         statusChanged.Invoke(false);
+
+        // TODO: This ugly fix is for when you're canceling during Snug setup, we need some way to restore the hands after. Maybe a cleanup step would be better.
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
     }
 
     public void Next()
@@ -88,25 +92,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         context.embody.presetsJSON.val = "Improved Possession";
 
-        // NOTE: We use Count because we want to sync all available motion controls, not only the first one
-        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
-        var useViveTrackers = context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0;
-
-        // ReSharper disable once UseObjectOrCollectionInitializer
-        var steps = new List<IWizardStep>();
-
-        steps.Add(new ResetPoseStep(context, !useViveTrackers));
-
-        steps.Add(new RecordPlayerHeightStep(context.worldScale));
-
-        if (useViveTrackers)
-        {
-            steps.Add(new ActivateHeadAndHandsStep(context));
-            steps.Add(new RecordViveTrackersStep(context));
-            steps.Add(new DeactivateStep(context));
-        }
-
-        steps.Add(new AskSnugStep(context, steps));
+        var steps = BuildSteps();
 
         for (var i = 0; i < steps.Count; i++)
         {
@@ -138,6 +124,30 @@ public class WizardModule : EmbodyModuleBase, IWizard
         }
 
         StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
+    }
+
+    private List<IWizardStep> BuildSteps()
+    {
+        var steps = new List<IWizardStep>();
+
+        // NOTE: We use Count because we want to sync all available motion controls, not only the first one
+        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
+        var useViveTrackers = context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0;
+
+        steps.Add(new ResetPoseStep(context, !useViveTrackers));
+
+        steps.Add(new RecordPlayerHeightStep(context.worldScale));
+
+        if (useViveTrackers)
+        {
+            steps.Add(new ActivateHeadAndHandsStep(context));
+            steps.Add(new RecordViveTrackersStep(context));
+            steps.Add(new DeactivateStep(context));
+        }
+
+        steps.Add(new AskSnugStep(context, steps));
+
+        return steps;
     }
 
 

@@ -16,6 +16,6 @@ public class ActivateWithoutSnugStep : WizardStepBase, IWizardStep
 
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = false;
-        context.embody.activeJSON.val = true;
+        context.embody.activeJSON.val = false;
     }
 }

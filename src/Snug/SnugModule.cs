@@ -210,8 +210,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             }
         }
 
-        EnableHand(_lHand, MotionControlNames.LeftHand);
-        EnableHand(_rHand, MotionControlNames.RightHand);
+        try
+        {
+            EnableHand(_lHand, MotionControlNames.LeftHand);
+            EnableHand(_rHand, MotionControlNames.RightHand);
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: Failed to initialize Snug. {exc}");
+            enabledJSON.val = false;
+        }
+
+        if (!_lHand.active || !_rHand.active)
+        {
+            SuperController.LogError($"Embody: Failed to initialize Snug hands. No motion tracker to bind to.");
+            enabledJSON.val = false;
+        }
     }
 
     private void EnableHand(SnugHand hand, string motionControlName)
