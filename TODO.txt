@@ -8,3 +8,5 @@
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
 - Male Snug? Or maybe an additional anchor between thighs
 - When using Snug, only allow a maximum pull effect and increase it every frame so fast movements are not as affected as slow movements
+
+- Decals are not visible in mirrors

@@ -505,7 +505,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         base.ResetToDefault();
 
         foreach (var anchor in anchorPoints)
+        {
             anchor.InitFromDefault();
+            anchor.Update();
+        }
 
         falloffDistanceJSON.SetValToDefault();
         disableSelfGrabJSON.SetValToDefault();

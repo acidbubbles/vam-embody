@@ -272,8 +272,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             var motionControlJSON = new JSONClass
             {
-                {"OffsetPosition", motionControl.possessPointTransform.localPosition.ToJSON()},
-                {"OffsetRotation", motionControl.possessPointTransform.localEulerAngles.ToJSON()},
+                {"OffsetPosition", motionControl.customOffset.ToJSON()},
+                {"OffsetRotation", motionControl.customOffsetRotation.ToJSON()},
+                {"PossessPointRotation", motionControl.possessPointRotation.ToJSON()},
                 {"Controller", motionControl.mappedControllerName},
                 {"Enabled", motionControl.enabled ? "true" : "false"},
                 {"ControlRotation", motionControl.controlRotation ? "true" : "false"},
@@ -296,8 +297,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             var controllerJSON = motionControlsJSON[motionControlName];
             var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
             if (motionControl == null) continue;
-            motionControl.possessPointTransform.localPosition = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
-            motionControl.possessPointTransform.localEulerAngles = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            motionControl.customOffset = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+            motionControl.customOffsetRotation = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            motionControl.possessPointRotation = controllerJSON["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
             motionControl.mappedControllerName = controllerJSON["Controller"].Value;
             motionControl.enabled = controllerJSON["Enabled"].Value != "false";
             motionControl.controlRotation = controllerJSON["ControlRotation"].Value != "false";
