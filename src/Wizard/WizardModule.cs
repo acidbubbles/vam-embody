@@ -131,17 +131,19 @@ public class WizardModule : EmbodyModuleBase, IWizard
         var steps = new List<IWizardStep>();
 
         // NOTE: We use Count because we want to sync all available motion controls, not only the first one
-        // ReSharper disable once ReplaceWithSingleCallToCount UseMethodAny.0
-        var useViveTrackers = context.trackers.viveTrackers.Where(t => t.SyncMotionControl()).Count() > 0;
+        var useViveTrackers = context.trackers.viveTrackers.Count(t => t.SyncMotionControl());
 
-        steps.Add(new ResetPoseStep(context, !useViveTrackers));
+        steps.Add(new ResetPoseStep(context, useViveTrackers == 0));
 
         steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
-        if (useViveTrackers)
+        if (useViveTrackers > 0)
         {
             steps.Add(new ActivateHeadAndHandsStep(context));
-            steps.Add(new RecordViveTrackersStep(context));
+            if (useViveTrackers > 1)
+                steps.Add(new RecordViveTrackersFeetStep(context));
+            if (useViveTrackers == 1 || useViveTrackers > 2)
+                steps.Add(new RecordViveTrackersStep(context));
             steps.Add(new DeactivateStep(context));
         }
 

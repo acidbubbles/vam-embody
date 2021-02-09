@@ -1,8 +1,10 @@
-﻿public class RecordViveTrackersStep : WizardStepBase, IWizardStep
-{
-    public string helpText => "Align all remaining vive trackers as closely as possible to your model's position, and press next.";
+﻿using System.Linq;
 
-    public RecordViveTrackersStep(EmbodyContext context)
+public class RecordViveTrackersFeetStep : WizardStepBase, IWizardStep
+{
+    public string helpText => "Align your feet to match the model feet's position and angle as closely as possible, and select Next.";
+
+    public RecordViveTrackersFeetStep(EmbodyContext context)
         : base(context)
     {
 
@@ -11,11 +13,11 @@
     public void Apply()
     {
         var autoSetup = new TrackerAutoSetup(context.containingAtom);
+        var feet = context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("FootControl")).ToList();
         foreach (var mc in context.trackers.viveTrackers)
         {
-            if(mc.mappedControllerName != null) continue;
             if (!mc.SyncMotionControl()) continue;
-            autoSetup.AttachToClosestNode(mc);
+            autoSetup.AttachToClosestNode(mc, feet);
         }
         context.Refresh();
     }

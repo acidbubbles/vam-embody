@@ -34,6 +34,12 @@ public class TrackerAutoSetup
 
     public void AttachToClosestNode(MotionControllerWithCustomPossessPoint motionControl)
     {
+        var controllers = _containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control"));
+        AttachToClosestNode(motionControl, controllers);
+    }
+
+    public void AttachToClosestNode(MotionControllerWithCustomPossessPoint motionControl, IEnumerable<FreeControllerV3> controllers)
+    {
         if (!motionControl.SyncMotionControl())
         {
             SuperController.LogError($"Embody: {motionControl.name} does not seem to be attached to a VR motion control.");
@@ -44,13 +50,14 @@ public class TrackerAutoSetup
 
         var closestDistance = float.PositiveInfinity;
         Rigidbody closest = null;
-        foreach (var controller in _containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Select(fc => fc.GetComponent<Rigidbody>()))
+        foreach (var controller in controllers)
         {
+            var rigidbody = controller.GetComponent<Rigidbody>();
             if (!_autoBindControllers.Contains(controller.name)) continue;
-            var distance = Vector3.Distance(position, controller.position);
+            var distance = Vector3.Distance(position, rigidbody.position);
             if (!(distance < closestDistance)) continue;
             closestDistance = distance;
-            closest = controller;
+            closest = rigidbody;
         }
 
         if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
