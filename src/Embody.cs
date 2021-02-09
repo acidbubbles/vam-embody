@@ -336,6 +336,12 @@ public class Embody : MVRScript, IEmbody
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
         var version = jc["Version"].AsInt;
         if (version <= 0) return;
+        if (version < 2)
+        {
+            SuperController.LogError("Embody: Saved settings are not compatible with this version of Embody.");
+            _restored = true;
+            return;
+        }
         if (version > SaveFormat.Version)
         {
             SuperController.LogError("Embody: This scene was saved with a more recent Embody version than the one you have install. Please get the latest version.");

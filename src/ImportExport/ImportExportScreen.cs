@@ -55,7 +55,7 @@ public class ImportExportScreen : ScreenBase, IScreen
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
 
         var clearPersonalData = CreateButton("Clear Personal Data (Plugin)", true);
-        clearPersonalData.button.onClick.AddListener(() => ClearPersonalData());
+        clearPersonalData.button.onClick.AddListener(ClearPersonalData);
     }
 
     private void SaveCallback(string path)
