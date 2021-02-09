@@ -123,9 +123,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            id = "Pelvis",
-            label = "Pelvis",
-            bone = bones.First(rb => rb.name == "pelvis").transform,
+            id = "Hips",
+            label = "Hips",
+            bone = bones.First(rb => rb.name == "hip").transform,
             inGameOffsetDefault = new Vector3(0, -0.088f, -0.009f),
             inGameSizeDefault = new Vector3(0.36f, 0, 0.24f),
             realLifeOffsetDefault = Vector3.zero,

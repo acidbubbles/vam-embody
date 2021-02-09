@@ -9,7 +9,7 @@ public class TrackerAutoSetup
     {
         "chestControl",
         "lElbowControl", "rElbowControl",
-        "pelvisControl",
+        "hipControl",
         "lKneeControl", "rKneeControl",
         "lFootControl", "rFootControl"
     });
