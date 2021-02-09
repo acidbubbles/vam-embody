@@ -44,8 +44,8 @@ public class EmbodyContext
         var sc = SuperController.singleton;
         const string prefix = "EMBODY_DEBUG#";
         head = GetDebugAtom($"{prefix}head") ?? sc.centerCameraTarget.transform;
-        leftHand = GetDebugAtom($"{prefix}lHand") ?? sc.leftHand;
-        rightHand = GetDebugAtom($"{prefix}rHand") ?? sc.rightHand;
+        leftHand = GetDebugAtom($"{prefix}lHand") ?? GetHand(sc.touchObjectLeft, sc.viveObjectLeft);
+        rightHand = GetDebugAtom($"{prefix}rHand") ?? GetHand(sc.touchObjectRight, sc.viveObjectRight);
         viveTracker1 = GetDebugAtom($"{prefix}viveTracker1") ?? sc.viveTracker1;
         viveTracker2 = GetDebugAtom($"{prefix}viveTracker2") ?? sc.viveTracker2;
         viveTracker3 = GetDebugAtom($"{prefix}viveTracker3") ?? sc.viveTracker3;
@@ -61,6 +61,15 @@ public class EmbodyContext
         var atom = SuperController.singleton.GetAtomByUid(uid);
         if (atom == null || !atom.on) return null;
         return atom.mainController.control;
+    }
+
+    private Transform GetHand(Transform ovrHand, Transform viveHand)
+    {
+        if (SuperController.singleton.isOVR)
+            return ovrHand;
+        if (SuperController.singleton.isOpenVR)
+            return viveHand;
+        return null;
     }
 
     public void Refresh()
