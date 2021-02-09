@@ -14,7 +14,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public const string Label = "Automation";
     public override string storeId => "Automation";
     public override string label => Label;
-    public override bool alwaysEnabled => true;
+    public override bool skipChangeEnabledWhenActive => true;
 
     public JSONStorableBool takeOverVamPossess { get; } = new JSONStorableBool("TakeOverVamPossess", true);
     public KeyCode toggleKey { get; set; } = KeyCode.None;

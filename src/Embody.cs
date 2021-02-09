@@ -63,6 +63,8 @@ public class Embody : MVRScript, IEmbody
             presetsJSON = InitPresets(modules);
             RegisterStringChooser(presetsJSON);
 
+            _context.automation.enabledJSON.val = true;
+
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));
             if (isPerson)
@@ -97,7 +99,7 @@ public class Embody : MVRScript, IEmbody
                     _context.Initialize();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
-                        if (module.alwaysEnabled) continue;
+                        if (module.skipChangeEnabledWhenActive) continue;
                         if (!module.selectedJSON.val)
                         {
                             module.enabledJSON.val = false;
@@ -112,7 +114,7 @@ public class Embody : MVRScript, IEmbody
                     automationModule.Reset();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
                     {
-                        if (module.alwaysEnabled) continue;
+                        if (module.skipChangeEnabledWhenActive) continue;
                         module.enabledJSON.val = false;
                     }
                 }
@@ -177,7 +179,7 @@ public class Embody : MVRScript, IEmbody
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
     {
         var module = _modules.AddComponent<T>();
-        module.enabled = module.alwaysEnabled;
+        module.enabled = false;
         module.context = context;
         module.activeJSON = activeJSON;
         return module;
@@ -231,7 +233,7 @@ public class Embody : MVRScript, IEmbody
         {
             foreach (var module in modules)
             {
-                if (module.alwaysEnabled) continue;
+                if (module.skipChangeEnabledWhenActive) continue;
                 module.selectedJSON.val = false;
             }
 

@@ -5,7 +5,7 @@ public interface IEmbodyModule
 {
     string storeId { get; }
     string label { get; }
-    bool alwaysEnabled { get; }
+    bool skipChangeEnabledWhenActive { get; }
     JSONStorableBool enabledJSON { get; }
     JSONStorableBool selectedJSON { get; }
     EmbodyContext context { get; set; }
@@ -19,7 +19,7 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 {
     public abstract string storeId { get; }
     public abstract string label { get; }
-    public virtual bool alwaysEnabled => false;
+    public virtual bool skipChangeEnabledWhenActive => false;
     public JSONStorableBool selectedJSON { get; private set; }
     public JSONStorableBool enabledJSON { get; private set; }
     public EmbodyContext context { get; set; }

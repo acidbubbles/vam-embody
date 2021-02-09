@@ -22,7 +22,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
     public override string label => Label;
-    public override bool alwaysEnabled => true;
+    public override bool skipChangeEnabledWhenActive => true;
 
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
@@ -43,14 +43,14 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public void StartWizard()
     {
         if (_coroutine != null) StopWizard("");
+        enabledJSON.val = true;
         _coroutine = StartCoroutine(StartWizardCo());
         statusChanged.Invoke(true);
     }
 
     public void StopWizard(string message)
     {
-        if (_coroutine == null)
-            return;
+        if (!enabledJSON.val) return;
 
         StopCoroutine(_coroutine);
         _coroutine = null;
@@ -69,6 +69,8 @@ public class WizardModule : EmbodyModuleBase, IWizard
         // TODO: This ugly fix is for when you're canceling during Snug setup, we need some way to restore the hands after. Maybe a cleanup step would be better.
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
+
+        enabledJSON.val = false;
     }
 
     public void Next()
@@ -101,12 +103,16 @@ public class WizardModule : EmbodyModuleBase, IWizard
             _step.Enter();
             while (!AreAnyStartRecordKeysDown())
             {
+                ReopenIfClosed();
+
                 if (_skip)
                     break;
 
                 yield return 0;
                 _step.Update();
             }
+
+            ReopenIfClosed();
 
             try
             {
@@ -124,6 +130,16 @@ public class WizardModule : EmbodyModuleBase, IWizard
         }
 
         StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
+    }
+
+    private void ReopenIfClosed()
+    {
+        if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
+        SuperController.singleton.SelectController(containingAtom.mainController);
+        SuperController.singleton.ShowMainHUDMonitor();
+        var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
+        selector.SetActiveTab("Plugins");
+        context.plugin.UITransform.gameObject.SetActive(true);
     }
 
     private List<IWizardStep> BuildSteps()
