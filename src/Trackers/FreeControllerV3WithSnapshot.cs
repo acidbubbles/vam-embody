@@ -3,6 +3,7 @@
     public readonly FreeControllerV3 controller;
     public readonly HandControl handControl;
     public FreeControllerV3Snapshot snapshot;
+    public bool active;
 
     public FreeControllerV3WithSnapshot(FreeControllerV3 controller)
     {

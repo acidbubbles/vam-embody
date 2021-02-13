@@ -133,6 +133,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                     controllerWithSnapshot.handControl.possessed = true;
             }
 
+            controllerWithSnapshot.active = true;
             Possess(motionControl, controllerWithSnapshot.controller);
         }
     }
@@ -157,7 +158,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var c in controllers)
         {
-            if (!c.controller.possessed) continue;
+            if (!c.active) continue;
 
             c.controller.RestorePreLinkState();
             c.controller.possessed = false;
