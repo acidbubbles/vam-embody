@@ -165,6 +165,8 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         steps.Add(new AskSnugStep(context, steps));
 
+        steps.Add(new MakeDefaultsStep(context));
+
         return steps;
     }
 

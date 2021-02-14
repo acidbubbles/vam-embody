@@ -123,6 +123,7 @@
     <Compile Include="src\Wizard\Steps\DeactivateAndRestoreSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\DeactivateStep.cs" />
     <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
+    <Compile Include="src\Wizard\Steps\MakeDefaultsStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersFeetStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\ResetPoseStep.cs" />
