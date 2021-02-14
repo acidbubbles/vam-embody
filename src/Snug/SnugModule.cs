@@ -242,6 +242,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.currentPositionState = FreeControllerV3.PositionState.On;
         hand.controller.currentRotationState = FreeControllerV3.RotationState.On;
         hand.controller.possessed = true;
+        var motionAnimationControl = hand.controller.GetComponent<MotionAnimationControl>();
+        motionAnimationControl.suspendPositionPlayback = true;
+        hand.controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
+        motionAnimationControl.suspendRotationPlayback = true;
+        hand.controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
         if (context.trackers.enableHandsGraspJSON.val)
             (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
         if (previewSnugOffsetJSON.val) hand.showCueLine = true;
