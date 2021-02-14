@@ -48,7 +48,7 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
             Vector3.ProjectOnPlane(head.control.eulerAngles, Vector3.up).y
         ) / 3f;
 
-        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
+        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Where(fc => fc.control != null))
         {
             SetState(controller, FreeControllerV3.PositionState.Off, FreeControllerV3.RotationState.Off);
         }

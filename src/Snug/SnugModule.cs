@@ -203,6 +203,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 if (fc == _lHand.controller || fc == _rHand.controller) continue;
                 if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
                 if (!fc.name.EndsWith("Control")) continue;
+                if (fc.control == null) continue;
                 if (!context.trackers.motionControls.Any(mc => mc.mappedControllerName == fc.name && mc.enabled))
                     _previousState.Add(FreeControllerV3Snapshot.Snap(fc));
                 fc.canGrabPosition = false;

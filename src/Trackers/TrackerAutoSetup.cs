@@ -34,7 +34,9 @@ public class TrackerAutoSetup
 
     public void AttachToClosestNode(MotionControllerWithCustomPossessPoint motionControl)
     {
-        var controllers = _containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control"));
+        var controllers = _containingAtom.freeControllers
+            .Where(fc => fc.name.EndsWith("Control"))
+            .Where(fc => fc.control != null);
         AttachToClosestNode(motionControl, controllers);
     }
 
