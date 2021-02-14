@@ -4,31 +4,34 @@ using UnityEngine;
 public class PersonMeasurements
 {
     private const float _feetToGroundDistance = 0.059f;
-    private const float _skeletonSumToStandHeightRatio = 0.930f;
+    private const float _skeletonSumToStandHeightRatio = 0.940f;
 
-    private readonly Atom _containingAtom;
+    private readonly DAZBone[] _bones;
+    private readonly DAZBone _hipBone;
 
     public PersonMeasurements(Atom containingAtom)
     {
-        _containingAtom = containingAtom;
+        _bones = containingAtom.GetComponentsInChildren<DAZBone>();
+        _hipBone = _bones.First(b => b.name == "hip");
     }
 
     public float MeasureHeight()
     {
-        var bones = _containingAtom.GetComponentsInChildren<DAZBone>();
-        var headBone = bones.First(b => b.name == "head");
-        var hipBone = bones.First(b => b.name == "hip");
-        var lFootBone = bones.First(b => b.name == "lFoot");
-        var rFootBone = bones.First(b => b.name == "rFoot");
-        var footToHead = Measure(headBone, hipBone) + ((Measure(lFootBone, hipBone) + Measure(rFootBone, hipBone)) / 2f);
+        var footToHead = MeasureToHip("head") + ((MeasureToHip("lFoot") + MeasureToHip("rFoot")) / 2f);
 
-        var lEye = bones.First(eye => eye.name == "lEye").transform;
-        var eyesToHeadDistance = headBone.transform.InverseTransformPoint(lEye.position).y;
+        var lEye = _bones.First(eye => eye.name == "lEye").transform;
+        var eyesToHeadDistance = _bones.First(b => b.name == "head").transform.InverseTransformPoint(lEye.position).y;
 
         var measure = footToHead + eyesToHeadDistance + _feetToGroundDistance;
          measure *= _skeletonSumToStandHeightRatio;
 
         return measure;
+    }
+
+    public float MeasureToHip(string boneName)
+    {
+        var from = _bones.First(b => b.name == boneName);
+        return Measure(from, _hipBone);
     }
 
     private static float Measure(DAZBone from, DAZBone to)
@@ -44,10 +47,5 @@ public class PersonMeasurements
             bone = bone.parentBone;
         }
         return length;
-    }
-
-    private Rigidbody Get(string rbName)
-    {
-        return _containingAtom.rigidbodies.First(rb => rb.name == rbName);
     }
 }

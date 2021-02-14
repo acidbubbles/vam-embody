@@ -19,15 +19,16 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         var measurements = new PersonMeasurements(context.containingAtom);
         var height = measurements.MeasureHeight();
         // TODO: Measure shoulders
-        var footHalfDistance = 0.1f;
-        var footYaw = 16f;
+        var footHalfDistance = 0.045f;
+        var footYaw = 4f;
         var footPitch = 18f;
         var footFloorDistance = 0.055f;
-        var headForwardOffset = 0.050f;
+        var headForwardOffset = -0.020f;
+        var hipForwardOffset = 0.020f;
         var feetForwardOffset = 0.010f;
-        var handsToHeightRatio = 0.75f;
-        var handsForwardOffset = 0.2f;
-        var handsRightOffset = 0.2f;
+        var handsToHipOffset = -0.10f;
+        var handsForwardOffset = 0.05f;
+        var handsRightOffset = 0.22f;
 
         var head = context.containingAtom.freeControllers.First(fc => fc.name == "headControl");
         var pelvis = context.containingAtom.freeControllers.First(fc => fc.name == "pelvisControl");
@@ -60,6 +61,14 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         head.control.position = position + new Vector3(0f, height, 0f) + headForward * headForwardOffset;
         head.RBHoldPositionSpring = 10000f;
         head.RBHoldRotationSpring = 1000f;
+
+        SetState(hip, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
+        hip.control.localEulerAngles = new Vector3(0f, direction, 0f);
+        var hipForward = hip.control.forward;
+        var hipHeight = measurements.MeasureToHip("lFoot");
+        hip.control.position = position + new Vector3(0f, hipHeight, 0f) + hipForward * hipForwardOffset;
+        hip.RBHoldPositionSpring = 4000f;
+        hip.RBHoldRotationSpring = 1000f;
 
         SetState(lFoot, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
         lFoot.control.localEulerAngles = new Vector3(footPitch, direction - footYaw, 0f);
@@ -95,14 +104,14 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         }
 
         SetState(lHand, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        lHand.control.localEulerAngles = headEulerAngles + context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).baseOffsetRotation;
-        lHand.control.position = position + Vector3.up * (height * handsToHeightRatio) + headForward * handsForwardOffset - headRight * handsRightOffset;
+        lHand.control.localEulerAngles = new Vector3(-25f, 0, 90f);
+        lHand.control.position = position + Vector3.up * (hipHeight + handsToHipOffset) + headForward * handsForwardOffset - headRight * handsRightOffset;
         lHand.RBHoldPositionSpring = 10000f;
         lHand.RBHoldRotationSpring = 1000f;
 
         SetState(rHand, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        rHand.control.localEulerAngles = headEulerAngles + context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).baseOffsetRotation;
-        rHand.control.position = position + Vector3.up * (height * handsToHeightRatio) + headForward * handsForwardOffset + headRight * handsRightOffset;
+        rHand.control.localEulerAngles = new Vector3(-25f, 0, -90f);
+        rHand.control.position = position + Vector3.up * (hipHeight + handsToHipOffset) + headForward * handsForwardOffset + headRight * handsRightOffset;
         rHand.RBHoldPositionSpring = 10000f;
         rHand.RBHoldRotationSpring = 1000f;
     }
