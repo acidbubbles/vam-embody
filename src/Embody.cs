@@ -340,7 +340,7 @@ public class Embody : MVRScript, IEmbody
         if (version <= 0) return;
         if (version < 2)
         {
-            SuperController.LogError("Embody: Saved settings are not compatible with this version of Embody.");
+            SuperController.LogError($"Embody: Saved settings (Save Format {version}) are not compatible with this version of Embody (Save Format {SaveFormat.Version}).");
             _restored = true;
             return;
         }
