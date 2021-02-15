@@ -43,7 +43,6 @@ src\Trackers\MotionControllerWithCustomPossessPoint.cs
 src\Trackers\MotionControlNames.cs
 src\Trackers\OffsetPreview.cs
 src\Trackers\TrackerAutoSetup.cs
-src\Trackers\TrackersConstants.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\Utilities\Utilities.cs

@@ -175,7 +175,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             yield return 0;
         }
 
-        StopWizard("All done! You can now activate Embody.\n\nYou can tweak your settings or start this wizard again. You can make this setup your default in the Import/Export screen. Default settings will automatically apply whenever you load this plugin on an atom.");
+        StopWizard("<b>All done!</b>\n\nYou can now activate Embody.\n\nYou can tweak your settings manually by pressing Back, or start this wizard again if you prefer.\n\nYou can save tweaks in your default profile in the <i>Import, Export & Default Settings</i> screen. Default settings will automatically apply whenever you load this plugin on an atom.\n\nNow, have fun living in the future!");
     }
 
     private void ReopenIfClosed()
@@ -184,7 +184,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
         if (!SuperController.singleton.mainHUD.gameObject.activeInHierarchy) return;
         SuperController.singleton.SelectController(containingAtom.mainController, false, false, false);
-        SuperController.singleton.ShowMainHUD(SuperController.singleton.IsMonitorRigActive);
+        if(Camera.current == SuperController.singleton.MonitorCenterCamera)
+            SuperController.singleton.ShowMonitorUI();
+        else
+            SuperController.singleton.ShowMainHUD();
         var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
         selector.SetActiveTab("Plugins");
         context.plugin.UITransform.gameObject.SetActive(true);

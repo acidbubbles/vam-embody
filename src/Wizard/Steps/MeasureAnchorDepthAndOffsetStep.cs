@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
 {
+    private const float _handsDistance = -0.025f;
+
     public string helpText => $"Put your <b>right hand</b> at the same height as your <b>{_anchor.label.ToLower()}</b>, slightly pressed against you.\n\nTry to <b>replicate as closely as you can</b> the model's hand position, but on your own body.\n\nPress Next to apply.";
 
     private readonly ControllerAnchorPoint _anchor;
@@ -40,13 +42,14 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         _leftHandControl.currentRotationState = FreeControllerV3.RotationState.Off;
         _chestControl.currentRotationState = FreeControllerV3.RotationState.On;
         _chestControl.control.rotation = _headControl.control.rotation;
+        _chestControl.RBHoldRotationSpring = 600;
     }
 
     public override void Update()
     {
         _rightHandControl.control.rotation = _anchor.bone.rotation;
         _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
-        _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + TrackersConstants.handsDistance / 2f));
+        _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + _handsDistance / 2f));
         _rightHandControl.control.position = _rightComparePointPosition;
         _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase, Space.Self);
         _rightHandControl.control.RotateAround(_rightComparePointPosition, _anchor.bone.transform.up, -90);

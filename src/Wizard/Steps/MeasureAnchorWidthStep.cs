@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 {
+    private const float _handsDistance = -0.030f;
+
     public string helpText => $"Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.\n\nPress Next to apply.\n\nTry to match as closely as you can the hands position of the model, but on your own body. Check that your feet are aligned.";
 
     private readonly ControllerAnchorPoint _anchor;
@@ -42,7 +44,7 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         {
             _leftHandControl.control.rotation = _anchor.bone.rotation;
             _leftHandControl.control.Rotate(_leftHandMotion.rotateControllerBase, Space.Self);
-            _leftComparePointPosition = _anchor.GetInGameWorldPosition() - (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+            _leftComparePointPosition = _anchor.GetInGameWorldPosition() - (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f));
             _leftHandControl.control.position = _leftComparePointPosition;
             _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_leftHandMotion.rotateControllerBase)) * _leftHandMotion.offsetControllerBase, Space.Self);
             _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
@@ -51,7 +53,7 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         {
             _rightHandControl.control.rotation = _anchor.bone.rotation;
             _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
-            _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
+            _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f));
             _rightHandControl.control.position = _rightComparePointPosition;
             _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase, Space.Self);
             _rightHandControl.control.RotateAround(_rightComparePointPosition, _rightHandControl.control.up, -_handRotate);
@@ -62,12 +64,15 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     {
         var inverseRotation = Quaternion.Inverse(_anchor.bone.rotation);
         var compareCenter = (_leftComparePointPosition + _rightComparePointPosition) / 2f;
-        var handsCenter = (context.leftHand.position + context.rightHand.position) / 2f;
+        var leftHandPosition = context.leftHand.position;
+        var rightHandPosition = context.rightHand.position;
+        var handsCenter = (leftHandPosition + rightHandPosition) / 2f;
         var realLifeOffset = inverseRotation * (handsCenter - compareCenter);
-        realLifeOffset.x = 0;
+        realLifeOffset.x = 0; // We never want sideways offset
+        realLifeOffset.z *= 0.6f; // It's hard to get z right, especially for the chest, so let's tone down how much we trust this.
         _anchor.realLifeOffset = realLifeOffset;
 
-        var realLifeWidth = Mathf.Abs((inverseRotation * context.rightHand.position).x - (inverseRotation * context.leftHand.position).x);
+        var realLifeWidth = Mathf.Abs((inverseRotation * rightHandPosition).x - (inverseRotation * leftHandPosition).x);
         _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * realLifeWidth;
     }
 

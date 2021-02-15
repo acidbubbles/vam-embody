@@ -13,7 +13,10 @@ public class FinishSnugSetupStep : WizardStepBase, IWizardStep
     {
         base.Enter();
 
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
+        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
         context.snug.previewSnugOffsetJSON.val = true;
+        context.snug.selectedJSON.val = true;
     }
 
     public void Apply()
@@ -24,10 +27,7 @@ public class FinishSnugSetupStep : WizardStepBase, IWizardStep
     {
         base.Leave();
 
-        context.snug.selectedJSON.val = true;
-        context.snug.previewSnugOffsetJSON.val = false;
         context.embody.activeJSON.val = false;
-        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
-        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
+        context.snug.previewSnugOffsetJSON.val = false;
     }
 }
