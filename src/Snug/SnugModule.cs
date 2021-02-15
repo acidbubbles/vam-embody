@@ -85,7 +85,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
-            active = true,
             locked = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
@@ -97,7 +96,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.15f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.18f, 0, 0.24f),
-            active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
@@ -108,7 +106,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.28f, 0, 0.26f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.3f),
-            active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
@@ -119,7 +116,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.24f, 0, 0.18f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.26f, 0, 0.28f),
-            active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
@@ -130,7 +126,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             inGameSizeDefault = new Vector3(0.36f, 0, 0.24f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.32f, 0, 0.3f),
-            active = true
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
@@ -143,8 +138,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.38f, 0, 0.2f),
             auto = false,
-            active = true,
-            locked = false
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
@@ -157,7 +150,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
             auto = false,
-            active = true,
             locked = true
         });
 

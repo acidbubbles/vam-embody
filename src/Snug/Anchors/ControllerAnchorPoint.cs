@@ -15,9 +15,9 @@ public class ControllerAnchorPoint
     public Vector3 inGameSize { get; set; }
     public ControllerAnchorPointVisualCue inGameCue { get; set; }
     public ControllerAnchorPointVisualCue realLifeCue { get; set; }
-    public bool active { get; set; }
+    public bool active { get; set; } = true;
     public bool locked { get; set; }
-    public bool auto { get; set; }
+    public bool auto { get; set; } = true;
 
     public Vector3 GetInGameWorldPosition()
     {
