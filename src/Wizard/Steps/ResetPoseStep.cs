@@ -4,7 +4,7 @@ using UnityEngine;
 public class ResetPoseStep : WizardStepBase, IWizardStep
 {
     private readonly bool _preferToes;
-    public string helpText => "We will now reset all Embody settings, and load a pose so the model is standing straight.\n\nPress Next when ready, or Skip if you'd like to run the wizard using the current settings and pose instead.\n\nA mirror is recommended to see what you're doing.\n\nAlso note that instead of using the Next button, you can also use the Select button on your VR controller while pointing anywhere.";
+    public string helpText => "We will now <b>reset all Embody settings</b>, and <b>load a pose</b> so the model is standing straight.\n\nPress Next when ready.\n\nSkip if you'd like to run the wizard using the current settings and pose instead.\n\nA mirror is recommended to see what you're doing.\n\nImportant: Instead of using the Next button, <b>you can also use the Select button on your VR controller</b> while pointing anywhere.";
 
     public ResetPoseStep(EmbodyContext context, bool preferToes)
         : base(context)

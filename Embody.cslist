@@ -48,10 +48,8 @@ src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\Utilities\Utilities.cs
 src\Utilities\UtilitiesScreen.cs
-src\Wizard\Steps\ActivateStep.cs
 src\Wizard\Steps\AskSnugStep.cs
 src\Wizard\Steps\AskViveTrackersStep.cs
-src\Wizard\Steps\EnableSnugStep.cs
 src\Wizard\Steps\FinishSnugSetupStep.cs
 src\Wizard\Steps\FinishViveSetupStep.cs
 src\Wizard\Steps\MakeDefaultsStep.cs
@@ -60,7 +58,6 @@ src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureArmsAtRestStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
-src\Wizard\Steps\RecordViveTrackersFeetStep.cs
 src\Wizard\Steps\RecordViveTrackersStep.cs
 src\Wizard\Steps\ResetPoseStep.cs
 src\Wizard\IWizardStep.cs

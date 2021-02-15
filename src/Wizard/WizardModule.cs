@@ -21,7 +21,7 @@ public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
-    public const string WizardIntroMessage = "This wizard will walk you through the main Embody features, help you configure them so you can make the most out of this plugin.\n\n. When you are ready, select Start Wizard. Once started, you can use Next to apply the current step, or Skip to ignore it and move on.\n\nOnce done you can always fine tune your profile later manually.";
+    public const string WizardIntroMessage = "This wizard will <b>walk you through</b> the main Embody features and help you <b>configure</b> them so you can make the most out of this plugin.\n\nWhen you are ready, select <b>Start Wizard</b>.\n\nOnce started, you can use <b>Next to apply</b> the current step, or <b>Skip to ignore</b> it and move on.\n\nOnce done you can always fine tune your profile later manually.";
 
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
@@ -184,7 +184,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
         if (!SuperController.singleton.mainHUD.gameObject.activeInHierarchy) return;
         SuperController.singleton.SelectController(containingAtom.mainController, false, false, false);
-        SuperController.singleton.ShowMainHUD(false);
+        SuperController.singleton.ShowMainHUD(SuperController.singleton.IsMonitorRigActive);
         var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
         selector.SetActiveTab("Plugins");
         context.plugin.UITransform.gameObject.SetActive(true);

@@ -1,6 +1,6 @@
 ﻿public class FinishViveSetupStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Great! All Vive trackers should be set now. Try them out. You can fine tune them in the Trackers Settings menu later, or restart the wizard.\n\nPress Next when you are ready to continue.";
+    public string helpText => "<b>Vive trackers setup is complete</b>. Try them out. You can fine tune them in the <i>Trackers Settings</i> menu later, or restart the wizard and try again.\n\nPress Next when you are ready to continue.";
 
     public FinishViveSetupStep(EmbodyContext context)
         : base(context)

@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"Put your hands on your real {_anchor.label} like the model is doing right now, and press Next when ready.\n\nTry to match as closely as you can the hands position of the model, but on your own body.";
+    public string helpText => $"Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.\n\nPress Next to apply.\n\nTry to match as closely as you can the hands position of the model, but on your own body. Check that your feet are aligned.";
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly float _handRotate;
