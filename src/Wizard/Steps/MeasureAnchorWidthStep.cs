@@ -15,8 +15,6 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private FreeControllerV3Snapshot _rightHandSnapshot;
     private Vector3 _leftComparePointPosition;
     private Vector3 _rightComparePointPosition;
-    private Transform _tmp1;
-    private Transform _tmp2;
 
     public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor, float handRotate)
         : base(context)
@@ -37,8 +35,6 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         _leftHandControl.RBHoldRotationSpring = 300;
         _rightHandControl.RBHoldPositionSpring = 10000;
         _rightHandControl.RBHoldRotationSpring = 300;
-        _tmp1 = VisualCuesHelper.Cross(Color.black).transform;
-        _tmp2 = VisualCuesHelper.Cross(Color.white).transform;
     }
 
     public override void Update()
@@ -50,8 +46,6 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
             _leftHandControl.control.position = _leftComparePointPosition;
             _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_leftHandMotion.rotateControllerBase)) * _leftHandMotion.offsetControllerBase, Space.Self);
             _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
-            _tmp1.SetPositionAndRotation(_leftComparePointPosition, _anchor.bone.transform.rotation);
-            _tmp2.SetPositionAndRotation(_leftHandControl.control.position, _leftHandControl.control.rotation);
         }
 
         {

@@ -12,7 +12,7 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     private readonly MotionControllerWithCustomPossessPoint _rightHandMotion;
     private FreeControllerV3Snapshot _leftHandSnapshot;
     private FreeControllerV3Snapshot _rightHandSnapshot;
-    private Vector3 _comparePointPosition;
+    private Vector3 _rightComparePointPosition;
 
     public MeasureAnchorDepthAndOffsetStep(EmbodyContext context, ControllerAnchorPoint anchor, float handRotate)
         : base(context)
@@ -36,16 +36,18 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
 
     public override void Update()
     {
-        _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _rightHandMotion.rotateControllerBase;
-        _comparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + TrackersConstants.handsDistance / 2f));
-        _rightHandControl.control.position = _comparePointPosition + Quaternion.Inverse(_rightHandControl.control.rotation) * Quaternion.Euler(_rightHandMotion.rotateControllerBase) * _rightHandMotion.offsetControllerBase;
-        _rightHandControl.control.RotateAround(_comparePointPosition, _anchor.bone.transform.up, -90);
-        _rightHandControl.control.RotateAround(_comparePointPosition, _anchor.bone.transform.forward, _handRotate);
+        _rightHandControl.control.rotation = _anchor.bone.rotation;
+        _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
+        _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + TrackersConstants.handsDistance / 2f));
+        _rightHandControl.control.position = _rightComparePointPosition;
+        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase, Space.Self);
+        _rightHandControl.control.RotateAround(_rightComparePointPosition, _anchor.bone.transform.up, -90);
+        _rightHandControl.control.RotateAround(_rightComparePointPosition, _anchor.bone.transform.forward, _handRotate);
     }
 
     public void Apply()
     {
-        var inGame = _anchor.bone.InverseTransformPoint(_comparePointPosition);
+        var inGame = _anchor.bone.InverseTransformPoint(_rightComparePointPosition);
         var real = _anchor.bone.InverseTransformPoint(context.rightHand.position);
 
         _anchor.realLifeSize += new Vector3(0, (real.y - inGame.y) / 2f, real.z - inGame.z);
