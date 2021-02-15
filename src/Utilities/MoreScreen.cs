@@ -28,6 +28,14 @@ public class MoreScreen : ScreenBase, IScreen
             val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
         toggleKeyPopup.popupPanelHeight = 700f;
+
+        var helpButton = CreateButton("[Browser] Online Help", true);
+        helpButton.button.onClick.AddListener(() => Application.OpenURL("https://github.com/acidbubbles/vam-embody/wiki"));
+
+        var patreonBtn = CreateButton("[Browser] Support me on Patreon ♥", true);
+        patreonBtn.textColor = new Color(0.97647f, 0.40784f, 0.32941f);
+        patreonBtn.buttonColor = Color.white;
+        patreonBtn.button.onClick.AddListener(() => Application.OpenURL("https://www.patreon.com/acidbubbles"));
     }
 
     private void CreateMirror()
