@@ -37,7 +37,7 @@ public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
     {
         var realY = (_leftHandMotion.controllerPointTransform.position.y + _rightHandMotion.controllerPointTransform.position.y) / 2f;
         var inGameY = (_leftHandControl.control.position.y + _rightHandControl.control.position.y) / 2f;
-        var difference = realY - inGameY;
+        var difference = inGameY - realY;
         _anchor.realLifeOffset = new Vector3(0f, difference, 0f);
     }
 

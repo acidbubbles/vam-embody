@@ -182,8 +182,9 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         if (!forceReopen) return;
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
-        SuperController.singleton.SelectController(containingAtom.mainController);
-        SuperController.singleton.ShowMainHUDMonitor();
+        if (!SuperController.singleton.mainHUD.gameObject.activeInHierarchy) return;
+        SuperController.singleton.SelectController(containingAtom.mainController, false, false, false);
+        SuperController.singleton.ShowMainHUD(false);
         var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
         selector.SetActiveTab("Plugins");
         context.plugin.UITransform.gameObject.SetActive(true);

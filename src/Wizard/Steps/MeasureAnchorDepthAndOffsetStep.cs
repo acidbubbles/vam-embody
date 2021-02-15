@@ -9,9 +9,12 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     private readonly float _handRotate;
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
+    private readonly FreeControllerV3 _headControl;
+    private readonly FreeControllerV3 _chestControl;
     private readonly MotionControllerWithCustomPossessPoint _rightHandMotion;
     private FreeControllerV3Snapshot _leftHandSnapshot;
     private FreeControllerV3Snapshot _rightHandSnapshot;
+    private FreeControllerV3Snapshot _chestSnapshot;
     private Vector3 _rightComparePointPosition;
 
     public MeasureAnchorDepthAndOffsetStep(EmbodyContext context, ControllerAnchorPoint anchor, float handRotate)
@@ -21,6 +24,8 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         _handRotate = handRotate;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
+        _headControl = context.containingAtom.freeControllers.First(fc => fc.name == "headControl");
+        _chestControl = context.containingAtom.freeControllers.First(fc => fc.name == "chestControl");
         _rightHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand);
     }
 
@@ -28,10 +33,13 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     {
         _leftHandSnapshot = FreeControllerV3Snapshot.Snap(_leftHandControl);
         _rightHandSnapshot = FreeControllerV3Snapshot.Snap(_rightHandControl);
+        _chestSnapshot = FreeControllerV3Snapshot.Snap(_chestControl);
         _rightHandControl.RBHoldPositionSpring = 10000;
         _rightHandControl.RBHoldRotationSpring = 300;
         _leftHandControl.currentPositionState = FreeControllerV3.PositionState.Off;
         _leftHandControl.currentRotationState = FreeControllerV3.RotationState.Off;
+        _chestControl.currentRotationState = FreeControllerV3.RotationState.On;
+        _chestControl.control.rotation = _headControl.control.rotation;
     }
 
     public override void Update()
@@ -59,5 +67,6 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     {
         _leftHandSnapshot.Restore(true);
         _rightHandSnapshot.Restore(true);
+        _chestSnapshot.Restore(true);
     }
 }

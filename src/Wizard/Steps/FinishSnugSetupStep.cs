@@ -24,6 +24,7 @@ public class FinishSnugSetupStep : WizardStepBase, IWizardStep
     {
         base.Leave();
 
+        context.snug.selectedJSON.val = true;
         context.snug.previewSnugOffsetJSON.val = false;
         context.embody.activeJSON.val = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
