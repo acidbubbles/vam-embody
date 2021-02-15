@@ -14,6 +14,12 @@ public class TrackerAutoSetup
         "lFootControl", "rFootControl"
     });
 
+    private static readonly HashSet<string> _centeredControllers = new HashSet<string>(new[]
+    {
+        "chestControl",
+        "hipControl",
+    });
+
     private static readonly HashSet<string> _disableRotationControllers = new HashSet<string>(new[]
     {
         "lNippleControl", "rNippleControl",
@@ -51,7 +57,7 @@ public class TrackerAutoSetup
         var position = motionControl.currentMotionControl.position;
 
         var closestDistance = float.PositiveInfinity;
-        Rigidbody closest = null;
+        FreeControllerV3 closest = null;
         foreach (var controller in controllers)
         {
             var rigidbody = controller.GetComponent<Rigidbody>();
@@ -59,7 +65,7 @@ public class TrackerAutoSetup
             var distance = Vector3.Distance(position, rigidbody.position);
             if (!(distance < closestDistance)) continue;
             closestDistance = distance;
-            closest = rigidbody;
+            closest = controller;
         }
 
         if (closest == null) throw new NullReferenceException("There was no controller available to attach.");
@@ -68,7 +74,7 @@ public class TrackerAutoSetup
         AlignToNode(motionControl, closest);
     }
 
-    public void AlignToNode(MotionControllerWithCustomPossessPoint motionControl, Rigidbody rb)
+    public void AlignToNode(MotionControllerWithCustomPossessPoint motionControl, FreeControllerV3 controller)
     {
         if (!motionControl.SyncMotionControl())
         {
@@ -76,14 +82,19 @@ public class TrackerAutoSetup
             return;
         }
 
-        motionControl.customOffset = motionControl.currentMotionControl.InverseTransformDirection(rb.position - motionControl.currentMotionControl.position);
-        var customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * rb.rotation).eulerAngles;
+        motionControl.customOffset = motionControl.currentMotionControl.InverseTransformDirection(controller.control.position - motionControl.currentMotionControl.position);
+        var customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * controller.control.rotation).eulerAngles;
         motionControl.customOffsetRotation = new Vector3(
             customOffsetRotation.x > 180 ? customOffsetRotation.x - 360 : customOffsetRotation.x,
             customOffsetRotation.y > 180 ? customOffsetRotation.y - 360 : customOffsetRotation.y,
             customOffsetRotation.z > 180 ? customOffsetRotation.z - 360 : customOffsetRotation.z
         );
         motionControl.possessPointRotation = Vector3.zero;
-        motionControl.controlRotation = !_disableRotationControllers.Contains(rb.name);
+        motionControl.controlRotation = !_disableRotationControllers.Contains(controller.name);
+        if (_centeredControllers.Contains(controller.name))
+        {
+            motionControl.customOffset.Scale(new Vector3(1f, 0f, 1f));
+            motionControl.customOffsetRotation.Scale(new Vector3(1f, 0f, 0f));
+        }
     }
 }
