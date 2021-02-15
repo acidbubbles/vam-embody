@@ -69,12 +69,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         };
     }
 
-    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 baseOffset = new Vector3(), Vector3 baseOffsetRotation = new Vector3())
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 offsetControllerBase = new Vector3(), Vector3 rotateControllerBase = new Vector3())
     {
         var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl);
         motionControl.mappedControllerName = mappedControllerName;
-        motionControl.baseOffset = baseOffset;
-        motionControl.baseOffsetRotation = baseOffsetRotation;
+        motionControl.offsetControllerBase = offsetControllerBase;
+        motionControl.rotateControllerBase = rotateControllerBase;
         motionControls.Add(motionControl);
         motionControl.SyncMotionControl();
     }
@@ -94,7 +94,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.position + eyes.First(eye => eye.name == "rEye").transform.position) / 2f;
         var head= eyes[0].transform.parent;
-        motionControl.baseOffset = -head.InverseTransformPoint(eyesCenter);
+        motionControl.offsetControllerBase = -head.InverseTransformPoint(eyesCenter);
     }
 
     public override void OnEnable()
@@ -121,14 +121,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 {
                     var controlRotation = controller.control.rotation;
                     motionControl.currentMotionControl.SetPositionAndRotation(
-                        controller.control.position - controlRotation * motionControl.combinedOffset,
+                        controller.control.position - controlRotation * motionControl.offsetControllerCombined,
                         controlRotation
                     );
                 }
             }
             else
             {
-                controller.control.SetPositionAndRotation(motionControl.possessPointTransform.position, motionControl.possessPointTransform.rotation);
+                controller.control.SetPositionAndRotation(motionControl.controllerPointTransform.position, motionControl.controllerPointTransform.rotation);
                 if (enableHandsGraspJSON.val && controllerWithSnapshot.handControl != null)
                     controllerWithSnapshot.handControl.possessed = true;
             }
@@ -191,10 +191,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         foreach (var c in motionControls)
         {
-            if (c.offsetTransform != null)
-                Destroy(c.offsetTransform.gameObject);
-            if (c.possessPointTransform != null)
-                Destroy(c.possessPointTransform.gameObject);
+            if (c.trackerPointTransform != null)
+                Destroy(c.trackerPointTransform.gameObject);
+            if (c.controllerPointTransform != null)
+                Destroy(c.controllerPointTransform.gameObject);
         }
     }
 
@@ -204,7 +204,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.possessed = true;
 
-        var motionControllerHeadRigidbody = motionControl.customRigidbody;
+        var motionControllerHeadRigidbody = motionControl.controllerPointRB;
         var motionAnimationControl = controller.GetComponent<MotionAnimationControl>();
 
         controller.canGrabPosition = true;
@@ -232,17 +232,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var upPossessAxis = controller.GetUpPossessAxis();
         var navigationRigUp = navigationRig.up;
 
-        var fromDirection = Vector3.ProjectOnPlane(motionControl.possessPointTransform.forward, navigationRigUp);
+        var fromDirection = Vector3.ProjectOnPlane(motionControl.controllerPointTransform.forward, navigationRigUp);
         var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRigUp);
-        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControl.possessPointTransform.up, navigationRigUp) > 0f)
+        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControl.controllerPointTransform.up, navigationRigUp) > 0f)
             vector = -vector;
 
         var rotation = Quaternion.FromToRotation(fromDirection, vector);
         navigationRig.rotation = rotation * navigationRig.rotation;
 
-        controller.AlignTo(motionControl.possessPointTransform, true);
+        controller.AlignTo(motionControl.controllerPointTransform, true);
 
-        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position - controller.control.rotation * motionControl.combinedOffset;
+        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position - controller.control.rotation * motionControl.offsetControllerCombined;
         var navigationRigPosition = navigationRig.position;
         var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
         var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
@@ -273,9 +273,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             var motionControlJSON = new JSONClass
             {
-                {"OffsetPosition", motionControl.customOffset.ToJSON()},
-                {"OffsetRotation", motionControl.customOffsetRotation.ToJSON()},
-                {"PossessPointRotation", motionControl.possessPointRotation.ToJSON()},
+                {"OffsetPosition", motionControl.offsetControllerCustom.ToJSON()},
+                {"OffsetRotation", motionControl.rotateControllerCustom.ToJSON()},
+                {"PossessPointRotation", motionControl.rotateAroundTracker.ToJSON()},
                 {"Controller", motionControl.mappedControllerName},
                 {"Enabled", motionControl.enabled ? "true" : "false"},
                 {"ControlRotation", motionControl.controlRotation ? "true" : "false"},
@@ -298,9 +298,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             var controllerJSON = motionControlsJSON[motionControlName];
             var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
             if (motionControl == null) continue;
-            motionControl.customOffset = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
-            motionControl.customOffsetRotation = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
-            motionControl.possessPointRotation = controllerJSON["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
+            motionControl.offsetControllerCustom = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+            motionControl.rotateControllerCustom = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+            motionControl.rotateAroundTracker = controllerJSON["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
             motionControl.mappedControllerName = controllerJSON["Controller"].Value;
             motionControl.enabled = controllerJSON["Enabled"].Value != "false";
             motionControl.controlRotation = controllerJSON["ControlRotation"].Value != "false";
@@ -317,9 +317,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             if (!MotionControlNames.IsHeadOrHands(mc.name))
                 mc.mappedControllerName = null;
             mc.controlRotation = true;
-            mc.customOffset = Vector3.zero;
-            mc.customOffsetRotation = Vector3.zero;
-            mc.possessPointRotation = Vector3.zero;
+            mc.offsetControllerCustom = Vector3.zero;
+            mc.rotateControllerCustom = Vector3.zero;
+            mc.rotateAroundTracker = Vector3.zero;
             mc.enabled = true;
         }
 

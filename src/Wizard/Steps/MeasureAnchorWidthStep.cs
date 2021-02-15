@@ -15,6 +15,8 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private FreeControllerV3Snapshot _rightHandSnapshot;
     private Vector3 _leftComparePointPosition;
     private Vector3 _rightComparePointPosition;
+    private Transform _tmp1;
+    private Transform _tmp2;
 
     public MeasureAnchorWidthStep(EmbodyContext context, ControllerAnchorPoint anchor, float handRotate)
         : base(context)
@@ -35,21 +37,29 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         _leftHandControl.RBHoldRotationSpring = 300;
         _rightHandControl.RBHoldPositionSpring = 10000;
         _rightHandControl.RBHoldRotationSpring = 300;
+        _tmp1 = VisualCuesHelper.Cross(Color.black).transform;
+        _tmp2 = VisualCuesHelper.Cross(Color.white).transform;
     }
 
     public override void Update()
     {
         {
-            _leftHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _leftHandMotion.baseOffsetRotation;
+            _leftHandControl.control.rotation = _anchor.bone.rotation;
+            _leftHandControl.control.Rotate(_leftHandMotion.rotateControllerBase, Space.Self);
             _leftComparePointPosition = _anchor.GetInGameWorldPosition() - (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-            _leftHandControl.control.position = _leftComparePointPosition + Quaternion.Inverse(_leftHandControl.control.rotation) * Quaternion.Euler(_leftHandMotion.baseOffsetRotation) * _leftHandMotion.baseOffset;
+            _leftHandControl.control.position = _leftComparePointPosition;
+            _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_leftHandMotion.rotateControllerBase)) * _leftHandMotion.offsetControllerBase, Space.Self);
             _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
+            _tmp1.SetPositionAndRotation(_leftComparePointPosition, _anchor.bone.transform.rotation);
+            _tmp2.SetPositionAndRotation(_leftHandControl.control.position, _leftHandControl.control.rotation);
         }
 
         {
-             _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _rightHandMotion.baseOffsetRotation;
+            _rightHandControl.control.rotation = _anchor.bone.rotation;
+            _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
             _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.right * (_anchor.inGameSize.x / 2f + TrackersConstants.handsDistance / 2f));
-            _rightHandControl.control.position = _rightComparePointPosition + Quaternion.Inverse(_rightHandControl.control.rotation) * Quaternion.Euler(_rightHandMotion.baseOffsetRotation) * _rightHandMotion.baseOffset;
+            _rightHandControl.control.position = _rightComparePointPosition;
+            _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase, Space.Self);
             _rightHandControl.control.RotateAround(_rightComparePointPosition, _rightHandControl.control.up, -_handRotate);
         }
     }

@@ -82,19 +82,19 @@ public class TrackerAutoSetup
             return;
         }
 
-        motionControl.customOffset = motionControl.currentMotionControl.InverseTransformDirection(controller.control.position - motionControl.currentMotionControl.position);
+        motionControl.offsetControllerCustom = motionControl.currentMotionControl.InverseTransformDirection(controller.control.position - motionControl.currentMotionControl.position);
         var customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * controller.control.rotation).eulerAngles;
-        motionControl.customOffsetRotation = new Vector3(
+        motionControl.rotateControllerCustom = new Vector3(
             customOffsetRotation.x > 180 ? customOffsetRotation.x - 360 : customOffsetRotation.x,
             customOffsetRotation.y > 180 ? customOffsetRotation.y - 360 : customOffsetRotation.y,
             customOffsetRotation.z > 180 ? customOffsetRotation.z - 360 : customOffsetRotation.z
         );
-        motionControl.possessPointRotation = Vector3.zero;
+        motionControl.rotateAroundTracker = Vector3.zero;
         motionControl.controlRotation = !_disableRotationControllers.Contains(controller.name);
         if (_centeredControllers.Contains(controller.name))
         {
-            motionControl.customOffset.Scale(new Vector3(1f, 0f, 1f));
-            motionControl.customOffsetRotation.Scale(new Vector3(1f, 0f, 0f));
+            motionControl.offsetControllerCustom.Scale(new Vector3(1f, 0f, 1f));
+            motionControl.rotateControllerCustom.Scale(new Vector3(1f, 0f, 0f));
         }
     }
 }

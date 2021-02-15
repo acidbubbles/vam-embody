@@ -9,6 +9,7 @@ public interface IWizard : IEmbodyModule
     WizardStatusChangedEvent statusChanged { get; }
     JSONStorableString statusJSON { get; }
     bool isRunning { get; }
+    bool forceReopen { get; set; }
     void StartWizard();
     void StopWizard(string message = null);
     void Next();
@@ -29,6 +30,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
     public bool isRunning => _coroutine != null;
+    public bool forceReopen { get; set; } = true;
 
     private Coroutine _coroutine;
     private IWizardStep _step;
@@ -136,6 +138,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
     private void ReopenIfClosed()
     {
+        if (!forceReopen) return;
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
         SuperController.singleton.SelectController(containingAtom.mainController);
         SuperController.singleton.ShowMainHUDMonitor();

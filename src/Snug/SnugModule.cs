@@ -372,7 +372,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         var effectWeight = ComputeEffectWeight(upper, lower, lowerWeight, motionControlPosition);
 
-        var possessPointPosition = hand.motionControl.possessPointTransform.position;
+        var possessPointPosition = hand.motionControl.controllerPointTransform.position;
         var finalPositionToControlPoint = finalPosition + (possessPointPosition - motionControlPosition);
 
         if (previewSnugOffsetJSON.val)
@@ -382,7 +382,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
 
         hand.controllerRigidbody.MovePosition(Vector3.Lerp(possessPointPosition, finalPositionToControlPoint, effectWeight));
-        hand.controllerRigidbody.MoveRotation(motionControl.possessPointTransform.rotation);
+        hand.controllerRigidbody.MoveRotation(motionControl.controllerPointTransform.rotation);
     }
 
     private float ComputeEffectWeight(ControllerAnchorPoint upper, ControllerAnchorPoint lower, float lowerWeight, Vector3 motionControlPosition)

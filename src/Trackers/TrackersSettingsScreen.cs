@@ -107,72 +107,72 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset X",
-            motionControl.customOffset.x,
-            val => motionControl.customOffset = new Vector3(val, motionControl.customOffset.y, motionControl.customOffset.z),
+            motionControl.offsetControllerCustom.x,
+            val => motionControl.offsetControllerCustom = new Vector3(val, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z),
             -0.5f,
             0.5f,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset Y",
-            motionControl.customOffset.y,
-            val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, val, motionControl.customOffset.z),
+            motionControl.offsetControllerCustom.y,
+            val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, val, motionControl.offsetControllerCustom.z),
             -0.5f,
             0.5f,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset Z",
-            motionControl.customOffset.z,
-            val => motionControl.customOffset = new Vector3(motionControl.customOffset.x, motionControl.customOffset.y, val),
+            motionControl.offsetControllerCustom.z,
+            val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, val),
             -0.5f,
             0.5f,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller X",
-            motionControl.customOffsetRotation.x,
-            val => motionControl.customOffsetRotation = new Vector3(val, motionControl.customOffsetRotation.y, motionControl.customOffsetRotation.z),
+            motionControl.rotateControllerCustom.x,
+            val => motionControl.rotateControllerCustom = new Vector3(val, motionControl.rotateControllerCustom.y, motionControl.rotateControllerCustom.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller Y",
-            motionControl.customOffsetRotation.y,
-            val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, val, motionControl.customOffsetRotation.z),
+            motionControl.rotateControllerCustom.y,
+            val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, val, motionControl.rotateControllerCustom.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller Z",
-            motionControl.customOffsetRotation.z,
-            val => motionControl.customOffsetRotation = new Vector3(motionControl.customOffsetRotation.x, motionControl.customOffsetRotation.y, val),
+            motionControl.rotateControllerCustom.z,
+            val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, motionControl.rotateControllerCustom.y, val),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker X",
-            motionControl.possessPointRotation.x,
-            val => motionControl.possessPointRotation = new Vector3(val, motionControl.possessPointRotation.y, motionControl.possessPointRotation.z),
+            motionControl.rotateAroundTracker.x,
+            val => motionControl.rotateAroundTracker = new Vector3(val, motionControl.rotateAroundTracker.y, motionControl.rotateAroundTracker.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Y",
-            motionControl.possessPointRotation.y,
-            val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, val, motionControl.possessPointRotation.z),
+            motionControl.rotateAroundTracker.y,
+            val => motionControl.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, val, motionControl.rotateAroundTracker.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Z",
-            motionControl.possessPointRotation.z,
-            val => motionControl.possessPointRotation = new Vector3(motionControl.possessPointRotation.x, motionControl.possessPointRotation.y, val),
+            motionControl.rotateAroundTracker.z,
+            val => motionControl.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, motionControl.rotateAroundTracker.y, val),
             -180,
             180,
             false), false);

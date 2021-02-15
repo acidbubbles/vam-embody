@@ -21,9 +21,9 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
         {
             mc.mappedControllerName = null;
             mc.controlRotation = true;
-            mc.customOffset = Vector3.zero;
-            mc.customOffsetRotation = Vector3.zero;
-            mc.possessPointRotation = Vector3.zero;
+            mc.offsetControllerCustom = Vector3.zero;
+            mc.rotateControllerCustom = Vector3.zero;
+            mc.rotateAroundTracker = Vector3.zero;
             mc.enabled = true;
         }
 

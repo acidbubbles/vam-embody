@@ -5,54 +5,54 @@ using Object = UnityEngine.Object;
 public class MotionControllerWithCustomPossessPoint
 {
     public string name;
-    public Transform offsetTransform;
-    public Transform possessPointTransform;
-    public Rigidbody customRigidbody;
-    public Transform currentMotionControl { get; private set; }
+    public Transform trackerPointTransform;
+    public Transform controllerPointTransform;
+    public Rigidbody controllerPointRB;
     public bool enabled = true;
     public bool controlRotation = true;
     public string mappedControllerName;
+    public Transform currentMotionControl { get; private set; }
     private Func<Transform> _getMotionControl;
     private OffsetPreview _offsetPreview;
-    private Vector3 _baseOffset;
-    private Vector3 _baseOffsetRotation;
-    private Vector3 _customOffset;
-    private Vector3 _customOffsetRotation;
-    private Vector3 _pointRotation;
+    private Vector3 _offsetControllerBase;
+    private Vector3 _rotateControllerBase;
+    private Vector3 _offsetControllerCustom;
+    private Vector3 _rotateControllerCustom;
+    private Vector3 _rotateAroundTracker;
     private bool _showPreview;
 
-    public Vector3 baseOffset
+    public Vector3 offsetControllerBase
     {
-        get { return _baseOffset; }
-        set { _baseOffset = value; SyncOffset(); }
+        get { return _offsetControllerBase; }
+        set { _offsetControllerBase = value; SyncOffset(); }
     }
 
-    public Vector3 baseOffsetRotation
+    public Vector3 rotateControllerBase
     {
-        get { return _baseOffsetRotation; }
-        set { _baseOffsetRotation = value; SyncOffset(); }
+        get { return _rotateControllerBase; }
+        set { _rotateControllerBase = value; SyncOffset(); }
     }
 
-    public Vector3 customOffset
+    public Vector3 offsetControllerCustom
     {
-        get { return _customOffset; }
-        set { _customOffset = value; SyncOffset(); }
+        get { return _offsetControllerCustom; }
+        set { _offsetControllerCustom = value; SyncOffset(); }
     }
 
-    public Vector3 customOffsetRotation
+    public Vector3 rotateControllerCustom
     {
-        get { return _customOffsetRotation; }
-        set { _customOffsetRotation = value; SyncOffset(); }
+        get { return _rotateControllerCustom; }
+        set { _rotateControllerCustom = value; SyncOffset(); }
     }
 
-    public Vector3 possessPointRotation
+    public Vector3 rotateAroundTracker
     {
-        get { return _pointRotation; }
-        set { _pointRotation = value; SyncOffset(); }
+        get { return _rotateAroundTracker; }
+        set { _rotateAroundTracker = value; SyncOffset(); }
     }
 
-    public Vector3 combinedOffset => _baseOffset + _customOffset;
-    public Vector3 combinedOffsetRotation => _baseOffsetRotation + _customOffsetRotation;
+    public Vector3 offsetControllerCombined => _offsetControllerBase + _offsetControllerCustom;
+    public Vector3 rotateControllerCombined => _rotateControllerBase + _rotateControllerCustom;
 
     public bool showPreview
     {
@@ -63,10 +63,10 @@ public class MotionControllerWithCustomPossessPoint
     private void SyncOffset()
     {
         if (currentMotionControl == null) return;
-        offsetTransform.localPosition = Vector3.zero;
-        offsetTransform.localEulerAngles = _pointRotation;
-        possessPointTransform.localPosition = combinedOffset;
-        possessPointTransform.localEulerAngles = combinedOffsetRotation;
+        trackerPointTransform.localPosition = Vector3.zero;
+        trackerPointTransform.localEulerAngles = _rotateAroundTracker;
+        controllerPointTransform.localPosition = offsetControllerCombined;
+        controllerPointTransform.localEulerAngles = rotateControllerCombined;
         SyncOffsetPreview();
     }
 
@@ -79,7 +79,7 @@ public class MotionControllerWithCustomPossessPoint
             DestroyOffsetPreview();
             return false;
         }
-        offsetTransform.SetParent(currentMotionControl, false);
+        trackerPointTransform.SetParent(currentMotionControl, false);
         if(!_showPreview)
             DestroyOffsetPreview();
         else
@@ -93,11 +93,11 @@ public class MotionControllerWithCustomPossessPoint
         if (_offsetPreview == null)
         {
             var go = new GameObject("EmbodyOffsetPreview_" + name);
-            go.transform.SetParent(possessPointTransform, false);
+            go.transform.SetParent(controllerPointTransform, false);
             _offsetPreview = go.gameObject.AddComponent<OffsetPreview>();
         }
 
-        _offsetPreview.offsetTransform = offsetTransform;
+        _offsetPreview.offsetTransform = trackerPointTransform;
         _offsetPreview.currentMotionControl = currentMotionControl;
     }
 
@@ -116,22 +116,22 @@ public class MotionControllerWithCustomPossessPoint
 
     public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl)
     {
-        var offsetPointGameObject = new GameObject($"EmbodyPossessOffsetPoint_{motionControlName}");
-        var possessPointGameObject = new GameObject($"EmbodyPossessPoint_{motionControlName}");
+        var trackerPointGO = new GameObject($"EmbodyTrackerPoint_{motionControlName}");
+        var controllerPointGO = new GameObject($"EmbodyControllerPoint_{motionControlName}");
 
-        var rb = possessPointGameObject.AddComponent<Rigidbody>();
+        var rb = controllerPointGO.AddComponent<Rigidbody>();
         rb.interpolation = RigidbodyInterpolation.None;
         rb.isKinematic = true;
 
-        possessPointGameObject.transform.SetParent(offsetPointGameObject.transform, false);
+        controllerPointGO.transform.SetParent(trackerPointGO.transform, false);
 
         return new MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
             _getMotionControl = getMotionControl,
-            offsetTransform = offsetPointGameObject.transform,
-            possessPointTransform = possessPointGameObject.transform,
-            customRigidbody = rb,
+            trackerPointTransform = trackerPointGO.transform,
+            controllerPointTransform = controllerPointGO.transform,
+            controllerPointRB = rb,
         };
     }
 }

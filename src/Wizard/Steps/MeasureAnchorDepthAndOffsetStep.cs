@@ -36,9 +36,9 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
 
     public override void Update()
     {
-        _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _rightHandMotion.baseOffsetRotation;
+        _rightHandControl.control.eulerAngles = _anchor.bone.rotation.eulerAngles + _rightHandMotion.rotateControllerBase;
         _comparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + TrackersConstants.handsDistance / 2f));
-        _rightHandControl.control.position = _comparePointPosition + Quaternion.Inverse(_rightHandControl.control.rotation) * Quaternion.Euler(_rightHandMotion.baseOffsetRotation) * _rightHandMotion.baseOffset;
+        _rightHandControl.control.position = _comparePointPosition + Quaternion.Inverse(_rightHandControl.control.rotation) * Quaternion.Euler(_rightHandMotion.rotateControllerBase) * _rightHandMotion.offsetControllerBase;
         _rightHandControl.control.RotateAround(_comparePointPosition, _anchor.bone.transform.up, -90);
         _rightHandControl.control.RotateAround(_comparePointPosition, _anchor.bone.transform.forward, _handRotate);
     }
