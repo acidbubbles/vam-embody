@@ -33,7 +33,7 @@ public class WizardScreen : ScreenBase, IScreen
         skipButton.buttonColor = Color.gray;
 
         var stopButton = CreateButton("Stop Wizard", true);
-        stopButton.button.onClick.AddListener(() => _wizard.StopWizard("Stopped"));
+        stopButton.button.onClick.AddListener(() => _wizard.StopWizard("The wizard was stopped."));
         stopButton.buttonColor = Color.red;
 
         _onStatusChanged = isRunning =>
@@ -51,7 +51,7 @@ public class WizardScreen : ScreenBase, IScreen
     {
         base.Hide();
 
-        _wizard.StopWizard("");
+        _wizard.StopWizard();
         _wizard.statusChanged.RemoveListener(_onStatusChanged);
     }
 }

@@ -1,6 +1,6 @@
 ﻿public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Align all remaining vive trackers as closely as possible to your model's position, and press next.";
+    public string helpText => "Align all remaining vive trackers as closely as possible to your model's position, and press Next.";
 
     public RecordViveTrackersStep(EmbodyContext context)
         : base(context)

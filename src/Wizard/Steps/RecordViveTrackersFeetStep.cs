@@ -2,7 +2,7 @@
 
 public class RecordViveTrackersFeetStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Align your feet to match the model feet's position and angle as closely as possible, and select Next.";
+    public string helpText => "Align your feet to match the model feet's position and angle as closely as possible, and select Next. Skip if you don't plan on using feet trackers.";
 
     public RecordViveTrackersFeetStep(EmbodyContext context)
         : base(context)

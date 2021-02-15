@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"Possession activated. Now put your hands on your real {_anchor.label}, and Press next when ready.";
+    public string helpText => $"Put your hands on your real {_anchor.label}, and press Next when ready.";
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly float _handRotate;

@@ -2,7 +2,7 @@
 
 public class DeactivateAndRestoreSnugStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Snug setup is complete, continue to exit possession.";
+    public string helpText => "Snug setup is complete, select Next to exit possession.";
 
     public DeactivateAndRestoreSnugStep(EmbodyContext context)
         : base(context)

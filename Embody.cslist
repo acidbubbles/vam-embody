@@ -48,10 +48,9 @@ src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\Utilities\Utilities.cs
 src\Utilities\UtilitiesScreen.cs
-src\Wizard\Steps\ActivateHeadAndHandsStep.cs
 src\Wizard\Steps\ActivateStep.cs
-src\Wizard\Steps\ActivateWithoutSnugStep.cs
 src\Wizard\Steps\AskSnugStep.cs
+src\Wizard\Steps\AskViveTrackersStep.cs
 src\Wizard\Steps\DeactivateAndRestoreSnugStep.cs
 src\Wizard\Steps\DeactivateStep.cs
 src\Wizard\Steps\EnableSnugStep.cs

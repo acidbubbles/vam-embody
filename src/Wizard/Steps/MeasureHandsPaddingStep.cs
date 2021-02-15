@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureHandsPaddingStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Now put your hands together like you're praying, and Press next when ready.";
+    public string helpText => "Put your hands together like you're praying, and press Next when ready.";
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
     private readonly Rigidbody _head;

@@ -285,7 +285,7 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
         activeJSON.val = false;
-        _modules.GetComponent<WizardModule>()?.StopWizard("");
+        _modules.GetComponent<WizardModule>()?.StopWizard("The wizard was canceled because Embody was disabled.");
     }
 
     // ReSharper disable once UnusedMember.Local
@@ -297,7 +297,7 @@ public class Embody : MVRScript, IEmbody
             activeJSON.val = false;
         }
 
-        _modules.GetComponent<WizardModule>()?.StopWizard("");
+        _modules.GetComponent<WizardModule>()?.StopWizard("The wizard was canceled because the scene was saved.");
     }
 
     // ReSharper disable once UnusedMember.Local
@@ -320,7 +320,7 @@ public class Embody : MVRScript, IEmbody
 
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
-        _context.wizard.StopWizard("");
+        _context.wizard.StopWizard();
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())

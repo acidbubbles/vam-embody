@@ -10,7 +10,7 @@ public interface IWizard : IEmbodyModule
     JSONStorableString statusJSON { get; }
     bool isRunning { get; }
     void StartWizard();
-    void StopWizard(string message);
+    void StopWizard(string message = null);
     void Next();
     void Skip();
 }
@@ -19,6 +19,8 @@ public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
+    public const string WizardIntroMessage = "This wizard will walk you through the main Embody features, help you configure them so you can make the most out of this plugin.\n\n. When you are ready, select Start Wizard. Once started, you can use Next to apply the current step, or Skip to ignore it and move on.\n\nOnce done you can always fine tune your profile later manually.";
+
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
     public override string label => Label;
@@ -37,18 +39,18 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         base.Awake();
 
-        statusJSON.val = "Select 'Start' to launch the wizard.";
+        statusJSON.val = WizardIntroMessage;
     }
 
     public void StartWizard()
     {
-        if (_coroutine != null) StopWizard("");
+        if (_coroutine != null) StopWizard();
         enabledJSON.val = true;
         _coroutine = StartCoroutine(StartWizardCo());
         statusChanged.Invoke(true);
     }
 
-    public void StopWizard(string message)
+    public void StopWizard(string message = null)
     {
         if (!enabledJSON.val) return;
 
@@ -61,7 +63,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             _step = null;
         }
 
-        statusJSON.val = message;
+        statusJSON.val = message ?? WizardIntroMessage;
         _next = false;
         _skip = false;
         statusChanged.Invoke(false);
@@ -154,14 +156,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
         steps.Add(new RecordPlayerHeightStep(context.worldScale));
 
         if (useViveTrackers > 0)
-        {
-            steps.Add(new ActivateHeadAndHandsStep(context));
-            if (useViveTrackers > 1)
-                steps.Add(new RecordViveTrackersFeetStep(context));
-            if (useViveTrackers == 1 || useViveTrackers > 2)
-                steps.Add(new RecordViveTrackersStep(context));
-            steps.Add(new DeactivateStep(context));
-        }
+            steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
 
         steps.Add(new AskSnugStep(context, steps));
 
