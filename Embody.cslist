@@ -1,5 +1,4 @@
 src\Automation\AutomationModule.cs
-src\Automation\AutomationSettingsScreen.cs
 src\Common\EmbodyContext.cs
 src\Common\EmbodyModuleBase.cs
 src\Common\FreeControllerV3Snapshot.cs
@@ -45,8 +44,8 @@ src\Trackers\OffsetPreview.cs
 src\Trackers\TrackerAutoSetup.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
+src\Utilities\MoreScreen.cs
 src\Utilities\Utilities.cs
-src\Utilities\UtilitiesScreen.cs
 src\Wizard\Steps\AskSnugStep.cs
 src\Wizard\Steps\AskViveTrackersStep.cs
 src\Wizard\Steps\FinishSnugSetupStep.cs

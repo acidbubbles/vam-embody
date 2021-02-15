@@ -1,23 +1,33 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
-public class UtilitiesScreen : ScreenBase, IScreen
+public class MoreScreen : ScreenBase, IScreen
 {
-    public const string ScreenName = "Utilities";
+    public const string ScreenName = "More";
 
-    public UtilitiesScreen(EmbodyContext context)
+    public MoreScreen(EmbodyContext context)
         : base(context)
     {
     }
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Some useful functions, hopefully!"), true);
+        CreateText(new JSONStorableString("", "Additional tools and options can be found here."), true);
 
         CreateButton("Create Mirror").button.onClick.AddListener(CreateMirror);
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
         CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(ResetPose);
         CreateButton("Reset All Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
+
+        CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession";
+
+        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
+            val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
+        toggleKeyPopup.popupPanelHeight = 700f;
     }
 
     private void CreateMirror()
@@ -53,5 +63,18 @@ public class UtilitiesScreen : ScreenBase, IScreen
         var useViveTrackers = context.trackers.viveTrackers.Any(t => t.SyncMotionControl());
         var step = new ResetPoseStep(context, !useViveTrackers);
         step.Apply();
+    }
+
+    private static List<string> _keys;
+    private static List<string> GetKeys()
+    {
+        if (_keys != null) return _keys;
+
+        _keys = Enum.GetNames(typeof(KeyCode)).ToList();
+        _keys.Remove(KeyCode.Mouse0.ToString());
+        _keys.Remove(KeyCode.Escape.ToString());
+        _keys.Remove(KeyCode.None.ToString());
+        _keys.Insert(0, KeyCode.None.ToString());
+        return _keys;
     }
 }

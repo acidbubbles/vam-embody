@@ -76,10 +76,9 @@ public class Embody : MVRScript, IEmbody
                 _screensManager.Add(OffsetCameraSettingsScreen.ScreenName, new OffsetCameraSettingsScreen(_context, offsetCameraModule));
                 _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
                 _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
-                _screensManager.Add(AutomationSettingsScreen.ScreenName, new AutomationSettingsScreen(_context, automationModule));
                 _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
                 _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
-                _screensManager.Add(UtilitiesScreen.ScreenName, new UtilitiesScreen(_context));
+                _screensManager.Add(MoreScreen.ScreenName, new MoreScreen(_context));
             }
             else
             {

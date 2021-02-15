@@ -76,12 +76,11 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
 
         if (context.containingAtom.type == "Person")
         {
-            CreateConfigButton(AutomationSettingsScreen.ScreenName, "Shortcuts & Automation...");
-            CreateConfigButton(UtilitiesScreen.ScreenName, "Tools (Create Mirror, Arm & Record)...");
+            CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
         }
 
         #warning For debugging purposes
-        // context.plugin.StartCoroutine(DebugCo());
+        //context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -100,26 +99,24 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
     {
         if (_once) yield break;
         _once = true;
+        context.wizard.forceReopen = false;
         yield return new WaitForSecondsRealtime(0.2f);
-        // context.snug.previewSnugOffsetJSON.val = true;
-        // new ResetPoseStep(context).Apply();
-        // Activate
-        //context.embody.activeJSON.val = true;
-        // Wizard
-        yield return new WaitForSecondsRealtime(0.1f);
         screensManager.Show(WizardScreen.ScreenName);
         yield return new WaitForSecondsRealtime(0.1f);
         context.wizard.StartWizard();
-        yield return new WaitForSecondsRealtime(0.1f);
-        context.wizard.Skip();
-        yield return new WaitForSecondsRealtime(0.1f);
-        context.wizard.Skip();
-        yield return new WaitForSecondsRealtime(0.1f);
-        context.wizard.Next();
-        for (var i = 0; i < 8; i++)
+        for (var i = 0; i < 2; i++)
+        {
+            yield return new WaitForSecondsRealtime(0.1f);
+            context.wizard.Skip();
+        }
+        foreach (var t in context.trackers.headAndHands) {t.enabled = false;}
+        context.hideGeometry.selectedJSON.val = false;
+        context.worldScale.selectedJSON.val = false;
+        for (var i = 0; i < 3; i++)
         {
             yield return new WaitForSecondsRealtime(0.1f);
             context.wizard.Next();
+            context.trackers.previewTrackerOffsetJSON.val = true;
         }
     }
 }
