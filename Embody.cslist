@@ -57,6 +57,7 @@ src\Wizard\Steps\FinishViveSetupStep.cs
 src\Wizard\Steps\MakeDefaultsStep.cs
 src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
+src\Wizard\Steps\MeasureArmsAtRestStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
 src\Wizard\Steps\RecordViveTrackersFeetStep.cs

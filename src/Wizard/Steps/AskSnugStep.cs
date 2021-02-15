@@ -46,7 +46,10 @@ public class AskSnugStep : WizardStepBase, IWizardStep
             _steps.Insert(++idx, new MeasureAnchorWidthStep(context, anchor, -60));
             _steps.Insert(++idx, new MeasureAnchorDepthAndOffsetStep(context, anchor, 70));
         }
-        // TODO: Hands at rest height step
+        {
+            var anchor = context.snug.anchorPoints.First(a => a.id == "Thighs");
+            _steps.Insert(++idx, new MeasureArmsAtRestStep(context, anchor));
+        }
         _steps.Insert(++idx, new FinishSnugSetupStep(context));
     }
 }
