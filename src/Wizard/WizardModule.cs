@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -48,7 +49,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         if (_coroutine != null) StopWizard();
         enabledJSON.val = true;
-        _coroutine = StartCoroutine(StartWizardCo());
+        _coroutine = StartCoroutine(WizardCoroutine());
         statusChanged.Invoke(true);
     }
 
@@ -61,7 +62,14 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         if (_step != null)
         {
-            _step.Leave();
+            try
+            {
+                _step.Leave();
+            }
+            catch (Exception exc)
+            {
+                SuperController.LogError($"Embody: Wizard {_step}.Leave failed: {exc}");
+            }
             _step = null;
         }
 
@@ -87,7 +95,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
         _skip = true;
     }
 
-    private IEnumerator StartWizardCo()
+    private IEnumerator WizardCoroutine()
     {
         context.embody.activeJSON.val = false;
         context.Initialize();
@@ -104,7 +112,17 @@ public class WizardModule : EmbodyModuleBase, IWizard
         {
             _step = steps[i];
             statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{_step.helpText}";
-            _step.Enter();
+            try
+            {
+                _step.Enter();
+            }
+            catch (Exception exc)
+            {
+                SuperController.LogError($"Embody: Wizard {_step}.Enter failed: {exc}");
+                StopWizard("An error prevented the wizard from finishing");
+                yield break;
+            }
+
             while (!AreAnyStartRecordKeysDown())
             {
                 ReopenIfClosed();
@@ -113,7 +131,17 @@ public class WizardModule : EmbodyModuleBase, IWizard
                     break;
 
                 yield return 0;
-                _step.Update();
+
+                try
+                {
+                    _step.Update();
+                }
+                catch (Exception exc)
+                {
+                    SuperController.LogError($"Embody: Wizard {_step}.Update failed: {exc}");
+                    StopWizard("An error prevented the wizard from finishing");
+                    yield break;
+                }
             }
 
             ReopenIfClosed();
@@ -125,9 +153,23 @@ public class WizardModule : EmbodyModuleBase, IWizard
                 else
                     _step.Apply();
             }
+            catch (Exception exc)
+            {
+                SuperController.LogError($"Embody: Wizard {_step}.Apply failed: {exc}");
+                StopWizard("An error prevented the wizard from finishing");
+                yield break;
+            }
             finally
             {
-                _step.Leave();
+                try
+                {
+                    _step?.Leave();
+                }
+                catch (Exception exc)
+                {
+                    SuperController.LogError($"Embody: Wizard {_step}.Leave failed: {exc}");
+                    StopWizard("An error prevented the wizard from finishing");
+                }
             }
 
             yield return 0;
