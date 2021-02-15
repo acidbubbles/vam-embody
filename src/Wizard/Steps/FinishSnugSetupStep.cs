@@ -2,7 +2,7 @@
 
 public class FinishSnugSetupStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "<b>Snug setup is complete<b>! Select Next to exit possession.";
+    public string helpText => "<b>Snug setup is complete</b>!\n\nSelect Next to exit possession.";
 
     public FinishSnugSetupStep(EmbodyContext context)
         : base(context)

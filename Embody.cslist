@@ -5,6 +5,7 @@ src\Common\FreeControllerV3Snapshot.cs
 src\Common\ListExtensions.cs
 src\Common\NavigationRigSnapshot.cs
 src\Common\QuaternionExtensions.cs
+src\Common\SuperControllerExtensions.cs
 src\Common\UIDynamicPopupExtensions.cs
 src\Common\Vector3Extensions.cs
 src\Common\VisualCuesHelper.cs
