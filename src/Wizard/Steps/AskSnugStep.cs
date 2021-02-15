@@ -21,7 +21,7 @@ public class AskSnugStep : WizardStepBase, IWizardStep
 
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = false;
-        context.embody.activeJSON.val = false;
+        context.embody.activeJSON.val = true;
 
         var idx = _steps.IndexOf(this);
         if (idx == -1) throw new InvalidOperationException($"{nameof(AskSnugStep)} was not found in the steps list");
@@ -47,6 +47,6 @@ public class AskSnugStep : WizardStepBase, IWizardStep
             _steps.Insert(++idx, new MeasureAnchorDepthAndOffsetStep(context, anchor, 70));
         }
         // TODO: Hands at rest height step
-        _steps.Insert(++idx, new DeactivateAndRestoreSnugStep(context));
+        _steps.Insert(++idx, new FinishSnugSetupStep(context));
     }
 }

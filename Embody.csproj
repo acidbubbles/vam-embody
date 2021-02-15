@@ -120,8 +120,8 @@
     <Compile Include="src\Wizard\Steps\AskViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\ActivateStep.cs" />
     <Compile Include="src\Wizard\Steps\AskSnugStep.cs" />
-    <Compile Include="src\Wizard\Steps\DeactivateAndRestoreSnugStep.cs" />
-    <Compile Include="src\Wizard\Steps\DeactivateStep.cs" />
+    <Compile Include="src\Wizard\Steps\FinishSnugSetupStep.cs" />
+    <Compile Include="src\Wizard\Steps\FinishViveSetupStep.cs" />
     <Compile Include="src\Wizard\Steps\EnableSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\MakeDefaultsStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersFeetStep.cs" />

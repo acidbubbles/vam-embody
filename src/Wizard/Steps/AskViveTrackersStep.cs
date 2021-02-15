@@ -6,7 +6,7 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
 {
     private readonly List<IWizardStep> _steps;
     private readonly int _useViveTrackers;
-    public string helpText => "Vive trackers were detected. If you want to configure them so they are automatically used during possession, press Next. You can also Skip this if you don't want Embody to configure your Vive trackers.";
+    public string helpText => "Vive trackers were detected.\n\nIf you want to configure them so they are automatically used during possession, press Next.\n\nYou can also Skip this if you don't want Embody to configure your Vive trackers.";
 
     public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps, int useViveTrackers)
         : base(context)
@@ -30,7 +30,6 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
         foreach (var mc in context.trackers.headAndHands)
             mc.enabled = true;
 
-        context.embody.activeJSON.val = true;
         context.trackers.previewTrackerOffsetJSON.val = true;
 
         var idx = _steps.IndexOf(this);
@@ -40,6 +39,6 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
             _steps.Insert(++idx, new RecordViveTrackersFeetStep(context));
         if (_useViveTrackers == 1 || _useViveTrackers > 2)
             _steps.Insert(++idx, new RecordViveTrackersStep(context));
-        _steps.Insert(++idx, new DeactivateStep(context));
+        _steps.Insert(++idx, new FinishViveSetupStep(context));
     }
 }

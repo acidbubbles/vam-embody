@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 
-public class DeactivateAndRestoreSnugStep : WizardStepBase, IWizardStep
+public class FinishSnugSetupStep : WizardStepBase, IWizardStep
 {
     public string helpText => "Snug setup is complete, select Next to exit possession.";
 
-    public DeactivateAndRestoreSnugStep(EmbodyContext context)
+    public FinishSnugSetupStep(EmbodyContext context)
         : base(context)
     {
     }

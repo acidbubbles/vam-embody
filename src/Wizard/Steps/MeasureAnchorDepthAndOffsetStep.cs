@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"Put your right hand at the same level as your {_anchor.label} but on the front, slightly pressed against you.";
+    public string helpText => $"Put your right hand at the same level as your {_anchor.label}, slightly pressed against you.\n\nTry to replicate as closely as you can the model's hand position, but on your own body.";
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly float _handRotate;

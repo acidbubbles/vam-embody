@@ -51,9 +51,9 @@ src\Utilities\UtilitiesScreen.cs
 src\Wizard\Steps\ActivateStep.cs
 src\Wizard\Steps\AskSnugStep.cs
 src\Wizard\Steps\AskViveTrackersStep.cs
-src\Wizard\Steps\DeactivateAndRestoreSnugStep.cs
-src\Wizard\Steps\DeactivateStep.cs
 src\Wizard\Steps\EnableSnugStep.cs
+src\Wizard\Steps\FinishSnugSetupStep.cs
+src\Wizard\Steps\FinishViveSetupStep.cs
 src\Wizard\Steps\MakeDefaultsStep.cs
 src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
