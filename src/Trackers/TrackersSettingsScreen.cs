@@ -34,7 +34,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
-            _trackers.motionControls.Select(mc => mc.name).ToList(),
+            _trackers.motionControls.Where(mc => mc.SyncMotionControl()).Select(mc => mc.name).ToList(),
             _trackers.motionControls[0].name ?? _none,
             "Tracker",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
@@ -58,7 +58,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         if (motionControl == null) return;
 
-        if (!MotionControlNames.IsHeadOrHands(motionControl.name))
+        if (MotionControlNames.IsViveTracker(motionControl.name))
         {
             _section.CreateButton("Map to Closest Control", true).button.onClick.AddListener(() =>
             {
