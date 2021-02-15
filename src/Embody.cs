@@ -156,6 +156,7 @@ public class Embody : MVRScript, IEmbody
         }
 
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
+        _screensManager.Show(MainScreen.ScreenName);
     }
 
     public override void InitUI()

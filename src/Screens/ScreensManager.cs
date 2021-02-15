@@ -36,7 +36,6 @@ public class ScreensManager : IScreensManager
         _backButton = plugin.CreateButton("< Back");
         _backButton.button.onClick.AddListener(() => Show(mainScreen));
         _backButton.height = 100f;
-        Show(mainScreen);
     }
 
     public bool Show(string screenName)

@@ -19,7 +19,10 @@ public class MainScreen : ScreenBase, IScreen
             CreateSpacer().height = 10f;
 
             CreateButton($"Import, Export & Default Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
-            CreateButton("Automatic Setup Wizard...").button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
+            var wizardBtn = CreateButton("Launch Wizard...");
+            wizardBtn.button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
+            if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.EyeDistanceMethod)
+                wizardBtn.buttonColor = Color.green;
 
             CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
