@@ -1,4 +1,6 @@
-﻿public class WorldScaleSettingsScreen : ScreenBase, IScreen
+﻿using System.Linq;
+
+public class WorldScaleSettingsScreen : ScreenBase, IScreen
 {
     private readonly IWorldScaleModule _worldScale;
     public const string ScreenName = WorldScaleModule.Label;
@@ -22,7 +24,7 @@
 
     private void RecordPlayerHeight()
     {
-        _worldScale.playerHeightJSON.val = RecordPlayerHeightStep.GetPlayerHeight();
+        _worldScale.playerHeightJSON.val = SuperController.singleton.heightAdjustTransform.InverseTransformPoint(context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head).currentMotionControl.position).y;
         _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
     }
 }
