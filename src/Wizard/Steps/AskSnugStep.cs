@@ -21,6 +21,10 @@ public class AskSnugStep : WizardStepBase, IWizardStep
 
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = false;
+        var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
+        if (lElbowMotionControl != null) lElbowMotionControl.enabled = false;
+        var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
+        if (rElbowMotionControl != null) rElbowMotionControl.enabled = false;
         context.embody.activeJSON.val = true;
 
         var idx = _steps.IndexOf(this);
