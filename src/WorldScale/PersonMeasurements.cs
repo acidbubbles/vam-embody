@@ -4,7 +4,7 @@ using UnityEngine;
 public class PersonMeasurements
 {
     private const float _feetToGroundDistance = 0.059f;
-    private const float _skeletonSumToStandHeightRatio = 0.940f;
+    private const float _skeletonSumToStandHeightRatio = 0.945f;
 
     private readonly DAZBone[] _bones;
     private readonly DAZBone _hipBone;
