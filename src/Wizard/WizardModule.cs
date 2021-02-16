@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.XR;
 
 public interface IWizard : IEmbodyModule
 {
@@ -184,10 +185,10 @@ public class WizardModule : EmbodyModuleBase, IWizard
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
         if (!SuperController.singleton.mainHUD.gameObject.activeInHierarchy) return;
         SuperController.singleton.SelectController(containingAtom.mainController, false, false, false);
-        if(Camera.current == SuperController.singleton.MonitorCenterCamera)
-            SuperController.singleton.ShowMonitorUI();
-        else
+        if(XRDevice.isPresent)
             SuperController.singleton.ShowMainHUD();
+        else
+            SuperController.singleton.ShowMainHUDMonitor();
         var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
         selector.SetActiveTab("Plugins");
         context.plugin.UITransform.gameObject.SetActive(true);
