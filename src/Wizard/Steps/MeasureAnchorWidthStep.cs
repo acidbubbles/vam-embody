@@ -62,6 +62,7 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 
     public void Apply()
     {
+        var inverseWorldScale = (1 / SuperController.singleton.worldScale);
         var inverseRotation = Quaternion.Inverse(_anchor.bone.rotation);
         var compareCenter = (_leftComparePointPosition + _rightComparePointPosition) / 2f;
         var leftHandPosition = context.leftHand.position;
@@ -70,10 +71,10 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         var realLifeOffset = inverseRotation * (handsCenter - compareCenter);
         realLifeOffset.x = 0; // We never want sideways offset
         realLifeOffset.z *= 0.6f; // It's hard to get z right, especially for the chest, so let's tone down how much we trust this.
-        _anchor.realLifeOffset = realLifeOffset;
+        _anchor.realLifeOffset = realLifeOffset * inverseWorldScale;
 
         var realLifeWidth = Mathf.Abs((inverseRotation * rightHandPosition).x - (inverseRotation * leftHandPosition).x);
-        _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * realLifeWidth;
+        _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * (realLifeWidth * inverseWorldScale);
     }
 
     public override void Leave()

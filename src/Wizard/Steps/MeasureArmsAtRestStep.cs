@@ -35,10 +35,11 @@ public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
 
     public void Apply()
     {
+        var inverseWorldScale = (1 / SuperController.singleton.worldScale);
         var realY = (_leftHandMotion.controllerPointTransform.position.y + _rightHandMotion.controllerPointTransform.position.y) / 2f;
         var inGameY = (_leftHandControl.control.position.y + _rightHandControl.control.position.y) / 2f;
         var difference = inGameY - realY;
-        _anchor.realLifeOffset = new Vector3(0f, difference, 0f);
+        _anchor.realLifeOffset = new Vector3(0f, difference * inverseWorldScale, 0f);
     }
 
     public override void Leave()

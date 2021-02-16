@@ -2,6 +2,7 @@
 
 public class ControllerAnchorPoint
 {
+    public EmbodyScaleChangeReceiver scaleChangeReceiver { get; set; }
     public string id { get; set; }
     public string label { get; set; }
     public Transform bone { get; set; }
@@ -22,27 +23,29 @@ public class ControllerAnchorPoint
     public Vector3 GetInGameWorldPosition()
     {
         var rigidBodyTransform = bone.transform;
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * inGameOffset;
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset * SuperController.singleton.worldScale);
     }
 
     public Vector3 GetAdjustedWorldPosition()
     {
         var rigidBodyTransform = bone.transform;
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset + realLifeOffset);
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * ((inGameOffset + realLifeOffset) * SuperController.singleton.worldScale);
     }
 
     public void Update()
     {
+        var scale = scaleChangeReceiver.scale;
+
         if (inGameCue != null)
         {
             inGameCue.gameObject.SetActive(active);
-            inGameCue.Update(inGameOffset, inGameSize);
+            inGameCue.Update(inGameOffset * scale, inGameSize * scale);
         }
 
         if (realLifeCue != null)
         {
             realLifeCue.gameObject.SetActive(active);
-            realLifeCue.Update(inGameOffset + realLifeOffset, realLifeSize);
+            realLifeCue.Update(inGameOffset * scale + realLifeOffset, realLifeSize);
         }
     }
 

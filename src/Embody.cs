@@ -22,6 +22,7 @@ public class Embody : MVRScript, IEmbody
     private EmbodyContext _context;
     private bool _restored;
     private bool _activateAfterSaveComplete;
+    private EmbodyScaleChangeReceiver _scaleChangeReceiver;
 
     public override void Init()
     {
@@ -29,6 +30,8 @@ public class Embody : MVRScript, IEmbody
         {
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
             var isPerson = containingAtom.type == "Person";
+
+            _scaleChangeReceiver = gameObject.AddComponent<EmbodyScaleChangeReceiver>();
 
             _modules = new GameObject();
             _modules.transform.SetParent(transform, false);
@@ -56,6 +59,10 @@ public class Embody : MVRScript, IEmbody
             _context.snug = snugModule;
             _context.eyeTarget = eyeTargetModule;
             _context.wizard = wizardModule;
+            _context.scaleChangeReceiver = _scaleChangeReceiver;
+
+            _scaleChangeReceiver.context = _context;
+            containingAtom.RegisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
 
             _modules.SetActive(true);
 
@@ -312,6 +319,9 @@ public class Embody : MVRScript, IEmbody
 
     public void OnDestroy()
     {
+        if (_context?.containingAtom != null)
+            _context.containingAtom.DeregisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
+        Destroy(_scaleChangeReceiver);
         Destroy(_modules);
         foreach(var cue in VisualCuesHelper.Cues)
             Destroy(cue);

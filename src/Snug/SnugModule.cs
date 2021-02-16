@@ -13,6 +13,7 @@ public interface ISnugModule : IEmbodyModule
     JSONStorableBool disableSelfGrabJSON { get; }
     SnugAutoSetup autoSetup { get; }
     void ClearPersonalData();
+    void ScaleChanged();
 }
 
 public class SnugModule : EmbodyModuleBase, ISnugModule
@@ -78,6 +79,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Crown",
             label = "Crown",
             bone = bones.First(rb => rb.name == "head").transform,
@@ -89,6 +91,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Head",
             label = "Head",
             bone = bones.First(rb => rb.name == "head").transform,
@@ -99,6 +102,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Chest",
             label = "Chest",
             bone = bones.First(rb => rb.name == "chest").transform,
@@ -109,6 +113,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Abdomen",
             label = "Abdomen",
             bone = bones.First(rb => rb.name == "abdomen").transform,
@@ -119,6 +124,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Hips",
             label = "Hips",
             bone = bones.First(rb => rb.name == "hip").transform,
@@ -129,6 +135,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Thighs",
             label = "Thighs",
             // TODO: We could try and average this instead, OR define an absolute value
@@ -141,6 +148,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
+            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Feet",
             label = "Feet",
             // TODO: We could try and average this instead, OR define an absolute value
@@ -165,6 +173,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             anchorPoint.realLifeSize = anchorPoint.realLifeSizeDefault;
             anchorPoint.realLifeOffset = anchorPoint.realLifeOffsetDefault;
+            anchorPoint.Update();
+        }
+    }
+
+    public void ScaleChanged()
+    {
+        foreach (var anchorPoint in anchorPoints)
+        {
             anchorPoint.Update();
         }
     }
@@ -407,13 +423,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         var anchorPosition = upperPosition;
         var realLifeSize = upper.realLifeSize;
-
         var realOffset = upper.realLifeOffset;
         var inGameSize = upper.inGameSize;
         var scale = new Vector3(inGameSize.x / realLifeSize.x, 1f, inGameSize.z / realLifeSize.z);
         var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);
-        var finalPosition = anchorPosition + scaled - realOffset;
+        var finalPosition = anchorPosition + scaled - (realOffset * SuperController.singleton.worldScale);
 
         return finalPosition;
     }

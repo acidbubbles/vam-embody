@@ -6,7 +6,7 @@ public class EmbodyContext
     public readonly MVRScript plugin;
     public readonly IEmbody embody;
 
-    public Atom containingAtom => plugin.containingAtom;
+    public Atom containingAtom { get; }
 
     public IAutomationModule automation;
     public IWorldScaleModule worldScale;
@@ -17,6 +17,7 @@ public class EmbodyContext
     public ISnugModule snug;
     public IEyeTargetModule eyeTarget;
     public IWizard wizard;
+    public EmbodyScaleChangeReceiver scaleChangeReceiver;
 
     public Transform head { get; private set; }
     public Transform leftHand { get; private set; }
@@ -32,6 +33,7 @@ public class EmbodyContext
 
     public EmbodyContext(MVRScript plugin, IEmbody embody)
     {
+        this.containingAtom = plugin.containingAtom;
         this.plugin = plugin;
         this.embody = embody;
 
