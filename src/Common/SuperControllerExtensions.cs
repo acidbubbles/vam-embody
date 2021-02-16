@@ -20,7 +20,7 @@ public static class SuperControllerExtensions
 
         controller.AlignTo(motionControl.controllerPointTransform, true);
 
-        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position - controller.control.rotation * motionControl.offsetControllerCombined;
+        var possessPointDelta = controller.control.position - motionControl.currentMotionControl.position - controller.control.rotation * (motionControl.offsetControllerCombined * SuperController.singleton.worldScale);
         var navigationRigPosition = navigationRig.position;
         var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
         var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);

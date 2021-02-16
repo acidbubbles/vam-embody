@@ -133,10 +133,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             var eyes = _headTransform.GetComponentsInChildren<LookAtWithLimits>();
             var lEye = eyes.First(eye => eye.name == "lEye").transform;
             var rEye = eyes.First(eye => eye.name == "rEye").transform;
-            var eyesCenter = (lEye.position + rEye.position) / 2f;
-            var upDelta = Vector3.Dot(_headTransform.InverseTransformPoint(eyesCenter), _headTransform.up);
+            var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
+            var upDelta = eyesCenter.y;
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
-            _headToEyesDistance = eyesToHeadDistanceOffsetJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.position);
+            _headToEyesDistance = eyesToHeadDistanceOffsetJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.localPosition);
         }
         else
         {
@@ -242,7 +242,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         var cameraDelta = centerTargetTransform.position
                           - navigationRigTransform.position
-                          - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance);
+                          - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance * SuperController.singleton.worldScale);
         var navigationRigPosition = position - cameraDelta;
 
         var navigationRigRotation = rotation;
