@@ -202,7 +202,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
 
         steps.Add(new ResetPoseStep(context, useViveTrackers == 0));
 
-        steps.Add(new RecordPlayerHeightStep(context.worldScale));
+        steps.Add(new RecordPlayerHeightStep(context));
 
         if (useViveTrackers > 0)
             steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
