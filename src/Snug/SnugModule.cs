@@ -395,7 +395,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         if (previewSnugOffsetJSON.val)
         {
             visualCueLinePoints[0] = motionControlPosition;
-            visualCueLinePoints[1] = finalPosition;
+            visualCueLinePoints[1] = Vector3.Lerp(motionControlPosition, finalPosition, effectWeight);
         }
 
         hand.controllerRigidbody.MovePosition(Vector3.Lerp(possessPointPosition, finalPositionToControlPoint, effectWeight));
