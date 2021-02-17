@@ -49,9 +49,9 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     {
         _rightHandControl.control.rotation = _anchor.bone.rotation;
         _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
-        _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + _handsDistance / 2f));
+        _rightComparePointPosition = _anchor.GetInGameWorldPosition() + (_anchor.bone.transform.forward * (_anchor.inGameSize.z / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
         _rightHandControl.control.position = _rightComparePointPosition;
-        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase, Space.Self);
+        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase * context.scaleChangeReceiver.scale, Space.Self);
         _rightHandControl.control.RotateAround(_rightComparePointPosition, _anchor.bone.transform.up, -90);
         _rightHandControl.control.RotateAround(_rightComparePointPosition, _anchor.bone.transform.forward, _handRotate);
     }

@@ -19,17 +19,18 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         var measurements = new PersonMeasurements(context.containingAtom);
         var height = measurements.MeasureHeight();
         // TODO: Measure shoulders
-        const float globalForwardOffset = -0.025f;
-        const float footHalfDistance = 0.045f;
+        var scale = context.scaleChangeReceiver.scale;
+        var globalForwardOffset = (-0.025f) * scale;
+        var footHalfDistance = (0.045f) * scale;
         const float footYaw = 4f;
         const float footPitch = 18f;
-        const float footFloorDistance = 0.055f;
-        const float headForwardOffset = -0.020f + globalForwardOffset;
-        const float hipForwardOffset = 0.020f + globalForwardOffset;
-        const float feetForwardOffset = 0.010f + globalForwardOffset;
-        const float handsToHipOffset = -0.10f;
-        const float handsForwardOffset = 0.05f + globalForwardOffset;
-        const float handsRightOffset = 0.22f;
+        var footFloorDistance = (0.055f) * scale;
+        var headForwardOffset = (-0.020f + globalForwardOffset) * scale;
+        var hipForwardOffset = (0.020f + globalForwardOffset) * scale;
+        var feetForwardOffset = (0.010f + globalForwardOffset) * scale;
+        var handsToHipOffset = (-0.10f) * scale;
+        var handsForwardOffset = (0.05f + globalForwardOffset) * scale;
+        var handsRightOffset = (0.22f) * scale;
 
         var head = context.containingAtom.freeControllers.First(fc => fc.name == "headControl");
         var pelvis = context.containingAtom.freeControllers.First(fc => fc.name == "pelvisControl");

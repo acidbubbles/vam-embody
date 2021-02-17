@@ -24,13 +24,13 @@ public class ControllerAnchorPoint
     {
         var rigidBodyTransform = bone.transform;
         // ReSharper disable once Unity.InefficientMultiplicationOrder
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset * scaleChangeReceiver.scale * SuperController.singleton.worldScale);
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset * scaleChangeReceiver.scale);
     }
 
     public Vector3 GetAdjustedWorldPosition()
     {
         var rigidBodyTransform = bone.transform;
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * ((inGameOffset * scaleChangeReceiver.scale + realLifeOffset) * SuperController.singleton.worldScale);
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * ((inGameOffset * scaleChangeReceiver.scale + realLifeOffset));
     }
 
     public void Update()

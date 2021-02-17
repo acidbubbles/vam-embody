@@ -37,7 +37,7 @@ public class AskSnugStep : WizardStepBase, IWizardStep
         }
         {
             var anchor = context.snug.anchorPoints.First(a => a.id == "Chest");
-            _steps.Insert(++idx, new MeasureAnchorWidthStep(context, anchor, -20));
+            _steps.Insert(++idx, new MeasureAnchorWidthStep(context, anchor, -20, true));
             _steps.Insert(++idx, new MeasureAnchorDepthAndOffsetStep(context, anchor, -10));
         }
         {

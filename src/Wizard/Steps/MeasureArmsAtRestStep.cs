@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"<b>Stand straight</b> and <b>relax your hands</b> like the model is doing right now.\n\nPress Next when ready.\n\nTry not to overstretch your arms and match as closely as you can the hands position of the model.";
+    public string helpText => $"<b>Stand straight</b> and <b>relax your hands</b> like the model is doing right now (wait for the model to stabilize).\n\nPress Next when ready.\n\nTry not to overstretch your arms and match as closely as you can the hands position of the model.";
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly FreeControllerV3 _leftHandControl;
@@ -35,11 +35,10 @@ public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
 
     public void Apply()
     {
-        var inverseWorldScale = (1 / SuperController.singleton.worldScale);
         var realY = (_leftHandMotion.controllerPointTransform.position.y + _rightHandMotion.controllerPointTransform.position.y) / 2f;
         var inGameY = (_leftHandControl.control.position.y + _rightHandControl.control.position.y) / 2f;
-        var difference = inGameY - realY;
-        _anchor.realLifeOffset = new Vector3(0f, difference * inverseWorldScale, 0f);
+        var difference = realY - inGameY;
+        _anchor.realLifeOffset = new Vector3(0f, difference, 0f);
     }
 
     public override void Leave()
