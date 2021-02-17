@@ -69,9 +69,13 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
             _section.CreateButton("Align to Mapped Control", true).button.onClick.AddListener(() =>
             {
-                _trackerAutoSetup.AlignToNode(motionControl, context.containingAtom.freeControllers.First(fc => fc.name == motionControl.mappedControllerName));
-                ShowMotionControl(motionControl);
-                context.Refresh();
+                var controller = context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == motionControl.mappedControllerName);
+                if (controller != null)
+                {
+                    _trackerAutoSetup.AlignToNode(motionControl, controller);
+                    ShowMotionControl(motionControl);
+                    context.Refresh();
+                }
             });
         }
 

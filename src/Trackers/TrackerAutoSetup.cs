@@ -82,7 +82,7 @@ public class TrackerAutoSetup
             return;
         }
 
-        motionControl.offsetControllerCustom = motionControl.currentMotionControl.InverseTransformPoint(controller.control.position - motionControl.currentMotionControl.position);
+        motionControl.offsetControllerCustom = motionControl.currentMotionControl.InverseTransformPoint(controller.control.position);
         var customOffsetRotation = (Quaternion.Inverse(motionControl.currentMotionControl.rotation) * controller.control.rotation).eulerAngles;
         motionControl.rotateControllerCustom = new Vector3(
             customOffsetRotation.x > 180 ? customOffsetRotation.x - 360 : customOffsetRotation.x,

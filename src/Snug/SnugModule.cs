@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
@@ -179,10 +180,18 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public void ScaleChanged()
     {
-        foreach (var anchorPoint in anchorPoints)
-        {
-            anchorPoint.Update();
-        }
+        SuperController.singleton.StartCoroutine(ScaleChangedCo());
+    }
+
+    private IEnumerator ScaleChangedCo()
+    {
+        if (anchorPoints.Count == 0) yield break;
+        DestroyVisualCues();
+        for (var i = 0; i < 45; i++)
+            yield return 0;
+        if (this == null) yield break;
+        if (previewSnugOffsetJSON.val)
+            CreateVisualCues();
     }
 
     #region Lifecycle
