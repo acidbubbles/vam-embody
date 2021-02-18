@@ -41,7 +41,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         );
         CreateScrollablePopup(_motionControlJSON);
 
-        ShowMotionControl(_trackers.motionControls[0]);
+        ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == _motionControlJSON.val));
     }
 
     public override void Hide()
