@@ -81,7 +81,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public override bool BeforeEnable()
     {
-        AdjustHeadToEyesOffset();
+        var headMotionControl = motionControls.First(mc => mc.name == MotionControlNames.Head);
+        if (headMotionControl.enabled && !context.passenger.selectedJSON.val)
+        {
+            _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+            AdjustHeadToEyesOffset();
+        }
         return true;
     }
 
@@ -115,7 +120,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 controller.control.position = headBonePosition;
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
-                    _navigationRigSnapshot = NavigationRigSnapshot.Snap();
                     SuperController.singleton.AlignRigAndController(controller, motionControl);
                 }
                 else
