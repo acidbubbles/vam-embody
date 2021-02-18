@@ -78,12 +78,16 @@ public class WizardModule : EmbodyModuleBase, IWizard
         _next = false;
         _skip = false;
         statusChanged.Invoke(false);
+        enabledJSON.val = false;
 
         // TODO: This ugly fix is for when you're canceling during Snug setup, we need some way to restore the hands after. Maybe a cleanup step would be better.
+        context.embody.activeJSON.val = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
-
-        enabledJSON.val = false;
+        var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
+        if (lElbowMotionControl != null) lElbowMotionControl.enabled = true;
+        var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
+        if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
     }
 
     public void Next()
