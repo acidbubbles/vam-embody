@@ -64,6 +64,7 @@ src\Wizard\WizardModule.cs
 src\Wizard\WizardScreen.cs
 src\Wizard\WizardStepBase.cs
 src\WorldScale\PersonMeasurements.cs
+src\WorldScale\PlayerMeasurements.cs
 src\WorldScale\WorldScaleModule.cs
 src\WorldScale\WorldScaleSettingsScreen.cs
 src\Embody.cs

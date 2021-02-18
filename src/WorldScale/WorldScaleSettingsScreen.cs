@@ -24,7 +24,7 @@ public class WorldScaleSettingsScreen : ScreenBase, IScreen
 
     private void RecordPlayerHeight()
     {
-        _worldScale.playerHeightJSON.val = SuperController.singleton.heightAdjustTransform.InverseTransformPoint(context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head).currentMotionControl.position).y;
+        _worldScale.playerHeightJSON.val = new PlayerMeasurements(context).MeasureHeight();
         _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
     }
 }

@@ -136,6 +136,7 @@
     <Compile Include="src\Wizard\WizardScreen.cs" />
     <Compile Include="src\Wizard\WizardStepBase.cs" />
     <Compile Include="src\WorldScale\PersonMeasurements.cs" />
+    <Compile Include="src\WorldScale\PlayerMeasurements.cs" />
     <Compile Include="src\WorldScale\WorldScaleModule.cs" />
     <Compile Include="src\WorldScale\WorldScaleSettingsScreen.cs" />
   </ItemGroup>
