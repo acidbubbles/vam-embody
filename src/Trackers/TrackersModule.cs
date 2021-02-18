@@ -111,7 +111,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == MotionControlNames.Head)
             {
-                var headBonePosition = containingAtom.GetComponentsInChildren<DAZBone>().First(b => b.name == "head").transform.position;
+                var headBonePosition = context.bones.First(b => b.name == "head").transform.position;
                 controller.control.position = headBonePosition;
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {

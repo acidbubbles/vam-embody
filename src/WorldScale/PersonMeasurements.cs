@@ -9,9 +9,9 @@ public class PersonMeasurements
     private readonly DAZBone[] _bones;
     private readonly DAZBone _hipBone;
 
-    public PersonMeasurements(Atom containingAtom)
+    public PersonMeasurements(EmbodyContext context)
     {
-        _bones = containingAtom.GetComponentsInChildren<DAZBone>();
+        _bones = context.bones;
         _hipBone = _bones.First(b => b.name == "hip");
     }
 

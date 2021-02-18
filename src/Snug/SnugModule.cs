@@ -76,7 +76,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitAnchors()
     {
-        var bones = containingAtom.GetComponentsInChildren<DAZBone>();
+        var bones = context.bones;
 
         anchorPoints.Add(new ControllerAnchorPoint
         {

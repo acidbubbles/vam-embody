@@ -114,7 +114,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         if (playerHeightJSON.val == 0) return;
 
-        var measurements = new PersonMeasurements(containingAtom);
+        var measurements = new PersonMeasurements(context);
         var measure = measurements.MeasureHeight();
 
         var ratio = measure / playerHeightJSON.val;

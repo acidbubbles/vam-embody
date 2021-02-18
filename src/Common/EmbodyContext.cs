@@ -29,14 +29,14 @@ public class EmbodyContext
     public Transform viveTracker5 { get; private set; }
     public Transform viveTracker6 { get; private set; }
     public Transform viveTracker7 { get; private set; }
-    public Transform viveTracker8 { get; set; }
+    public Transform viveTracker8 { get; private set; }
+    public DAZBone[] bones { get; private set; }
 
     public EmbodyContext(MVRScript plugin, IEmbody embody)
     {
         this.containingAtom = plugin.containingAtom;
         this.plugin = plugin;
         this.embody = embody;
-
     }
 
     [SuppressMessage("ReSharper", "Unity.NoNullPropagation")]
@@ -56,6 +56,7 @@ public class EmbodyContext
         viveTracker6 = GetDebugAtom($"{prefix}viveTracker6") ?? sc.viveTracker6;
         viveTracker7 = GetDebugAtom($"{prefix}viveTracker7") ?? sc.viveTracker7;
         viveTracker8 = GetDebugAtom($"{prefix}viveTracker8") ?? sc.viveTracker8;
+        if (bones == null) bones = containingAtom.GetComponentsInChildren<DAZBone>();
     }
 
     private static Transform GetDebugAtom(string uid)

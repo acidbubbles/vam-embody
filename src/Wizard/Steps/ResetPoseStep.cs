@@ -16,7 +16,7 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
     {
         Utilities.ResetToDefaults(context);
 
-        var measurements = new PersonMeasurements(context.containingAtom);
+        var measurements = new PersonMeasurements(context);
         var height = measurements.MeasureHeight();
         // TODO: Measure shoulders
         var scale = context.scaleChangeReceiver.scale;
@@ -88,7 +88,7 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         {
             // TODO: In theory it would be better if the feet sole moved but the toes didn't, but the toes have weird movements and it's had to get the sole to stay on the ground.
             /*
-            var toeBone = context.containingAtom.GetComponentsInChildren<DAZBone>().First(b => b.name == "rToe");
+            var toeBone = context.bones.First(b => b.name == "rToe");
             var toeToFeetDistance = toeBone.transform.localPosition.magnitude;
 
             SetState(lToe, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
