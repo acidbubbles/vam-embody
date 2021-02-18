@@ -111,6 +111,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (motionControl.name == MotionControlNames.Head)
             {
+                var headBonePosition = containingAtom.GetComponentsInChildren<DAZBone>().First(b => b.name == "head").transform.position;
+                controller.control.position = headBonePosition;
                 if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
                 {
                     _navigationRigSnapshot = NavigationRigSnapshot.Snap();
@@ -120,7 +122,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 {
                     var controlRotation = controller.control.rotation;
                     motionControl.currentMotionControl.SetPositionAndRotation(
-                        controller.control.position - controlRotation * motionControl.offsetControllerCombined,
+                        headBonePosition - controlRotation * motionControl.offsetControllerCombined,
                         controlRotation
                     );
                 }
@@ -203,7 +205,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.possessed = true;
 
-        var motionControllerHeadRigidbody = motionControl.controllerPointRB;
+        var motionControllerRB = motionControl.controllerPointRB;
         var motionAnimationControl = controller.GetComponent<MotionAnimationControl>();
 
         controller.canGrabPosition = true;
@@ -215,11 +217,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.RBHoldRotationSpring = sc.possessRotationSpring;
 
         controller.SelectLinkToRigidbody(
-            motionControllerHeadRigidbody,
+            motionControllerRB,
             motionControl.controlRotation
                 ? FreeControllerV3.SelectLinkState.PositionAndRotation
                 : FreeControllerV3.SelectLinkState.Position
         );
+
+        controller.canGrabPosition = false;
+        controller.canGrabRotation = false;
     }
 
     public override void StoreJSON(JSONClass jc)
