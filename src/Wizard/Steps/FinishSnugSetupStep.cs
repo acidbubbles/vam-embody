@@ -19,6 +19,8 @@ public class FinishSnugSetupStep : WizardStepBase, IWizardStep
         if (lElbowMotionControl != null) lElbowMotionControl.enabled = true;
         var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
         if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
+        context.trackers.enabledJSON.val = false;
+        context.trackers.enabledJSON.val = true;
         context.snug.previewSnugOffsetJSON.val = true;
         context.snug.selectedJSON.val = true;
     }
