@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 {
@@ -28,10 +29,16 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
     public bool Apply()
     {
         var autoSetup = new TrackerAutoSetup(context.containingAtom);
+        var hashSet = new HashSet<string>();
         foreach (var mc in context.trackers.viveTrackers)
         {
             if (!mc.SyncMotionControl()) continue;
             autoSetup.AttachToClosestNode(mc);
+            if (!hashSet.Add(mc.mappedControllerName))
+            {
+                lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
+                return false;
+            }
         }
         context.Refresh();
 
