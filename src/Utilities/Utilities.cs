@@ -33,10 +33,10 @@ public static class Utilities
         // ReSharper disable once Unity.NoNullCoalescing
         var head = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head")?.transform ?? containingAtom.mainController.transform;
         var atomControl = atom.mainController.transform;
-        var rotation = new Vector3(0, atomControl.eulerAngles.y, 0);
         var headPosition = head.position;
-        atomControl.position = headPosition - (new Vector3(0, headPosition.y, 0) / 2f) + Quaternion.Euler(rotation) * (Vector3.forward * 0.5f);
-        atomControl.eulerAngles = rotation;
+        var headRotation = Quaternion.LookRotation(Vector3.Scale(head.forward, new Vector3(1f, 0f, 1f)), Vector3.up);
+        atomControl.position = headPosition - (new Vector3(0, headPosition.y, 0) / 2f) + headRotation * (Vector3.forward * 0.5f);
+        atomControl.rotation = headRotation;
         atomControl.Rotate(Vector3.right, -90);
 
         var scale = atom.GetStorableByID("scale") as SetTransformScaleIndependent;
