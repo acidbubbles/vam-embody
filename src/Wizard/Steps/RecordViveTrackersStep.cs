@@ -19,7 +19,10 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
         context.worldScale.enabledJSON.val = true;
         context.hideGeometry.enabledJSON.val = true;
-        SuperController.singleton.AlignRigAndController(context.containingAtom.freeControllers.First(fc => fc.name == "headControl"), context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head));
+        SuperController.singleton.AlignRigAndController(
+            context.containingAtom.freeControllers.First(fc => fc.name == "headControl"),
+            context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head),
+            false);
     }
 
     public void Apply()

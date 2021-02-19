@@ -2,7 +2,7 @@
 
 public static class SuperControllerExtensions
 {
-    public static void AlignRigAndController(this SuperController sc, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl)
+    public static void AlignRigAndController(this SuperController sc, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
     {
         var navigationRig = sc.navigationRig;
 
@@ -18,7 +18,8 @@ public static class SuperControllerExtensions
         var rotation = Quaternion.FromToRotation(fromDirection, vector);
         navigationRig.rotation = rotation * navigationRig.rotation;
 
-        controller.AlignTo(motionControl.controllerPointTransform, true);
+        if (alignControl)
+            controller.AlignTo(motionControl.controllerPointTransform, true);
 
         var possessPointDelta = controller.control.position - motionControl.controllerPointTransform.position;
         var navigationRigPosition = navigationRig.position;
