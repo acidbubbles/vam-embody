@@ -27,8 +27,10 @@ public class MeasureHandsPaddingStep : WizardStepBase, IWizardStep
         _rightHandControl.control.Rotate(new Vector3(180, 0, 270 - 10));
     }
 
-    public void Apply()
+    public bool Apply()
     {
         SuperController.LogMessage($"Hands distance: {Vector3.Distance(context.leftHand.position, context.rightHand.position)}");
+
+        return true;
     }
 }

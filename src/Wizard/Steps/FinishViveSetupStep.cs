@@ -14,8 +14,9 @@
         context.embody.activeJSON.val = true;
     }
 
-    public void Apply()
+    public bool Apply()
     {
+        return true;
     }
 
     public override void Leave()

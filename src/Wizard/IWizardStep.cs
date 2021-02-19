@@ -1,8 +1,9 @@
 ﻿public interface IWizardStep
 {
     string helpText { get; }
+    string lastError { get; set; }
     void Enter();
     void Update();
-    void Apply();
+    bool Apply();
     void Leave();
 }

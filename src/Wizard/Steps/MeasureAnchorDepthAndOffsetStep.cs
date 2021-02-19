@@ -64,7 +64,7 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         _rightHandControl.control.RotateAround(_rightComparePointPosition, boneTransform.forward, _handRotate);
     }
 
-    public void Apply()
+    public bool Apply()
     {
         var inGame = _anchor.bone.InverseTransformPoint(_rightComparePointPosition);
         var real = _anchor.bone.InverseTransformPoint(context.rightHand.position);
@@ -72,6 +72,8 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         _anchor.realLifeSize += new Vector3(0, (real.y - inGame.y) / 2f, (real.z - inGame.z) * _sizeDepthMultiply);
 
         _anchor.Update();
+
+        return true;
     }
 
     public override void Leave()

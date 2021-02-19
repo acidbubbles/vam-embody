@@ -2,6 +2,8 @@
 {
     protected readonly EmbodyContext context;
 
+    public string lastError { get; set; }
+
     protected WizardStepBase()
     {
     }

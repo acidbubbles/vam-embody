@@ -14,7 +14,7 @@ public class AskSnugStep : WizardStepBase, IWizardStep
         _steps = steps;
     }
 
-    public void Apply()
+    public bool Apply()
     {
         var autoSetup = new SnugAutoSetup(context.containingAtom, context.snug);
         autoSetup.AutoSetup();
@@ -55,5 +55,7 @@ public class AskSnugStep : WizardStepBase, IWizardStep
             _steps.Insert(++idx, new MeasureArmsAtRestStep(context, anchor));
         }
         _steps.Insert(++idx, new FinishSnugSetupStep(context));
+
+        return true;
     }
 }

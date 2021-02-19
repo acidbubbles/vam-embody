@@ -33,12 +33,14 @@ public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
         _rightHandControl.currentRotationState = FreeControllerV3.RotationState.Off;
     }
 
-    public void Apply()
+    public bool Apply()
     {
         var realY = (_leftHandMotion.controllerPointTransform.position.y + _rightHandMotion.controllerPointTransform.position.y) / 2f;
         var inGameY = (_leftHandControl.control.position.y + _rightHandControl.control.position.y) / 2f;
         var difference = realY - inGameY;
         _anchor.realLifeOffset = new Vector3(0f, difference, 0f);
+
+        return true;
     }
 
     public override void Leave()

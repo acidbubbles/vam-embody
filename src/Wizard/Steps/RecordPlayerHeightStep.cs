@@ -14,9 +14,11 @@ public class RecordPlayerHeightStep : WizardStepBase, IWizardStep
         _playerMeasurements = new PlayerMeasurements(context);
     }
 
-    public void Apply()
+    public bool Apply()
     {
         context.worldScale.playerHeightJSON.val = _playerMeasurements.MeasureHeight();
         context.worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
+
+        return true;
     }
 }

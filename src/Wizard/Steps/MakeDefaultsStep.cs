@@ -9,10 +9,11 @@ public class MakeDefaultsStep : WizardStepBase, IWizardStep
     {
     }
 
-    public void Apply()
+    public bool Apply()
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
         var jc = context.plugin.GetJSON();
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
+        return true;
     }
 }

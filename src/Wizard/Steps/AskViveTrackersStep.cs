@@ -15,7 +15,7 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
         _useViveTrackers = useViveTrackers;
     }
 
-    public void Apply()
+    public bool Apply()
     {
         foreach (var mc in context.trackers.viveTrackers)
         {
@@ -37,5 +37,7 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
 
         _steps.Insert(++idx, new RecordViveTrackersStep(context));
         _steps.Insert(++idx, new FinishViveSetupStep(context));
+
+        return true;
     }
 }

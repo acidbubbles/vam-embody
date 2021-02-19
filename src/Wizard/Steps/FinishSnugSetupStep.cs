@@ -25,8 +25,9 @@ public class FinishSnugSetupStep : WizardStepBase, IWizardStep
         context.snug.selectedJSON.val = true;
     }
 
-    public void Apply()
+    public bool Apply()
     {
+        return true;
     }
 
     public override void Leave()

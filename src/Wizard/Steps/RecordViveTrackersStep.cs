@@ -25,7 +25,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
             false);
     }
 
-    public void Apply()
+    public bool Apply()
     {
         var autoSetup = new TrackerAutoSetup(context.containingAtom);
         foreach (var mc in context.trackers.viveTrackers)
@@ -34,6 +34,8 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
             autoSetup.AttachToClosestNode(mc);
         }
         context.Refresh();
+
+        return true;
     }
 
     public override void Leave()

@@ -12,7 +12,7 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         _preferToes = preferToes;
     }
 
-    public void Apply()
+    public bool Apply()
     {
         Utilities.ResetToDefaults(context);
 
@@ -116,6 +116,8 @@ public class ResetPoseStep : WizardStepBase, IWizardStep
         rHand.control.position = position + Vector3.up * (hipHeight + handsToHipOffset) + headForward * handsForwardOffset + headRight * handsRightOffset;
         rHand.RBHoldPositionSpring = 10000f;
         rHand.RBHoldRotationSpring = 1000f;
+
+        return true;
     }
 
     private static void SetState(FreeControllerV3 controller, FreeControllerV3.PositionState positionState, FreeControllerV3.RotationState rotationState)

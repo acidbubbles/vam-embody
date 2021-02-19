@@ -74,7 +74,7 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         }
     }
 
-    public void Apply()
+    public bool Apply()
     {
         var inverseRotation = Quaternion.Inverse(_anchor.bone.rotation);
         var compareCenter = (_leftComparePointPosition + _rightComparePointPosition) / 2f;
@@ -89,6 +89,8 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         var realLifeWidth = Mathf.Abs((inverseRotation * rightHandPosition).x - (inverseRotation * leftHandPosition).x);
         _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * (realLifeWidth * _widthMultiplier);
         _anchor.realLifeSize = new Vector3(_anchor.realLifeSize.x, 1f, _anchor.realLifeSize.z);
+
+        return true;
     }
 
     public override void Leave()

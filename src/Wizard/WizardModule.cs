@@ -112,11 +112,21 @@ public class WizardModule : EmbodyModuleBase, IWizard
         context.embody.presetsJSON.val = "Improved Possession";
 
         var steps = BuildSteps();
+        var error = false;
 
         for (var i = 0; i < steps.Count; i++)
         {
             _step = steps[i];
-            statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{_step.helpText}";
+            if (error)
+            {
+                statusJSON.val = $"ERROR: {_step.lastError ?? "[No error message]"} / {steps.Count}\n\n{_step.helpText}";
+                error = false;
+                _step.lastError = null;
+            }
+            else
+            {
+                statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{_step.helpText}";
+            }
             try
             {
                 _step.Enter();
@@ -154,9 +164,18 @@ public class WizardModule : EmbodyModuleBase, IWizard
             try
             {
                 if (_skip)
+                {
                     _skip = false;
+                }
                 else
-                    _step.Apply();
+                {
+                    if (!_step.Apply())
+                    {
+                        i--;
+                        error = true;
+                        continue;
+                    }
+                }
             }
             catch (Exception exc)
             {
