@@ -16,6 +16,7 @@ public class EmbodyContext
     public ITrackersModule trackers;
     public ISnugModule snug;
     public IEyeTargetModule eyeTarget;
+    public DiagnosticsModule diagnostics;
     public IWizard wizard;
     public EmbodyScaleChangeReceiver scaleChangeReceiver;
 

@@ -48,6 +48,7 @@ public class Embody : MVRScript, IEmbody
              var trackersModule = isPerson ? CreateModule<TrackersModule>(_context) : null;
              var snugModule = isPerson ? CreateModule<SnugModule>(_context) : null;
              var eyeTargetModule = isPerson ? CreateModule<EyeTargetModule>(_context) : null;
+             var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
              var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
             _context.automation = automationModule;
@@ -58,6 +59,7 @@ public class Embody : MVRScript, IEmbody
             _context.trackers = trackersModule;
             _context.snug = snugModule;
             _context.eyeTarget = eyeTargetModule;
+            _context.diagnostics = diagnosticsModule;
             _context.wizard = wizardModule;
             _context.scaleChangeReceiver = _scaleChangeReceiver;
 
@@ -71,6 +73,7 @@ public class Embody : MVRScript, IEmbody
             RegisterStringChooser(presetsJSON);
 
             _context.automation.enabledJSON.val = true;
+            _context.diagnostics.enabledJSON.val = true;
 
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));

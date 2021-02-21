@@ -23,13 +23,6 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     private FreeControllerV3 _headControl;
     private bool _activatedByVam;
 
-    public override void Awake()
-    {
-        base.Awake();
-
-        enabled = true;
-    }
-
     public void Start()
     {
         _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");

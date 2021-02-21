@@ -78,9 +78,6 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         {
             CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
         }
-
-        #warning For debugging purposes
-        //context.plugin.StartCoroutine(DebugCo());
     }
 
     private UIDynamicButton CreateConfigButton(string screenName, string btnLabel, bool interactable = true)
@@ -92,31 +89,5 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         configureButton.button.onClick.AddListener(() => screensManager.Show(screenName));
         configureButton.button.interactable = interactable;
         return configureButton;
-    }
-
-    private bool _once;
-    private IEnumerator DebugCo()
-    {
-        if (_once) yield break;
-        _once = true;
-        context.wizard.forceReopen = false;
-        yield return new WaitForSecondsRealtime(0.2f);
-        screensManager.Show(WizardScreen.ScreenName);
-        yield return new WaitForSecondsRealtime(0.1f);
-        context.wizard.StartWizard();
-        for (var i = 0; i < 2; i++)
-        {
-            yield return new WaitForSecondsRealtime(0.1f);
-            context.wizard.Skip();
-        }
-        foreach (var t in context.trackers.headAndHands) {t.enabled = false;}
-        context.hideGeometry.selectedJSON.val = false;
-        context.worldScale.selectedJSON.val = false;
-        for (var i = 0; i < 3; i++)
-        {
-            yield return new WaitForSecondsRealtime(0.1f);
-            context.wizard.Next();
-            context.trackers.previewTrackerOffsetJSON.val = true;
-        }
     }
 }
