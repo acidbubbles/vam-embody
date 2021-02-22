@@ -38,8 +38,8 @@ public class Embody : MVRScript, IEmbody
             _modules.SetActive(false);
 
             _context = new EmbodyContext(this, this);
-            _context.Initialize();
 
+             var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
              var automationModule = CreateModule<AutomationModule>(_context);
              var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
              var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
@@ -48,9 +48,9 @@ public class Embody : MVRScript, IEmbody
              var trackersModule = isPerson ? CreateModule<TrackersModule>(_context) : null;
              var snugModule = isPerson ? CreateModule<SnugModule>(_context) : null;
              var eyeTargetModule = isPerson ? CreateModule<EyeTargetModule>(_context) : null;
-             var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
              var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
+            _context.diagnostics = diagnosticsModule;
             _context.automation = automationModule;
             _context.worldScale = worldScaleModule;
             _context.hideGeometry = hideGeometryModule;
@@ -59,7 +59,6 @@ public class Embody : MVRScript, IEmbody
             _context.trackers = trackersModule;
             _context.snug = snugModule;
             _context.eyeTarget = eyeTargetModule;
-            _context.diagnostics = diagnosticsModule;
             _context.wizard = wizardModule;
             _context.scaleChangeReceiver = _scaleChangeReceiver;
 
@@ -72,8 +71,10 @@ public class Embody : MVRScript, IEmbody
             presetsJSON = InitPresets(modules);
             RegisterStringChooser(presetsJSON);
 
+            _context.diagnostics.enabledJSON.val = Input.GetKey(KeyCode.LeftControl);
             _context.automation.enabledJSON.val = true;
-            _context.diagnostics.enabledJSON.val = true;
+
+            _context.Initialize();
 
             _screensManager = new ScreensManager();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));

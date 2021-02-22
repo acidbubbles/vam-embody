@@ -50,7 +50,17 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Awake)}: {exc}");
+        }
+    }
 
+    public void Start()
+    {
+        try
+        {
             InitAnchors();
             InitVisualCues();
         }

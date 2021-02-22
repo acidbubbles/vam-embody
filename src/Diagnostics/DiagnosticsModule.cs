@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using SimpleJSON;
 using UnityEngine;
 
@@ -13,15 +14,48 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     public override string label => Label;
     public override bool skipChangeEnabledWhenActive => true;
 
+    public Transform head;
+    public Transform leftHand;
+    public Transform rightHand;
+    public Transform viveTracker1;
+    public Transform viveTracker2;
+    public Transform viveTracker3;
+    public Transform viveTracker4;
+    public Transform viveTracker5;
+    public Transform viveTracker6;
+    public Transform viveTracker7;
+    public Transform viveTracker8;
+
     private bool _once;
 
-    public override void Awake()
+    public void Start()
     {
-        base.Awake();
-
-        enabled = true;
+        // TODO: Make a snapshot of each trackerL
+        // SuperController.singleton.viveTracker1 position and rotation
+        // Validate that it has a local position/rotation of 0,0,0
+        // Validate that the possess point is unused
+        // Try to use the Trackers transforms and update them to match the empty GameObject for a better representation
 
         //context.plugin.StartCoroutine(DebugCo());
+        const string prefix = "EMBODY_DEBUG#";
+        head = GetDebugAtom($"{prefix}head");
+        leftHand = GetDebugAtom($"{prefix}lHand");
+        rightHand = GetDebugAtom($"{prefix}rHand");
+        viveTracker1 = GetDebugAtom($"{prefix}viveTracker1");
+        viveTracker2 = GetDebugAtom($"{prefix}viveTracker2");
+        viveTracker3 = GetDebugAtom($"{prefix}viveTracker3");
+        viveTracker4 = GetDebugAtom($"{prefix}viveTracker4");
+        viveTracker5 = GetDebugAtom($"{prefix}viveTracker5");
+        viveTracker6 = GetDebugAtom($"{prefix}viveTracker6");
+        viveTracker7 = GetDebugAtom($"{prefix}viveTracker7");
+        viveTracker8 = GetDebugAtom($"{prefix}viveTracker8");
+    }
+
+    private static Transform GetDebugAtom(string uid)
+    {
+        var atom = SuperController.singleton.GetAtomByUid(uid);
+        if (atom == null || !atom.on) return null;
+        return atom.mainController.control;
     }
 
     public override void StoreJSON(JSONClass jc)
