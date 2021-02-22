@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEngine;
 
@@ -34,12 +35,16 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
-            _trackers.motionControls.Where(mc => mc.SyncMotionControl()).Select(mc => mc.name).ToList(),
+            new List<string>(),
             _trackers.motionControls[0].name ?? _none,
             "Tracker",
             (val) => ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == val))
         );
         CreateScrollablePopup(_motionControlJSON);
+        _motionControlJSON.choices = _trackers.motionControls
+            .Where(mc => mc.SyncMotionControl())
+            .Select(mc => mc.name)
+            .ToList();
 
         ShowMotionControl(_trackers.motionControls.FirstOrDefault(mc => mc.name == _motionControlJSON.val));
     }
