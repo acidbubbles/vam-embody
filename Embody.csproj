@@ -80,6 +80,7 @@
     <Compile Include="src\Common\Vector3Extensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
     <Compile Include="src\Diagnostics\DiagnosticsModule.cs" />
+    <Compile Include="src\Diagnostics\DiagnosticsScreen.cs" />
     <Compile Include="src\Embody.cs" />
     <Compile Include="src\EmbodyScaleChangeReceiver.cs" />
     <Compile Include="src\EyeTarget\EyeTargetModule.cs" />

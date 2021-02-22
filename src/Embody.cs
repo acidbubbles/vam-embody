@@ -30,6 +30,7 @@ public class Embody : MVRScript, IEmbody
         {
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
             var isPerson = containingAtom.type == "Person";
+            var diagnosticsEnabled = Input.GetKey(KeyCode.LeftControl);
 
             _scaleChangeReceiver = gameObject.AddComponent<EmbodyScaleChangeReceiver>();
 
@@ -40,6 +41,7 @@ public class Embody : MVRScript, IEmbody
             _context = new EmbodyContext(this, this);
 
              var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
+             diagnosticsModule.enabled = true;
              var automationModule = CreateModule<AutomationModule>(_context);
              var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
              var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
@@ -51,6 +53,7 @@ public class Embody : MVRScript, IEmbody
              var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
             _context.diagnostics = diagnosticsModule;
+            _context.Initialize();
             _context.automation = automationModule;
             _context.worldScale = worldScaleModule;
             _context.hideGeometry = hideGeometryModule;
@@ -71,13 +74,10 @@ public class Embody : MVRScript, IEmbody
             presetsJSON = InitPresets(modules);
             RegisterStringChooser(presetsJSON);
 
-            _context.diagnostics.enabledJSON.val = Input.GetKey(KeyCode.LeftControl);
             _context.automation.enabledJSON.val = true;
 
-            _context.Initialize();
-
             _screensManager = new ScreensManager();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules, diagnosticsEnabled));
             if (isPerson)
             {
                 _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
@@ -90,6 +90,7 @@ public class Embody : MVRScript, IEmbody
                 _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
                 _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
                 _screensManager.Add(MoreScreen.ScreenName, new MoreScreen(_context));
+                if (diagnosticsEnabled) _screensManager.Add(DiagnosticsScreen.ScreenName, new DiagnosticsScreen(_context, diagnosticsModule));
             }
             else
             {

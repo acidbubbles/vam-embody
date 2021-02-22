@@ -4,12 +4,14 @@ using UnityEngine;
 public class MainScreen : ScreenBase, IScreen
 {
     private readonly IEmbodyModule[] _modules;
+    private readonly bool _diagnosticsEnabled;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(EmbodyContext context, IEmbodyModule[] modules)
+    public MainScreen(EmbodyContext context, IEmbodyModule[] modules, bool diagnosticsEnabled)
         : base(context)
     {
         _modules = modules;
+        _diagnosticsEnabled = diagnosticsEnabled;
     }
 
     public void Show()
@@ -77,6 +79,11 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (context.containingAtom.type == "Person")
         {
             CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
+        }
+
+        if (_diagnosticsEnabled)
+        {
+            CreateConfigButton(DiagnosticsScreen.ScreenName, "<i>Diagnostics...</i>");
         }
     }
 

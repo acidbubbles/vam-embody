@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 
 public interface IDiagnosticsModule : IEmbodyModule
 {
+    IEnumerable<string> logs { get; }
 }
 
 public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
@@ -28,6 +31,9 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     private bool _once;
 
+    private readonly JSONArray _logs = new JSONArray();
+    public IEnumerable<string> logs => _logs.Childs.Select(c => c.Value);
+
     public void Start()
     {
         // TODO: Make a snapshot of each trackerL
@@ -37,6 +43,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         // Try to use the Trackers transforms and update them to match the empty GameObject for a better representation
 
         //context.plugin.StartCoroutine(DebugCo());
+
         const string prefix = "EMBODY_DEBUG#";
         head = GetDebugAtom($"{prefix}head");
         leftHand = GetDebugAtom($"{prefix}lHand");
@@ -51,6 +58,24 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         viveTracker8 = GetDebugAtom($"{prefix}viveTracker8");
     }
 
+    public override void OnEnable()
+    {
+        base.OnEnable();
+        Application.logMessageReceived += CaptureLog;
+    }
+
+    public override void OnDisable()
+    {
+        base.OnDisable();
+        Application.logMessageReceived -= CaptureLog;
+    }
+
+    private void CaptureLog(string condition, string stacktrace, LogType type)
+    {
+        if (type != LogType.Error && type != LogType.Exception) return;
+        _logs.Add($"{Time.realtimeSinceStartup:0.00} {type} {condition} {stacktrace}");
+    }
+
     private static Transform GetDebugAtom(string uid)
     {
         var atom = SuperController.singleton.GetAtomByUid(uid);
@@ -61,6 +86,8 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     public override void StoreJSON(JSONClass jc)
     {
         base.StoreJSON(jc);
+
+        jc["Logs"] = _logs;
     }
 
     public override void RestoreFromJSON(JSONClass jc)

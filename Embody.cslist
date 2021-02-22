@@ -10,6 +10,7 @@ src\Common\UIDynamicPopupExtensions.cs
 src\Common\Vector3Extensions.cs
 src\Common\VisualCuesHelper.cs
 src\Diagnostics\DiagnosticsModule.cs
+src\Diagnostics\DiagnosticsScreen.cs
 src\EyeTarget\EyeTargetModule.cs
 src\EyeTarget\EyeTargetSettingsScreen.cs
 src\HideGeometry\Handlers\ClothingHandler.cs
