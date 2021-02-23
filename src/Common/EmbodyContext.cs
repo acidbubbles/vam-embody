@@ -47,8 +47,8 @@ public class EmbodyContext
     {
         var sc = SuperController.singleton;
         head = diagnostics.head ?? sc.centerCameraTarget.transform;
-        leftHand = diagnostics.leftHand ?? GetHand(sc.touchObjectLeft, sc.viveObjectLeft);
-        rightHand = diagnostics.rightHand ?? GetHand(sc.touchObjectRight, sc.viveObjectRight);
+        leftHand = diagnostics.leftHand ?? GetHand( sc.ovrHandInputLeft.enabled, sc.touchObjectLeft, sc.steamVRHandInputLeft.enabled, sc.viveObjectLeft, sc.leapHandModelControl.leftHandEnabled, sc.leapHandLeft);
+        rightHand = diagnostics.rightHand ?? GetHand(sc.ovrHandInputRight.enabled, sc.touchObjectRight, sc.steamVRHandInputLeft.enabled, sc.viveObjectRight, sc.leapHandModelControl.rightHandEnabled, sc.leapHandRight);
         viveTracker1 = diagnostics.viveTracker1 ?? sc.viveTracker1;
         viveTracker2 = diagnostics.viveTracker2 ?? sc.viveTracker2;
         viveTracker3 = diagnostics.viveTracker3 ?? sc.viveTracker3;
@@ -61,12 +61,14 @@ public class EmbodyContext
         if (bones == null) bones = containingAtom.GetComponentsInChildren<DAZBone>();
     }
 
-    private Transform GetHand(Transform ovrHand, Transform viveHand)
+    private Transform GetHand(bool useOVR, Transform ovrHand, bool useVive, Transform viveHand, bool useLeap, Transform leapHand)
     {
-        if (SuperController.singleton.isOVR)
+        if (SuperController.singleton.isOVR && useOVR)
             return ovrHand;
-        if (SuperController.singleton.isOpenVR)
+        if (SuperController.singleton.isOpenVR && useVive)
             return viveHand;
+        if (useLeap)
+            return leapHand;
         return null;
     }
 
