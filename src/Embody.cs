@@ -308,8 +308,6 @@ public class Embody : MVRScript, IEmbody
             _activateAfterSaveComplete = true;
             activeJSON.val = false;
         }
-
-        _modules.GetComponent<WizardModule>()?.StopWizard("The wizard was canceled because the scene was saved.");
     }
 
     // ReSharper disable once UnusedMember.Local
@@ -335,7 +333,6 @@ public class Embody : MVRScript, IEmbody
 
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
-        _context.wizard.StopWizard();
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())

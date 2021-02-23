@@ -28,6 +28,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 
     public bool Apply()
     {
+        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersStep)}/{nameof(Apply)}/Before");
         var autoSetup = new TrackerAutoSetup(context.containingAtom);
         var hashSet = new HashSet<string>();
         foreach (var mc in context.trackers.viveTrackers)
@@ -41,6 +42,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
             }
         }
         context.Refresh();
+        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersStep)}/{nameof(Apply)}/After");
 
         return true;
     }
