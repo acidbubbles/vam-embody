@@ -53,7 +53,6 @@ public class Embody : MVRScript, IEmbody
              var wizardModule = isPerson ? CreateModule<WizardModule>(_context) : null;
 
             _context.diagnostics = diagnosticsModule;
-            _context.Initialize();
             _context.automation = automationModule;
             _context.worldScale = worldScaleModule;
             _context.hideGeometry = hideGeometryModule;
@@ -107,7 +106,6 @@ public class Embody : MVRScript, IEmbody
                         return;
                     }
 
-                    _context.Initialize();
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
                         if (module.skipChangeEnabledWhenActive) continue;

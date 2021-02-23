@@ -109,7 +109,6 @@ public class WizardModule : EmbodyModuleBase, IWizard
     private IEnumerator WizardCoroutine()
     {
         context.embody.activeJSON.val = false;
-        context.Initialize();
 
         yield return 0;
 

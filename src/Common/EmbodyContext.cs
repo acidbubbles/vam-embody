@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class EmbodyContext
 {
@@ -21,55 +19,62 @@ public class EmbodyContext
     public IWizard wizard;
     public EmbodyScaleChangeReceiver scaleChangeReceiver;
 
-    public Transform head { get; private set; }
-    public Transform leftHand { get; private set; }
-    public Transform rightHand { get; private set; }
-    public Transform viveTracker1 { get; private set; }
-    public Transform viveTracker2 { get; private set; }
-    public Transform viveTracker3 { get; private set; }
-    public Transform viveTracker4 { get; private set; }
-    public Transform viveTracker5 { get; private set; }
-    public Transform viveTracker6 { get; private set; }
-    public Transform viveTracker7 { get; private set; }
-    public Transform viveTracker8 { get; private set; }
+    // ReSharper disable once Unity.NoNullCoalescing
+    public Transform head => diagnostics.head ?? SuperController.singleton.centerCameraTarget.transform;
+
+    public Transform leftHand
+    {
+        get
+        {
+            if (!ReferenceEquals(diagnostics.leftHand, null))
+                return diagnostics.leftHand;
+
+            if (SuperController.singleton.isOVR && SuperController.singleton.ovrHandInputLeft.enabled)
+                return SuperController.singleton.touchObjectLeft;
+            if (SuperController.singleton.isOpenVR && SuperController.singleton.steamVRHandInputLeft.enabled)
+                return SuperController.singleton.viveObjectLeft;
+            if (SuperController.singleton.leapHandModelControl.leftHandEnabled)
+                return SuperController.singleton.leapHandLeft;
+            return null;
+        }
+    }
+
+    public Transform rightHand
+    {
+        get
+        {
+            if (!ReferenceEquals(diagnostics.rightHand, null))
+                return diagnostics.rightHand;
+
+            if (SuperController.singleton.isOVR && SuperController.singleton.ovrHandInputRight.enabled)
+                return SuperController.singleton.touchObjectRight;
+            if (SuperController.singleton.isOpenVR && SuperController.singleton.steamVRHandInputRight.enabled)
+                return SuperController.singleton.viveObjectRight;
+            if (SuperController.singleton.leapHandModelControl.rightHandEnabled)
+                return SuperController.singleton.leapHandRight;
+            return null;
+        }
+    }
+
+    // ReSharper disable Unity.NoNullCoalescing
+    public Transform viveTracker1 => diagnostics.viveTracker1 ?? SuperController.singleton.viveTracker1;
+    public Transform viveTracker2 => diagnostics.viveTracker2 ?? SuperController.singleton.viveTracker2;
+    public Transform viveTracker3 => diagnostics.viveTracker3 ?? SuperController.singleton.viveTracker3;
+    public Transform viveTracker4 => diagnostics.viveTracker4 ?? SuperController.singleton.viveTracker4;
+    public Transform viveTracker5 => diagnostics.viveTracker5 ?? SuperController.singleton.viveTracker5;
+    public Transform viveTracker6 => diagnostics.viveTracker6 ?? SuperController.singleton.viveTracker6;
+    public Transform viveTracker7 => diagnostics.viveTracker7 ?? SuperController.singleton.viveTracker7;
+    public Transform viveTracker8 => diagnostics.viveTracker8 ?? SuperController.singleton.viveTracker8;
+    // ReSharper restore Unity.NoNullCoalescing
+
     public DAZBone[] bones { get; private set; }
 
     public EmbodyContext(MVRScript plugin, IEmbody embody)
     {
-        this.containingAtom = plugin.containingAtom;
         this.plugin = plugin;
         this.embody = embody;
-    }
-
-    [SuppressMessage("ReSharper", "Unity.NoNullPropagation")]
-    [SuppressMessage("ReSharper", "Unity.NoNullCoalescing")]
-    public void Initialize()
-    {
-        var sc = SuperController.singleton;
-        head = diagnostics.head ?? sc.centerCameraTarget.transform;
-        leftHand = diagnostics.leftHand ?? GetHand( sc.ovrHandInputLeft.enabled, sc.touchObjectLeft, sc.steamVRHandInputLeft.enabled, sc.viveObjectLeft, sc.leapHandModelControl.leftHandEnabled, sc.leapHandLeft);
-        rightHand = diagnostics.rightHand ?? GetHand(sc.ovrHandInputRight.enabled, sc.touchObjectRight, sc.steamVRHandInputLeft.enabled, sc.viveObjectRight, sc.leapHandModelControl.rightHandEnabled, sc.leapHandRight);
-        viveTracker1 = diagnostics.viveTracker1 ?? sc.viveTracker1;
-        viveTracker2 = diagnostics.viveTracker2 ?? sc.viveTracker2;
-        viveTracker3 = diagnostics.viveTracker3 ?? sc.viveTracker3;
-        viveTracker4 = diagnostics.viveTracker4 ?? sc.viveTracker4;
-        viveTracker5 = diagnostics.viveTracker5 ?? sc.viveTracker5;
-        viveTracker6 = diagnostics.viveTracker6 ?? sc.viveTracker6;
-        viveTracker7 = diagnostics.viveTracker7 ?? sc.viveTracker7;
-        viveTracker8 = diagnostics.viveTracker8 ?? sc.viveTracker8;
-
-        if (bones == null) bones = containingAtom.GetComponentsInChildren<DAZBone>();
-    }
-
-    private Transform GetHand(bool useOVR, Transform ovrHand, bool useVive, Transform viveHand, bool useLeap, Transform leapHand)
-    {
-        if (SuperController.singleton.isOVR && useOVR)
-            return ovrHand;
-        if (SuperController.singleton.isOpenVR && useVive)
-            return viveHand;
-        if (useLeap)
-            return leapHand;
-        return null;
+        containingAtom = plugin.containingAtom;
+        bones = containingAtom.GetComponentsInChildren<DAZBone>();
     }
 
     public void Refresh()
