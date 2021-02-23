@@ -244,30 +244,38 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
                 return;
             }
 
-            var hairHashSum = 0;
-            for (var i = 0; i < _selector.hairItems.Length; i++)
+            if (hideHairJSON.val)
             {
-                var hair = _selector.hairItems[i];
-                if (!hair.active) continue;
-                hairHashSum ^= hair.GetHashCode();
-            }
-            if (_hairHashSum != hairHashSum)
-            {
-                RefreshHandlers();
-                return;
+                var hairHashSum = 0;
+                for (var i = 0; i < _selector.hairItems.Length; i++)
+                {
+                    var hair = _selector.hairItems[i];
+                    if (!hair.active) continue;
+                    hairHashSum ^= hair.GetHashCode();
+                }
+
+                if (_hairHashSum != hairHashSum)
+                {
+                    RefreshHandlers();
+                    return;
+                }
             }
 
-            var clothingHashSum = 0;
-            for (var i = 0; i < _selector.clothingItems.Length; i++)
+            if (hideClothingJSON.val)
             {
-                var clothing = _selector.clothingItems[i];
-                if (!clothing.active) continue;
-                clothingHashSum ^= clothing.GetHashCode();
-            }
-            if (_clothingHashSum != clothingHashSum)
-            {
-                RefreshHandlers();
-                return;
+                var clothingHashSum = 0;
+                for (var i = 0; i < _selector.clothingItems.Length; i++)
+                {
+                    var clothing = _selector.clothingItems[i];
+                    if (!clothing.active) continue;
+                    clothingHashSum ^= clothing.GetHashCode();
+                }
+
+                if (_clothingHashSum != clothingHashSum)
+                {
+                    RefreshHandlers();
+                    return;
+                }
             }
         }
         catch (Exception e)
