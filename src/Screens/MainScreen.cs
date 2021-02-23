@@ -69,6 +69,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         {
             if (module.storeId == AutomationModule.Label) continue;
             if (module.storeId == WizardModule.Label) continue;
+            if (module.storeId == DiagnosticsModule.Label) continue;
             var selectToggle = CreateToggle(module.selectedJSON, false);
             selectToggle.label = $"Select {module.label}";
             var label = module.label;
