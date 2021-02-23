@@ -9,16 +9,22 @@ namespace Handlers
         public float originalAlphaAdjust;
         public float originalColorAlpha;
         public Color originalSpecColor;
+        public bool supportsAlphaAdjust;
+        public bool supportsSpecColor;
 
         public static SkinShaderMaterialSnapshot FromMaterial(Material material)
         {
+            var supportsAlphaAdjust = material.HasProperty("_AlphaAdjust");
+            var supportsSpecColor = material.HasProperty("_SpecColor");
             return new SkinShaderMaterialSnapshot
             {
                 material = material,
                 originalShader = material.shader,
-                originalAlphaAdjust = material.GetFloat("_AlphaAdjust"),
+                supportsAlphaAdjust = supportsAlphaAdjust,
+                originalAlphaAdjust = supportsAlphaAdjust ? material.GetFloat("_AlphaAdjust") : 0,
                 originalColorAlpha = material.GetColor("_Color").a,
-                originalSpecColor = material.GetColor("_SpecColor")
+                supportsSpecColor = supportsSpecColor,
+                originalSpecColor = supportsSpecColor ? material.GetColor("_SpecColor") : Color.black
             };
         }
     }

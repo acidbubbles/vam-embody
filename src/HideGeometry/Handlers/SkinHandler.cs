@@ -25,7 +25,8 @@ namespace Handlers
                 if (!ReplacementShaders.ShadersMap.TryGetValue(material.shader.name, out shader))
                     SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
 
-                if (shader != null) material.shader = shader;
+                if (shader != null)
+                    material.shader = shader;
 
                 _materialRefs.Add(materialInfo);
             }
@@ -42,6 +43,8 @@ namespace Handlers
 
             // This is a hack to force a refresh of the shaders cache
             _skin.BroadcastMessage("OnApplicationFocus", true);
+
+            _materialRefs.Clear();
         }
 
         public void BeforeRender()
@@ -50,10 +53,12 @@ namespace Handlers
             {
                 var materialRef = _materialRefs[i];
                 var material = materialRef.material;
-                material.SetFloat("_AlphaAdjust", -1f);
+                if (materialRef.supportsAlphaAdjust)
+                    material.SetFloat("_AlphaAdjust", -1f);
                 var color = material.GetColor("_Color");
                 material.SetColor("_Color", new Color(color.r, color.g, color.b, 0f));
-                material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
+                if (materialRef.supportsSpecColor)
+                    material.SetColor("_SpecColor", new Color(0f, 0f, 0f, 0f));
             }
         }
 
@@ -63,10 +68,12 @@ namespace Handlers
             {
                 var materialRef = _materialRefs[i];
                 var material = materialRef.material;
-                material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+                if (materialRef.supportsAlphaAdjust)
+                    material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
                 var color = material.GetColor("_Color");
                 material.SetColor("_Color", new Color(color.r, color.g, color.b, materialRef.originalColorAlpha));
-                material.SetColor("_SpecColor", materialRef.originalSpecColor);
+                if (materialRef.supportsSpecColor)
+                    material.SetColor("_SpecColor", materialRef.originalSpecColor);
             }
         }
     }
