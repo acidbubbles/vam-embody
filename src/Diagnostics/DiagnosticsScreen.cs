@@ -20,6 +20,8 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         var logsJSON = new JSONStorableString("", logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
         CreateText(logsJSON, true).height = 1200f;
 
+        CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers());
+
         var snapshotsJSON = new JSONStorableStringChooser("",
             context.diagnostics.snapshots.Select(s => s.name).ToList(),
             $"{context.diagnostics.snapshots.Count} snapshots",
