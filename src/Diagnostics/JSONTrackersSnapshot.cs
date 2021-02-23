@@ -1,27 +1,26 @@
 ﻿using System.Globalization;
-using Battlehub.UIControls;
 using SimpleJSON;
 using UnityEngine;
 
 public class JSONTrackersSnapshot
 {
-    public string name { get; set; }
-    public JSONTrackerSnapshot head { get; set; }
-    public JSONTrackerSnapshot leftHand { get; set; }
-    public JSONTrackerSnapshot rightHand { get; set; }
-    public JSONTrackerSnapshot viveTracker1 { get; set; }
-    public JSONTrackerSnapshot viveTracker2 { get; set; }
-    public JSONTrackerSnapshot viveTracker3 { get; set; }
-    public JSONTrackerSnapshot viveTracker4 { get; set; }
-    public JSONTrackerSnapshot viveTracker5 { get; set; }
-    public JSONTrackerSnapshot viveTracker6 { get; set; }
-    public JSONTrackerSnapshot viveTracker7 { get; set; }
-    public JSONTrackerSnapshot viveTracker8 { get; set; }
-    public JSONClass pluginJSON { get; set; }
-    public float worldScale { get; set; }
-    public float playerHeightAdjust { get; set; }
-    public JSONTrackerSnapshot navigationRig { get; set; }
-    public JSONArray poseJSON { get; set; }
+    public string name;
+    public JSONTrackerSnapshot head;
+    public JSONTrackerSnapshot leftHand;
+    public JSONTrackerSnapshot rightHand;
+    public JSONTrackerSnapshot viveTracker1;
+    public JSONTrackerSnapshot viveTracker2;
+    public JSONTrackerSnapshot viveTracker3;
+    public JSONTrackerSnapshot viveTracker4;
+    public JSONTrackerSnapshot viveTracker5;
+    public JSONTrackerSnapshot viveTracker6;
+    public JSONTrackerSnapshot viveTracker7;
+    public JSONTrackerSnapshot viveTracker8;
+    public JSONClass pluginJSON;
+    public float worldScale;
+    public float playerHeightAdjust;
+    public JSONTrackerSnapshot navigationRig;
+    public JSONArray poseJSON;
 
     public JSONClass ToJSON()
     {
@@ -95,6 +94,8 @@ public class JSONTrackerSnapshot
 
     public static JSONTrackerSnapshot From(Transform transform)
     {
+        if (transform == null) return null;
+        if (!transform.gameObject.activeInHierarchy) return null;
         return new JSONTrackerSnapshot
         {
             position = transform.position,

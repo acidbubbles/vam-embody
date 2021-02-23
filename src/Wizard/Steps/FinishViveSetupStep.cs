@@ -16,7 +16,7 @@
 
     public bool Apply()
     {
-        context.diagnostics.TakeSnapshot($"{nameof(FinishSnugSetupStep)}/{nameof(Apply)}");
+        context.diagnostics.TakeSnapshot($"{nameof(FinishSnugSetupStep)}.{nameof(Apply)}");
         return true;
     }
 

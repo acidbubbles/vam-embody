@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Text;
-using MeshVR;
 
 public class DiagnosticsScreen : ScreenBase, IScreen
 {
@@ -20,8 +19,6 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         var logsJSON = new JSONStorableString("", logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
         CreateText(logsJSON, true).height = 1200f;
 
-        CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers());
-
         var snapshotsJSON = new JSONStorableStringChooser("",
             context.diagnostics.snapshots.Select(s => s.name).ToList(),
             $"{context.diagnostics.snapshots.Count} snapshots",
@@ -29,6 +26,8 @@ public class DiagnosticsScreen : ScreenBase, IScreen
             val => ShowSnapshot(logsJSON, val));
         CreateScrollablePopup(snapshotsJSON);
 
+        CreateButton("Remove Fake Trackers").button.onClick.AddListener(() => context.diagnostics.RemoveFakeTrackers());
+        CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val)));
         CreateButton("Load Snapshot").button.onClick.AddListener(() => LoadSnapshot(snapshotsJSON.val));
     }
 
