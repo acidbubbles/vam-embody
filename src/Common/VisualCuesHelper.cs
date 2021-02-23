@@ -75,7 +75,7 @@ public static class VisualCuesHelper
 
     public static void DrawEllipse(LineRenderer line, Vector2 radius)
     {
-        for (var i = 0; i <= line.positionCount; i++)
+        for (var i = 0; i < line.positionCount; i++)
         {
             var angle = i / (float) line.positionCount * 2.0f * Mathf.PI;
             var pointQuaternion = Quaternion.AngleAxis(90, Vector3.right);
