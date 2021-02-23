@@ -22,7 +22,8 @@ public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
-    public const string WizardIntroMessage = "This wizard will <b>walk you through</b> the main Embody features and help you <b>configure</b> them so you can make the most out of this plugin.\n\nWhen you are ready, select <b>Start Wizard</b>.\n\nOnce started, you can use <b>Next to apply</b> the current step, or <b>Skip to ignore</b> it and move on.\n\nOnce done you can always fine tune your profile later manually.";
+    private const string _wizardIntroMessage = "This wizard will <b>walk you through</b> the main Embody features and help you <b>configure</b> them so you can make the most out of this plugin.\n\nWhen you are ready, select <b>Start Wizard</b>.\n\nOnce started, you can use <b>Next to apply</b> the current step, or <b>Skip to ignore</b> it and move on.\n\nOnce done you can always fine tune your profile later manually.";
+    private const string _noHandsMessage = "Cannot start the wizard. No hand trackers were found. Are you running in Desktop mode?";
 
     public const string Label = "Wizard";
     public override string storeId => "Wizard";
@@ -43,12 +44,17 @@ public class WizardModule : EmbodyModuleBase, IWizard
     {
         base.Awake();
 
-        statusJSON.val = WizardIntroMessage;
+        statusJSON.val = _wizardIntroMessage;
     }
 
     public void StartWizard()
     {
         if (_coroutine != null) StopWizard();
+        if (context.leftHand == null || context.rightHand == null)
+        {
+            statusJSON.val = _noHandsMessage;
+            return;
+        }
         enabledJSON.val = true;
         _coroutine = StartCoroutine(WizardCoroutine());
         statusChanged.Invoke(true);
@@ -74,7 +80,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
             _step = null;
         }
 
-        statusJSON.val = message ?? WizardIntroMessage;
+        statusJSON.val = message ?? _wizardIntroMessage;
         _next = false;
         _skip = false;
         statusChanged.Invoke(false);
