@@ -234,6 +234,14 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             context.plugin.RestoreFromJSON(snapshot.pluginJSON);
         if (snapshot.poseJSON != null)
             RestorePoseJSON(snapshot.poseJSON);
+        if (snapshot.worldScale > 0)
+            SuperController.singleton.worldScale = snapshot.worldScale;
+        SuperController.singleton.playerHeightAdjust = snapshot.playerHeightAdjust;
+        if (snapshot.navigationRig != null)
+        {
+            SuperController.singleton.navigationRig.position = snapshot.navigationRig.position;
+            SuperController.singleton.navigationRig.eulerAngles = snapshot.navigationRig.rotation;
+        }
         RestoreFakeTracker(head, snapshot.head);
         RestoreFakeTracker(leftHand, snapshot.leftHand);
         RestoreFakeTracker(rightHand, snapshot.rightHand);
