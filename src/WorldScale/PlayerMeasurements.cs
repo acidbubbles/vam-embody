@@ -13,6 +13,7 @@ public class PlayerMeasurements
     {
         var headMotionControl = _context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head);
         var lowestMotionControl = _context.trackers.motionControls
+            .Where(mc => mc.name == MotionControlNames.LeftHand || mc.name == MotionControlNames.RightHand)
             .Where(t => t.enabled && t.SyncMotionControl())
             .Min(vt => vt.currentMotionControl.position.y);
 
