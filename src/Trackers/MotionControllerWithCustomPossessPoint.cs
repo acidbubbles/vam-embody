@@ -13,6 +13,7 @@ public class MotionControllerWithCustomPossessPoint
     public string mappedControllerName;
     public Transform currentMotionControl { get; private set; }
     private Func<Transform> _getMotionControl;
+    private Action<MotionControllerWithCustomPossessPoint> _configure;
     private OffsetPreview _offsetPreview;
     private Vector3 _offsetControllerBase;
     private Vector3 _rotateControllerBase;
@@ -79,6 +80,7 @@ public class MotionControllerWithCustomPossessPoint
             DestroyOffsetPreview();
             return false;
         }
+        _configure?.Invoke(this);
         trackerPointTransform.SetParent(currentMotionControl, false);
         if(!_showPreview)
             DestroyOffsetPreview();
@@ -114,7 +116,7 @@ public class MotionControllerWithCustomPossessPoint
         _offsetPreview.Sync();
     }
 
-    public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl)
+    public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl, Action<MotionControllerWithCustomPossessPoint> configure)
     {
         var trackerPointGO = new GameObject($"EmbodyTrackerPoint_{motionControlName}");
         var controllerPointGO = new GameObject($"EmbodyControllerPoint_{motionControlName}");
@@ -129,6 +131,7 @@ public class MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
             _getMotionControl = getMotionControl,
+            _configure = configure,
             trackerPointTransform = trackerPointGO.transform,
             controllerPointTransform = controllerPointGO.transform,
             controllerPointRB = rb,

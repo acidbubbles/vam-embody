@@ -38,13 +38,62 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public JSONStorableBool enableHandsGraspJSON { get; } = new JSONStorableBool("EnableHandsGrasp", true);
     private NavigationRigSnapshot _navigationRigSnapshot;
 
+    public void ConfigureHand(MotionControllerWithCustomPossessPoint motionControl, bool isRight)
+    {
+        var t = motionControl.currentMotionControl;
+        if (t == SuperController.singleton.touchObjectLeft)
+        {
+            motionControl.offsetControllerBase = new Vector3(-0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, 90, 0);
+        }
+        else if (t == SuperController.singleton.touchObjectRight)
+        {
+            motionControl.offsetControllerBase = new Vector3(0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, -90, 0);
+        }
+        else if (t == SuperController.singleton.viveObjectLeft)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = new Vector3(-0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, 90, 0);
+        }
+        else if (t == SuperController.singleton.viveObjectRight)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = new Vector3(0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, -90, 0);
+        }
+        else if (t == SuperController.singleton.leapHandLeft)
+        {
+            motionControl.offsetControllerBase = new Vector3(0f, -0.02341545f, 0f);
+            motionControl.rotateControllerBase = new Vector3(180f, 90f, 6f);
+        }
+        else if (t == SuperController.singleton.leapHandRight)
+        {
+            motionControl.offsetControllerBase = new Vector3(0f, -0.02341545f, 0f);
+            motionControl.rotateControllerBase = new Vector3(180f, -90f, -6f);
+        }
+        else if(!isRight)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = new Vector3(-0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, 90, 0);
+        }
+        else
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = new Vector3(0.03247f, -0.03789f, -0.10116f);
+            motionControl.rotateControllerBase = new Vector3(-90, -90, 0);
+        }
+    }
+
     public override void Awake()
     {
         base.Awake();
 
         AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
-        AddMotionControl(MotionControlNames.LeftHand, () => context.leftHand, "lHandControl", new Vector3(-0.03247f, -0.03789f, -0.10116f), new Vector3(-90, 90, 0));
-        AddMotionControl(MotionControlNames.RightHand, () => context.rightHand, "rHandControl", new Vector3(0.03247f, -0.03789f, -0.10116f), new Vector3(-90, -90, 0));
+        AddMotionControl(MotionControlNames.LeftHand, () => context.leftHand, "lHandControl", mc => ConfigureHand(mc, false));
+        AddMotionControl(MotionControlNames.RightHand, () => context.rightHand, "rHandControl", mc => ConfigureHand(mc, true));
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3);
@@ -69,12 +118,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         };
     }
 
-    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Vector3 offsetControllerBase = new Vector3(), Vector3 rotateControllerBase = new Vector3())
+    private void AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Action<MotionControllerWithCustomPossessPoint> configure = null)
     {
-        var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl);
+        var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl, configure);
         motionControl.mappedControllerName = mappedControllerName;
-        motionControl.offsetControllerBase = offsetControllerBase;
-        motionControl.rotateControllerBase = rotateControllerBase;
         motionControls.Add(motionControl);
         motionControl.SyncMotionControl();
     }

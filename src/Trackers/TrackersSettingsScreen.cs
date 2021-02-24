@@ -42,7 +42,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         );
         CreateScrollablePopup(_motionControlJSON);
         _motionControlJSON.choices = _trackers.motionControls
-            .Where(mc => mc.SyncMotionControl())
+            .Where(mc => mc.SyncMotionControl() || MotionControlNames.IsHeadOrHands(mc.name))
             .Select(mc => mc.name)
             .ToList();
 
