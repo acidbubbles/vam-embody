@@ -21,6 +21,7 @@ public class MotionControllerWithCustomPossessPoint
     private Vector3 _rotateControllerCustom;
     private Vector3 _rotateAroundTracker;
     private bool _showPreview;
+    private bool _highlighted;
 
     public Vector3 offsetControllerBase
     {
@@ -61,6 +62,12 @@ public class MotionControllerWithCustomPossessPoint
         set { _showPreview = value; SyncMotionControl(); }
     }
 
+    public bool highlighted
+    {
+        get { return _highlighted; }
+        set { _highlighted = value; SyncOffsetPreview(); }
+    }
+
     private void SyncOffset()
     {
         if (currentMotionControl == null) return;
@@ -99,7 +106,6 @@ public class MotionControllerWithCustomPossessPoint
             _offsetPreview = go.gameObject.AddComponent<OffsetPreview>();
         }
 
-        _offsetPreview.offsetTransform = trackerPointTransform;
         _offsetPreview.currentMotionControl = currentMotionControl;
     }
 
@@ -113,7 +119,7 @@ public class MotionControllerWithCustomPossessPoint
     private void SyncOffsetPreview()
     {
         if (_offsetPreview == null) return;
-        _offsetPreview.Sync();
+        _offsetPreview.Sync(_highlighted);
     }
 
     public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl, Action<MotionControllerWithCustomPossessPoint> configure)

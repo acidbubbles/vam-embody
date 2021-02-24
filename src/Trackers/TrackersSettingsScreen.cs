@@ -13,6 +13,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     private CollapsibleSection _section;
     private JSONStorableStringChooser _motionControlJSON;
     private readonly TrackerAutoSetup _trackerAutoSetup;
+    private MotionControllerWithCustomPossessPoint _currentMotionControl;
 
     public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
         : base(context)
@@ -53,6 +54,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     {
         base.Hide();
         _section = null;
+        if (_currentMotionControl != null)
+            _currentMotionControl.highlighted = false;
     }
 
     [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
@@ -61,7 +64,13 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         if (_section == null) _section = CreateSection();
         _section.RemoveAll();
 
+        if (_currentMotionControl != null)
+            _currentMotionControl.highlighted = false;
+
         if (motionControl == null) return;
+
+        _currentMotionControl = motionControl;
+        _currentMotionControl.highlighted = true;
 
         if (MotionControlNames.IsViveTracker(motionControl.name))
         {
