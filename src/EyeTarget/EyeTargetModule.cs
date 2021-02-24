@@ -102,6 +102,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     {
         if (_mirrors.Count == 0 && !ReferenceEquals(_windowCamera, null))
         {
+            // TODO: This doesn't seem to look where you'd want, validate the position (should it use a child control?)
             _eyeTarget.control.position = _windowCamera.position;
             return;
         }

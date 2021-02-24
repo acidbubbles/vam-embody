@@ -52,12 +52,12 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         var boneTransform = _anchor.bone.transform;
 
         _rightHandControl.control.rotation = _anchor.bone.rotation;
-        _rightHandControl.control.Rotate(HandsAdjustments._ovrRightRotate, Space.Self);
+        _rightHandControl.control.Rotate(HandsAdjustments.OVRRightRotate, Space.Self);
         _rightComparePointPosition = _anchor.GetInGameWorldPosition();
         _rightComparePointPosition += (boneTransform.forward * (_anchor.inGameSize.z / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
         _rightComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
         _rightHandControl.control.position = _rightComparePointPosition;
-        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrRightRotate)) * HandsAdjustments._ovrRightOffset * context.scaleChangeReceiver.scale, Space.Self);
+        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments.OVRRightRotate)) * HandsAdjustments.OVRRightOffset * context.scaleChangeReceiver.scale, Space.Self);
         // ReSharper disable once Unity.InefficientPropertyAccess
         _rightHandControl.control.RotateAround(_rightComparePointPosition, boneTransform.up, -90);
         _rightHandControl.control.RotateAround(_rightComparePointPosition, boneTransform.forward, _handRotate);

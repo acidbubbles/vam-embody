@@ -47,24 +47,24 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 
         {
             _leftHandControl.control.rotation = _anchor.bone.rotation;
-            _leftHandControl.control.Rotate(HandsAdjustments._ovrLeftRotate, Space.Self);
+            _leftHandControl.control.Rotate(HandsAdjustments.OVRLeftRotate, Space.Self);
             _leftComparePointPosition = _anchor.GetInGameWorldPosition();
             _leftComparePointPosition -= (boneTransform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
             _leftComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
             _leftHandControl.control.position = _leftComparePointPosition;
-            _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrLeftRotate)) * HandsAdjustments._ovrLeftOffset * context.scaleChangeReceiver.scale, Space.Self);
+            _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments.OVRLeftRotate)) * HandsAdjustments.OVRLeftOffset * context.scaleChangeReceiver.scale, Space.Self);
             _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
             // _leftHandControl.control.Translate(_anchor.bone.up * _handsOffsetY, Space.World);
         }
 
         {
             _rightHandControl.control.rotation = _anchor.bone.rotation;
-            _rightHandControl.control.Rotate(HandsAdjustments._ovrRightRotate, Space.Self);
+            _rightHandControl.control.Rotate(HandsAdjustments.OVRRightRotate, Space.Self);
             _rightComparePointPosition = _anchor.GetInGameWorldPosition();
             _rightComparePointPosition += (boneTransform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
             _rightComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
             _rightHandControl.control.position = _rightComparePointPosition;
-            _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrRightRotate)) * HandsAdjustments._ovrRightOffset * context.scaleChangeReceiver.scale, Space.Self);
+            _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments.OVRRightRotate)) * HandsAdjustments.OVRRightOffset * context.scaleChangeReceiver.scale, Space.Self);
             _rightHandControl.control.RotateAround(_rightComparePointPosition, _rightHandControl.control.up, -_handRotate);
             // _rightHandControl.control.Translate(_anchor.bone.up * _handsOffsetY, Space.World);
         }

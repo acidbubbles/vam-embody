@@ -10,3 +10,5 @@
 - When using Snug, only allow a maximum pull effect and increase it every frame so fast movements are not as affected as slow movements
 
 - Decals are not visible in mirrors
+- Re-bind hands when none are available
+- Look at closest object in reduced camera frustrum: https://stackoverflow.com/a/45062755/15224343
