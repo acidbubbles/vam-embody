@@ -19,16 +19,17 @@ public interface IDiagnosticsModule : IEmbodyModule
     Transform viveTracker7 { get; }
     Transform viveTracker8 { get; }
     IEnumerable<string> logs { get; }
-    List<JSONTrackersSnapshot> snapshots { get; }
+    List<EmbodyDebugSnapshot> snapshots { get; }
     void TakeSnapshot(string name);
-    void RestoreSnapshot(JSONTrackersSnapshot snapshot);
+    void RestoreSnapshot(EmbodyDebugSnapshot snapshot);
     void RemoveFakeTrackers();
-    void CreateFakeTrackers(JSONTrackersSnapshot snapshot);
+    void CreateFakeTrackers(EmbodyDebugSnapshot snapshot);
 }
 
 public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 {
     public const string Label = "Diagnostics";
+    private const string _embodyDebugPrefix = "EMBODY_DEBUG#";
     public override string storeId => "Diagnostics";
     public override string label => Label;
     public override bool skipChangeEnabledWhenActive => true;
@@ -49,7 +50,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     private bool _restored;
 
     private JSONArray _logs = new JSONArray();
-    public List<JSONTrackersSnapshot> snapshots { get; } = new List<JSONTrackersSnapshot>();
+    public List<EmbodyDebugSnapshot> snapshots { get; } = new List<EmbodyDebugSnapshot>();
     public IEnumerable<string> logs => _logs.Childs.Select(c => c.Value);
 
     public void Start()
@@ -62,18 +63,17 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
         //context.plugin.StartCoroutine(DebugCo());
 
-        const string prefix = "EMBODY_DEBUG#";
-        head = GetDebugAtom($"{prefix}{MotionControlNames.Head}");
-        leftHand = GetDebugAtom($"{prefix}{MotionControlNames.LeftHand}");
-        rightHand = GetDebugAtom($"{prefix}{MotionControlNames.RightHand}");
-        viveTracker1 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}1");
-        viveTracker2 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}2");
-        viveTracker3 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}3");
-        viveTracker4 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}4");
-        viveTracker5 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}5");
-        viveTracker6 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}6");
-        viveTracker7 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}7");
-        viveTracker8 = GetDebugAtom($"{prefix}{MotionControlNames.ViveTrackerPrefix}8");
+        head = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");
+        leftHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.LeftHand}");
+        rightHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.RightHand}");
+        viveTracker1 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}1");
+        viveTracker2 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}2");
+        viveTracker3 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}3");
+        viveTracker4 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}4");
+        viveTracker5 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}5");
+        viveTracker6 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}6");
+        viveTracker7 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}7");
+        viveTracker8 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}8");
     }
 
     public override void OnEnable()
@@ -105,30 +105,30 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     public void RemoveFakeTrackers()
     {
         head = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.Head}"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.Head}"));
         leftHand = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.LeftHand}"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.LeftHand}"));
         rightHand = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.RightHand}"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.RightHand}"));
         viveTracker1 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}1"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}1"));
         viveTracker2 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}2"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}2"));
         viveTracker3 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}3"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}3"));
         viveTracker4 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}4"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}4"));
         viveTracker5 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}5"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}5"));
         viveTracker6 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}6"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}6"));
         viveTracker7 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}7"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}7"));
         viveTracker8 = null;
-        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"EMBODY_DEBUG#{MotionControlNames.ViveTrackerPrefix}8"));
+        SuperController.singleton.RemoveAtom(SuperController.singleton.GetAtomByUid($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}8"));
     }
 
-    public void CreateFakeTrackers(JSONTrackersSnapshot snapshot)
+    public void CreateFakeTrackers(EmbodyDebugSnapshot snapshot)
     {
         if (snapshot == null || snapshot.head != null)
             StartCoroutine(CreateFakeTracker(MotionControlNames.Head, "headControl", t => head = t));
@@ -156,7 +156,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     private IEnumerator CreateFakeTracker(string trackerName, string controlName, Func<Transform, Transform> assign)
     {
-        var atomUid = $"EMBODY_DEBUG#{trackerName}";
+        var atomUid = $"{_embodyDebugPrefix}{trackerName}";
         var atom = SuperController.singleton.GetAtomByUid(atomUid);
         if (atom == null)
         {
@@ -179,25 +179,27 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     public void TakeSnapshot(string snapshotName)
     {
         if (!enabled) return;
-        snapshots.Add(new JSONTrackersSnapshot
+        var pluginJSON = context.plugin.GetJSON();
+        pluginJSON.Remove(storeId);
+        snapshots.Add(new EmbodyDebugSnapshot
         {
             name = $"{Time.realtimeSinceStartup:0.00} {snapshotName}",
             worldScale = SuperController.singleton.worldScale,
             playerHeightAdjust = SuperController.singleton.playerHeightAdjust,
-            pluginJSON = context.plugin.GetJSON(),
+            pluginJSON = pluginJSON,
             poseJSON = StorePoseJSON(),
-            navigationRig = JSONTrackerSnapshot.From(SuperController.singleton.navigationRig),
-            head = JSONTrackerSnapshot.From(context.head),
-            leftHand = JSONTrackerSnapshot.From(context.leftHand),
-            rightHand = JSONTrackerSnapshot.From(context.rightHand),
-            viveTracker1 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker1),
-            viveTracker2 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker2),
-            viveTracker3 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker3),
-            viveTracker4 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker4),
-            viveTracker5 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker5),
-            viveTracker6 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker6),
-            viveTracker7 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker7),
-            viveTracker8 = JSONTrackerSnapshot.From(SuperController.singleton.viveTracker8),
+            navigationRig = EmbodyTransformDebugSnapshot.From(SuperController.singleton.navigationRig),
+            head = EmbodyTransformDebugSnapshot.From(context.head),
+            leftHand = EmbodyTransformDebugSnapshot.From(context.leftHand),
+            rightHand = EmbodyTransformDebugSnapshot.From(context.rightHand),
+            viveTracker1 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker1),
+            viveTracker2 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker2),
+            viveTracker3 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker3),
+            viveTracker4 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker4),
+            viveTracker5 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker5),
+            viveTracker6 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker6),
+            viveTracker7 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker7),
+            viveTracker8 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker8),
         });
     }
 
@@ -228,7 +230,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         }
     }
 
-    public void RestoreSnapshot(JSONTrackersSnapshot snapshot)
+    public void RestoreSnapshot(EmbodyDebugSnapshot snapshot)
     {
         if (snapshot.pluginJSON != null)
             context.plugin.RestoreFromJSON(snapshot.pluginJSON);
@@ -255,7 +257,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         RestoreFakeTracker(viveTracker8, snapshot.viveTracker8);
     }
 
-    private void RestoreFakeTracker(Transform fake, JSONTrackerSnapshot snapshot)
+    private void RestoreFakeTracker(Transform fake, EmbodyTransformDebugSnapshot snapshot)
     {
         if (fake == null) return;
         if (snapshot == null)
@@ -286,7 +288,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         if (jc.HasKey("Logs"))
             _logs = jc["Logs"].AsArray;
         if(jc.HasKey("Snapshots"))
-            snapshots.AddRange(jc["Snapshots"].AsArray.Childs.Select(s => JSONTrackersSnapshot.FromJSON(s.AsObject)));
+            snapshots.AddRange(jc["Snapshots"].AsArray.Childs.Select(s => EmbodyDebugSnapshot.FromJSON(s.AsObject)));
     }
 
     public override void ResetToDefault()

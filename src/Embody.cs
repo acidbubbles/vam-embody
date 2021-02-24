@@ -41,7 +41,7 @@ public class Embody : MVRScript, IEmbody
             _context = new EmbodyContext(this, this);
 
              var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
-             diagnosticsModule.enabled = true;
+             diagnosticsModule.enabled = diagnosticsEnabled;
              var automationModule = CreateModule<AutomationModule>(_context);
              var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
              var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
