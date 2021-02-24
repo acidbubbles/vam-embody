@@ -16,7 +16,6 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     private readonly FreeControllerV3 _rightHandControl;
     private readonly FreeControllerV3 _headControl;
     private readonly FreeControllerV3 _chestControl;
-    private readonly MotionControllerWithCustomPossessPoint _rightHandMotion;
     private FreeControllerV3Snapshot _leftHandSnapshot;
     private FreeControllerV3Snapshot _rightHandSnapshot;
     private FreeControllerV3Snapshot _chestSnapshot;
@@ -31,7 +30,6 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
         _headControl = context.containingAtom.freeControllers.First(fc => fc.name == "headControl");
         _chestControl = context.containingAtom.freeControllers.First(fc => fc.name == "chestControl");
-        _rightHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand);
     }
 
     public override void Enter()
@@ -54,12 +52,13 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
         var boneTransform = _anchor.bone.transform;
 
         _rightHandControl.control.rotation = _anchor.bone.rotation;
-        _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
+        _rightHandControl.control.Rotate(HandsAdjustments._ovrRightRotate, Space.Self);
         _rightComparePointPosition = _anchor.GetInGameWorldPosition();
         _rightComparePointPosition += (boneTransform.forward * (_anchor.inGameSize.z / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
         _rightComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
         _rightHandControl.control.position = _rightComparePointPosition;
-        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase * context.scaleChangeReceiver.scale, Space.Self);
+        _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrRightRotate)) * HandsAdjustments._ovrRightOffset * context.scaleChangeReceiver.scale, Space.Self);
+        // ReSharper disable once Unity.InefficientPropertyAccess
         _rightHandControl.control.RotateAround(_rightComparePointPosition, boneTransform.up, -90);
         _rightHandControl.control.RotateAround(_rightComparePointPosition, boneTransform.forward, _handRotate);
     }

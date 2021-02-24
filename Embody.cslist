@@ -42,6 +42,7 @@ src\Snug\SnugHand.cs
 src\Snug\SnugModule.cs
 src\Snug\SnugSettingsScreen.cs
 src\Trackers\FreeControllerV3WithSnapshot.cs
+src\Trackers\HandsAdjustments.cs
 src\Trackers\MotionControllerWithCustomPossessPoint.cs
 src\Trackers\MotionControlNames.cs
 src\Trackers\OffsetPreview.cs

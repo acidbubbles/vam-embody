@@ -114,6 +114,7 @@
     <Compile Include="src\Snug\SnugAutoSetup.cs" />
     <Compile Include="src\Snug\SnugSettingsScreen.cs" />
     <Compile Include="src\Trackers\FreeControllerV3WithSnapshot.cs" />
+    <Compile Include="src\Trackers\HandsAdjustments.cs" />
     <Compile Include="src\Trackers\MotionControllerWithCustomPossessPoint.cs" />
     <Compile Include="src\Trackers\MotionControlNames.cs" />
     <Compile Include="src\Trackers\OffsetPreview.cs" />

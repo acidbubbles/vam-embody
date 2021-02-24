@@ -15,8 +15,6 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private readonly bool _ignoreDepth;
     private readonly FreeControllerV3 _leftHandControl;
     private readonly FreeControllerV3 _rightHandControl;
-    private readonly MotionControllerWithCustomPossessPoint _leftHandMotion;
-    private readonly MotionControllerWithCustomPossessPoint _rightHandMotion;
     private FreeControllerV3Snapshot _leftHandSnapshot;
     private FreeControllerV3Snapshot _rightHandSnapshot;
     private Vector3 _leftComparePointPosition;
@@ -30,8 +28,6 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
         _ignoreDepth = ignoreDepth;
         _leftHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         _rightHandControl = context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
-        _leftHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand);
-        _rightHandMotion = context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand);
     }
 
     public override void Enter()
@@ -51,24 +47,24 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
 
         {
             _leftHandControl.control.rotation = _anchor.bone.rotation;
-            _leftHandControl.control.Rotate(_leftHandMotion.rotateControllerBase, Space.Self);
+            _leftHandControl.control.Rotate(HandsAdjustments._ovrLeftRotate, Space.Self);
             _leftComparePointPosition = _anchor.GetInGameWorldPosition();
             _leftComparePointPosition -= (boneTransform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
             _leftComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
             _leftHandControl.control.position = _leftComparePointPosition;
-            _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_leftHandMotion.rotateControllerBase)) * _leftHandMotion.offsetControllerBase * context.scaleChangeReceiver.scale, Space.Self);
+            _leftHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrLeftRotate)) * HandsAdjustments._ovrLeftOffset * context.scaleChangeReceiver.scale, Space.Self);
             _leftHandControl.control.RotateAround(_leftComparePointPosition, _leftHandControl.control.up, _handRotate);
             // _leftHandControl.control.Translate(_anchor.bone.up * _handsOffsetY, Space.World);
         }
 
         {
             _rightHandControl.control.rotation = _anchor.bone.rotation;
-            _rightHandControl.control.Rotate(_rightHandMotion.rotateControllerBase, Space.Self);
+            _rightHandControl.control.Rotate(HandsAdjustments._ovrRightRotate, Space.Self);
             _rightComparePointPosition = _anchor.GetInGameWorldPosition();
             _rightComparePointPosition += (boneTransform.right * (_anchor.inGameSize.x / 2f + _handsDistance / 2f) * context.scaleChangeReceiver.scale);
             _rightComparePointPosition += (boneTransform.up * _handsOffsetY * context.scaleChangeReceiver.scale);
             _rightHandControl.control.position = _rightComparePointPosition;
-            _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(_rightHandMotion.rotateControllerBase)) * _rightHandMotion.offsetControllerBase * context.scaleChangeReceiver.scale, Space.Self);
+            _rightHandControl.control.Translate(Quaternion.Inverse(Quaternion.Euler(HandsAdjustments._ovrRightRotate)) * HandsAdjustments._ovrRightOffset * context.scaleChangeReceiver.scale, Space.Self);
             _rightHandControl.control.RotateAround(_rightComparePointPosition, _rightHandControl.control.up, -_handRotate);
             // _rightHandControl.control.Translate(_anchor.bone.up * _handsOffsetY, Space.World);
         }

@@ -1,0 +1,63 @@
+﻿using UnityEngine;
+
+public static class HandsAdjustments
+{
+    public static readonly Vector3 _ovrLeftOffset = new Vector3(-0.03247f, -0.03789f, -0.10116f);
+    public static readonly Vector3 _ovrLeftRotate = new Vector3(-90, 90, 0);
+    public static readonly Vector3 _ovrRightOffset = Vector3.Scale(_ovrLeftOffset, new Vector3(-1f, 1f, 1f));
+    public static readonly Vector3 _ovrRightRotate = Vector3.Scale(_ovrLeftRotate, new Vector3(1f, -1f, -1f));
+
+    private static readonly Vector3 _leapLeftOffset = new Vector3(0f, -0.02341545f, 0f);
+    private static readonly Vector3 _leapLeftRotate = new Vector3(180f, 90f, 6f);
+    private static readonly Vector3 _leapRightOffset = Vector3.Scale(_leapLeftOffset, new Vector3(-1f, 1f, 1f));
+    private static readonly Vector3 _leapRightRotate = Vector3.Scale(_leapLeftRotate, new Vector3(1f, -1f, -1f));
+
+    public static void ConfigureHand(MotionControllerWithCustomPossessPoint motionControl, bool isRight)
+    {
+        var t = motionControl.currentMotionControl;
+        if (t == SuperController.singleton.touchObjectLeft)
+        {
+            motionControl.offsetControllerBase = _ovrLeftOffset;
+            motionControl.rotateControllerBase = _ovrLeftRotate;
+        }
+        else if (t == SuperController.singleton.touchObjectRight)
+        {
+            motionControl.offsetControllerBase = _ovrRightOffset;
+            motionControl.rotateControllerBase = _ovrRightRotate;
+        }
+        else if (t == SuperController.singleton.viveObjectLeft)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = _ovrLeftOffset;
+            motionControl.rotateControllerBase = _ovrLeftRotate;
+        }
+        else if (t == SuperController.singleton.viveObjectRight)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = _ovrRightOffset;
+            motionControl.rotateControllerBase = _ovrRightRotate;
+        }
+        else if (t == SuperController.singleton.leapHandLeft)
+        {
+            motionControl.offsetControllerBase = _leapLeftOffset;
+            motionControl.rotateControllerBase = _leapLeftRotate;
+        }
+        else if (t == SuperController.singleton.leapHandRight)
+        {
+            motionControl.offsetControllerBase = _leapRightOffset;
+            motionControl.rotateControllerBase = _leapRightRotate;
+        }
+        else if(!isRight)
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = _ovrLeftOffset;
+            motionControl.rotateControllerBase = _ovrLeftRotate;
+        }
+        else
+        {
+            // TODO: Copied from Oculus controller
+            motionControl.offsetControllerBase = _ovrRightOffset;
+            motionControl.rotateControllerBase = _ovrRightRotate;
+        }
+    }
+}

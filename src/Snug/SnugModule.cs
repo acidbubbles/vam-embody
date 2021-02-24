@@ -241,7 +241,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         if (!_lHand.active || !_rHand.active)
         {
-            SuperController.LogError($"Embody: Failed to initialize Snug hands. No motion tracker to bind to.");
+            SuperController.LogError($"Embody: Failed to initialize Snug hands. No motion tracker to bind to. If using Leap Motion, make sure both hands are visible when you activate Embody.");
             enabledJSON.val = false;
         }
     }
