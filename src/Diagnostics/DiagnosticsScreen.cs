@@ -18,6 +18,7 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         var logs = _diagnostics.logs.ToArray();
         var logsJSON = new JSONStorableString("", logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
         CreateText(logsJSON, true).height = 1200f;
+        CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
 
         var snapshotsJSON = new JSONStorableStringChooser("",
             context.diagnostics.snapshots.Select(s => s.name).ToList(),
@@ -29,6 +30,13 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         CreateButton("Remove Fake Trackers").button.onClick.AddListener(() => context.diagnostics.RemoveFakeTrackers());
         CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val)));
         CreateButton("Load Snapshot").button.onClick.AddListener(() => LoadSnapshot(snapshotsJSON.val));
+        CreateButton("Take Snapshot").button.onClick.AddListener(() =>
+        {
+            context.diagnostics.TakeSnapshot("ManualSnapshot");
+            snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
+            snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
+            logsJSON.val = "";
+        });
     }
 
     private void ShowSnapshot(JSONStorableString logsJSON, string snapshotName)
