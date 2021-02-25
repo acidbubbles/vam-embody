@@ -7,6 +7,8 @@ public class DiagnosticsScreen : ScreenBase, IScreen
 
     private readonly IDiagnosticsModule _diagnostics;
 
+    private readonly JSONStorableBool _restoreWorldStateJSON = new JSONStorableBool("Restore Navigation Rig", false);
+
     public DiagnosticsScreen(EmbodyContext context, IDiagnosticsModule diagnostics)
         : base(context)
     {
@@ -29,14 +31,27 @@ public class DiagnosticsScreen : ScreenBase, IScreen
 
         CreateButton("Remove Fake Trackers").button.onClick.AddListener(() => context.diagnostics.RemoveFakeTrackers());
         CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val)));
+        CreateToggle(_restoreWorldStateJSON);
         CreateButton("Load Snapshot").button.onClick.AddListener(() => LoadSnapshot(snapshotsJSON.val));
         CreateButton("Take Snapshot").button.onClick.AddListener(() =>
         {
             context.diagnostics.TakeSnapshot("ManualSnapshot");
-            snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
-            snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
-            logsJSON.val = "";
+            RefreshSnapshots(snapshotsJSON, logsJSON);
         });
+        CreateButton("Delete Snapshot").button.onClick.AddListener(() =>
+        {
+            var snapshot = context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val);
+            if (snapshot == null) return;
+            context.diagnostics.snapshots.Remove(snapshot);
+            RefreshSnapshots(snapshotsJSON, logsJSON);
+        });
+    }
+
+    private void RefreshSnapshots(JSONStorableStringChooser snapshotsJSON, JSONStorableString logsJSON)
+    {
+        snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
+        snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
+        logsJSON.val = "";
     }
 
     private void ShowSnapshot(JSONStorableString logsJSON, string snapshotName)
@@ -45,6 +60,7 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         if (snapshot == null) return;
         var sb = new StringBuilder();
         sb.AppendLine($"<b>Snapshot</b>:\n{snapshot.name}");
+        sb.AppendLine($"<b>Pose</b>:\n{((snapshot.poseJSON?.Count ?? 0) > 0 ? $"{snapshot.poseJSON.Count} nodes" : "None")}");
         sb.AppendLine($"<b>Player Height Adjust</b>:\n{snapshot.playerHeightAdjust}");
         sb.AppendLine($"<b>World Scale</b>:\n{snapshot.worldScale}");
         sb.AppendLine($"<b>Navigation Rig</b>:\n{snapshot.navigationRig}");
@@ -66,6 +82,6 @@ public class DiagnosticsScreen : ScreenBase, IScreen
     {
         var snapshot = context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotName);
         if (snapshot == null) return;
-        context.diagnostics.RestoreSnapshot(snapshot);
+        context.diagnostics.RestoreSnapshot(snapshot, _restoreWorldStateJSON.val);
     }
 }

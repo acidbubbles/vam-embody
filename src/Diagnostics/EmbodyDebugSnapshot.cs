@@ -5,6 +5,11 @@ using UnityEngine;
 public class EmbodyDebugSnapshot
 {
     public string name;
+    public JSONClass pluginJSON;
+    public JSONArray poseJSON;
+    public float worldScale;
+    public float playerHeightAdjust;
+    public EmbodyTransformDebugSnapshot navigationRig;
     public EmbodyTransformDebugSnapshot head;
     public EmbodyTransformDebugSnapshot leftHand;
     public EmbodyTransformDebugSnapshot rightHand;
@@ -16,11 +21,6 @@ public class EmbodyDebugSnapshot
     public EmbodyTransformDebugSnapshot viveTracker6;
     public EmbodyTransformDebugSnapshot viveTracker7;
     public EmbodyTransformDebugSnapshot viveTracker8;
-    public JSONClass pluginJSON;
-    public float worldScale;
-    public float playerHeightAdjust;
-    public EmbodyTransformDebugSnapshot navigationRig;
-    public JSONArray poseJSON;
 
     public JSONClass ToJSON()
     {
@@ -43,6 +43,7 @@ public class EmbodyDebugSnapshot
         if (viveTracker7 != null) jc["ViveTracker7"] = viveTracker7.ToJSON();
         if (viveTracker8 != null) jc["ViveTracker8"] = viveTracker8.ToJSON();
         if (pluginJSON != null) jc["Plugin"] = pluginJSON;
+        if (poseJSON != null) jc["Pose"] = poseJSON;
         return jc;
     }
 
@@ -65,15 +66,16 @@ public class EmbodyDebugSnapshot
             viveTracker6 = jc.HasKey("ViveTracker6") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker6"]) : null,
             viveTracker7 = jc.HasKey("ViveTracker7") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker7"]) : null,
             viveTracker8 = jc.HasKey("ViveTracker8") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker8"]) : null,
-            pluginJSON = jc.HasKey("Plugin") ? jc["Plugin"].AsObject : null
+            pluginJSON = jc.HasKey("Plugin") ? jc["Plugin"].AsObject : null,
+            poseJSON = jc.HasKey("Pose") ? jc["Pose"].AsArray : null
         };
     }
 }
 
 public class EmbodyTransformDebugSnapshot
 {
-    public Vector3 position { get; set; }
-    public Vector3 rotation { get; set; }
+    public Vector3 position;
+    public Vector3 rotation;
 
     public JSONNode ToJSON()
     {

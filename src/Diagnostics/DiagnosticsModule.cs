@@ -21,7 +21,7 @@ public interface IDiagnosticsModule : IEmbodyModule
     IEnumerable<string> logs { get; }
     List<EmbodyDebugSnapshot> snapshots { get; }
     void TakeSnapshot(string name);
-    void RestoreSnapshot(EmbodyDebugSnapshot snapshot);
+    void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState);
     void RemoveFakeTrackers();
     void CreateFakeTrackers(EmbodyDebugSnapshot snapshot);
 }
@@ -263,16 +263,17 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         }
     }
 
-    public void RestoreSnapshot(EmbodyDebugSnapshot snapshot)
+    public void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState)
     {
         if (snapshot.pluginJSON != null)
             context.plugin.RestoreFromJSON(snapshot.pluginJSON);
         if (snapshot.poseJSON != null)
             RestorePoseJSON(snapshot.poseJSON);
-        if (snapshot.worldScale > 0)
+        if (snapshot.worldScale > 0 && restoreWorldState)
             SuperController.singleton.worldScale = snapshot.worldScale;
-        SuperController.singleton.playerHeightAdjust = snapshot.playerHeightAdjust;
-        if (snapshot.navigationRig != null)
+        if (restoreWorldState)
+            SuperController.singleton.playerHeightAdjust = snapshot.playerHeightAdjust;
+        if (snapshot.navigationRig != null && restoreWorldState)
         {
             SuperController.singleton.navigationRig.position = snapshot.navigationRig.position;
             SuperController.singleton.navigationRig.eulerAngles = snapshot.navigationRig.rotation;
@@ -295,7 +296,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         if (fake == null) return;
         if (snapshot == null)
         {
-            Destroy(fake.gameObject);
+            SuperController.singleton.RemoveAtom(fake.GetComponent<FreeControllerV3>().containingAtom);
             return;
         }
         fake.position = snapshot.position;
