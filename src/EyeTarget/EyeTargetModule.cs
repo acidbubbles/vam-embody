@@ -36,16 +36,17 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private readonly List<Transform> _objects = new List<Transform>();
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
+    private readonly Plane[] _frustrumPlanes = new Plane[6];
+    private const float _frustrumFov = 8f * Mathf.Deg2Rad;
 
     public override void Awake()
     {
         base.Awake();
 
         _eyeBehavior = (EyesControl) containingAtom.GetStorableByID("Eyes");
-        _head = containingAtom.rigidbodies.First(fc => fc.name == "head").transform;
-        var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-        _lEye = eyes.First(eye => eye.name == "lEye").transform;
-        _rEye = eyes.First(eye => eye.name == "rEye").transform;
+        _head = context.bones.First(eye => eye.name == "head").transform;
+        _lEye = context.bones.First(eye => eye.name == "lEye").transform;
+        _rEye = context.bones.First(eye => eye.name == "rEye").transform;
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
         trackMirrorsJSON = new JSONStorableBool("TrackMirrors", true, (bool _) => { if(enabled) Rescan(); });
         trackObjectsJSON = new JSONStorableBool("TrackObjects", true, (bool _) => { if(enabled) Rescan(); });
@@ -54,7 +55,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public override bool BeforeEnable()
     {
         Rescan();
-        SuperController.LogMessage($"{_objects.Count}");
 
         return _mirrors.Count > 0 || _objects.Count > 0;
     }
@@ -112,8 +112,23 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                 {
                     foreach (var controller in atom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
                     {
+                        if (!controller.enabled) continue;
+                        if (controller.name == "eyeTargetControl") continue;
+                        if (atom == containingAtom && controller.name == "headControl") continue;
                         _objects.Add(controller.control);
                     }
+                    break;
+                }
+                case "Cube":
+                case "Sphere":
+                case "Dildo":
+                case "Paddle":
+                case "ToyAH":
+                case "ToyBP":
+                case "CustomUnityAsset":
+                case "Torch":
+                {
+                    _objects.Add(atom.mainController.control);
                     break;
                 }
             }
@@ -136,20 +151,66 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public void Update()
     {
+        var eyesCenter = (_lEye.position + _rEye.position) / 2f;
+
+        BoxCollider lookAtMirror;
+        var lookAtMirrorDistance = float.PositiveInfinity;
+        if (_mirrors.Count > 0)
+        {
+            if (_mirrors.Count == 1)
+            {
+                lookAtMirror = _mirrors[0];
+            }
+            else
+            {
+                var headPosition = _head.position;
+                var ray = new Ray(eyesCenter, _head.forward);
+                lookAtMirror = null;
+                var closestMirrorDistance = float.PositiveInfinity;
+                BoxCollider closestMirror = null;
+                for (var i = 0; i < _mirrors.Count; i++)
+                {
+                    var potentialMirror = _mirrors[i];
+                    var potentialMirrorDistance = Vector3.Distance(headPosition, potentialMirror.transform.position);
+                    if (potentialMirrorDistance < closestMirrorDistance)
+                    {
+                        closestMirrorDistance = potentialMirrorDistance;
+                        closestMirror = potentialMirror;
+                    }
+                    RaycastHit hit;
+                    if (!potentialMirror.Raycast(ray, out hit, 20f))
+                        continue;
+                    if (hit.distance > lookAtMirrorDistance) continue;
+                    lookAtMirrorDistance = hit.distance;
+                    lookAtMirror = potentialMirror;
+                }
+
+                if (ReferenceEquals(lookAtMirror, null))
+                {
+                    if (ReferenceEquals(closestMirror, null)) return;
+                    lookAtMirror = closestMirror;
+                }
+            }
+        }
+        else
+        {
+            lookAtMirror = null;
+        }
+
         if (_objects.Count > 0)
         {
             var lastDistance = float.PositiveInfinity;
             var lastPosition = Vector3.zero;
-            var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-            var cameraPosition = SuperController.singleton.centerCameraTarget.transform.position;
+            //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
+            CalculateFrustum(eyesCenter, _head.forward, _frustrumFov, 1.3f, 0.22f, 100f, _frustrumPlanes);
 
             foreach (var o in _objects)
             {
                 var position = o.position;
                 var bounds = new Bounds(position, new Vector3(0.25f, 0.25f, 0.25f));
-                if (!GeometryUtility.TestPlanesAABB(planes, bounds)) continue;
-                var distance = Vector3.Distance(bounds.center, cameraPosition);
-                if (distance > lastDistance) continue;
+                if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
+                var distance = Vector3.Distance(bounds.center, eyesCenter);
+                if (distance > lastDistance || distance > lookAtMirrorDistance) continue;
                 lastDistance = distance;
                 lastPosition = position;
             }
@@ -161,51 +222,49 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             }
         }
 
-        var eyesCenter = (_lEye.position + _rEye.position) / 2f;
-        BoxCollider lookAtMirror;
-        if (_mirrors.Count == 1)
+        if (!ReferenceEquals(lookAtMirror, null))
         {
-            lookAtMirror = _mirrors[0];
+            var mirrorTransform = lookAtMirror.transform;
+            var mirrorPosition = mirrorTransform.position;
+            var mirrorNormal = mirrorTransform.up;
+            var plane = new Plane(mirrorNormal, mirrorPosition);
+            var planePoint = plane.ClosestPointOnPlane(eyesCenter);
+            var reflectPosition = planePoint - (eyesCenter - planePoint);
+            _eyeTarget.control.position = reflectPosition;
         }
         else
         {
-            var headPosition = _head.position;
-            var ray = new Ray(eyesCenter, _head.forward);
-            var lookAtMirrorDistance = float.PositiveInfinity;
-            lookAtMirror = null;
-            var closestMirrorDistance = float.PositiveInfinity;
-            BoxCollider closestMirror = null;
-            for (var i = 0; i < _mirrors.Count; i++)
-            {
-                var potentialMirror = _mirrors[i];
-                var potentialMirrorDistance = Vector3.Distance(headPosition, potentialMirror.transform.position);
-                if (potentialMirrorDistance < closestMirrorDistance)
-                {
-                    closestMirrorDistance = potentialMirrorDistance;
-                    closestMirror = potentialMirror;
-                }
-                RaycastHit hit;
-                if (!potentialMirror.Raycast(ray, out hit, 20f))
-                    continue;
-                if (hit.distance > lookAtMirrorDistance) continue;
-                lookAtMirrorDistance = hit.distance;
-                lookAtMirror = potentialMirror;
-            }
-
-            if (ReferenceEquals(lookAtMirror, null))
-            {
-                if (ReferenceEquals(closestMirror, null)) return;
-                lookAtMirror = closestMirror;
-            }
+            _eyeTarget.control.position = eyesCenter + _head.forward * 0.4f;
         }
+    }
 
-        var mirrorTransform = lookAtMirror.transform;
-        var mirrorPosition = mirrorTransform.position;
-        var mirrorNormal = mirrorTransform.up;
-        var plane = new Plane(mirrorNormal, mirrorPosition);
-        var planePoint = plane.ClosestPointOnPlane(eyesCenter);
-        var reflectPosition = planePoint - (eyesCenter - planePoint);
-        _eyeTarget.control.position = reflectPosition;
+    // Source: http://answers.unity.com/answers/1024526/view.html
+    private static void CalculateFrustum(Vector3 origin, Vector3 direction, float fovRadians, float viewRatio, float near, float far, Plane[] frustrumPlanes)
+    {
+        var nearCenter = origin + direction * near;
+        var farCenter = origin + direction * far;
+        var camRight = Vector3.Cross(direction, Vector3.up) * -1;
+        var camUp = Vector3.Cross(direction, camRight);
+        var nearHeight = 2 * Mathf.Tan(fovRadians / 2) * near;
+        var farHeight = 2 * Mathf.Tan(fovRadians / 2) * far;
+        var nearWidth = nearHeight * viewRatio;
+        var farWidth = farHeight * viewRatio;
+        var farTopLeft = farCenter + camUp * (farHeight * 0.5f) - camRight * (farWidth * 0.5f);
+        //not needed; 6 points are sufficient to calculate the frustum
+        //Vector3 farTopRight = farCenter + camUp*(farHeight*0.5f) + camRight*(farWidth*0.5f);
+        var farBottomLeft = farCenter - camUp * (farHeight * 0.5f) - camRight * (farWidth * 0.5f);
+        var farBottomRight = farCenter - camUp * (farHeight * 0.5f) + camRight * (farWidth * 0.5f);
+        var nearTopLeft = nearCenter + camUp * (nearHeight * 0.5f) - camRight * (nearWidth * 0.5f);
+        var nearTopRight = nearCenter + camUp * (nearHeight * 0.5f) + camRight * (nearWidth * 0.5f);
+        //not needed; 6 points are sufficient to calculate the frustum
+        //Vector3 nearBottomLeft  = nearCenter - camUp*(nearHeight*0.5f) - camRight*(nearWidth*0.5f);
+        var nearBottomRight = nearCenter - camUp * (nearHeight * 0.5f) + camRight * (nearWidth * 0.5f);
+        frustrumPlanes[0] = new Plane(nearTopLeft, farTopLeft, farBottomLeft);
+        frustrumPlanes[1] = new Plane(nearTopRight, nearBottomRight, farBottomRight);
+        frustrumPlanes[2] = new Plane(farBottomLeft, farBottomRight, nearBottomRight);
+        frustrumPlanes[3] = new Plane(farTopLeft, nearTopLeft, nearTopRight);
+        frustrumPlanes[4] = new Plane(nearBottomRight, nearTopRight, nearTopLeft);
+        frustrumPlanes[5] = new Plane(farBottomRight, farBottomLeft, farTopLeft);
     }
 
     private void ONAtomUIDsChanged(List<string> uids)

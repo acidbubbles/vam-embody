@@ -55,14 +55,6 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     public void Start()
     {
-        // TODO: Make a snapshot of each trackerL
-        // SuperController.singleton.viveTracker1 position and rotation
-        // Validate that it has a local position/rotation of 0,0,0
-        // Validate that the possess point is unused
-        // Try to use the Trackers transforms and update them to match the empty GameObject for a better representation
-
-        //context.plugin.StartCoroutine(DebugCo());
-
         head = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");
         leftHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.LeftHand}");
         rightHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.RightHand}");
@@ -74,6 +66,47 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         viveTracker6 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}6");
         viveTracker7 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}7");
         viveTracker8 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}8");
+
+        // context.plugin.StartCoroutine(DebugCo());
+    }
+
+    private IEnumerator DebugCo()
+    {
+        if (_once) yield break;
+        _once = true;
+
+        yield return 0;
+
+        context.embody.activeJSON.val = true;
+
+        /*
+        while (context.plugin.isActiveAndEnabled)
+        {
+            yield return new WaitForSeconds(1);
+            new PlayerMeasurements(context).MeasureHeight();
+        }
+        */
+        /*
+        context.wizard.forceReopen = false;
+        yield return new WaitForSecondsRealtime(0.2f);
+        screensManager.Show(WizardScreen.ScreenName);
+        yield return new WaitForSecondsRealtime(0.1f);
+        context.wizard.StartWizard();
+        for (var i = 0; i < 2; i++)
+        {
+            yield return new WaitForSecondsRealtime(0.1f);
+            context.wizard.Skip();
+        }
+        foreach (var t in context.trackers.headAndHands) {t.enabled = false;}
+        context.hideGeometry.selectedJSON.val = false;
+        context.worldScale.selectedJSON.val = false;
+        for (var i = 0; i < 3; i++)
+        {
+            yield return new WaitForSecondsRealtime(0.1f);
+            context.wizard.Next();
+            context.trackers.previewTrackerOffsetJSON.val = true;
+        }
+        */
     }
 
     public override void OnEnable()
@@ -296,51 +329,5 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         base.ResetToDefault();
         _logs = new JSONArray();
         snapshots.Clear();
-    }
-
-    private IEnumerator DebugCo()
-    {
-        if (_once) yield break;
-        _once = true;
-
-        context.trackers.previewTrackerOffsetJSON.val = true;
-
-        /*
-        Height with tracker: 1.706743
-        Height without tracker: 1.666745
-         */
-        var withTracker = VisualCuesHelper.Cross(Color.red).transform;
-            withTracker.position = new Vector3(0, 1.706743f, 0);
-        var withoutTracker = VisualCuesHelper.Cross(Color.blue).transform;
-            withoutTracker.position = new Vector3(0, 1.666745f, 0);
-
-        /*
-        while (context.plugin.isActiveAndEnabled)
-        {
-            yield return new WaitForSeconds(1);
-            new PlayerMeasurements(context).MeasureHeight();
-        }
-        */
-        /*
-        context.wizard.forceReopen = false;
-        yield return new WaitForSecondsRealtime(0.2f);
-        screensManager.Show(WizardScreen.ScreenName);
-        yield return new WaitForSecondsRealtime(0.1f);
-        context.wizard.StartWizard();
-        for (var i = 0; i < 2; i++)
-        {
-            yield return new WaitForSecondsRealtime(0.1f);
-            context.wizard.Skip();
-        }
-        foreach (var t in context.trackers.headAndHands) {t.enabled = false;}
-        context.hideGeometry.selectedJSON.val = false;
-        context.worldScale.selectedJSON.val = false;
-        for (var i = 0; i < 3; i++)
-        {
-            yield return new WaitForSecondsRealtime(0.1f);
-            context.wizard.Next();
-            context.trackers.previewTrackerOffsetJSON.val = true;
-        }
-        */
     }
 }
