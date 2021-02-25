@@ -54,7 +54,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public override bool BeforeEnable()
     {
         Rescan();
-
         SuperController.LogMessage($"{_objects.Count}");
 
         return _mirrors.Count > 0 || _objects.Count > 0;

@@ -24,47 +24,48 @@ public class EmbodyDebugSnapshot
 
     public JSONClass ToJSON()
     {
-        return new JSONClass
+        var jc = new JSONClass
         {
-            {"Name", name},
+            {"Name", name ?? "Unnamed"},
             {"WorldScale", worldScale.ToString(NumberFormatInfo.InvariantInfo)},
             {"PlayerHeightAdjust", playerHeightAdjust.ToString(NumberFormatInfo.InvariantInfo)},
-            {"NavigationRig", navigationRig?.ToJSON()},
-            {"Head", head?.ToJSON()},
-            {"LeftHand", leftHand?.ToJSON()},
-            {"RightHand", rightHand?.ToJSON()},
-            {"ViveTracker1", viveTracker1?.ToJSON()},
-            {"ViveTracker2", viveTracker2?.ToJSON()},
-            {"ViveTracker3", viveTracker3?.ToJSON()},
-            {"ViveTracker4", viveTracker4?.ToJSON()},
-            {"ViveTracker5", viveTracker5?.ToJSON()},
-            {"ViveTracker6", viveTracker6?.ToJSON()},
-            {"ViveTracker7", viveTracker7?.ToJSON()},
-            {"ViveTracker8", viveTracker8?.ToJSON()},
-            {"Plugin", pluginJSON}
         };
+        if (navigationRig != null) jc["NavigationRig"] = navigationRig.ToJSON();
+        if (head != null) jc["Head"] = head.ToJSON();
+        if (leftHand != null) jc["LeftHand"] = leftHand.ToJSON();
+        if (rightHand != null) jc["RightHand"] = rightHand.ToJSON();
+        if (viveTracker1 != null) jc["ViveTracker1"] = viveTracker1.ToJSON();
+        if (viveTracker2 != null) jc["ViveTracker2"] = viveTracker2.ToJSON();
+        if (viveTracker3 != null) jc["ViveTracker3"] = viveTracker3.ToJSON();
+        if (viveTracker4 != null) jc["ViveTracker4"] = viveTracker4.ToJSON();
+        if (viveTracker5 != null) jc["ViveTracker5"] = viveTracker5.ToJSON();
+        if (viveTracker6 != null) jc["ViveTracker6"] = viveTracker6.ToJSON();
+        if (viveTracker7 != null) jc["ViveTracker7"] = viveTracker7.ToJSON();
+        if (viveTracker8 != null) jc["ViveTracker8"] = viveTracker8.ToJSON();
+        if (pluginJSON != null) jc["Plugin"] = pluginJSON;
+        return jc;
     }
 
     public static EmbodyDebugSnapshot FromJSON(JSONClass jc)
     {
         return new EmbodyDebugSnapshot
         {
-            name = jc["Name"].Value,
-            worldScale = jc["WorldScale"].AsFloat,
-            playerHeightAdjust = jc["PlayerHeightAdjust"].AsFloat,
-            navigationRig = EmbodyTransformDebugSnapshot.FromJSON(jc["NavigationRig"]),
-            head = EmbodyTransformDebugSnapshot.FromJSON(jc["Head"]),
-            leftHand = EmbodyTransformDebugSnapshot.FromJSON(jc["LeftHand"]),
-            rightHand = EmbodyTransformDebugSnapshot.FromJSON(jc["RightHand"]),
-            viveTracker1 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker1"]),
-            viveTracker2 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker2"]),
-            viveTracker3 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker3"]),
-            viveTracker4 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker4"]),
-            viveTracker5 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker5"]),
-            viveTracker6 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker6"]),
-            viveTracker7 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker7"]),
-            viveTracker8 = EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker8"]),
-            pluginJSON = jc["Plugin"].AsObject
+            name = jc.HasKey("Name") ? jc["Name"].Value : null,
+            worldScale = jc.HasKey("WorldScale") ? jc["WorldScale"].AsFloat : 0f,
+            playerHeightAdjust = jc.HasKey("PlayerHeightAdjust") ? jc["PlayerHeightAdjust"].AsFloat : 0f,
+            navigationRig = jc.HasKey("NavigationRig") ? EmbodyTransformDebugSnapshot.FromJSON(jc["NavigationRig"]) : null,
+            head = jc.HasKey("Head") ? EmbodyTransformDebugSnapshot.FromJSON(jc["Head"]) : null,
+            leftHand = jc.HasKey("LeftHand") ? EmbodyTransformDebugSnapshot.FromJSON(jc["LeftHand"]) : null,
+            rightHand = jc.HasKey("RightHand") ? EmbodyTransformDebugSnapshot.FromJSON(jc["RightHand"]) : null,
+            viveTracker1 = jc.HasKey("ViveTracker1") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker1"]) : null,
+            viveTracker2 = jc.HasKey("ViveTracker2") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker2"]) : null,
+            viveTracker3 = jc.HasKey("ViveTracker3") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker3"]) : null,
+            viveTracker4 = jc.HasKey("ViveTracker4") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker4"]) : null,
+            viveTracker5 = jc.HasKey("ViveTracker5") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker5"]) : null,
+            viveTracker6 = jc.HasKey("ViveTracker6") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker6"]) : null,
+            viveTracker7 = jc.HasKey("ViveTracker7") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker7"]) : null,
+            viveTracker8 = jc.HasKey("ViveTracker8") ? EmbodyTransformDebugSnapshot.FromJSON(jc["ViveTracker8"]) : null,
+            pluginJSON = jc.HasKey("Plugin") ? jc["Plugin"].AsObject : null
         };
     }
 }
