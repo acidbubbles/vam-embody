@@ -20,6 +20,20 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         "ReflectiveWoodPanel",
     });
 
+    private static readonly HashSet<string> _bonesLookAt = new HashSet<string>
+    {
+        "lHand",
+        "rHand",
+        "lEye",
+        "rEye",
+        "tongue03",
+        "abdomen",
+        "chest",
+        "pelvis",
+        "Gen3",
+        "Testes",
+    };
+
     public override string storeId => "EyeTarget";
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
@@ -110,12 +124,20 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                 }
                 case "Person":
                 {
-                    foreach (var controller in atom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
+                    if (atom == containingAtom)
                     {
-                        if (!controller.enabled) continue;
-                        if (controller.name == "eyeTargetControl") continue;
-                        if (atom == containingAtom && controller.name == "headControl") continue;
-                        _objects.Add(controller.control);
+                        foreach (var bone in context.bones)
+                        {
+                            if (bone.name == "lHand" || bone.name == "rHand")
+                                _objects.Add(bone.transform);
+                        }
+                        continue;
+                    }
+
+                    foreach (var bone in atom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>())
+                    {
+                        if (!_bonesLookAt.Contains(bone.name)) continue;
+                        _objects.Add(bone.transform);
                     }
                     break;
                 }
@@ -201,8 +223,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         {
             var lastDistance = float.PositiveInfinity;
             var lastPosition = Vector3.zero;
+            // var lastName = "none";
             //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-            CalculateFrustum(eyesCenter, _head.forward, _frustrumFov, 1.3f, 0.22f, 100f, _frustrumPlanes);
+            CalculateFrustum(eyesCenter, _head.forward, _frustrumFov, 1.3f, 0.35f, 100f, _frustrumPlanes);
 
             foreach (var o in _objects)
             {
@@ -213,6 +236,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                 if (distance > lastDistance || distance > lookAtMirrorDistance) continue;
                 lastDistance = distance;
                 lastPosition = position;
+                // lastName = o.parent.parent.name;
             }
 
             if (!float.IsPositiveInfinity(lastDistance))
