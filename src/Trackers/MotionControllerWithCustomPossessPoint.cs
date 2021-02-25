@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleJSON;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -10,6 +11,7 @@ public class MotionControllerWithCustomPossessPoint
     public Rigidbody controllerPointRB;
     public bool enabled = true;
     public bool controlRotation = true;
+    public bool useLeapPositionning;
     public string mappedControllerName;
     public Transform currentMotionControl { get; private set; }
     private Func<Transform> _getMotionControl;
@@ -142,5 +144,44 @@ public class MotionControllerWithCustomPossessPoint
             controllerPointTransform = controllerPointGO.transform,
             controllerPointRB = rb,
         };
+    }
+
+    public JSONClass GetJSON()
+    {
+        var motionControlJSON = new JSONClass
+        {
+            {"OffsetPosition", offsetControllerCustom.ToJSON()},
+            {"OffsetRotation", rotateControllerCustom.ToJSON()},
+            {"PossessPointRotation", rotateAroundTracker.ToJSON()},
+            {"Controller", mappedControllerName},
+            {"Enabled", enabled ? "true" : "false"},
+            {"ControlRotation", controlRotation ? "true" : "false"},
+            {"UseLeap", useLeapPositionning ? "true" : "false"},
+        };
+        return motionControlJSON;
+    }
+
+    public void RestoreFromJSON(JSONNode jc)
+    {
+        offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
+        rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
+        rotateAroundTracker = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
+        mappedControllerName = jc["Controller"].Value;
+        enabled = jc["Enabled"].Value != "false";
+        controlRotation = jc["ControlRotation"].Value != "false";
+        useLeapPositionning = jc["UseLeap"].Value == "true";
+        if (mappedControllerName == "") mappedControllerName = null;
+    }
+
+    public void ResetToDefault()
+    {
+        if (!MotionControlNames.IsHeadOrHands(name))
+            mappedControllerName = null;
+        controlRotation = true;
+        useLeapPositionning = false;
+        offsetControllerCustom = Vector3.zero;
+        rotateControllerCustom = Vector3.zero;
+        rotateAroundTracker = Vector3.zero;
+        enabled = true;
     }
 }

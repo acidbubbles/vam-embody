@@ -7,7 +7,12 @@
 
     public static bool IsHeadOrHands(string name)
     {
-        return name == Head || name == LeftHand || name == RightHand;
+        return name == Head || IsHands(name);
+    }
+
+    public static bool IsHands(string name)
+    {
+        return name == LeftHand || name == RightHand;
     }
 
     public static bool IsViveTracker(string name)

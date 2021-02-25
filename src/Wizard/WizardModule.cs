@@ -50,7 +50,7 @@ public class WizardModule : EmbodyModuleBase, IWizard
     public void StartWizard()
     {
         if (_coroutine != null) StopWizard();
-        if (context.leftHand == null || context.rightHand == null)
+        if (context.LeftHand() == null || context.RightHand() == null)
         {
             statusJSON.val = _noHandsMessage;
             return;

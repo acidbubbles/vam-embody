@@ -123,6 +123,15 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             ), false);
         }
 
+        if (MotionControlNames.IsHands(motionControl.name))
+        {
+            _section.CreateToggle(new JSONStorableBool(
+                $"{motionControl.name} Use Leap Motion Position",
+                motionControl.useLeapPositionning,
+                val => motionControl.useLeapPositionning = val
+            ), false);
+        }
+
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset X",
             motionControl.offsetControllerCustom.x,

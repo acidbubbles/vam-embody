@@ -44,8 +44,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
     public JSONStorableBool enableHandsGraspJSON { get; } = new JSONStorableBool("EnableHandsGrasp", true);
 
-    private FreeControllerV3WithSnapshot leftHandController;
-    private FreeControllerV3WithSnapshot rightHandController;
+    private FreeControllerV3WithSnapshot _leftHandController;
+    private FreeControllerV3WithSnapshot _rightHandController;
     private NavigationRigSnapshot _navigationRigSnapshot;
     private Coroutine _waitForHandsCo;
 
@@ -54,8 +54,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.Awake();
 
         headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
-        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.leftHand, "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
-        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.rightHand, "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
+        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositionning ?? false), "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
+        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositionning ?? false), "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3);
@@ -69,8 +69,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             var snapshot = new FreeControllerV3WithSnapshot(controller);
             controllers.Add(snapshot);
-            if (controller.name == "lHandControl") leftHandController = snapshot;
-            if (controller.name == "rHandControl") rightHandController = snapshot;
+            if (controller.name == "lHandControl") _leftHandController = snapshot;
+            if (controller.name == "rHandControl") _rightHandController = snapshot;
         }
 
         previewTrackerOffsetJSON.setCallbackFunction = val =>
@@ -274,8 +274,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private bool TryActivateHands()
     {
-        var leftActive = leftHandController.active || Bind(leftHandMotionControl);
-        var rightActive = rightHandController.active || Bind(rightHandMotionControl);
+        var leftActive = _leftHandController.active || Bind(leftHandMotionControl);
+        var rightActive = _rightHandController.active || Bind(rightHandMotionControl);
         return leftActive && rightActive;
     }
 
@@ -288,18 +288,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         var motionControlsJSON = new JSONClass();
         foreach (var motionControl in motionControls)
-        {
-            var motionControlJSON = new JSONClass
-            {
-                {"OffsetPosition", motionControl.offsetControllerCustom.ToJSON()},
-                {"OffsetRotation", motionControl.rotateControllerCustom.ToJSON()},
-                {"PossessPointRotation", motionControl.rotateAroundTracker.ToJSON()},
-                {"Controller", motionControl.mappedControllerName},
-                {"Enabled", motionControl.enabled ? "true" : "false"},
-                {"ControlRotation", motionControl.controlRotation ? "true" : "false"},
-            };
-            motionControlsJSON[motionControl.name] = motionControlJSON;
-        }
+            motionControlsJSON[motionControl.name] = motionControl.GetJSON();
         jc["MotionControls"] = motionControlsJSON;
     }
 
@@ -313,16 +302,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var motionControlsJSON = jc["MotionControls"].AsObject;
         foreach (var motionControlName in motionControlsJSON.Keys)
         {
-            var controllerJSON = motionControlsJSON[motionControlName];
+            var motionControlJSON = motionControlsJSON[motionControlName];
             var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
-            if (motionControl == null) continue;
-            motionControl.offsetControllerCustom = controllerJSON["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
-            motionControl.rotateControllerCustom = controllerJSON["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
-            motionControl.rotateAroundTracker = controllerJSON["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
-            motionControl.mappedControllerName = controllerJSON["Controller"].Value;
-            motionControl.enabled = controllerJSON["Enabled"].Value != "false";
-            motionControl.controlRotation = controllerJSON["ControlRotation"].Value != "false";
-            if (motionControl.mappedControllerName == "") motionControl.mappedControllerName = null;
+            motionControl?.RestoreFromJSON(motionControlJSON);
         }
     }
 
@@ -330,16 +312,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.ResetToDefault();
 
-        foreach (var mc in context.trackers.motionControls)
-        {
-            if (!MotionControlNames.IsHeadOrHands(mc.name))
-                mc.mappedControllerName = null;
-            mc.controlRotation = true;
-            mc.offsetControllerCustom = Vector3.zero;
-            mc.rotateControllerCustom = Vector3.zero;
-            mc.rotateAroundTracker = Vector3.zero;
-            mc.enabled = true;
-        }
+        foreach (var mc in context.trackers.motionControls) mc.ResetToDefault();
 
         enableHandsGraspJSON.SetValToDefault();
         previewTrackerOffsetJSON.SetValToDefault();

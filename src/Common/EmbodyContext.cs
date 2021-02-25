@@ -22,38 +22,32 @@ public class EmbodyContext
     // ReSharper disable once Unity.NoNullCoalescing
     public Transform head => diagnostics.head ?? SuperController.singleton.centerCameraTarget.transform;
 
-    public Transform leftHand
+    public Transform LeftHand(bool useLeap = false)
     {
-        get
-        {
-            if (!ReferenceEquals(diagnostics.leftHand, null))
-                return diagnostics.leftHand;
+        if (!ReferenceEquals(diagnostics.leftHand, null))
+            return diagnostics.leftHand;
 
-            if (SuperController.singleton.isOVR && SuperController.singleton.ovrHandInputLeft.enabled)
-                return SuperController.singleton.touchObjectLeft;
-            if (SuperController.singleton.isOpenVR && SuperController.singleton.steamVRHandInputLeft.enabled)
-                return SuperController.singleton.viveObjectLeft;
-            if (SuperController.singleton.leapHandModelControl.leftHandEnabled)
-                return SuperController.singleton.leapHandLeft;
-            return null;
-        }
+        if (SuperController.singleton.isOVR && (!useLeap || SuperController.singleton.ovrHandInputLeft.enabled))
+            return SuperController.singleton.touchObjectLeft;
+        if (SuperController.singleton.isOpenVR && (!useLeap || SuperController.singleton.steamVRHandInputLeft.enabled))
+            return SuperController.singleton.viveObjectLeft;
+        if (useLeap && SuperController.singleton.leapHandModelControl.leftHandEnabled)
+            return SuperController.singleton.leapHandLeft;
+        return null;
     }
 
-    public Transform rightHand
+    public Transform RightHand(bool useLeap = false)
     {
-        get
-        {
-            if (!ReferenceEquals(diagnostics.rightHand, null))
-                return diagnostics.rightHand;
+        if (!ReferenceEquals(diagnostics.rightHand, null))
+            return diagnostics.rightHand;
 
-            if (SuperController.singleton.isOVR && SuperController.singleton.ovrHandInputRight.enabled)
-                return SuperController.singleton.touchObjectRight;
-            if (SuperController.singleton.isOpenVR && SuperController.singleton.steamVRHandInputRight.enabled)
-                return SuperController.singleton.viveObjectRight;
-            if (SuperController.singleton.leapHandModelControl.rightHandEnabled)
-                return SuperController.singleton.leapHandRight;
-            return null;
-        }
+        if (SuperController.singleton.isOVR && (!useLeap || SuperController.singleton.ovrHandInputRight.enabled))
+            return SuperController.singleton.touchObjectRight;
+        if (SuperController.singleton.isOpenVR && (!useLeap || SuperController.singleton.steamVRHandInputRight.enabled))
+            return SuperController.singleton.viveObjectRight;
+        if (useLeap && SuperController.singleton.leapHandModelControl.rightHandEnabled)
+            return SuperController.singleton.leapHandRight;
+        return null;
     }
 
     // ReSharper disable Unity.NoNullCoalescing

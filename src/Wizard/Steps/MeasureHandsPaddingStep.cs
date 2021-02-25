@@ -29,7 +29,7 @@ public class MeasureHandsPaddingStep : WizardStepBase, IWizardStep
 
     public bool Apply()
     {
-        SuperController.LogMessage($"Hands distance: {Vector3.Distance(context.leftHand.position, context.rightHand.position)}");
+        SuperController.LogMessage($"Hands distance: {Vector3.Distance(context.LeftHand().position, context.RightHand().position)}");
 
         return true;
     }

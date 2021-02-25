@@ -66,7 +66,7 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     public bool Apply()
     {
         var inGame = _anchor.bone.InverseTransformPoint(_rightComparePointPosition);
-        var real = _anchor.bone.InverseTransformPoint(context.rightHand.position);
+        var real = _anchor.bone.InverseTransformPoint(context.RightHand().position);
 
         _anchor.realLifeSize += new Vector3(0, (real.y - inGame.y) / 2f, (real.z - inGame.z) * _sizeDepthMultiply);
 

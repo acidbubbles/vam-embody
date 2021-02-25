@@ -74,8 +74,8 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     {
         var inverseRotation = Quaternion.Inverse(_anchor.bone.rotation);
         var compareCenter = (_leftComparePointPosition + _rightComparePointPosition) / 2f;
-        var leftHandPosition = context.leftHand.position;
-        var rightHandPosition = context.rightHand.position;
+        var leftHandPosition = context.LeftHand().position;
+        var rightHandPosition = context.RightHand().position;
         var handsCenter = (leftHandPosition + rightHandPosition) / 2f;
         var realLifeOffset = inverseRotation * (handsCenter - compareCenter);
         realLifeOffset.x = 0; // We never want sideways offset
