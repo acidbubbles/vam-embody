@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 public class DiagnosticsScreen : ScreenBase, IScreen
@@ -23,35 +24,62 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
 
         var snapshotsJSON = new JSONStorableStringChooser("",
-            context.diagnostics.snapshots.Select(s => s.name).ToList(),
-            $"{context.diagnostics.snapshots.Count} snapshots",
+            new List<string>(),
+            $"",
             "Snapshots",
             val => ShowSnapshot(logsJSON, val));
+        RefreshSnapshots(snapshotsJSON);
         CreateScrollablePopup(snapshotsJSON);
 
-        CreateButton("Remove Fake Trackers").button.onClick.AddListener(() => context.diagnostics.RemoveFakeTrackers());
-        CreateButton("Create Fake Trackers").button.onClick.AddListener(() => context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val)));
+        CreateButton("Remove Fake Trackers").button.onClick.AddListener(() =>
+        {
+            context.diagnostics.RemoveFakeTrackers();
+        });
+        CreateButton("Create Fake Trackers").button.onClick.AddListener(() =>
+        {
+            context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val));
+        });
         CreateToggle(_restoreWorldStateJSON);
-        CreateButton("Load Snapshot").button.onClick.AddListener(() => LoadSnapshot(snapshotsJSON.val));
+        CreateButton("Load Snapshot").button.onClick.AddListener(() =>
+        {
+            var snapshot = FindSnapshot(snapshotsJSON);
+            if (snapshot == null)
+            {
+                logsJSON.val = "Select a snapshot first";
+                return;
+            }
+            context.diagnostics.RestoreSnapshot(snapshot, _restoreWorldStateJSON.val);
+        });
         CreateButton("Take Snapshot").button.onClick.AddListener(() =>
         {
             context.diagnostics.TakeSnapshot("ManualSnapshot");
-            RefreshSnapshots(snapshotsJSON, logsJSON);
+            RefreshSnapshots(snapshotsJSON);
+            logsJSON.val = "";
         });
         CreateButton("Delete Snapshot").button.onClick.AddListener(() =>
         {
-            var snapshot = context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val);
-            if (snapshot == null) return;
+            var snapshot = FindSnapshot(snapshotsJSON);
+            if (snapshot == null)
+            {
+                logsJSON.val = "Select a snapshot first";
+                return;
+            }
             context.diagnostics.snapshots.Remove(snapshot);
-            RefreshSnapshots(snapshotsJSON, logsJSON);
+            snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
+            snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
+            logsJSON.val = "";
         });
     }
 
-    private void RefreshSnapshots(JSONStorableStringChooser snapshotsJSON, JSONStorableString logsJSON)
+    private void RefreshSnapshots(JSONStorableStringChooser snapshotsJSON)
     {
         snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
         snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
-        logsJSON.val = "";
+    }
+
+    private EmbodyDebugSnapshot FindSnapshot(JSONStorableStringChooser snapshotsJSON)
+    {
+        return context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val);
     }
 
     private void ShowSnapshot(JSONStorableString logsJSON, string snapshotName)
@@ -76,12 +104,5 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         sb.AppendLine($"<b>Vive Tracker 7</b>:\n{snapshot.viveTracker7}");
         sb.AppendLine($"<b>Vive Tracker 8</b>:\n{snapshot.viveTracker8}");
         logsJSON.val = sb.ToString();
-    }
-
-    private void LoadSnapshot(string snapshotName)
-    {
-        var snapshot = context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotName);
-        if (snapshot == null) return;
-        context.diagnostics.RestoreSnapshot(snapshot, _restoreWorldStateJSON.val);
     }
 }

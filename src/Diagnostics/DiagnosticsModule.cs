@@ -164,31 +164,38 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     public void CreateFakeTrackers(EmbodyDebugSnapshot snapshot)
     {
-        if (snapshot == null || snapshot.head != null)
-            StartCoroutine(CreateFakeTracker(MotionControlNames.Head, "headControl", t => head = t));
-        if (snapshot == null || snapshot.leftHand != null)
-            StartCoroutine(CreateFakeTracker(MotionControlNames.LeftHand, "lHandControl", t => leftHand = t));
-        if (snapshot == null || snapshot.rightHand != null)
-            StartCoroutine(CreateFakeTracker(MotionControlNames.RightHand, "rHandControl", t => rightHand = t));
-        if (snapshot == null || snapshot.viveTracker1 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}1", "lFootControl", t => viveTracker1 = t));
-        if (snapshot == null || snapshot.viveTracker2 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}2", "rFootControl", t => viveTracker2 = t));
-        if (snapshot == null || snapshot.viveTracker3 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}3", "lKneeControl", t => viveTracker3 = t));
-        if (snapshot == null || snapshot.viveTracker4 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}4", "rKneeControl", t => viveTracker4 = t));
-        if (snapshot == null || snapshot.viveTracker5 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}5", "hipControl", t => viveTracker5 = t));
-        if (snapshot == null || snapshot.viveTracker6 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}6", "chestControl", t => viveTracker6 = t));
-        if (snapshot == null || snapshot.viveTracker7 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}7", "lElbowControl", t => viveTracker7 = t));
-        if (snapshot == null || snapshot.viveTracker8 != null)
-            StartCoroutine(CreateFakeTracker($"{MotionControlNames.ViveTrackerPrefix}8", "rElbowControl", t => viveTracker8 = t));
+        StartCoroutine(CreateFakeTrackersCo(snapshot));
     }
 
-    private IEnumerator CreateFakeTracker(string trackerName, string controlName, Func<Transform, Transform> assign)
+    public IEnumerator CreateFakeTrackersCo(EmbodyDebugSnapshot snapshot)
+    {
+        var e = CreateFakeTrackerCo(MotionControlNames.Head, "headControl", t => head = t, "Head", false);
+        while (e.MoveNext())
+            yield return e.Current;
+
+        if (snapshot == null || snapshot.leftHand != null)
+            StartCoroutine(CreateFakeTrackerCo(MotionControlNames.LeftHand, "lHandControl", t => leftHand = t));
+        if (snapshot == null || snapshot.rightHand != null)
+            StartCoroutine(CreateFakeTrackerCo(MotionControlNames.RightHand, "rHandControl", t => rightHand = t));
+        if (snapshot == null || snapshot.viveTracker1 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}1", "lFootControl", t => viveTracker1 = t));
+        if (snapshot == null || snapshot.viveTracker2 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}2", "rFootControl", t => viveTracker2 = t));
+        if (snapshot == null || snapshot.viveTracker3 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}3", "lKneeControl", t => viveTracker3 = t));
+        if (snapshot == null || snapshot.viveTracker4 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}4", "rKneeControl", t => viveTracker4 = t));
+        if (snapshot == null || snapshot.viveTracker5 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}5", "hipControl", t => viveTracker5 = t));
+        if (snapshot == null || snapshot.viveTracker6 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}6", "chestControl", t => viveTracker6 = t));
+        if (snapshot == null || snapshot.viveTracker7 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}7", "lElbowControl", t => viveTracker7 = t));
+        if (snapshot == null || snapshot.viveTracker8 != null)
+            StartCoroutine(CreateFakeTrackerCo($"{MotionControlNames.ViveTrackerPrefix}8", "rElbowControl", t => viveTracker8 = t));
+    }
+
+    private IEnumerator CreateFakeTrackerCo(string trackerName, string controlName, Func<Transform, Transform> assign, string icon = null, bool attachToHead = true)
     {
         var atomUid = $"{_embodyDebugPrefix}{trackerName}";
         var atom = SuperController.singleton.GetAtomByUid(atomUid);
@@ -200,6 +207,15 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             atom = SuperController.singleton.GetAtomByUid(atomUid);
         }
         var t = assign(atom.mainController.control);
+        if (icon != null)
+        {
+            var grabPoint = atom.GetStorableByID("GrabPoint");
+            if (grabPoint != null)
+            {
+                grabPoint.SetStringChooserParamValue("grabIconType", icon);
+            }
+        }
+
         var controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == controlName);
         if (controller != null)
         {
@@ -208,6 +224,16 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             if(tracker != null)
                 t.Rotate(tracker.rotateControllerCombined, Space.Self);
         }
+
+        if (attachToHead)
+        {
+            var c = atom.mainController;
+            c.SetLinkToAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");
+            c.SetLinkToRigidbodyObject("control");
+            c.currentPositionState = FreeControllerV3.PositionState.PhysicsLink;
+            c.currentRotationState = FreeControllerV3.RotationState.PhysicsLink;
+        }
+    }
 
     public void Log(string message)
     {
