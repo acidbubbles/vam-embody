@@ -9,6 +9,7 @@ public class EmbodyDebugSnapshot
     public JSONArray poseJSON;
     public float worldScale;
     public float playerHeightAdjust;
+    public string vrMode;
     public EmbodyTransformDebugSnapshot navigationRig;
     public EmbodyTransformDebugSnapshot head;
     public EmbodyTransformDebugSnapshot leftHand;
@@ -27,6 +28,7 @@ public class EmbodyDebugSnapshot
         var jc = new JSONClass
         {
             {"Name", name ?? "Unnamed"},
+            {"VRMode", vrMode ?? "Unspecified"},
             {"WorldScale", worldScale.ToString(NumberFormatInfo.InvariantInfo)},
             {"PlayerHeightAdjust", playerHeightAdjust.ToString(NumberFormatInfo.InvariantInfo)},
         };
@@ -52,6 +54,7 @@ public class EmbodyDebugSnapshot
         return new EmbodyDebugSnapshot
         {
             name = jc.HasKey("Name") ? jc["Name"].Value : null,
+            vrMode = jc.HasKey("VRMode") ? jc["VRMode"].Value : null,
             worldScale = jc.HasKey("WorldScale") ? jc["WorldScale"].AsFloat : 0f,
             playerHeightAdjust = jc.HasKey("PlayerHeightAdjust") ? jc["PlayerHeightAdjust"].AsFloat : 0f,
             navigationRig = jc.HasKey("NavigationRig") ? EmbodyTransformDebugSnapshot.FromJSON(jc["NavigationRig"]) : null,

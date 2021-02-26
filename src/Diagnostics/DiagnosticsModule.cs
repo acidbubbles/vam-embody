@@ -20,8 +20,8 @@ public interface IDiagnosticsModule : IEmbodyModule
     Transform viveTracker8 { get; }
     IEnumerable<string> logs { get; }
     List<EmbodyDebugSnapshot> snapshots { get; }
-    void TakeSnapshot(string name);
     void Log(string message);
+    void TakeSnapshot(string name);
     void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState);
     void RemoveFakeTrackers();
     void CreateFakeTrackers(EmbodyDebugSnapshot snapshot);
@@ -248,6 +248,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         snapshots.Add(new EmbodyDebugSnapshot
         {
             name = $"{Time.realtimeSinceStartup:0.00} {snapshotName}",
+            vrMode = GetVRMode(),
             worldScale = SuperController.singleton.worldScale,
             playerHeightAdjust = SuperController.singleton.playerHeightAdjust,
             pluginJSON = pluginJSON,
@@ -265,6 +266,15 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             viveTracker7 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker7),
             viveTracker8 = EmbodyTransformDebugSnapshot.From(SuperController.singleton.viveTracker8),
         });
+    }
+
+    private static string GetVRMode()
+    {
+        if (SuperController.singleton.isOVR)
+            return "Oculus";
+        if (SuperController.singleton.isOpenVR)
+            return "Vive";
+        return "Desktop";
     }
 
     private JSONArray StorePoseJSON()
