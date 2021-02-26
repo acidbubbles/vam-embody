@@ -230,8 +230,8 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             var c = atom.mainController;
             c.SetLinkToAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");
             c.SetLinkToRigidbodyObject("control");
-            c.currentPositionState = FreeControllerV3.PositionState.PhysicsLink;
-            c.currentRotationState = FreeControllerV3.RotationState.PhysicsLink;
+            c.currentPositionState = FreeControllerV3.PositionState.ParentLink;
+            c.currentRotationState = FreeControllerV3.RotationState.ParentLink;
         }
     }
 
@@ -325,13 +325,18 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     private void RestoreFakeTracker(Transform fake, EmbodyTransformDebugSnapshot snapshot)
     {
         if (fake == null) return;
+        var controller = fake.GetComponent<FreeControllerV3>();
         if (snapshot == null)
         {
-            SuperController.singleton.RemoveAtom(fake.GetComponent<FreeControllerV3>().containingAtom);
+            SuperController.singleton.RemoveAtom(controller.containingAtom);
             return;
         }
-        fake.position = snapshot.position;
-        fake.eulerAngles = snapshot.rotation;
+        controller.currentPositionState = FreeControllerV3.PositionState.On;
+        controller.currentRotationState = FreeControllerV3.RotationState.On;
+        controller.control.position = snapshot.position;
+        controller.control.eulerAngles = snapshot.rotation;
+        controller.currentPositionState = FreeControllerV3.PositionState.ParentLink;
+        controller.currentRotationState = FreeControllerV3.RotationState.ParentLink;
     }
 
     public override void StoreJSON(JSONClass jc)

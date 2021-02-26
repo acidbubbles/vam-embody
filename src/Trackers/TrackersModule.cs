@@ -148,11 +148,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             }
             else
             {
-                var controlRotation = controller.control.rotation;
-                motionControl.currentMotionControl.SetPositionAndRotation(
-                    headBonePosition - controlRotation * motionControl.offsetControllerCombined,
-                    controlRotation
-                );
+                SuperController.singleton.AlignToController(motionControl.currentMotionControl, controller, motionControl);
             }
         }
         else

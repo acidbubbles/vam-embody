@@ -4,8 +4,21 @@ public static class SuperControllerExtensions
 {
     public static void AlignRigAndController(this SuperController sc, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
     {
-        var navigationRig = sc.navigationRig;
+        sc.AlignToController(sc.navigationRig, controller, motionControl, alignControl);
 
+        if (sc.MonitorCenterCamera != null)
+        {
+            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
+            monitorCenterCameraTransform.LookAt(controller.transform.position + controller.GetForwardPossessAxis());
+            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
+            localEulerAngles.y = 0f;
+            localEulerAngles.z = 0f;
+            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
+        }
+    }
+
+    public static void AlignToController(this SuperController sc, Transform navigationRig, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
+    {
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();
         var navigationRigUp = navigationRig.up;
@@ -28,15 +41,5 @@ public static class SuperControllerExtensions
         navigationRigPositionDelta += navigationRigUp * (0f - navigationRigUpDelta);
         navigationRig.position = navigationRigPositionDelta;
         sc.playerHeightAdjust += navigationRigUpDelta;
-
-        if (sc.MonitorCenterCamera != null)
-        {
-            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
-            monitorCenterCameraTransform.LookAt(controller.transform.position + forwardPossessAxis);
-            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
-            localEulerAngles.y = 0f;
-            localEulerAngles.z = 0f;
-            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
-        }
     }
 }
