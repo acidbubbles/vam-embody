@@ -38,6 +38,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
             if (!hashSet.Add(mc.mappedControllerName))
             {
                 lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
+                context.diagnostics.Log(lastError);
                 return false;
             }
         }

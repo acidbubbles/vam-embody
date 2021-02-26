@@ -21,6 +21,7 @@ public interface IDiagnosticsModule : IEmbodyModule
     IEnumerable<string> logs { get; }
     List<EmbodyDebugSnapshot> snapshots { get; }
     void TakeSnapshot(string name);
+    void Log(string message);
     void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState);
     void RemoveFakeTrackers();
     void CreateFakeTrackers(EmbodyDebugSnapshot snapshot);
@@ -132,7 +133,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     {
         if (type != LogType.Error && type != LogType.Exception) return;
         if (condition == null) return;
-        _logs.Add($"{Time.realtimeSinceStartup:0.00} {type} {condition} {stacktrace}");
+        _logs.Add($"[ERR] {Time.realtimeSinceStartup:0.00} {type} {condition} {stacktrace}");
     }
 
     public void RemoveFakeTrackers()
@@ -207,6 +208,10 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             if(tracker != null)
                 t.Rotate(tracker.rotateControllerCombined, Space.Self);
         }
+
+    public void Log(string message)
+    {
+        _logs.Add($"[INF] {Time.realtimeSinceStartup:0.00} {message}");
     }
 
     public void TakeSnapshot(string snapshotName)
