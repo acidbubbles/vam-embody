@@ -20,6 +20,12 @@ public class WorldScaleSettingsScreen : ScreenBase, IScreen
         CreateScrollablePopup(_worldScale.worldScaleMethodJSON, true);
         CreateSlider(_worldScale.playerHeightJSON, true).label = "Player Height";
         CreateButton("Record Player Height (stand straight)", true).button.onClick.AddListener(RecordPlayerHeight);
+        var showPersonHeight = CreateButton("Show Person Height", true);
+        showPersonHeight.button.onClick.AddListener(() =>
+        {
+            var height = new PersonMeasurements(context).MeasureHeight();
+            showPersonHeight.label = $"Height: {height:0.00} (World Scale: {height / context.worldScale.playerHeightJSON.val:0.00})";
+        });
     }
 
     private void RecordPlayerHeight()
