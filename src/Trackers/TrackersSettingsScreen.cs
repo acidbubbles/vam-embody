@@ -126,7 +126,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         if (MotionControlNames.IsHands(motionControl.name))
         {
             _section.CreateToggle(new JSONStorableBool(
-                $"{motionControl.name} Use Leap Motion Position",
+                $"Use Leap Motion Position",
                 motionControl.useLeapPositionning,
                 val => motionControl.useLeapPositionning = val
             ), false);
