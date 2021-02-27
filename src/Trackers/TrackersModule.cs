@@ -259,7 +259,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     private IEnumerator WaitForHandsCo()
     {
         yield return new WaitForSecondsRealtime(1f);
-        while (TryActivateHands())
+        while (!TryActivateHands())
         {
             yield return new WaitForSecondsRealtime(0.5f);
         }
