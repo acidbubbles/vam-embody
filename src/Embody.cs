@@ -9,12 +9,14 @@ using UnityEngine;
 public interface IEmbody
 {
     JSONStorableBool activeJSON { get; }
+    UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
 }
 
 public class Embody : MVRScript, IEmbody
 {
     public JSONStorableBool activeJSON { get; private set; }
+    public UIDynamicToggle activeToggle { get; private set; }
     public JSONStorableStringChooser presetsJSON { get; private set; }
 
     private GameObject _modules;
@@ -130,7 +132,7 @@ public class Embody : MVRScript, IEmbody
             };
             RegisterBool(activeJSON);
 
-            var activeToggle = CreateToggle(activeJSON, false);
+            activeToggle = CreateToggle(activeJSON, false);
             activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
@@ -181,7 +183,7 @@ public class Embody : MVRScript, IEmbody
         {
             {"Namespace", "Embody"}
         });
-        bindings.Add(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
+        bindings.Add(new JSONStorableAction("ToggleActive", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = !activeJSON.val; } }));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
         bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
     }

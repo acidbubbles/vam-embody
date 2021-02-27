@@ -42,6 +42,7 @@ public class WizardScreen : ScreenBase, IScreen
             stopButton.button.interactable = isRunning;
             nextButton.button.interactable = isRunning;
             skipButton.button.interactable = isRunning;
+            context.embody.activeToggle.toggle.interactable = !isRunning;
         };
         _wizard.statusChanged.AddListener(_onStatusChanged);
         _onStatusChanged(_wizard.isRunning);
@@ -53,5 +54,6 @@ public class WizardScreen : ScreenBase, IScreen
 
         _wizard.StopWizard();
         _wizard.statusChanged.RemoveListener(_onStatusChanged);
+        context.embody.activeToggle.toggle.interactable = true;
     }
 }
