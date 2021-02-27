@@ -18,12 +18,15 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
         base.Enter();
 
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        context.embody.activeJSON.val = true;
+        /*
+        This method creates less movement noise, but it's harder to precisely align eyes
         context.worldScale.enabledJSON.val = true;
-        //context.hideGeometry.enabledJSON.val = true;
         SuperController.singleton.AlignRigAndController(
             context.containingAtom.freeControllers.First(fc => fc.name == "headControl"),
             context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head),
             false);
+        */
     }
 
     public bool Apply()
@@ -52,9 +55,11 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
     {
         base.Leave();
 
-        //context.hideGeometry.enabledJSON.val = false;
+        context.embody.activeJSON.val = false;
+        /*
         context.worldScale.enabledJSON.val = false;
         _navigationRigSnapshot?.Restore();
+        */
     }
 
     public override void Update()

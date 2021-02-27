@@ -6,7 +6,7 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
 {
     private readonly List<IWizardStep> _steps;
     private readonly int _useViveTrackers;
-    public string helpText => "<b>Vive trackers</b> were detected.\n\nIf you want to calibrate and use them during possession, press Next.\n\nYou can also Skip this if you don't want Embody to control your Vive trackers.";
+    public string helpText => "<b>Vive trackers</b> were detected.\n\nIf you want to calibrate and use them during possession, strand <b>straight</b>, look <b>forward</b> press <b>Next</b>.\n\nYou can also Skip this if you don't want Embody to control your Vive trackers.";
 
     public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps, int useViveTrackers)
         : base(context)
