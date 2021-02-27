@@ -148,7 +148,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             }
             else
             {
-                SuperController.singleton.AlignToController(motionControl.currentMotionControl, controller, motionControl);
+                SuperController.singleton.AlignTransformAndController(controller, motionControl);
             }
         }
         else
@@ -261,6 +261,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private IEnumerator WaitForHandsCo()
     {
+        yield return new WaitForSecondsRealtime(1f);
         while (TryActivateHands())
         {
             yield return new WaitForSecondsRealtime(0.5f);
