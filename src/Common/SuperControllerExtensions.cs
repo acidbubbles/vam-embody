@@ -4,7 +4,19 @@ public static class SuperControllerExtensions
 {
     public static void AlignRigAndController(this SuperController sc, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
     {
-        sc.AlignToController(sc.navigationRig, controller, motionControl, alignControl);
+        var up = sc.navigationRig.up;
+
+        sc.navigationRig.rotation = ComputeRotation(sc.navigationRig, controller, motionControl, up);
+
+        if (alignControl)
+            controller.AlignTo(motionControl.controllerPointTransform, true);
+
+        var position = ComputePosition(sc.navigationRig, controller, motionControl);
+
+        var upDelta = Vector3.Dot(position - sc.navigationRig.position, up);
+        position += up * (0f - upDelta);
+        sc.navigationRig.position = position;
+        sc.playerHeightAdjust += upDelta;
 
         if (sc.MonitorCenterCamera != null)
         {
@@ -17,29 +29,39 @@ public static class SuperControllerExtensions
         }
     }
 
-    public static void AlignToController(this SuperController sc, Transform navigationRig, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
+    public static void AlignTransformAndController(this SuperController _, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
     {
-        var forwardPossessAxis = controller.GetForwardPossessAxis();
-        var upPossessAxis = controller.GetUpPossessAxis();
-        var navigationRigUp = navigationRig.up;
+        var transform = motionControl.currentMotionControl;
+        var up = transform.up;
 
-        var fromDirection = Vector3.ProjectOnPlane(motionControl.controllerPointTransform.forward, navigationRigUp);
-        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, navigationRigUp);
-        if (Vector3.Dot(upPossessAxis, navigationRigUp) < 0f && Vector3.Dot(motionControl.controllerPointTransform.up, navigationRigUp) > 0f)
-            vector = -vector;
-
-        var rotation = Quaternion.FromToRotation(fromDirection, vector);
-        navigationRig.rotation = rotation * navigationRig.rotation;
+        transform.rotation = ComputeRotation(transform, controller, motionControl, up);
 
         if (alignControl)
             controller.AlignTo(motionControl.controllerPointTransform, true);
 
+        var position = ComputePosition(transform, controller, motionControl);
+
+        transform.position = position;
+    }
+
+    private static Quaternion ComputeRotation(Transform transform, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, Vector3 up)
+    {
+        var forwardPossessAxis = controller.GetForwardPossessAxis();
+        var upPossessAxis = controller.GetUpPossessAxis();
+
+        var fromDirection = Vector3.ProjectOnPlane(motionControl.controllerPointTransform.forward, up);
+        var vector = Vector3.ProjectOnPlane(forwardPossessAxis, up);
+        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControl.controllerPointTransform.up, up) > 0f)
+            vector = -vector;
+
+        var rotation = Quaternion.FromToRotation(fromDirection, vector);
+        return rotation * transform.rotation;
+    }
+
+    private static Vector3 ComputePosition(Transform transform, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl)
+    {
         var possessPointDelta = controller.control.position - motionControl.controllerPointTransform.position;
-        var navigationRigPosition = navigationRig.position;
-        var navigationRigPositionDelta = navigationRigPosition + possessPointDelta;
-        var navigationRigUpDelta = Vector3.Dot(navigationRigPositionDelta - navigationRigPosition, navigationRigUp);
-        navigationRigPositionDelta += navigationRigUp * (0f - navigationRigUpDelta);
-        navigationRig.position = navigationRigPositionDelta;
-        sc.playerHeightAdjust += navigationRigUpDelta;
+        var currentPosition = transform.position;
+        return currentPosition + possessPointDelta;
     }
 }
