@@ -11,7 +11,8 @@ public class MotionControllerWithCustomPossessPoint
     public Rigidbody controllerPointRB;
     public bool enabled = true;
     public bool controlRotation = true;
-    public bool useLeapPositionning;
+    public bool useLeapPositioning;
+    public bool fingersTracking = true;
     public string mappedControllerName;
     public Transform currentMotionControl { get; private set; }
     private Func<Transform> _getMotionControl;
@@ -156,7 +157,8 @@ public class MotionControllerWithCustomPossessPoint
             {"Controller", mappedControllerName},
             {"Enabled", enabled ? "true" : "false"},
             {"ControlRotation", controlRotation ? "true" : "false"},
-            {"UseLeap", useLeapPositionning ? "true" : "false"},
+            {"UseLeap", useLeapPositioning ? "true" : "false"},
+            {"FingersTracking", fingersTracking ? "true" : "false"},
         };
         return motionControlJSON;
     }
@@ -169,7 +171,8 @@ public class MotionControllerWithCustomPossessPoint
         mappedControllerName = jc["Controller"].Value;
         enabled = jc["Enabled"].Value != "false";
         controlRotation = jc["ControlRotation"].Value != "false";
-        useLeapPositionning = jc["UseLeap"].Value == "true";
+        useLeapPositioning = jc["UseLeap"].Value == "true";
+        fingersTracking = jc["FingersTracking"].Value != "false";
         if (mappedControllerName == "") mappedControllerName = null;
     }
 
@@ -178,7 +181,8 @@ public class MotionControllerWithCustomPossessPoint
         if (!MotionControlNames.IsHeadOrHands(name))
             mappedControllerName = null;
         controlRotation = true;
-        useLeapPositionning = false;
+        useLeapPositioning = false;
+        fingersTracking = true;
         offsetControllerCustom = Vector3.zero;
         rotateControllerCustom = Vector3.zero;
         rotateAroundTracker = Vector3.zero;

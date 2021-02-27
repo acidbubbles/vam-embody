@@ -9,7 +9,6 @@ public interface ITrackersModule : IEmbodyModule
 {
     JSONStorableBool restorePoseAfterPossessJSON { get; }
     JSONStorableBool previewTrackerOffsetJSON { get; }
-    JSONStorableBool enableHandsGraspJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
     IEnumerable<MotionControllerWithCustomPossessPoint> viveTrackers { get; }
     IEnumerable<MotionControllerWithCustomPossessPoint> headAndHands { get; }
@@ -42,7 +41,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
-    public JSONStorableBool enableHandsGraspJSON { get; } = new JSONStorableBool("EnableHandsGrasp", true);
 
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
@@ -54,8 +52,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.Awake();
 
         headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
-        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositionning ?? false), "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
-        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositionning ?? false), "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
+        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false), "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
+        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false), "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3);
@@ -119,29 +117,28 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         SuperController.singleton.ClearPossess();
 
-        foreach (var motionControl in motionControls)
-        {
+        Bind(headMotionControl);
+        var leftHandBound = Bind(leftHandMotionControl);
+        var rightHandBound = Bind(rightHandMotionControl);
+        if ((!leftHandBound || !rightHandBound) && (SuperController.singleton.isOVR || SuperController.singleton.isOpenVR) && _waitForHandsCo == null)
+            _waitForHandsCo = StartCoroutine(WaitForHandsCo());
+        foreach (var motionControl in viveTrackers)
             Bind(motionControl);
-        }
     }
 
     private bool Bind(MotionControllerWithCustomPossessPoint motionControl)
     {
         var controllerWithSnapshot = FindController(motionControl);
         if (controllerWithSnapshot == null)
-        {
-            if ((motionControl == leftHandMotionControl || motionControl == rightHandMotionControl) && _waitForHandsCo == null)
-                _waitForHandsCo = StartCoroutine(WaitForHandsCo());
             return false;
-        }
 
         var controller = controllerWithSnapshot.controller;
         controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
 
         if (motionControl.name == MotionControlNames.Head)
         {
-            var headBonePosition = context.bones.First(b => b.name == "head").transform.position;
-            controller.control.position = headBonePosition;
+            // Reduce the stretch between the head and the eye by matching the controller and the head bone
+            controller.control.position = context.bones.First(b => b.name == "head").transform.position;
             if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
             {
                 SuperController.singleton.AlignRigAndController(controller, motionControl);
@@ -154,14 +151,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         else
         {
             controller.control.SetPositionAndRotation(motionControl.controllerPointTransform.position, motionControl.controllerPointTransform.rotation);
-            if (enableHandsGraspJSON.val && controllerWithSnapshot.handControl != null)
-            {
-                controllerWithSnapshot.handControl.possessed = true;
-            }
         }
 
         controllerWithSnapshot.active = true;
         Possess(motionControl, controllerWithSnapshot.controller);
+
+        if (motionControl.fingersTracking && controllerWithSnapshot.handControl != null)
+            controllerWithSnapshot.handControl.possessed = true;
+
         return true;
     }
 
@@ -281,7 +278,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.StoreJSON(jc);
 
         restorePoseAfterPossessJSON.StoreJSON(jc);
-        enableHandsGraspJSON.StoreJSON(jc);
 
         var motionControlsJSON = new JSONClass();
         foreach (var motionControl in motionControls)
@@ -294,7 +290,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         base.RestoreFromJSON(jc);
 
         restorePoseAfterPossessJSON.RestoreFromJSON(jc);
-        enableHandsGraspJSON.StoreJSON(jc);
 
         var motionControlsJSON = jc["MotionControls"].AsObject;
         foreach (var motionControlName in motionControlsJSON.Keys)
@@ -309,9 +304,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.ResetToDefault();
 
-        foreach (var mc in context.trackers.motionControls) mc.ResetToDefault();
+        foreach (var mc in context.trackers.motionControls)
+            mc.ResetToDefault();
 
-        enableHandsGraspJSON.SetValToDefault();
         previewTrackerOffsetJSON.SetValToDefault();
         restorePoseAfterPossessJSON.SetValToDefault();
     }

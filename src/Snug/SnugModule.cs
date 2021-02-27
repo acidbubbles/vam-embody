@@ -265,7 +265,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
         motionAnimationControl.suspendRotationPlayback = true;
         hand.controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
-        if (context.trackers.enableHandsGraspJSON.val)
+        if (hand.motionControl.fingersTracking)
             (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
         if (previewSnugOffsetJSON.val) hand.showCueLine = true;
     }

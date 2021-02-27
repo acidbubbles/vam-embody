@@ -32,8 +32,6 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
-        CreateToggle(_trackers.enableHandsGraspJSON, true).label = "Enable hands grasping & Leap Motion";
-
         _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
             new List<string>(),
@@ -127,8 +125,14 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         {
             _section.CreateToggle(new JSONStorableBool(
                 $"Use Leap Motion Position",
-                motionControl.useLeapPositionning,
-                val => motionControl.useLeapPositionning = val
+                motionControl.useLeapPositioning,
+                val => motionControl.useLeapPositioning = val
+            ), false);
+
+            _section.CreateToggle(new JSONStorableBool(
+                $"Use Fingers Tracking",
+                motionControl.fingersTracking,
+                val => motionControl.fingersTracking = val
             ), false);
         }
 
