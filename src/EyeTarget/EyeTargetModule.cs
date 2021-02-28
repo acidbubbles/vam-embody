@@ -51,7 +51,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
     private readonly Plane[] _frustrumPlanes = new Plane[6];
-    private const float _frustrumFov = 8f * Mathf.Deg2Rad;
+    private const float _frustrumFov = 6f * Mathf.Deg2Rad;
 
     public override void Awake()
     {
