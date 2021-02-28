@@ -27,8 +27,6 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        if (ShowNotSelected(_snug.selectedJSON.val)) return;
-
         if (!context.embody.activeJSON.val)
             _snug.autoSetup.AutoSetup();
 

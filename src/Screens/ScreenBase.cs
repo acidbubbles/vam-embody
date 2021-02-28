@@ -18,15 +18,6 @@
             _root = new CollapsibleSection(context.plugin);
         }
 
-        protected bool ShowNotSelected(bool selected)
-        {
-            if (selected) return false;
-
-            CreateText(new JSONStorableString("", "This module is disabled. Go to the main screen to select it."), true);
-
-            return true;
-        }
-
         public virtual void Hide()
         {
             _root.RemoveAll();

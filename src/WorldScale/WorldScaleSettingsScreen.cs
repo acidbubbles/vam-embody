@@ -13,8 +13,6 @@ public class WorldScaleSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        if (ShowNotSelected(_worldScale.selectedJSON.val)) return;
-
         CreateText(new JSONStorableString("", "Changes the world scale based on your real height and the in-game model height.\n\nUse the Record Player Height button while standing straight to get accurate world scale."), true);
 
         CreateScrollablePopup(_worldScale.worldScaleMethodJSON, true);

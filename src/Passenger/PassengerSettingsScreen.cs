@@ -14,8 +14,6 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        if (ShowNotSelected(_passenger.selectedJSON.val)) return;
-
         if (context.containingAtom.type == "Person")
         {
             CreateToggle(_passenger.lookAtJSON).label = "Look At Eye Target";

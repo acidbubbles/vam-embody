@@ -11,8 +11,6 @@
 
     public void Show()
     {
-        if (ShowNotSelected(_hideGeometry.selectedJSON.val)) return;
-
         CreateText(new JSONStorableString("", "Hides the face and hair when possessing a model, except in mirrors."), true);
 
         CreateToggle(_hideGeometry.hideFaceJSON, true).label = "Hide face (skin, eyes, eyelashes)";
