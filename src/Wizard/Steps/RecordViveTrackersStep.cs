@@ -6,6 +6,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
     public string helpText => "Now <b>take the same pose</b> as the model, and <b>align all vive trackers</b> as closely as possible to your model's position.\n\nPress Next when you are ready.\n\nEach Vive tracker will be assigned a control on the model, and their relative position will be recorded.";
 
     private NavigationRigSnapshot _navigationRigSnapshot;
+    private float _heightAdjust;
 
     public RecordViveTrackersStep(EmbodyContext context)
         : base(context)
@@ -19,6 +20,7 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
         context.embody.activeJSON.val = true;
+        _heightAdjust = SuperController.singleton.playerHeightAdjust;
         /*
         This method creates less movement noise, but it's harder to precisely align eyes
         context.worldScale.enabledJSON.val = true;
@@ -27,6 +29,11 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
             context.trackers.motionControls.First(mc => mc.name == MotionControlNames.Head),
             false);
         */
+    }
+
+    public override void Update()
+    {
+        SuperController.singleton.playerHeightAdjust = _heightAdjust;
     }
 
     public bool Apply()
@@ -60,11 +67,5 @@ public class RecordViveTrackersStep : WizardStepBase, IWizardStep
         context.worldScale.enabledJSON.val = false;
         _navigationRigSnapshot?.Restore();
         */
-    }
-
-    public override void Update()
-    {
-        // TODO: Enable and disable the preview
-        // TODO: Draw lines connecting trackers with their closest target
     }
 }
