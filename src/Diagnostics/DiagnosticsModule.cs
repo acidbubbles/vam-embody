@@ -308,6 +308,8 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     {
         if (snapshot.pluginJSON != null)
             context.plugin.RestoreFromJSON(snapshot.pluginJSON);
+        context.worldScale.selectedJSON.val = false;
+        context.hideGeometry.selectedJSON.val = false;
         if (snapshot.poseJSON != null)
             RestorePoseJSON(snapshot.poseJSON);
         if (snapshot.worldScale > 0 && restoreWorldState)
