@@ -276,7 +276,6 @@ public class Embody : MVRScript, IEmbody
                     _context.hideGeometry.selectedJSON.val = true;
                     _context.passenger.selectedJSON.val = true;
                     _context.worldScale.selectedJSON.val = true;
-                    _context.eyeTarget.selectedJSON.val = true;
                     break;
             }
         });
