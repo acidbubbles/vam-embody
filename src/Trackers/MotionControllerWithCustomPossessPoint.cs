@@ -29,13 +29,13 @@ public class MotionControllerWithCustomPossessPoint
     public Vector3 offsetControllerBase
     {
         get { return _offsetControllerBase; }
-        set { _offsetControllerBase = value; SyncOffset(); }
+        set { _offsetControllerBase = value; }
     }
 
     public Vector3 rotateControllerBase
     {
         get { return _rotateControllerBase; }
-        set { _rotateControllerBase = value; SyncOffset(); }
+        set { _rotateControllerBase = value; }
     }
 
     public Vector3 offsetControllerCustom
