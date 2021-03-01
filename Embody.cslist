@@ -61,6 +61,7 @@ src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureArmsAtRestStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
+src\Wizard\Steps\RecordViveTrackersFeetStep.cs
 src\Wizard\Steps\RecordViveTrackersStep.cs
 src\Wizard\Steps\ResetPoseStep.cs
 src\Wizard\IWizardStep.cs

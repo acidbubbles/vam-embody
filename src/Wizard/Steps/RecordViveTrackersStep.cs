@@ -52,6 +52,7 @@ Press <b>Next</b> when you are ready.
         var hashSet = new HashSet<string>();
         foreach (var mc in context.trackers.viveTrackers)
         {
+            if (mc.mappedControllerName != null) continue;
             if (!mc.SyncMotionControl()) continue;
             autoSetup.AttachToClosestNode(mc);
             if (!hashSet.Add(mc.mappedControllerName))

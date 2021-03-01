@@ -130,6 +130,7 @@
     <Compile Include="src\Wizard\Steps\FinishViveSetupStep.cs" />
     <Compile Include="src\Wizard\Steps\MakeDefaultsStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureArmsAtRestStep.cs" />
+    <Compile Include="src\Wizard\Steps\RecordViveTrackersFeetStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\ResetPoseStep.cs" />
     <Compile Include="src\Wizard\WizardModule.cs" />

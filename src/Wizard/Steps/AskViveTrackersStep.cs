@@ -41,6 +41,7 @@ Skip this if you want to setup Vive trackers manually.".TrimStart();
         var idx = _steps.IndexOf(this);
         if (idx == -1) throw new InvalidOperationException($"{nameof(AskViveTrackersStep)} was not found in the steps list");
 
+        _steps.Insert(++idx, new RecordViveTrackersFeetStep(context));
         _steps.Insert(++idx, new RecordViveTrackersStep(context));
         _steps.Insert(++idx, new FinishViveSetupStep(context));
 
