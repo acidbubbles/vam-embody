@@ -2,7 +2,12 @@
 
 public class MakeDefaultsStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Do you want to <b>use these settings by default</b>? When you add Embody to other persons, these settings will <b>automatically be applied</b>.\n\nSelect <b>Next to save as default</b>.\n\nSkip to keep the defaults untouched.";
+    public string helpText => @"
+Do you want to <b>use these settings by default</b>? When you add Embody to other persons, these settings will <b>automatically be applied</b>.
+
+Select <b>Next to save as default</b>.
+
+Skip to keep the defaults untouched.".TrimStart();
 
     public MakeDefaultsStep(EmbodyContext context)
         : base(context)

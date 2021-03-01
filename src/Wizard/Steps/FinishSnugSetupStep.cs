@@ -2,7 +2,12 @@
 
 public class FinishSnugSetupStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "<b>Snug setup is complete</b>!\n\nYou can see in white the model proportions, and in green, yours. There is also a line that shows how your hands are offset to compensate.\n\nSelect Next to exit possession.";
+    public string helpText => @"
+<b>Snug setup is complete</b>!
+
+You can see in white the model proportions, and in green, yours. There is also a line that shows how your hands are offset to compensate.
+
+Select Next to exit possession.".TrimStart();
 
     public FinishSnugSetupStep(EmbodyContext context)
         : base(context)

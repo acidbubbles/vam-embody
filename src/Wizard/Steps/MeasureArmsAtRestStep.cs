@@ -3,7 +3,12 @@ using UnityEngine;
 
 public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
 {
-    public string helpText => $"<b>Stand straight</b> and <b>relax your hands</b> like the model is doing right now (wait for the model to stabilize).\n\nPress Next when ready.\n\nTry not to overstretch your arms and match as closely as you can the hands position of the model.";
+    public string helpText => @$"
+<b>Stand straight</b> and <b>relax your hands</b> like the model is doing right now (wait for the model to stabilize).
+
+Press Next when ready.
+
+Try not to overstretch your arms and match as closely as you can the hands position of the model.".TrimStart();
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly FreeControllerV3 _leftHandControl;

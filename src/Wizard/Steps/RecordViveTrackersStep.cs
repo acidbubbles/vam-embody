@@ -3,7 +3,11 @@ using System.Linq;
 
 public class RecordViveTrackersStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Now <b>take the same pose</b> as the model, and <b>align all vive trackers</b> as closely as possible to your model's position.\n\nPress Next when you are ready.\n\nEach Vive tracker will be assigned a control on the model, and their relative position will be recorded.";
+    public string helpText => @"Now <b>take the same pose</b> as the model, and <b>align all vive trackers</b> as closely as possible to your model's position.
+
+Press Next when you are ready.
+
+Each Vive tracker will be assigned a control on the model, and their relative position will be recorded.".TrimStart();
 
     private NavigationRigSnapshot _navigationRigSnapshot;
     private float _heightAdjust;

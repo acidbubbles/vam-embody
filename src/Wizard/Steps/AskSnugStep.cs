@@ -4,7 +4,14 @@ using System.Linq;
 
 public class AskSnugStep : WizardStepBase, IWizardStep
 {
-    public string helpText => "Do you want to setup <b>Snug</b>?\n\nSnug dynamically adjusts your hands so despite body proportion differences, your in-game hands position will match your own in relation to your body. In other words, <b>you can touch yourself in the real world and it should feel right in VR</b>!\n\nSelect <b>Next to use Snug</b> (possession will be activated, but hands will be disabled)\n\n<b>Skip to disable Snug</b>.";
+    public string helpText => @"
+Do you want to setup <b>Snug</b>?
+
+Snug dynamically adjusts your hands so despite body proportion differences, your in-game hands position will match your own in relation to your body. In other words, <b>you can touch yourself in the real world and it should feel right in VR</b>!
+
+Select <b>Next to use Snug</b> (possession will be activated, but hands will be disabled)
+
+<b>Skip to disable Snug</b>.".TrimStart();
 
     private readonly List<IWizardStep> _steps;
 
