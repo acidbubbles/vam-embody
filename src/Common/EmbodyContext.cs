@@ -26,13 +26,12 @@ public class EmbodyContext
     {
         if (!ReferenceEquals(diagnostics.leftHand, null))
             return diagnostics.leftHand;
-
-        if (SuperController.singleton.isOVR && (!useLeap || SuperController.singleton.ovrHandInputLeft.enabled))
-            return SuperController.singleton.touchObjectLeft;
-        if (SuperController.singleton.isOpenVR && (!useLeap || SuperController.singleton.steamVRHandInputLeft.enabled))
-            return SuperController.singleton.viveObjectLeft;
-        if (useLeap && SuperController.singleton.leapHandModelControl.leftHandEnabled)
+        if (useLeap)
             return SuperController.singleton.leapHandLeft;
+        if (SuperController.singleton.isOVR)
+            return SuperController.singleton.touchObjectLeft;
+        if (SuperController.singleton.isOpenVR)
+            return SuperController.singleton.viveObjectLeft;
         return null;
     }
 
@@ -40,13 +39,13 @@ public class EmbodyContext
     {
         if (!ReferenceEquals(diagnostics.rightHand, null))
             return diagnostics.rightHand;
-
-        if (SuperController.singleton.isOVR && (!useLeap || SuperController.singleton.ovrHandInputRight.enabled))
-            return SuperController.singleton.touchObjectRight;
-        if (SuperController.singleton.isOpenVR && (!useLeap || SuperController.singleton.steamVRHandInputRight.enabled))
-            return SuperController.singleton.viveObjectRight;
-        if (useLeap && SuperController.singleton.leapHandModelControl.rightHandEnabled)
+        if (useLeap)
             return SuperController.singleton.leapHandRight;
+        if (SuperController.singleton.isOVR)
+            return SuperController.singleton.touchObjectRight;
+        if (SuperController.singleton.isOpenVR)
+            return SuperController.singleton.viveObjectRight;
+
         return null;
     }
 

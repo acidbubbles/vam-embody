@@ -47,7 +47,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
     private NavigationRigSnapshot _navigationRigSnapshot;
-    private Coroutine _waitForHandsCo;
 
     public override void Awake()
     {
@@ -120,10 +119,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         SuperController.singleton.ClearPossess();
 
         Bind(headMotionControl);
-        var leftHandBound = Bind(leftHandMotionControl);
-        var rightHandBound = Bind(rightHandMotionControl);
-        if ((!leftHandBound || !rightHandBound) && (SuperController.singleton.isOVR || SuperController.singleton.isOpenVR) && _waitForHandsCo == null)
-            _waitForHandsCo = StartCoroutine(WaitForHandsCo());
+        Bind(leftHandMotionControl);
+        Bind(rightHandMotionControl);
         BindFingers();
         foreach (var motionControl in viveTrackers)
             Bind(motionControl);
@@ -173,9 +170,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public void ReleaseFingers()
     {
         if (_leftHandController.handControl != null)
-            _leftHandController.handControl.possessed = true;
+            _leftHandController.handControl.possessed = false;
         if (_rightHandController.handControl != null)
-            _rightHandController.handControl.possessed = true;
+            _rightHandController.handControl.possessed = false;
     }
 
     private FreeControllerV3WithSnapshot FindController(MotionControllerWithCustomPossessPoint motionControl)
@@ -195,12 +192,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public override void OnDisable()
     {
         base.OnDisable();
-
-        if (_waitForHandsCo != null)
-        {
-            StopCoroutine(_waitForHandsCo);
-            _waitForHandsCo = null;
-        }
 
         ReleaseFingers();
 
@@ -272,23 +263,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.canGrabPosition = false;
         controller.canGrabRotation = false;
-    }
-
-    private IEnumerator WaitForHandsCo()
-    {
-        yield return new WaitForSecondsRealtime(1f);
-        while (!TryActivateHands())
-        {
-            yield return new WaitForSecondsRealtime(0.5f);
-        }
-        _waitForHandsCo = null;
-    }
-
-    private bool TryActivateHands()
-    {
-        var leftActive = _leftHandController.active || Bind(leftHandMotionControl);
-        var rightActive = _rightHandController.active || Bind(rightHandMotionControl);
-        return leftActive && rightActive;
     }
 
     public override void StoreJSON(JSONClass jc)
