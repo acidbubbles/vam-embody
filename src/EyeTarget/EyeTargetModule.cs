@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 
 public interface IEyeTargetModule : IEmbodyModule
@@ -313,5 +314,44 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private void ONAtomUIDsChanged(List<string> uids)
     {
         Rescan();
+    }
+
+    public override void StoreJSON(JSONClass jc)
+    {
+        base.StoreJSON(jc);
+
+        trackMirrorsJSON.StoreJSON(jc);
+        trackWindowCameraJSON.StoreJSON(jc);
+        trackSelfHandsJSON.StoreJSON(jc);
+        trackSelfGenitalsJSON.StoreJSON(jc);
+        trackPersonsJSON.StoreJSON(jc);
+        trackObjectsJSON.StoreJSON(jc);
+        frustrumJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc)
+    {
+        base.RestoreFromJSON(jc);
+
+        trackMirrorsJSON.RestoreFromJSON(jc);
+        trackWindowCameraJSON.RestoreFromJSON(jc);
+        trackSelfHandsJSON.RestoreFromJSON(jc);
+        trackSelfGenitalsJSON.RestoreFromJSON(jc);
+        trackPersonsJSON.RestoreFromJSON(jc);
+        trackObjectsJSON.RestoreFromJSON(jc);
+        frustrumJSON.RestoreFromJSON(jc);
+    }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        trackMirrorsJSON.SetValToDefault();
+        trackWindowCameraJSON.SetValToDefault();
+        trackSelfHandsJSON.SetValToDefault();
+        trackSelfGenitalsJSON.SetValToDefault();
+        trackPersonsJSON.SetValToDefault();
+        trackObjectsJSON.SetValToDefault();
+        frustrumJSON.SetValToDefault();
     }
 }
