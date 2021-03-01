@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR;
@@ -44,6 +45,8 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
     private IWizardStep _step;
     private bool _next;
     private bool _skip;
+    private JSONArray _poseJSON;
+    private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Awake()
     {
@@ -60,6 +63,20 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
             statusJSON.val = _noHandsMessage;
             return;
         }
+
+        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+
+        _poseJSON = containingAtom.GetStorableIDs()
+            .Select(s => containingAtom.GetStorableByID(s))
+            .Where(t => !t.exclude && t.gameObject.activeInHierarchy)
+            .Where(t => t is FreeControllerV3 || t is DAZBone)
+            .Select(t => t.GetJSON())
+            .Aggregate(new JSONArray(), (arrayJSON, storableJSON) =>
+            {
+                arrayJSON.Add(storableJSON);
+                return arrayJSON;
+            });
+
         enabledJSON.val = true;
         _coroutine = StartCoroutine(WizardCoroutine());
         statusChanged.Invoke(true);
@@ -99,6 +116,26 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
         if (lElbowMotionControl != null) lElbowMotionControl.enabled = true;
         var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
         if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
+
+        if (_poseJSON != null)
+        {
+            foreach (var storableJSON in _poseJSON.Childs)
+            {
+                var storableId = storableJSON["id"].Value;
+                if (string.IsNullOrEmpty(storableId)) continue;
+                var storable = containingAtom.GetStorableByID(storableId);
+                storable.PreRestore();
+                storable.RestoreFromJSON(storableJSON.AsObject);
+                storable.PostRestore();
+            }
+            _poseJSON = null;
+        }
+
+        if (_navigationRigSnapshot != null)
+        {
+            _navigationRigSnapshot.Restore();
+            _navigationRigSnapshot = null;
+        }
     }
 
     public void Next()
