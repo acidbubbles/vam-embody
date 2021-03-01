@@ -8,7 +8,7 @@ public class MeasureAnchorDepthAndOffsetStep : WizardStepBase, IWizardStep
     private const float _handsOffsetY = 0.03f;
     private const float _sizeDepthMultiply = 1.1f;
 
-    public string helpText => @$"
+    public string helpText => $@"
 Put your <b>right hand</b> at the same height as your <b>{_anchor.label.ToLower()}</b>, slightly pressed against you.
 
 Try to <b>replicate as closely as you can</b> the model's hand position, but on your own body.

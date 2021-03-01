@@ -8,7 +8,7 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private const float _handsOffsetY = 0.03f;
     private const float _widthMultiplier = 1.2f;
 
-    public string helpText => @$"Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.
+    public string helpText => $@"Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.
 
 Press Next to apply.
 

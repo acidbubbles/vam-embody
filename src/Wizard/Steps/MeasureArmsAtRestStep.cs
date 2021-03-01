@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MeasureArmsAtRestStep : WizardStepBase, IWizardStep
 {
-    public string helpText => @$"
+    public string helpText => $@"
 <b>Stand straight</b> and <b>relax your hands</b> like the model is doing right now (wait for the model to stabilize).
 
 Press Next when ready.
