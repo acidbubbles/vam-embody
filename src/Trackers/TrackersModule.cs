@@ -16,6 +16,8 @@ public interface ITrackersModule : IEmbodyModule
     MotionControllerWithCustomPossessPoint leftHandMotionControl { get; }
     MotionControllerWithCustomPossessPoint rightHandMotionControl { get; }
     List<FreeControllerV3WithSnapshot> controllers { get; }
+    void BindFingers();
+    void ReleaseFingers();
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -122,6 +124,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var rightHandBound = Bind(rightHandMotionControl);
         if ((!leftHandBound || !rightHandBound) && (SuperController.singleton.isOVR || SuperController.singleton.isOpenVR) && _waitForHandsCo == null)
             _waitForHandsCo = StartCoroutine(WaitForHandsCo());
+        BindFingers();
         foreach (var motionControl in viveTrackers)
             Bind(motionControl);
     }
@@ -156,10 +159,23 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controllerWithSnapshot.active = true;
         Possess(motionControl, controllerWithSnapshot.controller);
 
-        if (motionControl.fingersTracking && controllerWithSnapshot.handControl != null)
-            controllerWithSnapshot.handControl.possessed = true;
-
         return true;
+    }
+
+    public void BindFingers()
+    {
+        if (leftHandMotionControl.fingersTracking && _leftHandController.handControl != null)
+            _leftHandController.handControl.possessed = true;
+        if (rightHandMotionControl.fingersTracking && _rightHandController.handControl != null)
+            _rightHandController.handControl.possessed = true;
+    }
+
+    public void ReleaseFingers()
+    {
+        if (_leftHandController.handControl != null)
+            _leftHandController.handControl.possessed = true;
+        if (_rightHandController.handControl != null)
+            _rightHandController.handControl.possessed = true;
     }
 
     private FreeControllerV3WithSnapshot FindController(MotionControllerWithCustomPossessPoint motionControl)
@@ -185,6 +201,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             StopCoroutine(_waitForHandsCo);
             _waitForHandsCo = null;
         }
+
+        ReleaseFingers();
 
         foreach (var c in controllers)
         {

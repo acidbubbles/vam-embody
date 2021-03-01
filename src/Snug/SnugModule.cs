@@ -232,6 +232,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             EnableHand(_lHand, MotionControlNames.LeftHand);
             EnableHand(_rHand, MotionControlNames.RightHand);
+            context.trackers.BindFingers();
         }
         catch (Exception exc)
         {
@@ -265,8 +266,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
         motionAnimationControl.suspendRotationPlayback = true;
         hand.controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
-        if (hand.motionControl.fingersTracking)
-            (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = true;
         if (previewSnugOffsetJSON.val) hand.showCueLine = true;
     }
 
@@ -274,6 +273,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.OnDisable();
 
+        context.trackers.ReleaseFingers();
         DisableHand(_lHand);
         DisableHand(_rHand);
 
