@@ -5,7 +5,12 @@ using UnityEngine;
 public interface IEyeTargetModule : IEmbodyModule
 {
     JSONStorableBool trackMirrorsJSON { get; }
+    JSONStorableBool trackWindowCameraJSON { get; }
+    JSONStorableBool trackSelfHandsJSON { get; }
+    JSONStorableBool trackSelfGenitalsJSON { get; }
+    JSONStorableBool trackPersonsJSON { get; }
     JSONStorableBool trackObjectsJSON { get; }
+    JSONStorableFloat frustrumJSON { get; }
     void Rescan();
 }
 
@@ -39,7 +44,12 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     protected override bool shouldBeSelectedByDefault => true;
 
     public JSONStorableBool trackMirrorsJSON { get; private set; }
+    public JSONStorableBool trackWindowCameraJSON { get; private set; }
+    public JSONStorableBool trackSelfHandsJSON { get; private set; }
+    public JSONStorableBool trackSelfGenitalsJSON { get; private set; }
+    public JSONStorableBool trackPersonsJSON { get; private set; }
     public JSONStorableBool trackObjectsJSON { get; private set; }
+    public JSONStorableFloat frustrumJSON { get; private set; }
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -51,7 +61,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
     private readonly Plane[] _frustrumPlanes = new Plane[6];
-    private const float _frustrumFov = 6f * Mathf.Deg2Rad;
 
     public override void Awake()
     {
@@ -63,7 +72,12 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _rEye = context.bones.First(eye => eye.name == "rEye").transform;
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
         trackMirrorsJSON = new JSONStorableBool("TrackMirrors", true, (bool _) => { if(enabled) Rescan(); });
+        trackWindowCameraJSON = new JSONStorableBool("TrackWindowCamera", true, (bool _) => { if(enabled) Rescan(); });
+        trackSelfHandsJSON = new JSONStorableBool("TrackSelfHands", true, (bool _) => { if(enabled) Rescan(); });
+        trackSelfGenitalsJSON = new JSONStorableBool("TrackSelfGenitals", true, (bool _) => { if(enabled) Rescan(); });
+        trackPersonsJSON = new JSONStorableBool("TrackPersons", true, (bool _) => { if(enabled) Rescan(); });
         trackObjectsJSON = new JSONStorableBool("TrackObjects", true, (bool _) => { if(enabled) Rescan(); });
+        frustrumJSON = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
     }
 
     public override bool BeforeEnable()
@@ -118,6 +132,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             {
                 case "WindowCamera":
                 {
+                    if (!trackWindowCameraJSON.val) continue;
                     if (atom.GetStorableByID("CameraControl")?.GetBoolParamValue("cameraOn") != true) continue;
                     _objects.Add(atom.mainController.control);
                     break;
@@ -128,12 +143,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                     {
                         foreach (var bone in context.bones)
                         {
-                            if (bone.name == "lHand" || bone.name == "rHand")
+                            if (trackSelfHandsJSON.val && bone.name == "lHand" || bone.name == "rHand")
+                                _objects.Add(bone.transform);
+                            else if (trackSelfGenitalsJSON.val && bone.name == "Gen1" || bone.name == "Gen3")
                                 _objects.Add(bone.transform);
                         }
                         continue;
                     }
 
+                    if (!trackPersonsJSON.val) continue;
                     foreach (var bone in atom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>())
                     {
                         if (!_bonesLookAt.Contains(bone.name)) continue;
@@ -150,6 +168,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                 case "CustomUnityAsset":
                 case "Torch":
                 {
+                    if (!trackObjectsJSON.val) continue;
                     _objects.Add(atom.mainController.control);
                     break;
                 }
@@ -225,7 +244,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             var lastPosition = Vector3.zero;
             // var lastName = "none";
             //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-            CalculateFrustum(eyesCenter, _head.forward, _frustrumFov, 1.3f, 0.35f, 100f, _frustrumPlanes);
+            CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.35f, 100f, _frustrumPlanes);
 
             foreach (var o in _objects)
             {
