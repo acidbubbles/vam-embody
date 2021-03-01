@@ -1,9 +1,11 @@
 ﻿public class FinishViveSetupStep : WizardStepBase, IWizardStep
 {
     public string helpText => @"
-<b>Vive trackers setup is complete</b>. Try them out. You can fine tune them in the <i>Trackers Settings</i> menu later, or restart the wizard and try again.
+<b>Vive trackers setup is complete</b>.
 
-Press Next when you are ready to continue.".TrimStart();
+Try them out! You can fine tune them in the <i>Trackers Settings</i> menu later, or restart the wizard and try again.
+
+Press <b>Next</b> when you are ready to continue.".TrimStart();
 
     public FinishViveSetupStep(EmbodyContext context)
         : base(context)

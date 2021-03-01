@@ -8,9 +8,11 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
     private readonly int _useViveTrackers;
     public string helpText => @"<b>Vive trackers</b> were detected.
 
-If you want to calibrate and use them during possession, strand <b>straight</b>, look <b>forward</b> press <b>Next</b>.
+Possession will be enabled only for your head and hands.
 
-You can also Skip this if you don't want Embody to control your Vive trackers.".TrimStart();
+Press <b>Next</b> to continue.
+
+Skip this if you want to setup Vive trackers manually.".TrimStart();
 
     public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps, int useViveTrackers)
         : base(context)
