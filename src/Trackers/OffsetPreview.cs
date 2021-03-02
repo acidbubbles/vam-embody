@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class OffsetPreview : MonoBehaviour
 {
-    private const float _highligtedAlpha = 1f;
+    private const float _highlightedAlpha = 1f;
     private const float _normalAlpha = 0.3f;
     public Transform currentMotionControl;
     private LineRenderer _lineRenderer;
@@ -25,18 +25,24 @@ public class OffsetPreview : MonoBehaviour
             Vector3.zero,
             transform.InverseTransformPoint(motionControlPosition),
         });
-        _motionControlPreview.SetPositionAndRotation(motionControlPosition, currentMotionControl.rotation);
-        foreach (var renderer in _controllerPreview.GetComponentsInChildren<Renderer>())
+        if (_motionControlPreview != null)
         {
-            var material = renderer.material;
-            if(material == null) continue;
-            material.color = material.color.WithAlpha(highlighted ? _highligtedAlpha : _normalAlpha);
+            _motionControlPreview.SetPositionAndRotation(motionControlPosition, currentMotionControl.rotation);
+            foreach (var renderer in _motionControlPreview.GetComponentsInChildren<Renderer>())
+            {
+                var material = renderer.material;
+                if (material == null) continue;
+                material.color = renderer.material.color.WithAlpha(highlighted ? _highlightedAlpha : _normalAlpha);
+            }
         }
-        foreach (var renderer in _motionControlPreview.GetComponentsInChildren<Renderer>())
+        if (_controllerPreview != null)
         {
-            var material = renderer.material;
-            if(material == null) continue;
-            material.color = renderer.material.color.WithAlpha(highlighted ? _highligtedAlpha : _normalAlpha);
+            foreach (var renderer in _controllerPreview.GetComponentsInChildren<Renderer>())
+            {
+                var material = renderer.material;
+                if (material == null) continue;
+                material.color = material.color.WithAlpha(highlighted ? _highlightedAlpha : _normalAlpha);
+            }
         }
     }
 

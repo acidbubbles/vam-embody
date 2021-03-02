@@ -76,7 +76,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             foreach (var mc in motionControls)
             {
                 mc.SyncMotionControl();
-                mc.showPreview = val;
+                if (!val || mc.name != MotionControlNames.Head || mc.currentMotionControl != null && mc.currentMotionControl == context.diagnostics.head)
+                {
+                    mc.showPreview = val;
+                }
             }
         };
     }

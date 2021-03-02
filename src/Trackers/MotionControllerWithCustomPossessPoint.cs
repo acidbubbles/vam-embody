@@ -73,7 +73,7 @@ public class MotionControllerWithCustomPossessPoint
 
     private void SyncOffset()
     {
-        if (currentMotionControl == null) return;
+        if (trackerPointTransform == null) return;
         trackerPointTransform.localPosition = Vector3.zero;
         trackerPointTransform.localEulerAngles = _rotateAroundTracker;
         controllerPointTransform.localPosition = offsetControllerCombined;
@@ -83,21 +83,40 @@ public class MotionControllerWithCustomPossessPoint
 
     public bool SyncMotionControl()
     {
-        // TODO: Crash when moving from debug object to actual motion control
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null || !currentMotionControl.gameObject.activeInHierarchy)
         {
+            trackerPointTransform = null;
+            controllerPointTransform = null;
+            controllerPointRB = null;
             DestroyOffsetPreview();
             return false;
         }
+        InitializeMotionControlChildren();
         _configure?.Invoke(this);
-        trackerPointTransform.SetParent(currentMotionControl, false);
         if(!_showPreview)
             DestroyOffsetPreview();
         else
             CreatOffsetPreview();
         SyncOffset();
         return true;
+    }
+
+    private void InitializeMotionControlChildren()
+    {
+        if (trackerPointTransform != null && trackerPointTransform.parent == currentMotionControl)
+            return;
+
+        var trackerPointGO = new GameObject($"EmbodyTrackerPoint_{name}");
+        trackerPointTransform = trackerPointGO.transform;
+        trackerPointTransform.SetParent(currentMotionControl, false);
+        var controllerPointGO = new GameObject($"EmbodyControllerPoint_{name}");
+        controllerPointTransform = controllerPointGO.transform;
+        controllerPointTransform.SetParent(trackerPointTransform, false);
+
+        controllerPointRB = controllerPointGO.AddComponent<Rigidbody>();
+        controllerPointRB.interpolation = RigidbodyInterpolation.None;
+        controllerPointRB.isKinematic = true;
     }
 
     private void CreatOffsetPreview()
@@ -110,6 +129,7 @@ public class MotionControllerWithCustomPossessPoint
         }
 
         _offsetPreview.currentMotionControl = currentMotionControl;
+        _offsetPreview.Sync(_highlighted);
     }
 
     private void DestroyOffsetPreview()
@@ -127,23 +147,11 @@ public class MotionControllerWithCustomPossessPoint
 
     public static MotionControllerWithCustomPossessPoint Create(string motionControlName, Func<Transform> getMotionControl, Action<MotionControllerWithCustomPossessPoint> configure)
     {
-        var trackerPointGO = new GameObject($"EmbodyTrackerPoint_{motionControlName}");
-        var controllerPointGO = new GameObject($"EmbodyControllerPoint_{motionControlName}");
-
-        var rb = controllerPointGO.AddComponent<Rigidbody>();
-        rb.interpolation = RigidbodyInterpolation.None;
-        rb.isKinematic = true;
-
-        controllerPointGO.transform.SetParent(trackerPointGO.transform, false);
-
         return new MotionControllerWithCustomPossessPoint
         {
             name = motionControlName,
             _getMotionControl = getMotionControl,
-            _configure = configure,
-            trackerPointTransform = trackerPointGO.transform,
-            controllerPointTransform = controllerPointGO.transform,
-            controllerPointRB = rb,
+            _configure = configure
         };
     }
 
