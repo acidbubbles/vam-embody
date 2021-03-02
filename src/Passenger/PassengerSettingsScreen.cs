@@ -40,21 +40,21 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             (float val) => _passenger.rotationOffset = new Vector3(val, _passenger.rotationOffset.y, _passenger.rotationOffset.z),
             -180f,
             180f
-        ), true);
+        ) { valNoCallback = _passenger.rotationOffset.x }, true);
         CreateSlider(new JSONStorableFloat(
             "Rotation Y",
             0f,
             (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, val, _passenger.rotationOffset.z),
             -180f,
             180f
-        ), true);
+        ) { valNoCallback = _passenger.rotationOffset.y }, true);
         CreateSlider(new JSONStorableFloat(
             "Rotation Z",
             0f,
             (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, _passenger.rotationOffset.y, val),
             -180f,
             180f
-        ), true);
+        ) { valNoCallback = _passenger.rotationOffset.z }, true);
         CreateSlider(_passenger.positionSmoothingJSON, true);
         CreateSlider(new JSONStorableFloat(
             "Position X",
@@ -63,7 +63,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             -2f,
             2f,
             false
-        ), true).valueFormat = "F4";
+        ) { valNoCallback = _passenger.positionOffset.x }, true).valueFormat = "F4";
         CreateSlider(new JSONStorableFloat(
             "Position Y",
             0f,
@@ -71,7 +71,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             -2f,
             2f,
             false
-        ), true).valueFormat = "F4";
+        ) { valNoCallback = _passenger.positionOffset.y }, true).valueFormat = "F4";
         CreateSlider(new JSONStorableFloat(
             "Position Z",
             0f,
@@ -79,6 +79,6 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             -2f,
             2f,
             false
-        ), true).valueFormat = "F4";
+        ) { valNoCallback = _passenger.positionOffset.z }, true).valueFormat = "F4";
     }
 }
