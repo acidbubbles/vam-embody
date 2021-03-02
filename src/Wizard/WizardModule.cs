@@ -93,7 +93,7 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
         {
             try
             {
-                _step.Leave();
+                _step.Leave(true);
             }
             catch (Exception exc)
             {
@@ -174,6 +174,10 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
             {
                 statusJSON.val = $"Step {i + 1} / {steps.Count}\n\n{_step.helpText}";
             }
+
+            // NOTE: Not strictly necessary, but allows physics to settle and ensures final leave will be invoked
+            yield return new WaitForSecondsRealtime(0.2f);
+
             try
             {
                 _step.Enter();
@@ -234,7 +238,7 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
             {
                 try
                 {
-                    _step?.Leave();
+                    _step?.Leave(false);
                 }
                 catch (Exception exc)
                 {
@@ -242,8 +246,6 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
                     StopWizard("An error prevented the wizard from finishing");
                 }
             }
-
-            yield return 0;
         }
 
         StopWizard("<b>All done!</b>\n\nYou can now activate Embody.\n\nYou can tweak your settings manually by pressing Back, or start this wizard again if you prefer.\n\nYou can save tweaks in your default profile in the <i>Import, Export & Default Settings</i> screen. Default settings will automatically apply whenever you load this plugin on an atom.\n\nNow, have fun living in the future!");

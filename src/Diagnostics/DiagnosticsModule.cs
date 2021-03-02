@@ -23,6 +23,7 @@ public interface IDiagnosticsModule : IEmbodyModule
     void Log(string message);
     void TakeSnapshot(string name);
     void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState);
+    void RestoreTrackers(EmbodyDebugSnapshot snapshot);
     void RemoveFakeTrackers();
     void CreateFakeTrackers(EmbodyDebugSnapshot snapshot);
 }
@@ -322,6 +323,11 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
             SuperController.singleton.navigationRig.position = snapshot.navigationRig.position;
             SuperController.singleton.navigationRig.eulerAngles = snapshot.navigationRig.rotation;
         }
+        RestoreTrackers(snapshot);
+    }
+
+    public void RestoreTrackers(EmbodyDebugSnapshot snapshot)
+    {
         RestoreFakeTracker(head, snapshot.head);
         RestoreFakeTracker(leftHand, snapshot.leftHand);
         RestoreFakeTracker(rightHand, snapshot.rightHand);

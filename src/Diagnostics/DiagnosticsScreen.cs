@@ -50,6 +50,16 @@ public class DiagnosticsScreen : ScreenBase, IScreen
             }
             context.diagnostics.RestoreSnapshot(snapshot, _restoreWorldStateJSON.val);
         });
+        CreateButton("Load Fake Trackers").button.onClick.AddListener(() =>
+        {
+            var snapshot = FindSnapshot(snapshotsJSON);
+            if (snapshot == null)
+            {
+                logsJSON.val = "Select a snapshot first";
+                return;
+            }
+            context.diagnostics.RestoreTrackers(snapshot);
+        });
         CreateButton("Take Snapshot").button.onClick.AddListener(() =>
         {
             context.diagnostics.TakeSnapshot("ManualSnapshot");

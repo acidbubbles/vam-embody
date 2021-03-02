@@ -21,7 +21,7 @@
     {
     }
 
-    public virtual void Leave()
+    public virtual void Leave(bool final)
     {
     }
 }
