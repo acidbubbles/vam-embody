@@ -77,7 +77,7 @@ Press Next to apply.".TrimStart();
 
         _anchor.Update();
 
-        context.diagnostics.TakeSnapshot($"{nameof(MeasureAnchorDepthAndOffsetStep)}.{nameof(Apply)}");
+        context.diagnostics.TakeSnapshot($"{nameof(MeasureAnchorDepthAndOffsetStep)}[{_anchor.id}].{nameof(Apply)}");
 
         return true;
     }

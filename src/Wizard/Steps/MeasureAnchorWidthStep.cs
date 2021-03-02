@@ -90,7 +90,7 @@ Try to match as closely as you can the hands position of the model, but on your 
         _anchor.realLifeSize = _anchor.inGameSize / _anchor.inGameSize.x * (realLifeWidth * _widthMultiplier);
         _anchor.realLifeSize = new Vector3(_anchor.realLifeSize.x, 1f, _anchor.realLifeSize.z);
 
-        context.diagnostics.TakeSnapshot($"{nameof(MeasureAnchorWidthStep)}.{nameof(Apply)}");
+        context.diagnostics.TakeSnapshot($"{nameof(MeasureAnchorWidthStep)}[{_anchor.id}].{nameof(Apply)}");
 
         return true;
     }
