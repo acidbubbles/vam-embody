@@ -14,9 +14,9 @@ public class NavigationRigSnapshot
         var monitorCenterCamera = SuperController.singleton.MonitorCenterCamera.transform;
         return new NavigationRigSnapshot
         {
+            _playerHeightAdjust = SuperController.singleton.playerHeightAdjust,
             _position = navigationRig.position,
             _rotation = navigationRig.rotation,
-            _playerHeightAdjust = SuperController.singleton.playerHeightAdjust,
             _monitorPosition = monitorCenterCamera.position,
             _monitorRotation = monitorCenterCamera.rotation,
         };

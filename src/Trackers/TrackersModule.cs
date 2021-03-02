@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
@@ -46,7 +45,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
-    private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Awake()
     {
@@ -95,7 +93,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         if (headMotionControl.enabled && !context.passenger.selectedJSON.val)
         {
-            _navigationRigSnapshot = NavigationRigSnapshot.Snap();
             AdjustHeadToEyesOffset();
         }
         return true;
@@ -219,11 +216,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 c.handControl.possessed = false;
         }
 
-        if (_navigationRigSnapshot != null)
-        {
-            _navigationRigSnapshot.Restore();
-            _navigationRigSnapshot = null;
-        }
     }
 
     public void OnDestroy()

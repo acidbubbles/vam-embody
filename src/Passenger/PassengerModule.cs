@@ -62,7 +62,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private Transform _cameraCenterTarget;
     private Transform _cameraCenter;
     private float _headToEyesDistance;
-    private NavigationRigSnapshot _navigationRigSnapshot;
     private FreeControllerV3Snapshot _headControlSnapshot;
 
     public override void Awake()
@@ -153,8 +152,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _headControl.canGrabPosition = false;
         _headControl.canGrabRotation = false;
 
-        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
-
         _previousInterpolation = _headRigidbody.interpolation;
         _headRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
 
@@ -169,8 +166,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         base.OnDisable();
 
         GlobalSceneOptions.singleton.disableNavigation = false;
-
-        _navigationRigSnapshot?.Restore();
 
         if (_headRigidbody != null)
             _headRigidbody.interpolation = _previousInterpolation;

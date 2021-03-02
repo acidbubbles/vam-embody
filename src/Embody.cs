@@ -25,6 +25,7 @@ public class Embody : MVRScript, IEmbody
     private bool _restored;
     private bool _activateAfterSaveComplete;
     private EmbodyScaleChangeReceiver _scaleChangeReceiver;
+    private NavigationRigSnapshot _navigationRigSnapshot;
 
     public override void Init()
     {
@@ -98,6 +99,7 @@ public class Embody : MVRScript, IEmbody
                 _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
             }
 
+            var modulesToEnable = new List<IEmbodyModule>();
             activeJSON.setCallbackFunction = val =>
             {
                 if (val)
@@ -108,6 +110,8 @@ public class Embody : MVRScript, IEmbody
                         return;
                     }
 
+                    modulesToEnable.Clear();
+
                     foreach (var module in _modules.GetComponents<IEmbodyModule>())
                     {
                         if (module.skipChangeEnabledWhenActive) continue;
@@ -117,8 +121,18 @@ public class Embody : MVRScript, IEmbody
                             continue;
                         }
                         if (module.BeforeEnable())
-                            module.enabledJSON.val = true;
+                            modulesToEnable.Add(module);
                     }
+
+                    if(modules.Contains(_context.trackers) || modules.Contains(_context.passenger))
+                        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+
+                    foreach (var module in modulesToEnable)
+                    {
+                        module.enabledJSON.val = true;
+                    }
+
+                    modulesToEnable.Clear();
                 }
                 else
                 {
@@ -128,6 +142,8 @@ public class Embody : MVRScript, IEmbody
                         if (module.skipChangeEnabledWhenActive) continue;
                         module.enabledJSON.val = false;
                     }
+
+                    StartCoroutine(RestoreNavigationRig());
                 }
             };
             RegisterBool(activeJSON);
@@ -148,6 +164,13 @@ public class Embody : MVRScript, IEmbody
             if (_modules != null) Destroy(_modules);
             throw;
         }
+    }
+
+    private IEnumerator RestoreNavigationRig()
+    {
+        yield return 0;
+        _navigationRigSnapshot?.Restore();
+        _navigationRigSnapshot = null;
     }
 
     private IEnumerator DeferredInit()
