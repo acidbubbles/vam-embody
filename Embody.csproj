@@ -121,6 +121,7 @@
     <Compile Include="src\Trackers\TrackerAutoSetup.cs" />
     <Compile Include="src\Trackers\TrackersModule.cs" />
     <Compile Include="src\Trackers\TrackersSettingsScreen.cs" />
+    <Compile Include="src\Utilities\PossessionPose.cs" />
     <Compile Include="src\Utilities\Utilities.cs" />
     <Compile Include="src\Utilities\MoreScreen.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />

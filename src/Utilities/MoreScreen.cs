@@ -80,9 +80,8 @@ public class MoreScreen : ScreenBase, IScreen
 
     private void ResetPose()
     {
-        var useViveTrackers = context.trackers.viveTrackers.Any(t => t.SyncMotionControl());
-        var step = new ResetPoseStep(context, !useViveTrackers);
-        step.Apply();
+        var pose = new PossessionPose(context);
+        pose.Apply();
     }
 
     private static List<string> _keys;
