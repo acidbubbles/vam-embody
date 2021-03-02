@@ -77,10 +77,12 @@ Press Next to apply.".TrimStart();
 
         _anchor.Update();
 
+        context.diagnostics.TakeSnapshot($"{nameof(MeasureAnchorDepthAndOffsetStep)}.{nameof(Apply)}");
+
         return true;
     }
 
-    public override void Leave()
+    public override void Leave(bool final)
     {
         _leftHandSnapshot.Restore(true);
         _rightHandSnapshot.Restore(true);

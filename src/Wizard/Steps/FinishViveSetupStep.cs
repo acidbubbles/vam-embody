@@ -25,9 +25,9 @@ Press <b>Next</b> when you are ready to continue.".TrimStart();
         return true;
     }
 
-    public override void Leave()
+    public override void Leave(bool final)
     {
-        base.Leave();
+        base.Leave(final);
 
         context.trackers.previewTrackerOffsetJSON.val = false;
         context.embody.activeJSON.val = false;

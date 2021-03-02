@@ -2,8 +2,14 @@
 
 public class RecordViveTrackersFeetStep : WizardStepBase, IWizardStep
 {
+    private float _heightAdjust;
+
     public string helpText => @"
-Align your feet to match the model's feet position and angle as closely as possible, and select Next.\n\nSkip if you don't plan on using feet trackers.".TrimStart();
+Align your feet to match the model's feet position and angle as closely as possible, and stand straight.
+
+Press <b>Next</b> when ready.
+
+Skip if you don't plan on using feet trackers.".TrimStart();
 
     public RecordViveTrackersFeetStep(EmbodyContext context)
         : base(context)
@@ -11,13 +17,31 @@ Align your feet to match the model's feet position and angle as closely as possi
 
     }
 
+    public override void Enter()
+    {
+        base.Enter();
+
+        context.trackers.previewTrackerOffsetJSON.val = true;
+        context.embody.activeJSON.val = true;
+        _heightAdjust = SuperController.singleton.playerHeightAdjust;
+    }
+
+    public override void Update()
+    {
+        SuperController.singleton.playerHeightAdjust = _heightAdjust;
+    }
+
     public bool Apply()
     {
+        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.Before");
         var autoSetup = new TrackerAutoSetup(context.containingAtom);
         var feet = context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("FootControl")).ToList();
+        var eyes = context.head.position.y;
+        var floor = context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod ? eyes - context.worldScale.playerHeightJSON.val : 0f;
+        var maxY = floor + (eyes - floor) * 0.25f;
         var trackersNearFloor = context.trackers.viveTrackers
             .Where(t => t.SyncMotionControl())
-            .Where(t => t.currentMotionControl.position.y < 0.25f)
+            .Where(t => t.currentMotionControl.position.y < maxY)
             .ToList();
 
         if (trackersNearFloor.Count != 2)
@@ -41,12 +65,18 @@ Align your feet to match the model's feet position and angle as closely as possi
         }
 
         context.Refresh();
+        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.After");
         return true;
     }
 
-    public override void Update()
+    public override void Leave(bool final)
     {
-        // TODO: Enable and disable the preview
-        // TODO: Draw lines connecting trackers with their closest target
+        base.Leave(final);
+
+        if (final)
+        {
+            context.embody.activeJSON.val = false;
+            context.trackers.previewTrackerOffsetJSON.val = false;
+        }
     }
 }

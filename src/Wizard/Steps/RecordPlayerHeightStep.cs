@@ -4,19 +4,14 @@ public class RecordPlayerHeightStep : WizardStepBase, IWizardStep
 {
     private readonly PlayerMeasurements _playerMeasurements;
 
-    public string helpText => context.trackers.selectedJSON.val && context.trackers.viveTrackers.Any(mc => mc.enabled && mc.SyncMotionControl())
-        ? @"
+    public string helpText => @"
 We will now <b>measure your height</b>.
 
-Please <b>place one controller on the ground</b>, <b>stand straight</b>, and press <b>Next</b> when ready.".TrimStart()
-        : @"
-We will now <b>measure your height</b>.
+- Place one <b>controller on the ground</b> (optional)
+- Stand <b>straight</b>
+- Look <b>forward</b>
 
-This will improve automatic <b>world scale</b>, making your body height feel right.
-
-You can optionally place a controller on the ground for a more precise height estimation.
-
-<b>Stand straight</b>, and press <b>Next</b> when ready.".TrimStart();
+Press <b>Next</b> when ready.".TrimStart();
 
     public RecordPlayerHeightStep(EmbodyContext context)
         : base(context)

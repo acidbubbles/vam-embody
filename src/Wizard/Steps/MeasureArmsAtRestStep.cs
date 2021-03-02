@@ -45,10 +45,12 @@ Try not to overstretch your arms and match as closely as you can the hands posit
         var difference = realY - inGameY;
         _anchor.realLifeOffset = new Vector3(0f, difference, 0f);
 
+        context.diagnostics.TakeSnapshot($"{nameof(MeasureArmsAtRestStep)}.{nameof(Apply)}");
+
         return true;
     }
 
-    public override void Leave()
+    public override void Leave(bool final)
     {
         _leftHandSnapshot.Restore(true);
         _rightHandSnapshot.Restore(true);

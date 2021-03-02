@@ -32,12 +32,14 @@ Select Next to exit possession.".TrimStart();
 
     public bool Apply()
     {
+        context.diagnostics.TakeSnapshot($"{nameof(FinishSnugSetupStep)}.{nameof(Apply)}");
+
         return true;
     }
 
-    public override void Leave()
+    public override void Leave(bool final)
     {
-        base.Leave();
+        base.Leave(final);
 
         context.embody.activeJSON.val = false;
         context.snug.previewSnugOffsetJSON.val = false;

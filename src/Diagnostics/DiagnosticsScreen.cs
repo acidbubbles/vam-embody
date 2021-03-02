@@ -79,6 +79,10 @@ public class DiagnosticsScreen : ScreenBase, IScreen
             snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
             logsJSON.val = "";
         });
+        CreateButton("Temporary Debug").button.onClick.AddListener(() =>
+        {
+            new RecordViveTrackersStep(context).Apply();
+        });
     }
 
     private void RefreshSnapshots(JSONStorableStringChooser snapshotsJSON)

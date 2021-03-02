@@ -14,7 +14,6 @@ Your Vive trackers will be mapped to a control on the atom. Their offset and rot
 Press <b>Next</b> when you are ready.
 ".TrimStart();
 
-    private NavigationRigSnapshot _navigationRigSnapshot;
     private float _heightAdjust;
 
     public RecordViveTrackersStep(EmbodyContext context)
@@ -27,7 +26,7 @@ Press <b>Next</b> when you are ready.
     {
         base.Enter();
 
-        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        context.trackers.previewTrackerOffsetJSON.val = true;
         context.embody.activeJSON.val = true;
         _heightAdjust = SuperController.singleton.playerHeightAdjust;
         /*
@@ -68,11 +67,12 @@ Press <b>Next</b> when you are ready.
         return true;
     }
 
-    public override void Leave()
+    public override void Leave(bool final)
     {
-        base.Leave();
+        base.Leave(final);
 
         context.embody.activeJSON.val = false;
+        context.trackers.previewTrackerOffsetJSON.val = false;
         /*
         context.worldScale.enabledJSON.val = false;
         _navigationRigSnapshot?.Restore();

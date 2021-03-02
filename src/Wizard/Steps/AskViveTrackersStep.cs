@@ -8,7 +8,7 @@ public class AskViveTrackersStep : WizardStepBase, IWizardStep
     private readonly int _useViveTrackers;
     public string helpText => @"<b>Vive trackers</b> were detected.
 
-Possession will be enabled only for your head and hands.
+Possession will now be activated only for your head and hands.
 
 Press <b>Next</b> to continue.
 

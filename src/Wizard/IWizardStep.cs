@@ -5,5 +5,5 @@
     void Enter();
     void Update();
     bool Apply();
-    void Leave();
+    void Leave(bool final);
 }

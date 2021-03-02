@@ -50,6 +50,7 @@ src\Trackers\TrackerAutoSetup.cs
 src\Trackers\TrackersModule.cs
 src\Trackers\TrackersSettingsScreen.cs
 src\Utilities\MoreScreen.cs
+src\Utilities\PossessionPose.cs
 src\Utilities\Utilities.cs
 src\Wizard\Steps\AskSnugStep.cs
 src\Wizard\Steps\AskViveTrackersStep.cs
@@ -60,7 +61,6 @@ src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs
 src\Wizard\Steps\MeasureAnchorWidthStep.cs
 src\Wizard\Steps\MeasureArmsAtRestStep.cs
 src\Wizard\Steps\MeasureHandsPaddingStep.cs
-src\Wizard\Steps\PossessionPose.cs
 src\Wizard\Steps\RecordPlayerHeightStep.cs
 src\Wizard\Steps\RecordViveTrackersFeetStep.cs
 src\Wizard\Steps\RecordViveTrackersStep.cs
