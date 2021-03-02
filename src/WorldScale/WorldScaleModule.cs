@@ -25,16 +25,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
-    private Possessor _possessor;
-    private FreeControllerV3 _headControl;
-
-    public override void Awake()
-    {
-        base.Awake();
-
-        _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
-        _headControl = (FreeControllerV3) containingAtom.GetStorableByID("headControl");
-    }
 
     public override void OnEnable()
     {
@@ -90,11 +80,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         _originalWorldScale = SuperController.singleton.worldScale;
         SuperController.singleton.worldScale = worldScale;
-
-        var yAdjust = _possessor.autoSnapPoint.position.y - _headControl.possessPoint.position.y;
-
-        if (yAdjust != 0)
-            SuperController.singleton.playerHeightAdjust -= yAdjust;
     }
 
     private static float GetRigEyesDistance()
