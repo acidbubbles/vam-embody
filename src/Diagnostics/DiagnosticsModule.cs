@@ -20,6 +20,7 @@ public interface IDiagnosticsModule : IEmbodyModule
     Transform viveTracker8 { get; }
     IEnumerable<string> logs { get; }
     List<EmbodyDebugSnapshot> snapshots { get; }
+    JSONStorableBool attachToHeadJSON { get; }
     void Log(string message);
     void TakeSnapshot(string name);
     void RestoreSnapshot(EmbodyDebugSnapshot snapshot, bool restoreWorldState);
@@ -52,6 +53,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     private bool _restored;
 
     private JSONArray _logs = new JSONArray();
+    public JSONStorableBool attachToHeadJSON { get; } = new JSONStorableBool("AttachToHead", false);
     public List<EmbodyDebugSnapshot> snapshots { get; } = new List<EmbodyDebugSnapshot>();
     public IEnumerable<string> logs => _logs.Childs.Select(c => c.Value);
 
@@ -230,7 +232,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
                 t.Rotate(tracker.rotateControllerCombined, Space.Self);
         }
 
-        if (attachToHead)
+        if (attachToHead && attachToHeadJSON.val)
         {
             var c = atom.mainController;
             c.SetLinkToAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");

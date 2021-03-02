@@ -35,6 +35,7 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         {
             context.diagnostics.RemoveFakeTrackers();
         });
+        CreateToggle(_diagnostics.attachToHeadJSON).label = "Trackers Attached To Head";
         CreateButton("Create Fake Trackers").button.onClick.AddListener(() =>
         {
             context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val));
