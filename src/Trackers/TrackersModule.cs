@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
@@ -119,8 +120,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
+
         foreach (var motionControl in viveTrackers)
             Bind(motionControl);
+
+        StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
+    }
+
+    private IEnumerator OnEnableCo(NavigationRigSnapshot rigSnapshot)
+    {
+        yield return new WaitForEndOfFrame();
+        rigSnapshot.Restore();
     }
 
     private bool Bind(MotionControllerWithCustomPossessPoint motionControl)

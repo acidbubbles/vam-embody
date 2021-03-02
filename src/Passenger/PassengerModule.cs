@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using MeshVR;
@@ -158,6 +159,15 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (!allowPersonHeadRotationJSON.val)
             GlobalSceneOptions.singleton.disableNavigation = true;
 
+        StartCoroutine(OnEnableCo());
+    }
+
+    private IEnumerator OnEnableCo()
+    {
+        // This will be offset by VaM, but should be pretty close for small world scale differences
+        UpdateNavigationRig(true);
+        yield return new WaitForEndOfFrame();
+        // This will bring back a perfect match when Control Position is off
         UpdateNavigationRig(true);
     }
 
