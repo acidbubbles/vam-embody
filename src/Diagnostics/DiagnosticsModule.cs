@@ -174,6 +174,10 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         while (e.MoveNext())
             yield return e.Current;
 
+        if(head == null) yield break;
+
+        head.transform.position = (context.bones.First(b => b.name == "lEye").transform.position + context.bones.First(b => b.name == "rEye").transform.position) / 2f;
+
         if (snapshot == null || snapshot.leftHand != null)
             StartCoroutine(CreateFakeTrackerCo(MotionControlNames.LeftHand, "lHandControl", t => leftHand = t));
         if (snapshot == null || snapshot.rightHand != null)
