@@ -280,7 +280,8 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
         if (useViveTrackers > 0)
             steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
 
-        steps.Add(new AskSnugStep(context, steps));
+        if (context.LeftHand() != null && context.RightHand() != null)
+            steps.Add(new AskSnugStep(context, steps));
 
         steps.Add(new MakeDefaultsStep(context));
 

@@ -13,7 +13,7 @@ Put your <b>right hand</b> at the same height as your <b>{_anchor.label.ToLower(
 
 Try to <b>replicate as closely as you can</b> the model's hand position, but on your own body.
 
-Press Next to apply.".TrimStart();
+Press <b>A</b> when ready.".TrimStart();
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly float _handRotate;

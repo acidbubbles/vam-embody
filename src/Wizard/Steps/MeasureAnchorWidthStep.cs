@@ -8,11 +8,16 @@ public class MeasureAnchorWidthStep : WizardStepBase, IWizardStep
     private const float _handsOffsetY = 0.03f;
     private const float _widthMultiplier = 1.2f;
 
-    public string helpText => $@"Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.
+    public string helpText => $@"
+Put your <b>hands</b> on your real <b>{_anchor.label.ToLower()}</b>, like the model is doing right now.
 
-Press Next to apply.
+- Replicate the pose <b>exactly</b>
+- <b>Avoid bending</b>, only move hands
+- <b>Center your hands</b> depth-wise
+- Keep your <b>head straight</b>
+- Keep your <b>feet aligned</b>
 
-Try to match as closely as you can the hands position of the model, but on your own body. Check that your <b>feet are aligned</b>, and try to center your hands depth-wise without moving forward.".TrimStart();
+Press <b>A</b> when ready.".TrimStart();
 
     private readonly ControllerAnchorPoint _anchor;
     private readonly float _handRotate;
