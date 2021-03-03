@@ -8,6 +8,9 @@ public class MoreScreen : ScreenBase, IScreen
 {
     public const string ScreenName = "More";
 
+    // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
+    private MotionAnimationMaster motionAnimationMaster => context.containingAtom.subSceneComponent?.motionAnimationMaster ?? SuperController.singleton.motionAnimationMaster;
+
     public MoreScreen(EmbodyContext context)
         : base(context)
     {
@@ -52,8 +55,8 @@ public class MoreScreen : ScreenBase, IScreen
     {
         context.embody.activeJSON.val = true;
 
-        SuperController.singleton.motionAnimationMaster.StopPlayback();
-        SuperController.singleton.motionAnimationMaster.ResetAnimation();
+        motionAnimationMaster.StopPlayback();
+        motionAnimationMaster.ResetAnimation();
 
         foreach (var controller in context.plugin.containingAtom.freeControllers.Where(fc => fc.possessed))
         {
@@ -79,8 +82,8 @@ public class MoreScreen : ScreenBase, IScreen
     {
         while (!string.IsNullOrEmpty(SuperController.singleton.helpText))
             yield return 0;
-        SuperController.singleton.motionAnimationMaster.StopPlayback();
-        SuperController.singleton.motionAnimationMaster.ResetAnimation();
+        motionAnimationMaster.StopPlayback();
+        motionAnimationMaster.ResetAnimation();
     }
 
     private static List<string> _keys;
