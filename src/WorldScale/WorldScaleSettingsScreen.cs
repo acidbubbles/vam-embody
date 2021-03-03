@@ -24,6 +24,11 @@ public class WorldScaleSettingsScreen : ScreenBase, IScreen
             var height = new PersonMeasurements(context).MeasureHeight();
             showPersonHeight.label = $"Height: {height:0.00} (World Scale: {height / context.worldScale.playerHeightJSON.val:0.00})";
         });
+        var applyWorldScale = CreateButton("Apply World Scale", true);
+        applyWorldScale.button.onClick.AddListener(() =>
+        {
+            context.worldScale.ApplyWorldScale();
+        });
     }
 
     private void RecordPlayerHeight()

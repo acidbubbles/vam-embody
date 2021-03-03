@@ -8,6 +8,7 @@ public interface IWorldScaleModule : IEmbodyModule
 {
     JSONStorableStringChooser worldScaleMethodJSON { get; }
     JSONStorableFloat playerHeightJSON { get; }
+    void ApplyWorldScale();
     void ClearPersonalData();
 }
 
@@ -35,6 +36,11 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         SuperController.singleton.showNavigationHologrid = false;
 
+        ApplyWorldScale();
+    }
+
+    public void ApplyWorldScale()
+    {
         switch (worldScaleMethodJSON.val)
         {
             case EyeDistanceMethod:
