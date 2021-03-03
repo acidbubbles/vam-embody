@@ -52,7 +52,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
     protected override bool shouldBeSelectedByDefault => context.containingAtom.type != "Person";
 
-    private Rigidbody _headRigidbody;
+    private Rigidbody _headControlRB;
     private Transform _headTransform;
     private FreeControllerV3 _headControl;
     private Quaternion _currentRotationVelocity;
@@ -71,9 +71,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
-        _headRigidbody = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.First();
+        _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.First();
         // ReSharper disable once Unity.NoNullPropagation
-        _headTransform = (containingAtom.type == "Person" ? containingAtom.GetComponentInChildren<LookAtWithLimits>()?.transform.parent : null) ?? _headRigidbody.transform;
+        _headTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
 
         _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
@@ -130,9 +130,18 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
         if (context.containingAtom.type == "Person")
         {
-            var eyes = _headTransform.GetComponentsInChildren<LookAtWithLimits>();
-            var lEye = eyes.First(eye => eye.name == "lEye").transform;
-            var rEye = eyes.First(eye => eye.name == "rEye").transform;
+            if (context.trackers.selectedJSON.val || allowPersonHeadRotationJSON.val)
+            {
+                // This avoids hands influencing head position, and in turn head position influencing hands causing havoc
+                _cameraCenter.SetParent(_headControl.control, false);
+            }
+            else
+            {
+                // This avoids stretched head control moving outside of the head center
+                _cameraCenter.SetParent(_headTransform, false);
+            }
+            var lEye = context.bones.First(b => b.name == "lEye").transform;
+            var rEye = context.bones.First(b => b.name == "rEye").transform;
             var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
             var upDelta = eyesCenter.y;
             _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
@@ -153,8 +162,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _headControl.canGrabPosition = false;
         _headControl.canGrabRotation = false;
 
-        _previousInterpolation = _headRigidbody.interpolation;
-        _headRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        _previousInterpolation = _headControlRB.interpolation;
+        _headControlRB.interpolation = RigidbodyInterpolation.Interpolate;
 
         if (!allowPersonHeadRotationJSON.val)
             GlobalSceneOptions.singleton.disableNavigation = true;
@@ -180,8 +189,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         GlobalSceneOptions.singleton.disableNavigation = false;
 
-        if (_headRigidbody != null)
-            _headRigidbody.interpolation = _previousInterpolation;
+        if (_headControlRB != null)
+            _headControlRB.interpolation = _previousInterpolation;
 
         if (_headControlSnapshot != null)
         {
