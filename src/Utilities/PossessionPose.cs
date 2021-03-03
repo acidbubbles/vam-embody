@@ -21,7 +21,8 @@ public class PossessionPose
         var footHalfDistance = (0.045f) * scale;
         const float footYaw = 4f;
         const float footPitch = 18f;
-        var footFloorDistance = (0.055f) * scale;
+        const float hipHeightRatio = 1.02f;
+        var footFloorDistance = (0.062f) * scale;
         var headForwardOffset = (-0.020f + globalForwardOffset) * scale;
         var hipForwardOffset = (0.020f + globalForwardOffset) * scale;
         var feetForwardOffset = (0.010f + globalForwardOffset) * scale;
@@ -63,7 +64,7 @@ public class PossessionPose
         SetState(hip, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
         hip.control.eulerAngles = new Vector3(0f, direction, 0f);
         var hipForward = hip.control.forward;
-        var hipHeight = measurements.MeasureToHip("lFoot");
+        var hipHeight = measurements.MeasureToHip("lFoot") * hipHeightRatio;
         hip.control.position = position + new Vector3(0f, hipHeight, 0f) + hipForward * hipForwardOffset;
         hip.RBHoldPositionSpring = 4000f;
         hip.RBHoldRotationSpring = 1000f;
