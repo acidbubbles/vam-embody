@@ -17,9 +17,23 @@ public class MoreScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Additional tools and options can be found here."), true);
 
-        CreateButton("Create Mirror").button.onClick.AddListener(CreateMirror);
+        CreateButton("Create Mirror").button.onClick.AddListener(() => SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
+
+        CreateSpacer().height = 20f;
+
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
-        CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(ResetPose);
+
+        CreateSpacer().height = 20f;
+
+        CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() =>
+        {
+            var pose = new PossessionPose(context);
+            pose.Apply();
+        });
+        CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
+
+        CreateSpacer().height = 20f;
+
         CreateButton("Reset All Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
 
         CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession";
@@ -32,15 +46,10 @@ public class MoreScreen : ScreenBase, IScreen
         var helpButton = CreateButton("[Browser] Online Help", true);
         helpButton.button.onClick.AddListener(() => Application.OpenURL("https://github.com/acidbubbles/vam-embody/wiki"));
 
-        var patreonBtn = CreateButton("[Browser] Support me on Patreon ♥", true);
+        var patreonBtn = CreateButton("[Browser] Support Me On Patreon ♥", true);
         patreonBtn.textColor = new Color(0.97647f, 0.40784f, 0.32941f);
         patreonBtn.buttonColor = Color.white;
         patreonBtn.button.onClick.AddListener(() => Application.OpenURL("https://www.patreon.com/acidbubbles"));
-    }
-
-    private void CreateMirror()
-    {
-        SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom));
     }
 
     private void StartRecord()
@@ -76,12 +85,6 @@ public class MoreScreen : ScreenBase, IScreen
             yield return 0;
         SuperController.singleton.motionAnimationMaster.StopPlayback();
         SuperController.singleton.motionAnimationMaster.ResetAnimation();
-    }
-
-    private void ResetPose()
-    {
-        var pose = new PossessionPose(context);
-        pose.Apply();
     }
 
     private static List<string> _keys;

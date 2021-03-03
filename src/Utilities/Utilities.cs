@@ -19,6 +19,17 @@ public static class Utilities
         context.eyeTarget.ResetToDefault();
     }
 
+    public static void ReCenterPose(Atom atom)
+    {
+        var controllers = atom.freeControllers.Where(fc => fc.name.EndsWith("Control")).ToList();
+        if (controllers.Count == 0) return;
+        var center = controllers.Aggregate(Vector3.zero, (a, c) => a += c.control.position) / controllers.Count;
+        var offset = center - atom.mainController.control.position;
+        offset.y = 0;
+        foreach (var controller in controllers)
+            controller.control.position -= offset;
+    }
+
     public static IEnumerator CreateMirror(IEyeTargetModule eyeTarget, Atom containingAtom)
     {
         var uid = CreateUid("Mirror");
