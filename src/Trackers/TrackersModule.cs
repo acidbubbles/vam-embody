@@ -121,13 +121,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         SuperController.singleton.ClearPossess();
 
         TryBindTrackers();
-
-        StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
     }
 
     public void TryBindTrackers()
     {
-        Bind(headMotionControl);
+        if(Bind(headMotionControl))
+            StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
@@ -149,7 +148,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (controllerWithSnapshot == null)
             return false;
         if (controllerWithSnapshot.active)
-            return true;
+            return false;
 
         var controller = controllerWithSnapshot.controller;
         controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
@@ -236,6 +235,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
             if (c.handControl != null)
                 c.handControl.possessed = false;
+
+            c.active = false;
         }
 
     }
