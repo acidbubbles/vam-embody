@@ -143,6 +143,7 @@ public class Embody : MVRScript, IEmbody
                         module.enabledJSON.val = false;
                     }
 
+                    _navigationRigSnapshot?.Restore();
                     StartCoroutine(RestoreNavigationRig());
                 }
             };
