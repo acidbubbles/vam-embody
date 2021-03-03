@@ -61,8 +61,9 @@ public class ImportExportScreen : ScreenBase, IScreen
 
         CreateSpacer(true).height = 40f;
 
-        var clearPersonalData = CreateButton("Clear Personal Data From Plugin", true);
-        clearPersonalData.button.onClick.AddListener(ClearPersonalData);
+        CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(ClearPersonalData);
+
+        CreateButton("Reset To Built-In Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
     }
 
     private void SaveCallback(string path)

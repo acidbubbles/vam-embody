@@ -32,10 +32,6 @@ public class MoreScreen : ScreenBase, IScreen
         });
         CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
 
-        CreateSpacer().height = 20f;
-
-        CreateButton("Reset All Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
-
         CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession";
 
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
