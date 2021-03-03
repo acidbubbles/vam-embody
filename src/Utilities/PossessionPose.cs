@@ -53,8 +53,7 @@ public class PossessionPose
         }
 
         SetState(head, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        head.control.localEulerAngles = new Vector3(0f, direction, 0f);
-        var headEulerAngles = head.control.localEulerAngles;
+        head.control.eulerAngles = new Vector3(0f, direction, 0f);
         var headForward = head.control.forward;
         var headRight = head.control.right;
         head.control.position = position + new Vector3(0f, height, 0f) + headForward * headForwardOffset;
@@ -62,7 +61,7 @@ public class PossessionPose
         head.RBHoldRotationSpring = 1000f;
 
         SetState(hip, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        hip.control.localEulerAngles = new Vector3(0f, direction, 0f);
+        hip.control.eulerAngles = new Vector3(0f, direction, 0f);
         var hipForward = hip.control.forward;
         var hipHeight = measurements.MeasureToHip("lFoot");
         hip.control.position = position + new Vector3(0f, hipHeight, 0f) + hipForward * hipForwardOffset;
@@ -70,13 +69,13 @@ public class PossessionPose
         hip.RBHoldRotationSpring = 1000f;
 
         SetState(lFoot, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        lFoot.control.localEulerAngles = new Vector3(footPitch, direction - footYaw, 0f);
+        lFoot.control.eulerAngles = new Vector3(footPitch, direction - footYaw, 0f);
         lFoot.control.position = position - headRight * footHalfDistance + Vector3.up * footFloorDistance + headForward * feetForwardOffset;
         lFoot.RBHoldPositionSpring = 10000f;
         lFoot.RBHoldRotationSpring = 1000f;
 
         SetState(rFoot, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        rFoot.control.localEulerAngles = new Vector3(footPitch, direction + footYaw, 0f);
+        rFoot.control.eulerAngles = new Vector3(footPitch, direction + footYaw, 0f);
         rFoot.control.position = position + headRight * footHalfDistance + Vector3.up * footFloorDistance + headForward * feetForwardOffset;
         rFoot.RBHoldPositionSpring = 10000f;
         rFoot.RBHoldRotationSpring = 1000f;
@@ -89,13 +88,13 @@ public class PossessionPose
             var toeToFeetDistance = toeBone.transform.localPosition.magnitude;
 
             SetState(lToe, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-            lToe.control.localEulerAngles = lFoot.control.eulerAngles;
+            lToe.control.eulerAngles = lFoot.control.eulerAngles;
             lToe.control.position = lFoot.control.position + lFoot.control.forward * toeToFeetDistance;
             lToe.RBHoldPositionSpring = 10000f;
             lToe.RBHoldRotationSpring = 500f;
 
             SetState(rToe, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-            rToe.control.localEulerAngles = rFoot.control.eulerAngles;
+            rToe.control.eulerAngles = rFoot.control.eulerAngles;
             rToe.control.position = rFoot.control.position + rFoot.control.forward * toeToFeetDistance;
             rToe.RBHoldPositionSpring = 10000f;
             rToe.RBHoldRotationSpring = 500f;
@@ -103,13 +102,13 @@ public class PossessionPose
         }
 
         SetState(lHand, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        lHand.control.localEulerAngles = new Vector3(-25f, 0, 90f);
+        lHand.control.eulerAngles = new Vector3(-25f, 0, 90f);
         lHand.control.position = position + Vector3.up * (hipHeight + handsToHipOffset) + headForward * handsForwardOffset - headRight * handsRightOffset;
         lHand.RBHoldPositionSpring = 10000f;
         lHand.RBHoldRotationSpring = 1000f;
 
         SetState(rHand, FreeControllerV3.PositionState.On, FreeControllerV3.RotationState.On);
-        rHand.control.localEulerAngles = new Vector3(-25f, 0, -90f);
+        rHand.control.eulerAngles = new Vector3(-25f, 0, -90f);
         rHand.control.position = position + Vector3.up * (hipHeight + handsToHipOffset) + headForward * handsForwardOffset + headRight * handsRightOffset;
         rHand.RBHoldPositionSpring = 10000f;
         rHand.RBHoldRotationSpring = 1000f;
