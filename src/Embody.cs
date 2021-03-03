@@ -72,13 +72,13 @@ public class Embody : MVRScript, IEmbody
 
             _modules.SetActive(true);
 
-            var modules = _modules.GetComponents<IEmbodyModule>();
-            presetsJSON = InitPresets(modules);
+            presetsJSON = InitPresets();
             RegisterStringChooser(presetsJSON);
 
             _context.automation.enabledJSON.val = true;
 
             _screensManager = new ScreensManager();
+            var modules = _modules.GetComponents<IEmbodyModule>();
             _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules, diagnosticsEnabled));
             if (isPerson)
             {
@@ -207,8 +207,29 @@ public class Embody : MVRScript, IEmbody
             {"Namespace", "Embody"}
         });
         bindings.Add(new JSONStorableAction("ToggleActive", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = !activeJSON.val; } }));
+        bindings.Add(new JSONStorableAction("Activate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = true; } }));
+        bindings.Add(new JSONStorableAction("Deactivate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = false; } }));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
         bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
+        bindings.Add(new JSONStorableAction("Preset_Passenger", () => SelectPreset("Passenger")));
+        bindings.Add(new JSONStorableAction("Preset_Snug", () => SelectPreset("Snug")));
+        bindings.Add(new JSONStorableAction("Preset_ImprovedPossession", () => SelectPreset("Improved Possession")));
+        bindings.Add(new JSONStorableAction("Enable_Leap", () =>
+        {
+            _context.trackers.leftHandMotionControl.fingersTracking = true;
+            _context.trackers.leftHandMotionControl.fingersTracking = true;
+            _context.trackers.leftHandMotionControl.useLeapPositioning = true;
+            _context.trackers.leftHandMotionControl.useLeapPositioning = true;
+            SuperController.singleton.disableLeap = false;
+        }));
+        bindings.Add(new JSONStorableAction("Disable_Leap", () =>
+        {
+            _context.trackers.leftHandMotionControl.fingersTracking = true;
+            _context.trackers.leftHandMotionControl.fingersTracking = true;
+            _context.trackers.leftHandMotionControl.useLeapPositioning = false;
+            _context.trackers.leftHandMotionControl.useLeapPositioning = false;
+            SuperController.singleton.disableLeap = true;
+        }));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
@@ -256,52 +277,61 @@ public class Embody : MVRScript, IEmbody
         _screensManager.Show(WizardScreen.ScreenName);
     }
 
-    private JSONStorableStringChooser InitPresets(IEmbodyModule[] modules)
+    private JSONStorableStringChooser InitPresets()
     {
-        return new JSONStorableStringChooser("Presets", new List<string>
+        var jss = new JSONStorableStringChooser("Presets", new List<string>
         {
             "VaM Possession",
             "Improved Possession",
             "Snug",
             "Passenger",
-        }, "(Select to apply)", "Apply preset", (string val) =>
+        }, "(Select to apply)", "Apply preset");
+        jss.setCallbackFunction = val =>
         {
-            foreach (var module in modules)
-            {
-                if (module.skipChangeEnabledWhenActive) continue;
-                module.selectedJSON.val = false;
-            }
+            SelectPreset(val);
+            jss.valNoCallback = $"({val} Applied)";
+        };
+        return jss;
+    }
 
-            switch (val)
-            {
-                case "VaM Possession":
-                    _context.automation.takeOverVamPossess.val = false;
-                    _context.hideGeometry.selectedJSON.val = true;
-                    _context.offsetCamera.selectedJSON.val = true;
-                    break;
-                case "Improved Possession":
-                    _context.automation.takeOverVamPossess.val = true;
-                    _context.trackers.selectedJSON.val = true;
-                    _context.hideGeometry.selectedJSON.val = true;
-                    _context.worldScale.selectedJSON.val = true;
-                    _context.eyeTarget.selectedJSON.val = true;
-                    break;
-                case "Snug":
-                    _context.automation.takeOverVamPossess.val = true;
-                    _context.trackers.selectedJSON.val = true;
-                    _context.hideGeometry.selectedJSON.val = true;
-                    _context.snug.selectedJSON.val = true;
-                    _context.worldScale.selectedJSON.val = true;
-                    _context.eyeTarget.selectedJSON.val = true;
-                    break;
-                case "Passenger":
-                    _context.automation.takeOverVamPossess.val = true;
-                    _context.hideGeometry.selectedJSON.val = true;
-                    _context.passenger.selectedJSON.val = true;
-                    _context.worldScale.selectedJSON.val = true;
-                    break;
-            }
-        });
+    private void SelectPreset(string val)
+    {
+        var modules = _modules.GetComponents<IEmbodyModule>();
+        foreach (var module in modules)
+        {
+            if (module.skipChangeEnabledWhenActive) continue;
+            module.selectedJSON.val = false;
+        }
+
+        switch (val)
+        {
+            case "VaM Possession":
+                _context.automation.takeOverVamPossess.val = false;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.offsetCamera.selectedJSON.val = true;
+                break;
+            case "Improved Possession":
+                _context.automation.takeOverVamPossess.val = true;
+                _context.trackers.selectedJSON.val = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                _context.eyeTarget.selectedJSON.val = true;
+                break;
+            case "Snug":
+                _context.automation.takeOverVamPossess.val = true;
+                _context.trackers.selectedJSON.val = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.snug.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                _context.eyeTarget.selectedJSON.val = true;
+                break;
+            case "Passenger":
+                _context.automation.takeOverVamPossess.val = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                break;
+        }
     }
 
     public void OnEnable()
