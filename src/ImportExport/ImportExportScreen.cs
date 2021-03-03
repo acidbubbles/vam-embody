@@ -21,7 +21,7 @@ public class ImportExportScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms.\n\nMake Default will save your settings so that whenever you load this plugin on a new atom, the parameters will be automatically applied.\n\nTo clear your height and body proportions from this instance, e.g. before making a scene public, use Clear Personal Data."), true);
 
-        var loadPresetUI = CreateButton("Import", true);
+        var loadPresetUI = CreateButton("Import Profile", true);
         loadPresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
@@ -29,12 +29,12 @@ public class ImportExportScreen : ScreenBase, IScreen
             SuperController.singleton.GetMediaPathDialog(LoadCallback, SaveFormat.SaveExt, SaveFormat.SaveFolder, false, true, false, null, false, shortcuts);
         });
 
-        var savePresetUI = CreateButton("Export", true);
+        var savePresetUI = CreateButton("Export Profile", true);
         savePresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
             var fileBrowserUI = SuperController.singleton.fileBrowserUI;
-            fileBrowserUI.SetTitle("Save Embody preset");
+            fileBrowserUI.SetTitle("Save Embody Profile");
             fileBrowserUI.fileRemovePrefix = null;
             fileBrowserUI.hideExtension = false;
             fileBrowserUI.keepOpen = false;
@@ -48,13 +48,20 @@ public class ImportExportScreen : ScreenBase, IScreen
             fileBrowserUI.ActivateFileNameField();
         });
 
-        var makeDefaults = CreateButton("Make Default (Saves)", true);
+        CreateSpacer(true).height = 40f;
+
+        var makeDefaults = CreateButton("Save Current Profile As Default", true);
         makeDefaults.button.onClick.AddListener(MakeDefault);
 
-        var clearDefaults = CreateButton("Clear Default (Saves)", true);
+        var applyDefaults = CreateButton("Load & Apply Default Profile", true);
+        applyDefaults.button.onClick.AddListener(MakeDefault);
+
+        var clearDefaults = CreateButton("Clear Default Profile", true);
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
 
-        var clearPersonalData = CreateButton("Clear Personal Data (Plugin)", true);
+        CreateSpacer(true).height = 40f;
+
+        var clearPersonalData = CreateButton("Clear Personal Data From Plugin", true);
         clearPersonalData.button.onClick.AddListener(ClearPersonalData);
     }
 
