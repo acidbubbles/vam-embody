@@ -21,7 +21,7 @@ public static class Utilities
 
     public static void ReCenterPose(Atom atom)
     {
-        var controllers = atom.freeControllers.Where(fc => fc.name.EndsWith("Control")).ToList();
+        var controllers = atom.freeControllers.Where(fc => fc.name.EndsWith("Control")).Where(c => c.currentPositionState != FreeControllerV3.PositionState.Off).ToList();
         if (controllers.Count == 0) return;
         var center = controllers.Aggregate(Vector3.zero, (a, c) => a += c.control.position) / controllers.Count;
         var offset = center - atom.mainController.control.position;
