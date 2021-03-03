@@ -100,6 +100,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             AdjustHeadToEyesOffset();
         }
+
+        if (restorePoseAfterPossessJSON.val)
+        {
+            foreach (var controller in controllers)
+            {
+                controller.snapshot = FreeControllerV3Snapshot.Snap(controller.controller);
+            }
+        }
         return true;
     }
 
@@ -151,7 +159,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             return false;
 
         var controller = controllerWithSnapshot.controller;
-        controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
 
         if (motionControl.name == MotionControlNames.Head)
         {
