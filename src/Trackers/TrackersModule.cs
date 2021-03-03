@@ -55,14 +55,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
         leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false), "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
         rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false), "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}4", () => context.viveTracker4);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}5", () => context.viveTracker5);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}6", () => context.viveTracker6);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}7", () => context.viveTracker7);
-        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}8", () => context.viveTracker8);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1 != null && context.viveTracker1.gameObject.activeInHierarchy ? context.viveTracker1 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2 != null && context.viveTracker2.gameObject.activeInHierarchy ? context.viveTracker2 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3 != null && context.viveTracker3.gameObject.activeInHierarchy ? context.viveTracker3 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}4", () => context.viveTracker4 != null && context.viveTracker4.gameObject.activeInHierarchy ? context.viveTracker4 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}5", () => context.viveTracker5 != null && context.viveTracker5.gameObject.activeInHierarchy ? context.viveTracker5 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}6", () => context.viveTracker6 != null && context.viveTracker6.gameObject.activeInHierarchy ? context.viveTracker6 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}7", () => context.viveTracker7 != null && context.viveTracker7.gameObject.activeInHierarchy ? context.viveTracker7 : null);
+        AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}8", () => context.viveTracker8 != null && context.viveTracker8.gameObject.activeInHierarchy ? context.viveTracker8 : null);
 
         foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
         {

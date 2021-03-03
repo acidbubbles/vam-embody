@@ -84,7 +84,7 @@ public class MotionControllerWithCustomPossessPoint
     public bool SyncMotionControl()
     {
         currentMotionControl = _getMotionControl();
-        if (currentMotionControl == null || !currentMotionControl.gameObject.activeInHierarchy)
+        if (currentMotionControl == null)
         {
             trackerPointTransform = null;
             controllerPointTransform = null;
