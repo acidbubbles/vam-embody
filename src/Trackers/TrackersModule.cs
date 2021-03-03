@@ -215,6 +215,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var c in controllers)
         {
+            if (c.snapshot != null)
+            {
+                c.snapshot.Restore(restorePoseAfterPossessJSON.val);
+                c.snapshot = null;
+            }
+
             if (!c.active) continue;
 
             c.controller.RestorePreLinkState();
@@ -226,15 +232,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 mac.suspendPositionPlayback = false;
                 mac.suspendRotationPlayback = false;
             }
-
-            if (c.snapshot != null)
-            {
-                c.snapshot.Restore(restorePoseAfterPossessJSON.val);
-                c.snapshot = null;
-            }
-
-            if (c.handControl != null)
-                c.handControl.possessed = false;
 
             c.active = false;
         }

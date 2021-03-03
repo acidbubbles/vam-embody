@@ -18,16 +18,16 @@ Select Next to exit possession.".TrimStart();
     {
         base.Enter();
 
+        context.embody.activeJSON.val = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
         var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
         if (lElbowMotionControl != null) lElbowMotionControl.enabled = true;
         var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
         if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
-        context.trackers.enabledJSON.val = false;
-        context.trackers.enabledJSON.val = true;
         context.snug.previewSnugOffsetJSON.val = true;
         context.snug.selectedJSON.val = true;
+        context.embody.activeJSON.val = true;
     }
 
     public bool Apply()
