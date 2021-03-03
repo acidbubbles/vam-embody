@@ -169,6 +169,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         yield return new WaitForEndOfFrame();
         // This will bring back a perfect match when Control Position is off
         UpdateNavigationRig(true);
+        // In some cases, another adjustment will still be required
+        yield return 0f;
+        UpdateNavigationRig(true);
     }
 
     public override void OnDisable()

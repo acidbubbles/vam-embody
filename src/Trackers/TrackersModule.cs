@@ -16,6 +16,7 @@ public interface ITrackersModule : IEmbodyModule
     MotionControllerWithCustomPossessPoint leftHandMotionControl { get; }
     MotionControllerWithCustomPossessPoint rightHandMotionControl { get; }
     List<FreeControllerV3WithSnapshot> controllers { get; }
+    void TryBindTrackers();
     void BindFingers();
     void ReleaseFingers();
 }
@@ -119,20 +120,26 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         SuperController.singleton.ClearPossess();
 
+        TryBindTrackers();
+
+        StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
+    }
+
+    public void TryBindTrackers()
+    {
         Bind(headMotionControl);
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
-
         foreach (var motionControl in viveTrackers)
             Bind(motionControl);
-
-        StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
     }
 
     private IEnumerator OnEnableCo(NavigationRigSnapshot rigSnapshot)
     {
         yield return new WaitForEndOfFrame();
+        rigSnapshot.Restore();
+        yield return 0f;
         rigSnapshot.Restore();
     }
 
@@ -141,6 +148,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var controllerWithSnapshot = FindController(motionControl);
         if (controllerWithSnapshot == null)
             return false;
+        if (controllerWithSnapshot.active)
+            return true;
 
         var controller = controllerWithSnapshot.controller;
         controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);

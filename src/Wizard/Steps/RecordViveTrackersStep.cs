@@ -71,8 +71,15 @@ Press <b>Next</b> when you are ready.
     {
         base.Leave(final);
 
-        context.embody.activeJSON.val = false;
-        context.trackers.previewTrackerOffsetJSON.val = false;
+        if (final)
+        {
+            context.embody.activeJSON.val = false;
+            context.trackers.previewTrackerOffsetJSON.val = false;
+        }
+        else
+        {
+            context.trackers.TryBindTrackers();
+        }
         /*
         context.worldScale.enabledJSON.val = false;
         _navigationRigSnapshot?.Restore();

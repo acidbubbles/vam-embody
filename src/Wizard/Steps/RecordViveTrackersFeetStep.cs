@@ -34,10 +34,9 @@ Skip if you don't plan on using feet trackers.".TrimStart();
     public bool Apply()
     {
         context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.Before");
-        var autoSetup = new TrackerAutoSetup(context.containingAtom);
         var feet = context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("FootControl")).ToList();
         var eyes = context.head.position.y;
-        var floor = context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod ? eyes - context.worldScale.playerHeightJSON.val : 0f;
+        var floor = context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod ? eyes - (context.worldScale.playerHeightJSON.val * SuperController.singleton.worldScale) : 0f;
         var maxY = floor + (eyes - floor) * 0.25f;
         var trackersNearFloor = context.trackers.viveTrackers
             .Where(t => t.SyncMotionControl())
@@ -50,6 +49,7 @@ Skip if you don't plan on using feet trackers.".TrimStart();
             return false;
         }
 
+        var autoSetup = new TrackerAutoSetup(context.containingAtom);
         foreach (var mc in trackersNearFloor)
         {
             if (!mc.SyncMotionControl()) continue;
@@ -77,6 +77,10 @@ Skip if you don't plan on using feet trackers.".TrimStart();
         {
             context.embody.activeJSON.val = false;
             context.trackers.previewTrackerOffsetJSON.val = false;
+        }
+        else
+        {
+            context.trackers.TryBindTrackers();
         }
     }
 }
