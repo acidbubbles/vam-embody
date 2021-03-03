@@ -17,11 +17,11 @@ public class PossessionPose
         var height = measurements.MeasureHeight();
         // TODO: Measure shoulders
         var scale = _context.scaleChangeReceiver.scale;
-        var globalForwardOffset = (-0.025f) * scale;
-        var footHalfDistance = (0.045f) * scale;
+        const float globalForwardOffset = (-0.025f);
         const float footYaw = 4f;
         const float footPitch = 18f;
         const float hipHeightRatio = 1.02f;
+        var footHalfDistance = (0.047f) * scale;
         var footFloorDistance = (0.062f) * scale;
         var headForwardOffset = (-0.020f + globalForwardOffset) * scale;
         var hipForwardOffset = (0.020f + globalForwardOffset) * scale;
