@@ -250,7 +250,8 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     public void TakeSnapshot(string snapshotName)
     {
         if (!enabled) return;
-        var pluginJSON = context.plugin.GetJSON();
+        var pluginJSON = new JSONClass();
+        context.embody.StoreJSON(pluginJSON, true);
         pluginJSON.Remove(storeId);
         snapshots.Add(new EmbodyDebugSnapshot
         {
