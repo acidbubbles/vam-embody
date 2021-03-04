@@ -181,12 +181,12 @@ public class Embody : MVRScript, IEmbody
         {
             containingAtom.RestoreFromLast(this);
         }
-        if (!_restored)
+        if(FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
         {
-            if(FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
+            var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
+            if (!_restored && profile != null)
             {
-                var profile = LoadJSON(SaveFormat.DefaultsPath);
-                RestoreFromJSON(profile.AsObject, false, false, null, false);
+                RestoreFromJSON(profile, false, false, null, false);
             }
         }
 
@@ -284,9 +284,15 @@ public class Embody : MVRScript, IEmbody
         {
             "VaM Possession",
             "Improved Possession",
+            "Improved Possession w/ Leap",
             "Snug",
             "Passenger",
-        }, "(Select to apply)", "Apply preset");
+            "Passenger w/ Hands",
+            "Passenger w/ Leap",
+        }, "(Select To Apply)", "Apply Preset")
+        {
+            isStorable = false
+        };
         jss.setCallbackFunction = val =>
         {
             SelectPreset(val);
@@ -304,22 +310,30 @@ public class Embody : MVRScript, IEmbody
             module.selectedJSON.val = false;
         }
 
+        _context.trackers.leftHandMotionControl.useLeapPositioning = false;
+        _context.trackers.rightHandMotionControl.useLeapPositioning = false;
+
         switch (val)
         {
             case "VaM Possession":
-                _context.automation.takeOverVamPossess.val = false;
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.offsetCamera.selectedJSON.val = true;
                 break;
             case "Improved Possession":
-                _context.automation.takeOverVamPossess.val = true;
                 _context.trackers.selectedJSON.val = true;
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
+            case "Improved Possession w/ Leap":
+                _context.trackers.selectedJSON.val = true;
+                _context.trackers.leftHandMotionControl.useLeapPositioning = true;
+                _context.trackers.rightHandMotionControl.useLeapPositioning = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                _context.eyeTarget.selectedJSON.val = true;
+                break;
             case "Snug":
-                _context.automation.takeOverVamPossess.val = true;
                 _context.trackers.selectedJSON.val = true;
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.snug.selectedJSON.val = true;
@@ -327,7 +341,20 @@ public class Embody : MVRScript, IEmbody
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
             case "Passenger":
-                _context.automation.takeOverVamPossess.val = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                break;
+            case "Passenger w/ Hands":
+                _context.trackers.selectedJSON.val = true;
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
+                break;
+            case "Passenger w/ Leap":
+                _context.trackers.selectedJSON.val = true;
+                _context.trackers.leftHandMotionControl.useLeapPositioning = true;
+                _context.trackers.rightHandMotionControl.useLeapPositioning = true;
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
