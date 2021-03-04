@@ -120,13 +120,20 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         worldScaleMethodJSON.valNoCallback = EyeDistanceMethod;
     }
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
-        importDefaultsOnLoad.StoreJSON(jc);
-        worldScaleMethodJSON.StoreJSON(jc);
-        playerHeightJSON.StoreJSON(jc);
+        if (!toDefaults)
+        {
+            importDefaultsOnLoad.StoreJSON(jc);
+        }
+
+        if (!importDefaultsOnLoad.val || toDefaults)
+        {
+            worldScaleMethodJSON.StoreJSON(jc);
+            playerHeightJSON.StoreJSON(jc);
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)

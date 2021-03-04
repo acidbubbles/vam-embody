@@ -480,30 +480,37 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     #region Load / Save
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
-        importDefaultsOnLoad.StoreJSON(jc);
-        falloffDistanceJSON.StoreJSON(jc);
-        disableSelfGrabJSON.StoreJSON(jc);
-
-        var anchors = new JSONClass();
-        foreach (var anchor in anchorPoints)
+        if (!toDefaults)
         {
-            anchors[anchor.id] = new JSONClass
-            {
-                /*
-                {"InGameOffset", anchor.InGameOffset.ToJSON()},
-                {"InGameSize", anchor.InGameSize.ToJSON()},
-                */
-                {"RealLifeOffset", anchor.realLifeOffset.ToJSON()},
-                {"RealLifeScale", anchor.realLifeSize.ToJSON()},
-                {"Active", anchor.active ? "true" : "false"},
-            };
+            importDefaultsOnLoad.StoreJSON(jc);
         }
 
-        jc["Anchors"] = anchors;
+        if (!importDefaultsOnLoad.val || toDefaults)
+        {
+            falloffDistanceJSON.StoreJSON(jc);
+            disableSelfGrabJSON.StoreJSON(jc);
+
+            var anchors = new JSONClass();
+            foreach (var anchor in anchorPoints)
+            {
+                anchors[anchor.id] = new JSONClass
+                {
+                    /*
+                    {"InGameOffset", anchor.InGameOffset.ToJSON()},
+                    {"InGameSize", anchor.InGameSize.ToJSON()},
+                    */
+                    {"RealLifeOffset", anchor.realLifeOffset.ToJSON()},
+                    {"RealLifeScale", anchor.realLifeSize.ToJSON()},
+                    {"Active", anchor.active ? "true" : "false"},
+                };
+            }
+
+            jc["Anchors"] = anchors;
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)

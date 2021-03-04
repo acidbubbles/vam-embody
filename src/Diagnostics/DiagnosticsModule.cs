@@ -364,9 +364,9 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         controller.currentRotationState = FreeControllerV3.RotationState.ParentLink;
     }
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
         jc["Logs"] = _logs;
         var snapshotsJSON = new JSONArray();

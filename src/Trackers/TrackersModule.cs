@@ -293,17 +293,24 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             mc.ResetToDefault(true);
     }
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
-        importDefaultsOnLoad.StoreJSON(jc);
-        restorePoseAfterPossessJSON.StoreJSON(jc);
+        if (!toDefaults)
+        {
+            importDefaultsOnLoad.StoreJSON(jc);
+        }
 
-        var motionControlsJSON = new JSONClass();
-        foreach (var motionControl in motionControls)
-            motionControlsJSON[motionControl.name] = motionControl.GetJSON();
-        jc["MotionControls"] = motionControlsJSON;
+        if (!importDefaultsOnLoad.val || toDefaults)
+        {
+            restorePoseAfterPossessJSON.StoreJSON(jc);
+
+            var motionControlsJSON = new JSONClass();
+            foreach (var motionControl in motionControls)
+                motionControlsJSON[motionControl.name] = motionControl.GetJSON();
+            jc["MotionControls"] = motionControlsJSON;
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)

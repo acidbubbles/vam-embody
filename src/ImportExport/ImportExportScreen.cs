@@ -87,7 +87,8 @@ public class ImportExportScreen : ScreenBase, IScreen
     private void MakeDefault()
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
-        var jc = context.plugin.GetJSON();
+        var jc = new JSONClass();
+        context.embody.StoreJSON(jc, true);
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
     }
 

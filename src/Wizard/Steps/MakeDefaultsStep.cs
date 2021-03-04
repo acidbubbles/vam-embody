@@ -1,4 +1,5 @@
 ﻿using MVR.FileManagementSecure;
+using SimpleJSON;
 
 public class MakeDefaultsStep : WizardStepBase, IWizardStep
 {
@@ -17,7 +18,8 @@ Skip to keep the defaults untouched.".TrimStart();
     public bool Apply()
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
-        var jc = context.plugin.GetJSON();
+        var jc = new JSONClass();
+        context.embody.StoreJSON(jc, true);
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
         return true;
     }

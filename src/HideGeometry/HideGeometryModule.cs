@@ -312,9 +312,9 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
         hideFaceJSON.StoreJSON(jc);
         hideHairJSON.StoreJSON(jc);

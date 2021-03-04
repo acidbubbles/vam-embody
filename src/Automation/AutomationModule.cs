@@ -86,9 +86,9 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc)
+    public override void StoreJSON(JSONClass jc, bool toDefaults)
     {
-        base.StoreJSON(jc);
+        base.StoreJSON(jc, toDefaults);
 
         jc["ToggleKey"] = toggleKey.ToString();
     }

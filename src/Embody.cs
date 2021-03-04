@@ -12,6 +12,7 @@ public interface IEmbody
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void LoadFromDefaults();
+    void StoreJSON(JSONClass json, bool toDefaults);
 }
 
 public class Embody : MVRScript, IEmbody
@@ -417,15 +418,20 @@ public class Embody : MVRScript, IEmbody
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
+        StoreJSON(json, false);
+        needsStore = true;
+        return json;
+    }
+
+    public void StoreJSON(JSONClass json, bool toDefaults)
+    {
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
         {
             var jc = new JSONClass();
-            c.StoreJSON(jc);
+            c.StoreJSON(jc, toDefaults);
             json[c.storeId] = jc;
         }
-        needsStore = true;
-        return json;
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
