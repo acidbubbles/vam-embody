@@ -54,7 +54,7 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
         enabledJSON.valNoCallback = false;
     }
 
-    public virtual void StoreJSON(JSONClass jc, bool toDefaults)
+    public virtual void StoreJSON(JSONClass jc, bool includeProfile)
     {
         selectedJSON.StoreJSON(jc);
     }

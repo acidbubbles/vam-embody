@@ -316,9 +316,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         Rescan();
     }
 
-    public override void StoreJSON(JSONClass jc, bool toDefaults)
+    public override void StoreJSON(JSONClass jc, bool includeProfile)
     {
-        base.StoreJSON(jc, toDefaults);
+        base.StoreJSON(jc, includeProfile);
 
         trackMirrorsJSON.StoreJSON(jc);
         trackWindowCameraJSON.StoreJSON(jc);

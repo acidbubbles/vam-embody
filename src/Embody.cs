@@ -12,7 +12,7 @@ public interface IEmbody
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void LoadFromDefaults();
-    void StoreJSON(JSONClass json, bool toDefaults);
+    void StoreJSON(JSONClass json, bool includeProfile);
 }
 
 public class Embody : MVRScript, IEmbody
@@ -423,13 +423,13 @@ public class Embody : MVRScript, IEmbody
         return json;
     }
 
-    public void StoreJSON(JSONClass json, bool toDefaults)
+    public void StoreJSON(JSONClass json, bool includeProfile)
     {
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
         {
             var jc = new JSONClass();
-            c.StoreJSON(jc, toDefaults);
+            c.StoreJSON(jc, includeProfile);
             json[c.storeId] = jc;
         }
     }

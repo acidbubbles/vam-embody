@@ -78,9 +78,9 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc, bool toDefaults)
+    public override void StoreJSON(JSONClass jc, bool includeProfile)
     {
-        base.StoreJSON(jc, toDefaults);
+        base.StoreJSON(jc, includeProfile);
 
         cameraDepthJSON.StoreJSON(jc);
         cameraHeightJSON.StoreJSON(jc);

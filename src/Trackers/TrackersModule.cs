@@ -293,16 +293,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             mc.ResetToDefault(true);
     }
 
-    public override void StoreJSON(JSONClass jc, bool toDefaults)
+    public override void StoreJSON(JSONClass jc, bool includeProfile)
     {
-        base.StoreJSON(jc, toDefaults);
+        base.StoreJSON(jc, includeProfile);
 
-        if (!toDefaults)
+        if (!includeProfile)
         {
             importDefaultsOnLoad.StoreJSON(jc);
         }
 
-        if (!importDefaultsOnLoad.val || toDefaults)
+        if (!importDefaultsOnLoad.val || includeProfile)
         {
             restorePoseAfterPossessJSON.StoreJSON(jc);
 
