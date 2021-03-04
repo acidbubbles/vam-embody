@@ -61,7 +61,8 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        selectedJSON.RestoreFromJSON(jc);
+        if (!fromDefaults)
+            selectedJSON.RestoreFromJSON(jc);
     }
 
     public virtual void ResetToDefault()
