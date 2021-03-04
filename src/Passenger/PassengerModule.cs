@@ -305,9 +305,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         jc["RotationOffset"] = rotationOffset.ToJSON();
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
         lookAtJSON.RestoreFromJSON(jc);
         lookAtWeightJSON.RestoreFromJSON(jc);

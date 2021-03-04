@@ -88,9 +88,9 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
         clipDistanceJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
         cameraDepthJSON.RestoreFromJSON(jc);
         cameraHeightJSON.RestoreFromJSON(jc);

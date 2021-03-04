@@ -375,9 +375,9 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         jc["Snapshots"] = snapshotsJSON;
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
         if (_restored) return;
         _restored = true;
         if (jc.HasKey("Logs"))

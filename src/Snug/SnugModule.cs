@@ -7,6 +7,7 @@ using UnityEngine;
 
 public interface ISnugModule : IEmbodyModule
 {
+    JSONStorableBool importDefaultsOnLoad { get; }
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffDistanceJSON { get; }
     JSONStorableFloat falloffMidPointJSON { get; }
@@ -26,10 +27,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public SnugAutoSetup autoSetup { get; private set; }
 
-    public JSONStorableBool previewSnugOffsetJSON { get; private set; }
-    public JSONStorableBool disableSelfGrabJSON { get; set; }
-    public JSONStorableFloat falloffDistanceJSON { get; private set; }
-    public JSONStorableFloat falloffMidPointJSON { get; private set; }
+    public JSONStorableBool importDefaultsOnLoad { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
+    public JSONStorableBool previewSnugOffsetJSON { get; } = new JSONStorableBool("PreviewSnugOffset", false);
+    public JSONStorableBool disableSelfGrabJSON { get; } = new JSONStorableBool("DisablePersonGrab", true);
+    public JSONStorableFloat falloffDistanceJSON { get; } = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
+    public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
     private SnugHand _lHand;
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
@@ -43,10 +45,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             base.Awake();
 
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
-
-            disableSelfGrabJSON = new JSONStorableBool("DisablePersonGrab", true);
-            falloffDistanceJSON = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
-            falloffMidPointJSON = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
 
             _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
@@ -62,15 +60,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitVisualCues()
     {
-        previewSnugOffsetJSON = new JSONStorableBool("PreviewSnugOffset", false, val =>
+        previewSnugOffsetJSON.setCallbackFunction = val =>
         {
             if (val)
                 CreateVisualCues();
             else
                 DestroyVisualCues();
-        })
-        {
-            isStorable = false
         };
     }
 
@@ -506,13 +501,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
         jc["Anchors"] = anchors;
 
+        importDefaultsOnLoad.StoreJSON(jc);
         falloffDistanceJSON.StoreJSON(jc);
         disableSelfGrabJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
         var anchorsJSON = jc["Anchors"];
         if (anchorsJSON != null)
@@ -532,6 +528,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             }
         }
 
+        importDefaultsOnLoad.RestoreFromJSON(jc);
         falloffDistanceJSON.RestoreFromJSON(jc);
         disableSelfGrabJSON.RestoreFromJSON(jc);
     }
@@ -546,6 +543,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             anchor.Update();
         }
 
+        importDefaultsOnLoad.SetValToDefault();
         falloffDistanceJSON.SetValToDefault();
         disableSelfGrabJSON.SetValToDefault();
     }

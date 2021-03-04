@@ -93,9 +93,9 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         jc["ToggleKey"] = toggleKey.ToString();
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
         var toggleKeyString = jc["ToggleKey"].Value;
         if (!string.IsNullOrEmpty(toggleKeyString))

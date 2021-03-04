@@ -329,9 +329,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         frustrumJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
         trackMirrorsJSON.RestoreFromJSON(jc);
         trackWindowCameraJSON.RestoreFromJSON(jc);

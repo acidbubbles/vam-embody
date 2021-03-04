@@ -6,6 +6,7 @@ using UnityEngine;
 
 public interface IWorldScaleModule : IEmbodyModule
 {
+    JSONStorableBool importDefaultsOnLoad { get; }
     JSONStorableStringChooser worldScaleMethodJSON { get; }
     JSONStorableFloat playerHeightJSON { get; }
     void ApplyWorldScale();
@@ -21,6 +22,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public override string storeId => "WorldScale";
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
+    public JSONStorableBool importDefaultsOnLoad { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
     public JSONStorableFloat playerHeightJSON { get; } = new JSONStorableFloat("PlayerHeight", 1.7f, 0f, 2f, false);
 
@@ -122,15 +124,26 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         base.StoreJSON(jc);
 
+        importDefaultsOnLoad.StoreJSON(jc);
         worldScaleMethodJSON.StoreJSON(jc);
         playerHeightJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
+        importDefaultsOnLoad.RestoreFromJSON(jc);
         worldScaleMethodJSON.RestoreFromJSON(jc);
         playerHeightJSON.RestoreFromJSON(jc);
+    }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        importDefaultsOnLoad.SetValToDefault();
+        worldScaleMethodJSON.SetValToDefault();
+        playerHeightJSON.SetValToDefault();
     }
 }

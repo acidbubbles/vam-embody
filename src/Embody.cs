@@ -186,7 +186,7 @@ public class Embody : MVRScript, IEmbody
             var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
             if (!_restored && profile != null)
             {
-                RestoreFromJSON(profile, false, false, null, false);
+                RestoreFromJSON(profile, true);
             }
         }
 
@@ -428,20 +428,28 @@ public class Embody : MVRScript, IEmbody
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
     {
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
+        if (RestoreFromJSON(jc, false))
+            _restored = true;
+    }
+
+    private bool RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    {
         var version = jc["Version"].AsInt;
-        if (version <= 0) return;
+        if (version <= 0) return false;
         if (version < 2)
         {
             SuperController.LogError($"Embody: Saved settings (Save Format {version}) are not compatible with this version of Embody (Save Format {SaveFormat.Version}).");
-            _restored = true;
-            return;
+            return false;
         }
         if (version > SaveFormat.Version)
         {
             SuperController.LogError("Embody: This scene was saved with a more recent Embody version than the one you have install. Please get the latest version.");
+            return false;
         }
-        foreach(var c in _modules.GetComponents<EmbodyModuleBase>())
-            c.RestoreFromJSON(jc[c.storeId].AsObject);
-        _restored = true;
+
+        foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
+            c.RestoreFromJSON(jc[c.storeId].AsObject, fromDefaults);
+
+        return false;
     }
 }

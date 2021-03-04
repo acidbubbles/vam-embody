@@ -59,7 +59,7 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
         selectedJSON.StoreJSON(jc);
     }
 
-    public virtual void RestoreFromJSON(JSONClass jc)
+    public virtual void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
         selectedJSON.RestoreFromJSON(jc);
     }

@@ -7,6 +7,7 @@ using UnityEngine;
 
 public interface ITrackersModule : IEmbodyModule
 {
+    JSONStorableBool importDefaultsOnLoad { get; }
     JSONStorableBool restorePoseAfterPossessJSON { get; }
     JSONStorableBool previewTrackerOffsetJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
@@ -42,6 +43,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         .Where(t => MotionControlNames.IsHeadOrHands(t.name));
 
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
+    public JSONStorableBool importDefaultsOnLoad { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
 
@@ -288,6 +290,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.StoreJSON(jc);
 
+        importDefaultsOnLoad.StoreJSON(jc);
         restorePoseAfterPossessJSON.StoreJSON(jc);
 
         var motionControlsJSON = new JSONClass();
@@ -296,10 +299,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         jc["MotionControls"] = motionControlsJSON;
     }
 
-    public override void RestoreFromJSON(JSONClass jc)
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
-        base.RestoreFromJSON(jc);
+        base.RestoreFromJSON(jc, fromDefaults);
 
+        importDefaultsOnLoad.RestoreFromJSON(jc);
         restorePoseAfterPossessJSON.RestoreFromJSON(jc);
 
         var motionControlsJSON = jc["MotionControls"].AsObject;
@@ -318,6 +322,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         foreach (var mc in context.trackers.motionControls)
             mc.ResetToDefault();
 
+        importDefaultsOnLoad.SetValToDefault();
         previewTrackerOffsetJSON.SetValToDefault();
         restorePoseAfterPossessJSON.SetValToDefault();
     }
