@@ -20,6 +20,7 @@ public interface ITrackersModule : IEmbodyModule
     void TryBindTrackers();
     void BindFingers();
     void ReleaseFingers();
+    void ClearPersonalData();
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -286,6 +287,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         controller.canGrabRotation = false;
     }
 
+    public void ClearPersonalData()
+    {
+        foreach (var mc in context.trackers.motionControls)
+            mc.ResetToDefault(true);
+    }
+
     public override void StoreJSON(JSONClass jc)
     {
         base.StoreJSON(jc);
@@ -303,15 +310,22 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.RestoreFromJSON(jc, fromDefaults);
 
-        importDefaultsOnLoad.RestoreFromJSON(jc);
-        restorePoseAfterPossessJSON.RestoreFromJSON(jc);
-
-        var motionControlsJSON = jc["MotionControls"].AsObject;
-        foreach (var motionControlName in motionControlsJSON.Keys)
+        if (!fromDefaults)
         {
-            var motionControlJSON = motionControlsJSON[motionControlName];
-            var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
-            motionControl?.RestoreFromJSON(motionControlJSON);
+            importDefaultsOnLoad.RestoreFromJSON(jc);
+        }
+
+        if (importDefaultsOnLoad.val || !fromDefaults)
+        {
+            restorePoseAfterPossessJSON.RestoreFromJSON(jc);
+
+            var motionControlsJSON = jc["MotionControls"].AsObject;
+            foreach (var motionControlName in motionControlsJSON.Keys)
+            {
+                var motionControlJSON = motionControlsJSON[motionControlName];
+                var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
+                motionControl?.RestoreFromJSON(motionControlJSON);
+            }
         }
     }
 
@@ -319,11 +333,11 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.ResetToDefault();
 
+        importDefaultsOnLoad.SetValToDefault();
+        restorePoseAfterPossessJSON.SetValToDefault();
+        previewTrackerOffsetJSON.SetValToDefault();
+
         foreach (var mc in context.trackers.motionControls)
             mc.ResetToDefault();
-
-        importDefaultsOnLoad.SetValToDefault();
-        previewTrackerOffsetJSON.SetValToDefault();
-        restorePoseAfterPossessJSON.SetValToDefault();
     }
 }

@@ -53,8 +53,8 @@ public class ImportExportScreen : ScreenBase, IScreen
         var makeDefaults = CreateButton("Save Current Profile As Default", true);
         makeDefaults.button.onClick.AddListener(MakeDefault);
 
-        var applyDefaults = CreateButton("Load & Apply Default Profile", true);
-        applyDefaults.button.onClick.AddListener(MakeDefault);
+        var applyDefaults = CreateButton("Apply Default Profile", true);
+        applyDefaults.button.onClick.AddListener(() => context.embody.LoadFromDefaults());
 
         var clearDefaults = CreateButton("Clear Default Profile", true);
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
@@ -63,7 +63,7 @@ public class ImportExportScreen : ScreenBase, IScreen
 
         CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(ClearPersonalData);
 
-        CreateButton("Reset To Built-In Defaults").button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
+        CreateButton("Reset To Built-In Defaults", true).button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
     }
 
     private void SaveCallback(string path)
@@ -96,5 +96,6 @@ public class ImportExportScreen : ScreenBase, IScreen
         _embody.activeJSON.val = false;
         _snug.ClearPersonalData();
         _worldScale.ClearPersonalData();
+        context.trackers.ClearPersonalData();
     }
 }

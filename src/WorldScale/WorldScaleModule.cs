@@ -133,9 +133,16 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         base.RestoreFromJSON(jc, fromDefaults);
 
-        importDefaultsOnLoad.RestoreFromJSON(jc);
-        worldScaleMethodJSON.RestoreFromJSON(jc);
-        playerHeightJSON.RestoreFromJSON(jc);
+        if (!fromDefaults)
+        {
+            importDefaultsOnLoad.RestoreFromJSON(jc);
+        }
+
+        if (importDefaultsOnLoad.val || !fromDefaults)
+        {
+            worldScaleMethodJSON.RestoreFromJSON(jc);
+            playerHeightJSON.RestoreFromJSON(jc);
+        }
     }
 
     public override void ResetToDefault()

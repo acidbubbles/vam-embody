@@ -184,16 +184,17 @@ public class MotionControllerWithCustomPossessPoint
         if (mappedControllerName == "") mappedControllerName = null;
     }
 
-    public void ResetToDefault()
+    public void ResetToDefault(bool onlyPersonalData = false)
     {
+        offsetControllerCustom = Vector3.zero;
+        rotateControllerCustom = Vector3.zero;
+        rotateAroundTracker = Vector3.zero;
+        if (onlyPersonalData) return;
         if (!MotionControlNames.IsHeadOrHands(name))
             mappedControllerName = null;
         controlRotation = true;
         useLeapPositioning = false;
         fingersTracking = true;
-        offsetControllerCustom = Vector3.zero;
-        rotateControllerCustom = Vector3.zero;
-        rotateAroundTracker = Vector3.zero;
         enabled = true;
     }
 }

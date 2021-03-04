@@ -484,6 +484,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.StoreJSON(jc);
 
+        importDefaultsOnLoad.StoreJSON(jc);
+        falloffDistanceJSON.StoreJSON(jc);
+        disableSelfGrabJSON.StoreJSON(jc);
+
         var anchors = new JSONClass();
         foreach (var anchor in anchorPoints)
         {
@@ -500,52 +504,55 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
 
         jc["Anchors"] = anchors;
-
-        importDefaultsOnLoad.StoreJSON(jc);
-        falloffDistanceJSON.StoreJSON(jc);
-        disableSelfGrabJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
         base.RestoreFromJSON(jc, fromDefaults);
 
-        var anchorsJSON = jc["Anchors"];
-        if (anchorsJSON != null)
+        if (!fromDefaults)
         {
-            foreach (var anchor in anchorPoints)
-            {
-                var anchorJSON = anchorsJSON[anchor.id];
-                if (anchorJSON == null) continue;
-                /*
-                anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
-                anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
-                */
-                anchor.realLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.realLifeOffset);
-                anchor.realLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.realLifeSize);
-                anchor.active = anchorJSON["Active"]?.Value != "false";
-                anchor.Update();
-            }
+            importDefaultsOnLoad.RestoreFromJSON(jc);
         }
 
-        importDefaultsOnLoad.RestoreFromJSON(jc);
-        falloffDistanceJSON.RestoreFromJSON(jc);
-        disableSelfGrabJSON.RestoreFromJSON(jc);
+        if (importDefaultsOnLoad.val || !fromDefaults)
+        {
+            disableSelfGrabJSON.RestoreFromJSON(jc);
+            falloffDistanceJSON.RestoreFromJSON(jc);
+            var anchorsJSON = jc["Anchors"];
+            if (anchorsJSON != null)
+            {
+                foreach (var anchor in anchorPoints)
+                {
+                    var anchorJSON = anchorsJSON[anchor.id];
+                    if (anchorJSON == null) continue;
+                    /*
+                    anchor.InGameOffset = anchorJSON["InGameOffset"].ToVector3(anchor.InGameOffset);
+                    anchor.InGameSize = anchorJSON["InGameSize"].ToVector3(anchor.InGameSize);
+                    */
+                    anchor.realLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.realLifeOffset);
+                    anchor.realLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.realLifeSize);
+                    if (!fromDefaults)
+                        anchor.active = anchorJSON["Active"]?.Value != "false";
+                    anchor.Update();
+                }
+            }
+        }
     }
 
     public override void ResetToDefault()
     {
         base.ResetToDefault();
 
+        importDefaultsOnLoad.SetValToDefault();
+        disableSelfGrabJSON.SetValToDefault();
+        falloffDistanceJSON.SetValToDefault();
+
         foreach (var anchor in anchorPoints)
         {
             anchor.InitFromDefault();
             anchor.Update();
         }
-
-        importDefaultsOnLoad.SetValToDefault();
-        falloffDistanceJSON.SetValToDefault();
-        disableSelfGrabJSON.SetValToDefault();
     }
 
     #endregion

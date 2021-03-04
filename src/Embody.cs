@@ -11,6 +11,7 @@ public interface IEmbody
     JSONStorableBool activeJSON { get; }
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
+    void LoadFromDefaults();
 }
 
 public class Embody : MVRScript, IEmbody
@@ -181,17 +182,19 @@ public class Embody : MVRScript, IEmbody
         {
             containingAtom.RestoreFromLast(this);
         }
-        if(FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
-        {
-            var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
-            if (!_restored && profile != null)
-            {
-                RestoreFromJSON(profile, true);
-            }
-        }
+        LoadFromDefaults();
+        _restored = true;
 
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
         _screensManager.Show(MainScreen.ScreenName);
+    }
+
+    public void LoadFromDefaults()
+    {
+        if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath)) return;
+        var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
+        if (profile == null) return;
+        RestoreFromJSON(profile, _restored);
     }
 
     public override void InitUI()
