@@ -27,14 +27,16 @@ public class SnugSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateText(new JSONStorableString("", "Moves your VR hands closer to where they are on your real body, so when you touch your abdomen, the model is also touching their abdomen.\n\nYou need to configure the size of your body and if your natural pose is different, the offset between your body center and the model's.\n\nThe Wizard is recommended unless you understand how Snug works."), true);
+
         if (!context.embody.activeJSON.val)
             _snug.autoSetup.AutoSetup();
 
-        CreateToggle(_snug.importDefaultsOnLoad).label = "Do Not Save (Use Defaults)";
-        CreateToggle(_snug.previewSnugOffsetJSON).label = "Preview Offset (Real v.s. In-Game)";
-        CreateToggle(_snug.disableSelfGrabJSON).label = "Disable Person Grab";
-        CreateSlider(_snug.falloffDistanceJSON, false).label = "Falloff Distance";
-        CreateSlider(_snug.falloffMidPointJSON, false).label = "Falloff Mid-point";
+        CreateToggle(_snug.importDefaultsOnLoad, true).label = "Do Not Save (Use Defaults)";
+        CreateToggle(_snug.previewSnugOffsetJSON, true).label = "Preview Offset (Real v.s. In-Game)";
+        CreateToggle(_snug.disableSelfGrabJSON, true).label = "Disable Person Grab";
+        CreateSlider(_snug.falloffDistanceJSON, true).label = "Falloff Distance";
+        CreateSlider(_snug.falloffMidPointJSON, true).label = "Falloff Mid-point";
         InitAnchorsUI();
 
         SyncSelectedAnchorJSON("");
@@ -52,35 +54,35 @@ public class SnugSettingsScreen : ScreenBase, IScreen
             "Anchor",
             SyncSelectedAnchorJSON
         );
-        CreateScrollablePopup(_selectedAnchorsJSON, true);
+        CreateScrollablePopup(_selectedAnchorsJSON);
 
         _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
-        CreateToggle(_anchorActiveJSON, true);
+        CreateToggle(_anchorActiveJSON);
 
         _anchorRealSizeXJSON = new JSONStorableFloat("Size X (Width)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorRealSizeXJSON, true);
+        CreateSlider(_anchorRealSizeXJSON);
         _anchorRealSizeZJSON = new JSONStorableFloat("Size Z (Depth)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorRealSizeZJSON, true);
+        CreateSlider(_anchorRealSizeZJSON);
 
         _anchorRealOffsetXJSON = new JSONStorableFloat("Offset X (Left/Right)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorRealOffsetXJSON, true);
+        CreateSlider(_anchorRealOffsetXJSON);
         _anchorRealOffsetYJSON = new JSONStorableFloat("Offset Y (Up/Down)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorRealOffsetYJSON, true);
+        CreateSlider(_anchorRealOffsetYJSON);
         _anchorRealOffsetZJSON = new JSONStorableFloat("Offset Z (Forw./Back.)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorRealOffsetZJSON, true);
+        CreateSlider(_anchorRealOffsetZJSON);
 
         #if(ALLOW_SNUG_INGAME_EDIT)
         _anchorInGameSizeXJSON = new JSONStorableFloat("In-Game Size X (Width)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorInGameSizeXJSON, true);
+        CreateSlider(_anchorInGameSizeXJSON);
         _anchorInGameSizeZJSON = new JSONStorableFloat("In-Game Size Z (Depth)", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};
-        CreateSlider(_anchorInGameSizeZJSON, true);
+        CreateSlider(_anchorInGameSizeZJSON);
 
         _anchorInGameOffsetXJSON = new JSONStorableFloat("In-Game Offset X (Left/Right)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorInGameOffsetXJSON, true);
+        CreateSlider(_anchorInGameOffsetXJSON);
         _anchorInGameOffsetYJSON = new JSONStorableFloat("In-Game Offset Y (Up/Down)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorInGameOffsetYJSON, true);
+        CreateSlider(_anchorInGameOffsetYJSON);
         _anchorInGameOffsetZJSON = new JSONStorableFloat("In-Game Offset Z (Forw./Back.)", 0f, UpdateAnchor, -0.2f, 0.2f, true) {isStorable = false};
-        CreateSlider(_anchorInGameOffsetZJSON, true);
+        CreateSlider(_anchorInGameOffsetZJSON);
         #endif
     }
 
