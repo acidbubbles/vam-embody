@@ -66,6 +66,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private Transform _cameraCenter;
     private float _headToEyesDistance;
     private FreeControllerV3Snapshot _headControlSnapshot;
+    private Quaternion _rigRotationOffset;
 
     public override void Awake()
     {
@@ -146,6 +147,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             SuperController.singleton.HideMainHUD();
         }
+        // TODO: Deal with upside down (Vector3.Dot?)
+        var rigRotationOffset = Vector3.ProjectOnPlane(SuperController.singleton.navigationRig.forward, Vector3.up) - Vector3.ProjectOnPlane(SuperController.singleton.navigationRig.forward, Vector3.up);
+        _rigRotationOffset = Quaternion.Euler(rigRotationOffset);
         return true;
     }
 
@@ -238,13 +242,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
         var centerTargetTransform = CameraTarget.centerTarget.transform;
-        var navigationRigTransform = navigationRig.transform;
         var linkTransform = _cameraCenterTarget;
 
         // Desired camera position
 
         var position = linkTransform.position;
-        var rotation = linkTransform.rotation;
+        var rotation = linkTransform.rotation * _rigRotationOffset;
 
         if (lookAtJSON.val && lookAtWeightJSON.val > 0)
         {
@@ -259,7 +262,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         // Move navigation rig
 
         var cameraDelta = centerTargetTransform.position
-                          - navigationRigTransform.position
+                          - navigationRig.position
                           - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance * SuperController.singleton.worldScale);
         var navigationRigPosition = position - cameraDelta;
 
@@ -276,16 +279,15 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         if (force || rotationLockJSON.val)
         {
-            navigationRigTransform.rotation = navigationRigRotation;
+            navigationRig.rotation = navigationRigRotation;
         }
         if (allowPersonHeadRotationJSON.val)
         {
             _headControl.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
         }
-
         if (force || positionLockJSON.val)
         {
-            navigationRigTransform.position = navigationRigPosition;
+            navigationRig.position = navigationRigPosition;
         }
     }
 
