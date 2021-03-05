@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Handlers
@@ -16,18 +15,20 @@ namespace Handlers
 
         public bool Prepare()
         {
-            var wrap = _clothing.GetComponentInChildren<DAZSkinWrap>();
-            if (wrap == null) return false;
-            if (wrap.GPUuseSimpleMaterial)
+            foreach(var wrap in _clothing.GetComponentsInChildren<DAZSkinWrap>())
             {
-                AddMaterial(wrap.GPUsimpleMaterial);
-            }
-            else
-            {
-                if (wrap.GPUmaterials == null) return false;
-                foreach (var mat in wrap.GPUmaterials)
+                if (wrap == null) return false;
+                if (wrap.GPUuseSimpleMaterial)
                 {
-                    AddMaterial(mat);
+                    AddMaterial(wrap.GPUsimpleMaterial);
+                }
+                else
+                {
+                    if (wrap.GPUmaterials == null) return false;
+                    foreach (var mat in wrap.GPUmaterials)
+                    {
+                        AddMaterial(mat);
+                    }
                 }
             }
             return _materials.Count != 0;
@@ -36,7 +37,8 @@ namespace Handlers
         private void AddMaterial(Material mat)
         {
             if (mat == null) return;
-            if (!mat.HasProperty("_AlphaAdjust")) return;
+            if (!mat.HasProperty("_AlphaAdjust"))
+                return;
             _materials.Add(new MaterialAlphaSnapshot
             {
                 material = mat,
