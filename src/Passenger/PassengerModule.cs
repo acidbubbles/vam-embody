@@ -249,6 +249,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (lookAtJSON.val && lookAtWeightJSON.val > 0)
         {
             var lookAtRotation = Quaternion.LookRotation(_eyeTargetControl.transform.position - linkTransform.position, linkTransform.up);
+            lookAtRotation.eulerAngles += _cameraCenterTarget.localEulerAngles;
             rotation = Quaternion.Slerp(rotation, lookAtRotation, lookAtWeightJSON.val);
         }
 
