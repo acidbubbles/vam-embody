@@ -14,6 +14,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open";
         if (context.containingAtom.type == "Person")
         {
             CreateToggle(_passenger.lookAtJSON).label = "Look At Eye Target";

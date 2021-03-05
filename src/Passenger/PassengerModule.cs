@@ -8,6 +8,7 @@ using UnityEngine;
 
 public interface IPassengerModule : IEmbodyModule
 {
+    JSONStorableBool exitOnMenuOpen { get; }
     JSONStorableBool lookAtJSON { get; }
     JSONStorableFloat lookAtWeightJSON { get; }
     JSONStorableBool rotationLockJSON { get; }
@@ -28,15 +29,16 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override string storeId => "Passenger";
     public override string label => Label;
 
-    public JSONStorableBool lookAtJSON { get; set; }
-    public JSONStorableFloat lookAtWeightJSON { get; set; }
-    public JSONStorableBool rotationLockJSON { get; set; }
-    public JSONStorableBool rotationLockNoRollJSON { get; set; }
-    public JSONStorableFloat rotationSmoothingJSON { get; set; }
-    public JSONStorableBool positionLockJSON { get; set; }
-    public JSONStorableFloat positionSmoothingJSON { get; set; }
-    public JSONStorableBool allowPersonHeadRotationJSON { get; set; }
-    public JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; set; }
+    public JSONStorableBool exitOnMenuOpen { get; } = new JSONStorableBool("ExitOnMenuOpen", true);
+    public JSONStorableBool lookAtJSON { get; } = new JSONStorableBool("LookAtEyeTarget", false);
+    public JSONStorableFloat lookAtWeightJSON { get; } = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
+    public JSONStorableBool rotationLockJSON { get; } = new JSONStorableBool("ControlRotation", true);
+    public JSONStorableBool rotationLockNoRollJSON { get; } = new JSONStorableBool("NoRoll", false);
+    public JSONStorableFloat rotationSmoothingJSON { get; } = new JSONStorableFloat("RotationSmoothing", 0f, 0f, 1f, true);
+    public JSONStorableBool positionLockJSON { get; } = new JSONStorableBool("ControlPosition", true);
+    public JSONStorableFloat positionSmoothingJSON { get; } = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
+    public JSONStorableBool allowPersonHeadRotationJSON { get; } = new JSONStorableBool("AllowPersonHeadRotationJSON", false);
+    public JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }  = new JSONStorableFloat("EyesToHeadDistanceOffset", 0f, -0.1f, 0.2f, false);
 
     public Vector3 positionOffset
     {
@@ -81,21 +83,16 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
 
-        lookAtJSON = new JSONStorableBool("LookAtEyeTarget", false, (bool val) => Reapply());
-
-        lookAtWeightJSON = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
-
-        positionLockJSON = new JSONStorableBool("ControlPosition", true, (bool val) => Reapply());
-
-        rotationLockJSON = new JSONStorableBool("ControlRotation", true, val =>
+        lookAtJSON.setCallbackFunction = _ => Reapply();
+        positionLockJSON.setCallbackFunction = _ => Reapply();
+        eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => Reapply();
+        rotationLockNoRollJSON.setCallbackFunction = _ => Reapply();
+        rotationLockJSON.setCallbackFunction = val =>
         {
-            if(val) allowPersonHeadRotationJSON.valNoCallback = false;
+            if (val) allowPersonHeadRotationJSON.valNoCallback = false;
             Reapply();
-        });
-
-        rotationLockNoRollJSON = new JSONStorableBool("NoRoll", false, (bool val) => Reapply());
-
-        allowPersonHeadRotationJSON = new JSONStorableBool("AllowPersonHeadRotationJSON", false, val =>
+        };
+        allowPersonHeadRotationJSON.setCallbackFunction = val =>
         {
             if (_eyeTargetControl == null)
             {
@@ -104,13 +101,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             }
             if (val) rotationLockJSON.valNoCallback = false;
             Reapply();
-        });
-
-        rotationSmoothingJSON = new JSONStorableFloat("RotationSmoothing", 0f, 0f, 1f, true);
-
-        positionSmoothingJSON = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
-
-        eyesToHeadDistanceOffsetJSON = new JSONStorableFloat("EyesToHeadDistanceOffset", 0f, (float val) => Reapply(), -0.1f, 0.2f, false);
+        };
     }
 
     private void Reapply()
@@ -150,6 +141,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         else
         {
             _cameraCenter.localPosition = Vector3.zero;
+        }
+        if (exitOnMenuOpen.val)
+        {
+            SuperController.singleton.HideMainHUD();
         }
         return true;
     }
@@ -221,6 +216,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         try
         {
+            if (exitOnMenuOpen.val && SuperController.singleton.mainHUD.gameObject.activeSelf)
+            {
+                context.embody.activeJSON.val = false;
+                return;
+            }
             UpdateNavigationRig(false);
         }
         catch (Exception e)
