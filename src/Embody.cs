@@ -28,6 +28,7 @@ public class Embody : MVRScript, IEmbody
     private bool _activateAfterSaveComplete;
     private EmbodyScaleChangeReceiver _scaleChangeReceiver;
     private NavigationRigSnapshot _navigationRigSnapshot;
+    private Coroutine _restoreNavigationRigCoroutine;
 
     public override void Init()
     {
@@ -126,7 +127,13 @@ public class Embody : MVRScript, IEmbody
                             modulesToEnable.Add(module);
                     }
 
-                    if(modules.Contains(_context.trackers) || modules.Contains(_context.passenger))
+                    if (_restoreNavigationRigCoroutine != null)
+                    {
+                        StopCoroutine(_restoreNavigationRigCoroutine);
+                        _restoreNavigationRigCoroutine = null;
+                    }
+
+                    if(_navigationRigSnapshot == null && (modules.Contains(_context.trackers) || modules.Contains(_context.passenger)))
                         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
                     foreach (var module in modulesToEnable)
@@ -146,7 +153,7 @@ public class Embody : MVRScript, IEmbody
                     }
 
                     _navigationRigSnapshot?.Restore();
-                    StartCoroutine(RestoreNavigationRig());
+                    _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
                 }
             };
             RegisterBool(activeJSON);
@@ -174,6 +181,7 @@ public class Embody : MVRScript, IEmbody
         yield return 0;
         _navigationRigSnapshot?.Restore();
         _navigationRigSnapshot = null;
+        _restoreNavigationRigCoroutine = null;
     }
 
     private IEnumerator DeferredInit()
