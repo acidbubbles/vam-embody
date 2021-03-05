@@ -225,6 +225,10 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
                 context.embody.activeJSON.val = false;
                 return;
             }
+
+            var turnAxis = JoystickControl.GetAxis(SuperController.singleton.navigationTurnAxis);
+            if (turnAxis != 0)
+                _rigRotationOffset *= Quaternion.Euler(0f, turnAxis, 0f);
             UpdateNavigationRig(false);
         }
         catch (Exception e)
