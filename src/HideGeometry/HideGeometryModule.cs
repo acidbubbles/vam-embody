@@ -182,7 +182,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             var hair = _selector.hairItems
                 .Where(h => h != null)
                 .Where(h => h.active)
-                .Where(h => h.tagsArray == null || h.tagsArray.Length == 0 || Array.IndexOf(h.tagsArray, "head") > -1 || Array.IndexOf(h.tagsArray, "face") > -1)
+                .Where(IsHeadHair)
                 .Where(HairHandler.Supports)
                 .ToArray();
             foreach (var h in hair)
@@ -207,6 +207,25 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
 
         if (!_dirty) _tryAgainAttempts = 0;
+    }
+
+    private static bool IsHeadHair(DAZHairGroup h)
+    {
+        if(h.tagsArray == null) return true;
+        if(h.tagsArray.Length == 0) return true;
+        if (
+            Array.IndexOf(h.tagsArray, "head") > -1 ||
+            Array.IndexOf(h.tagsArray, "face") > -1
+        ) return true;
+        // Oops, forgot to tag
+        if (
+            Array.IndexOf(h.tagsArray, "arms") == -1 &&
+            Array.IndexOf(h.tagsArray, "full body") == -1 &&
+            Array.IndexOf(h.tagsArray, "genital") == -1 &&
+            Array.IndexOf(h.tagsArray, "legs") == -1 &&
+            Array.IndexOf(h.tagsArray, "torso") == -1
+        ) return true;
+        return false;
     }
 
     private bool RegisterHandler(IHandler handler)

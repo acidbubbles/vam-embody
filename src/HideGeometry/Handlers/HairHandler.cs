@@ -48,6 +48,8 @@ namespace Handlers
 
             _hairMaterial = hairMaterial;
             _hairShaderProperty = "_StandWidth";
+            if(!_hairMaterial.HasProperty(_hairShaderProperty))
+                SuperController.LogError($"Hair {_hair.displayName} does not have shader property {_hairShaderProperty}");
             _hairShaderHiddenValue = 0f;
             _hairShaderOriginalValue = _hairMaterial.GetFloat(_hairShaderProperty);
             return true;
