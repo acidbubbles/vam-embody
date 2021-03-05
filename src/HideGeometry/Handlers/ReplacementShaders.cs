@@ -19,6 +19,9 @@ namespace Handlers
             { "Custom/Subsurface/TransparentComputeBuff", null },
             { "Custom/Subsurface/AlphaMaskComputeBuff", null },
             { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
+
+            // Plugin materials
+            { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", null }
         };
 
     }
