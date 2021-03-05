@@ -49,9 +49,9 @@ public static class SuperControllerExtensions
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();
 
-        var fromDirection = Vector3.ProjectOnPlane(motionControl.controllerPointTransform.forward, up);
+        var fromDirection = Vector3.ProjectOnPlane(transform.forward, up);
         var toDirection = Vector3.ProjectOnPlane(forwardPossessAxis, up);
-        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(motionControl.controllerPointTransform.up, up) > 0f)
+        if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(transform.up, up) > 0f)
             toDirection = -toDirection;
 
         var rotation = Quaternion.FromToRotation(fromDirection, toDirection);
