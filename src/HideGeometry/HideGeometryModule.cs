@@ -197,7 +197,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             _clothingHashSum = _selector.clothingItems.Where(h => h.active).Aggregate(0, (s, c) => s ^ c.GetHashCode());
             var clothes = _selector.clothingItems
                 .Where(c => c.active)
-                .Where(c => c.tagsArray != null && c.tagsArray.Length > 0 ? Array.IndexOf(c.tagsArray, "head") > -1 : c.displayName.IndexOf("eye", StringComparison.OrdinalIgnoreCase) > -1)
+                .Where(IsHeadClothing)
                 .ToArray();
             foreach (var c in clothes)
             {
@@ -225,6 +225,18 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
             Array.IndexOf(h.tagsArray, "legs") == -1 &&
             Array.IndexOf(h.tagsArray, "torso") == -1
         ) return true;
+        return false;
+    }
+
+    private static bool IsHeadClothing(DAZClothingItem c)
+    {
+        if (c.displayName.IndexOf("eye", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (c.displayName.IndexOf("lashes", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (c.displayName.IndexOf("face", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (c.tagsArray == null) return false;
+        if (c.tagsArray.Length == 0) return false;
+        if (Array.IndexOf(c.tagsArray, "head") > -1) return true;
+        if (Array.IndexOf(c.tagsArray, "glasses") > -1) return true;
         return false;
     }
 
