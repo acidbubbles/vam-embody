@@ -234,12 +234,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             SuperController.LogError($"Embody: Failed to initialize Snug. {exc}");
             enabledJSON.val = false;
         }
-
-        if (!_lHand.active || !_rHand.active)
-        {
-            SuperController.LogError($"Embody: Failed to initialize Snug hands. No motion tracker to bind to. If using Leap Motion, make sure both hands are visible when you activate Embody.");
-            enabledJSON.val = false;
-        }
     }
 
     private void EnableHand(SnugHand hand, string motionControlName)
@@ -339,6 +333,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var motionControl = hand.motionControl;
         var motionControlPosition = motionControl.currentMotionControl.position;
         var visualCueLinePoints = hand.visualCueLinePoints;
+
+        if (!hand.motionControl.currentMotionControl.gameObject.activeInHierarchy) return;
 
         // Find the anchor over and under the controller
         ControllerAnchorPoint lower = null;
