@@ -4,8 +4,5 @@
 - Use overlays to show the wizard message and how to exit Passenger
 - Floor snap effect (cannot go further than zero, and magnet effect when getting close to it)
 - Decals are not visible in mirrors
-- Look at closest object in reduced camera frustrum: https://stackoverflow.com/a/45062755/15224343
-- Passenger position at bind time not working
 - Smooth leap motion position (tracking is bad), or ignore "fast jumps"
-- Seems that the head is rotated when possessing? Are we using the navigation rig correctly? Especially in Passenger.
 - Try universe-centered rotation

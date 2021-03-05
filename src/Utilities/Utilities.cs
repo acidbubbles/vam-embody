@@ -78,7 +78,7 @@ public static class Utilities
         var uids = new HashSet<string>(SuperController.singleton.GetAtomUIDs());
         if (!uids.Contains(source)) return source;
         source += "#";
-        for (var i = 1; i < 1000; i++)
+        for (var i = 2; i < 1000; i++)
         {
             var uid = source + i;
             if (!uids.Contains(uid)) return uid;
