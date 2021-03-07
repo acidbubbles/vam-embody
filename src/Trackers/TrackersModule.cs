@@ -225,25 +225,26 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var c in controllers)
         {
+            if (c.active)
+            {
+                c.controller.RestorePreLinkState();
+                c.controller.possessed = false;
+
+                var mac = c.controller.GetComponent<MotionAnimationControl>();
+                if (mac != null)
+                {
+                    mac.suspendPositionPlayback = false;
+                    mac.suspendRotationPlayback = false;
+                }
+
+                c.active = false;
+            }
+
             if (c.snapshot != null)
             {
                 c.snapshot.Restore(restorePoseAfterPossessJSON.val);
                 c.snapshot = null;
             }
-
-            if (!c.active) continue;
-
-            c.controller.RestorePreLinkState();
-            c.controller.possessed = false;
-
-            var mac = c.controller.GetComponent<MotionAnimationControl>();
-            if (mac != null)
-            {
-                mac.suspendPositionPlayback = false;
-                mac.suspendRotationPlayback = false;
-            }
-
-            c.active = false;
         }
 
     }
