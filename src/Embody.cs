@@ -166,6 +166,8 @@ public class Embody : MVRScript, IEmbody
             var launchWizardJSON = new JSONStorableAction("LaunchWizard", () => StartCoroutine(LaunchWizard()));
             RegisterAction(launchWizardJSON);
 
+            RegisterAction(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
+
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
         catch (Exception)
