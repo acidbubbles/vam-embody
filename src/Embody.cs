@@ -68,10 +68,13 @@ public class Embody : MVRScript, IEmbody
             _context.snug = snugModule;
             _context.eyeTarget = eyeTargetModule;
             _context.wizard = wizardModule;
-            _context.scaleChangeReceiver = _scaleChangeReceiver;
 
-            _scaleChangeReceiver.context = _context;
-            containingAtom.RegisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
+            if (_scaleChangeReceiver != null)
+            {
+                _context.scaleChangeReceiver = _scaleChangeReceiver;
+                _scaleChangeReceiver.context = _context;
+                containingAtom.RegisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
+            }
 
             _modules.SetActive(true);
 

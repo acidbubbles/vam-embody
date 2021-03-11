@@ -5,6 +5,6 @@
     public override void ScaleChanged(float s)
     {
         base.ScaleChanged(s);
-        context.snug.ScaleChanged();
+        context.snug?.ScaleChanged();
     }
 }

@@ -67,7 +67,8 @@ public class EmbodyContext
         this.plugin = plugin;
         this.embody = embody;
         containingAtom = plugin.containingAtom;
-        bones = containingAtom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>();
+        if (containingAtom.type == "Person")
+            bones = containingAtom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>();
     }
 
     public void Refresh()
