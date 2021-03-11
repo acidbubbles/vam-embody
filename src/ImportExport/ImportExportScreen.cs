@@ -89,6 +89,7 @@ public class ImportExportScreen : ScreenBase, IScreen
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
         var jc = new JSONClass();
         context.embody.StoreJSON(jc, true);
+        jc.Remove(context.diagnostics.storeId);
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
     }
 
