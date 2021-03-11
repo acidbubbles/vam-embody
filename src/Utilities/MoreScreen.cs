@@ -49,6 +49,13 @@ public class MoreScreen : ScreenBase, IScreen
         patreonBtn.textColor = new Color(0.97647f, 0.40784f, 0.32941f);
         patreonBtn.buttonColor = Color.white;
         patreonBtn.button.onClick.AddListener(() => Application.OpenURL("https://www.patreon.com/acidbubbles"));
+
+        CreateSpacer(true).height = 20f;
+
+        CreateButton("<i>Diagnostics...</i>", true).button.onClick.AddListener(() =>
+        {
+            screensManager.Show(DiagnosticsScreen.ScreenName);
+        });
     }
 
     private void StartRecord()

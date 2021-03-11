@@ -369,16 +369,21 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     {
         base.StoreJSON(jc, includeProfile);
 
-        jc["Logs"] = _logs;
-        var snapshotsJSON = new JSONArray();
-        foreach (var snapshot in snapshots)
-            snapshotsJSON.Add(snapshot.ToJSON());
-        jc["Snapshots"] = snapshotsJSON;
+        if (_logs.Count > 0)
+            jc["Logs"] = _logs;
+        if (snapshots.Count > 0)
+        {
+            var snapshotsJSON = new JSONArray();
+            foreach (var snapshot in snapshots)
+                snapshotsJSON.Add(snapshot.ToJSON());
+            jc["Snapshots"] = snapshotsJSON;
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
     {
         base.RestoreFromJSON(jc, fromDefaults);
+        if (fromDefaults) return;
         if (_restored) return;
         _restored = true;
         if (jc.HasKey("Logs"))

@@ -18,8 +18,10 @@ public class DiagnosticsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateToggle(_diagnostics.enabledJSON).label = "Record Diagnostics Data";
+
         var logs = _diagnostics.logs.ToArray();
-        var logsJSON = new JSONStorableString("", logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
+        var logsJSON = new JSONStorableString("", logs.Length == 0 ? "Enabling diagnostics will record all VaM errors and your physical position during possession.\n\n<b>ONLY enable this if Acidbubbles asks you to.</b>\n\nAlso keep in mind this will give information about your height and body size, if you are not comfortable sharing this information, please keep diagnostics off." : string.Join(", ", logs));
         CreateText(logsJSON, true).height = 1200f;
         CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
 
