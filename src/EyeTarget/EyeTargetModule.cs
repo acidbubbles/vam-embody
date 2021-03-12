@@ -54,11 +54,11 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     protected override bool shouldBeSelectedByDefault => true;
 
     public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
-    public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackMirrors", true);
-    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
-    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
-    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
-    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackWindowCamera", true);
+    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackSelfHands", true);
+    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackSelfGenitals", true);
+    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackPersons", true);
+    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackObjects", true);
     public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
     public JSONStorableFloat gazeMinDurationJSON { get; } = new JSONStorableFloat("GazeMinDuration", 0.5f, 0f, 10f, false);
     public JSONStorableFloat gazeMaxDurationJSON { get; } = new JSONStorableFloat("GazeMaxDuration", 2f, 0f, 10f, false);
@@ -116,8 +116,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public void Rescan()
     {
+        ClearState();
         SyncMirrors();
         SyncObjects();
+
     }
 
     public override void OnEnable()
@@ -213,15 +215,20 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
          if(_eyeBehavior.currentLookMode != EyesControl.LookMode.Target)
              _eyeBehavior.currentLookMode = _eyeBehaviorRestoreLookMode;
 
-         _lookAtMirror = null;
-         _mirrors.Clear();
-         _objects.Clear();
-         _lockTargetCandidates.Clear();
-         _nextMirrorScanTime = 0f;
-         _nextObjectsScanTime = 0f;
-         _nextLockTargetTime = 0f;
-         _nextShakeTime = 0f;
-         _shakeValue = Vector3.zero;
+         ClearState();
+    }
+
+    private void ClearState()
+    {
+        _lookAtMirror = null;
+        _mirrors.Clear();
+        _objects.Clear();
+        _lockTargetCandidates.Clear();
+        _nextMirrorScanTime = 0f;
+        _nextObjectsScanTime = 0f;
+        _nextLockTargetTime = 0f;
+        _nextShakeTime = 0f;
+        _shakeValue = Vector3.zero;
     }
 
     public void Update()
