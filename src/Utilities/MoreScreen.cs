@@ -8,9 +8,6 @@ public class MoreScreen : ScreenBase, IScreen
 {
     public const string ScreenName = "More";
 
-    // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
-    private MotionAnimationMaster motionAnimationMaster => context.containingAtom.subSceneComponent?.motionAnimationMaster ?? SuperController.singleton.motionAnimationMaster;
-
     public MoreScreen(EmbodyContext context)
         : base(context)
     {
@@ -18,13 +15,20 @@ public class MoreScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Additional tools and options can be found here."), true);
+        CreateText(new JSONStorableString("", "Additional tools and options can be found here.\n\nOptions marked with an asterisk will only be saved in your profile."), true);
 
         CreateButton("Create Mirror").button.onClick.AddListener(() => SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
 
         CreateSpacer().height = 20f;
 
-        CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(StartRecord);
+        CreateToggle(context.automation.autoArmForRecord).label = "Auto Arm On Active*";
+        CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(() => Utilities.StartRecord(context));
+        CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
+        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key*", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
+            val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
+        toggleKeyPopup.popupPanelHeight = 700f;
+        CreateButton("Save As Default Profile").button.onClick.AddListener(() => new Storage(context).MakeDefault());
 
         CreateSpacer().height = 20f;
 
@@ -35,12 +39,7 @@ public class MoreScreen : ScreenBase, IScreen
         });
         CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
 
-        CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession";
-
-        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
-            val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
-        var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
-        toggleKeyPopup.popupPanelHeight = 700f;
+        CreateSpacer().height = 20f;
 
         var helpButton = CreateButton("[Browser] Online Help", true);
         helpButton.button.onClick.AddListener(() => Application.OpenURL("https://github.com/acidbubbles/vam-embody/wiki"));
@@ -56,41 +55,6 @@ public class MoreScreen : ScreenBase, IScreen
         {
             screensManager.Show(DiagnosticsScreen.ScreenName);
         });
-    }
-
-    private void StartRecord()
-    {
-        context.embody.activeJSON.val = true;
-
-        motionAnimationMaster.StopPlayback();
-        motionAnimationMaster.ResetAnimation();
-
-        foreach (var controller in context.plugin.containingAtom.freeControllers.Where(fc => fc.possessed))
-        {
-            var mac = controller.GetComponent<MotionAnimationControl>();
-            mac.ClearAnimation();
-            mac.armedForRecord = true;
-        }
-
-        if (context.eyeTarget.enabledJSON.val)
-        {
-            var controller = context.plugin.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-            var mac = controller.GetComponent<MotionAnimationControl>();
-            mac.ClearAnimation();
-            mac.armedForRecord = true;
-        }
-
-        SuperController.singleton.SelectModeAnimationRecord();
-
-        SuperController.singleton.StartCoroutine(WaitForRecordComplete());
-    }
-
-    private IEnumerator WaitForRecordComplete()
-    {
-        while (!string.IsNullOrEmpty(SuperController.singleton.helpText))
-            yield return 0;
-        motionAnimationMaster.StopPlayback();
-        motionAnimationMaster.ResetAnimation();
     }
 
     private static List<string> _keys;

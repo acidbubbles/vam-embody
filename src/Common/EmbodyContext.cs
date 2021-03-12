@@ -19,6 +19,9 @@ public class EmbodyContext
     public IWizard wizard;
     public EmbodyScaleChangeReceiver scaleChangeReceiver;
 
+    // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
+    public MotionAnimationMaster motionAnimationMaster => containingAtom.subSceneComponent?.motionAnimationMaster ?? SuperController.singleton.motionAnimationMaster;
+
     // ReSharper disable once Unity.NoNullCoalescing
     public Transform head => diagnostics.head ?? SuperController.singleton.centerCameraTarget.transform;
 

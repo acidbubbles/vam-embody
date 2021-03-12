@@ -1,6 +1,4 @@
-﻿using System;
-using MVR.FileManagementSecure;
-using SimpleJSON;
+﻿using MVR.FileManagementSecure;
 
 public class ImportExportScreen : ScreenBase, IScreen
 {
@@ -9,10 +7,12 @@ public class ImportExportScreen : ScreenBase, IScreen
     private readonly IEmbody _embody;
     private readonly IWorldScaleModule _worldScale;
     private readonly ISnugModule _snug;
+    private Storage _storage;
 
     public ImportExportScreen(EmbodyContext context, IEmbody embody, IWorldScaleModule worldScale, ISnugModule snug)
         : base(context)
     {
+        _storage = new Storage(context);
         _embody = embody;
         _worldScale = worldScale;
         _snug = snug;
@@ -27,7 +27,7 @@ public class ImportExportScreen : ScreenBase, IScreen
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
             var shortcuts = FileManagerSecure.GetShortCutsForDirectory(SaveFormat.SaveFolder);
-            SuperController.singleton.GetMediaPathDialog(LoadCallback, SaveFormat.SaveExt, SaveFormat.SaveFolder, false, true, false, null, false, shortcuts);
+            SuperController.singleton.GetMediaPathDialog(_storage.LoadProfile, SaveFormat.SaveExt, SaveFormat.SaveFolder, false, true, false, null, false, shortcuts);
         });
 
         var savePresetUI = CreateButton("Export Profile", true);
@@ -45,60 +45,25 @@ public class ImportExportScreen : ScreenBase, IScreen
             fileBrowserUI.shortCuts = null;
             fileBrowserUI.browseVarFilesAsDirectories = false;
             fileBrowserUI.SetTextEntry(true);
-            fileBrowserUI.Show(SaveCallback);
+            fileBrowserUI.Show(_storage.SaveProfile);
             fileBrowserUI.ActivateFileNameField();
         });
 
         CreateSpacer(true).height = 40f;
 
-        var makeDefaults = CreateButton("Save Current Profile As Default", true);
-        makeDefaults.button.onClick.AddListener(MakeDefault);
+        var makeDefaults = CreateButton("Save As Default Profile", true);
+        makeDefaults.button.onClick.AddListener(_storage.MakeDefault);
 
-        var applyDefaults = CreateButton("Apply Default Profile", true);
+        var applyDefaults = CreateButton("Load Default Profile", true);
         applyDefaults.button.onClick.AddListener(() => context.embody.LoadFromDefaults());
 
-        var clearDefaults = CreateButton("Clear Default Profile", true);
+        var clearDefaults = CreateButton("Delete Default Profile", true);
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
 
         CreateSpacer(true).height = 40f;
 
-        CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(ClearPersonalData);
+        CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(_storage.ClearPersonalData);
 
         CreateButton("Reset To Built-In Defaults", true).button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
-    }
-
-    private void SaveCallback(string path)
-    {
-        SuperController.singleton.fileBrowserUI.fileFormat = null;
-        if (string.IsNullOrEmpty(path)) return;
-        if (!path.EndsWith($".{SaveFormat.SaveExt}", StringComparison.InvariantCultureIgnoreCase)) path += $".{SaveFormat.SaveExt}";
-        var jc = new JSONClass();
-        context.embody.StoreJSON(jc, true);
-        context.plugin.SaveJSON(jc, path);
-    }
-
-    private void LoadCallback(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return;
-        _embody.activeJSON.val = false;
-        var jc = context.plugin.LoadJSON(path).AsObject;
-        context.embody.RestoreFromJSONInternal(jc, false);
-    }
-
-    private void MakeDefault()
-    {
-        FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
-        var jc = new JSONClass();
-        context.embody.StoreJSON(jc, true);
-        jc.Remove(context.diagnostics.storeId);
-        context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
-    }
-
-    private void ClearPersonalData()
-    {
-        _embody.activeJSON.val = false;
-        _snug.ClearPersonalData();
-        _worldScale.ClearPersonalData();
-        context.trackers.ClearPersonalData();
     }
 }

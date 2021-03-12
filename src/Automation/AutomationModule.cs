@@ -7,6 +7,7 @@ public interface IAutomationModule : IEmbodyModule
 {
     KeyCode toggleKey { get; set; }
     JSONStorableBool takeOverVamPossess { get; }
+    JSONStorableBool autoArmForRecord { get; }
 }
 
 public class AutomationModule : EmbodyModuleBase, IAutomationModule
@@ -17,6 +18,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public override bool skipChangeEnabledWhenActive => true;
 
     public JSONStorableBool takeOverVamPossess { get; } = new JSONStorableBool("TakeOverVamPossess", true);
+    public JSONStorableBool autoArmForRecord { get; } = new JSONStorableBool("AutoArmForRecord", false);
     public KeyCode toggleKey { get; set; } = KeyCode.None;
 
     private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
@@ -91,6 +93,11 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         base.StoreJSON(jc, includeProfile);
 
         jc["ToggleKey"] = toggleKey.ToString();
+        if (includeProfile)
+        {
+            autoArmForRecord.val = true;
+            takeOverVamPossess.val = true;
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
@@ -98,8 +105,14 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         base.RestoreFromJSON(jc, fromDefaults);
 
         var toggleKeyString = jc["ToggleKey"].Value;
-        if (!string.IsNullOrEmpty(toggleKeyString))
+        if (!string.IsNullOrEmpty(toggleKeyString) && toggleKeyString != KeyCode.None.ToString())
             toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString);
+
+        if (fromDefaults)
+        {
+            autoArmForRecord.RestoreFromJSON(jc);
+            takeOverVamPossess.RestoreFromJSON(jc);
+        }
     }
 
     public void Reset()
@@ -112,5 +125,6 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         base.ResetToDefault();
         toggleKey = KeyCode.None;
         takeOverVamPossess.SetValToDefault();
+        autoArmForRecord.SetValToDefault();
     }
 }

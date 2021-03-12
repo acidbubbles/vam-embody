@@ -85,4 +85,46 @@ public static class Utilities
         }
         return source + Guid.NewGuid();
     }
+
+    // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
+
+    public static void StartRecord(EmbodyContext context)
+    {
+        context.embody.activeJSON.val = true;
+
+        context.motionAnimationMaster.StopPlayback();
+        context.motionAnimationMaster.ResetAnimation();
+
+        MarkForRecord(context);
+
+        SuperController.singleton.SelectModeAnimationRecord();
+
+        SuperController.singleton.StartCoroutine(WaitForRecordComplete(context));
+    }
+
+    public static void MarkForRecord(EmbodyContext context)
+    {
+        foreach (var controller in context.plugin.containingAtom.freeControllers.Where(fc => fc.possessed))
+        {
+            var mac = controller.GetComponent<MotionAnimationControl>();
+            mac.ClearAnimation();
+            mac.armedForRecord = true;
+        }
+
+        if (context.eyeTarget.enabledJSON.val)
+        {
+            var controller = context.plugin.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
+            var mac = controller.GetComponent<MotionAnimationControl>();
+            mac.ClearAnimation();
+            mac.armedForRecord = true;
+        }
+    }
+
+    private static IEnumerator WaitForRecordComplete(EmbodyContext context)
+    {
+        while (!string.IsNullOrEmpty(SuperController.singleton.helpText))
+            yield return 0;
+        context.motionAnimationMaster.StopPlayback();
+        context.motionAnimationMaster.ResetAnimation();
+    }
 }

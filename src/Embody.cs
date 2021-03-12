@@ -145,6 +145,9 @@ public class Embody : MVRScript, IEmbody
                     }
 
                     modulesToEnable.Clear();
+
+                    if(_context.automation?.autoArmForRecord.val ?? false)
+                        Utilities.MarkForRecord(_context);
                 }
                 else
                 {
