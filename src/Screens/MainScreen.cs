@@ -16,13 +16,14 @@ public class MainScreen : ScreenBase, IScreen
     {
         if (context.containingAtom.type == "Person")
         {
-            CreateSpacer().height = 10f;
+            CreateSpacer().height = 38f;
 
-            CreateButton($"Import, Export & Default Settings...").button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
             var wizardBtn = CreateButton("Launch Wizard...");
             wizardBtn.button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
             if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.EyeDistanceMethod)
                 wizardBtn.buttonColor = Color.green;
+
+            CreateSpacer().height = 37f;
 
             CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
@@ -60,7 +61,6 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (context.containingAtom.type == "Person")
             CreateScrollablePopup(context.embody.presetsJSON, true);
 
-        CreateSpacer(false).height = 0f;
         CreateSpacer(true).height = 6f;
 
         foreach (var module in _modules)
@@ -78,6 +78,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         if (context.containingAtom.type == "Person")
         {
             CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
+            CreateConfigButton(ImportExportScreen.ScreenName, $"<i>Import, Export & Default Settings...</i>");
         }
     }
 
