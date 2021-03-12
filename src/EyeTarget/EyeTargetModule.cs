@@ -12,12 +12,18 @@ public interface IEyeTargetModule : IEmbodyModule
     JSONStorableBool trackPersonsJSON { get; }
     JSONStorableBool trackObjectsJSON { get; }
     JSONStorableFloat frustrumJSON { get; }
+    JSONStorableFloat gazeMinDurationJSON { get; }
+    JSONStorableFloat gazeMaxDurationJSON { get; }
     void Rescan();
 }
 
 public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 {
     public const string Label = "Eye Target";
+    private const float _mirrorScanSpan = 0.5f;
+    private const float _objectScanSpan = 0.1f;
+    private const float _naturalLookDistance = 0.4f;
+
     private static readonly HashSet<string> _mirrorAtomTypes = new HashSet<string>(new[]
     {
         "Glass",
@@ -44,13 +50,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
 
-    public JSONStorableBool trackMirrorsJSON { get; private set; }
-    public JSONStorableBool trackWindowCameraJSON { get; private set; }
-    public JSONStorableBool trackSelfHandsJSON { get; private set; }
-    public JSONStorableBool trackSelfGenitalsJSON { get; private set; }
-    public JSONStorableBool trackPersonsJSON { get; private set; }
-    public JSONStorableBool trackObjectsJSON { get; private set; }
-    public JSONStorableFloat frustrumJSON { get; private set; }
+    public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
+    public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
+    public JSONStorableFloat gazeMinDurationJSON { get; } = new JSONStorableFloat("GazeMinDuration", 0.5f, 0f, 10f, false);
+    public JSONStorableFloat gazeMaxDurationJSON { get; } = new JSONStorableFloat("GazeMaxDuration", 2f, 0f, 10f, false);
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -62,6 +70,13 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
     private readonly Plane[] _frustrumPlanes = new Plane[6];
+    private readonly List<EyeTargetReference> _lockTargetCandidates = new List<EyeTargetReference>();
+    private BoxCollider _lookAtMirror;
+    private float _lookAtMirrorDistance;
+    private float _nextMirrorScan;
+    private float _nextObjectsScan;
+    private float _nextLockTarget;
+    private Transform _lockTarget;
 
     public override void Awake()
     {
@@ -72,13 +87,14 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _lEye = context.bones.First(eye => eye.name == "lEye").transform;
         _rEye = context.bones.First(eye => eye.name == "rEye").transform;
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-        trackMirrorsJSON = new JSONStorableBool("TrackMirrors", true, (bool _) => { if(enabled) Rescan(); });
-        trackWindowCameraJSON = new JSONStorableBool("TrackWindowCamera", true, (bool _) => { if(enabled) Rescan(); });
-        trackSelfHandsJSON = new JSONStorableBool("TrackSelfHands", true, (bool _) => { if(enabled) Rescan(); });
-        trackSelfGenitalsJSON = new JSONStorableBool("TrackSelfGenitals", true, (bool _) => { if(enabled) Rescan(); });
-        trackPersonsJSON = new JSONStorableBool("TrackPersons", true, (bool _) => { if(enabled) Rescan(); });
-        trackObjectsJSON = new JSONStorableBool("TrackObjects", true, (bool _) => { if(enabled) Rescan(); });
-        frustrumJSON = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
+        trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackSelfHandsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackSelfGenitalsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackPersonsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackObjectsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        gazeMinDurationJSON.setCallbackFunction = val => gazeMaxDurationJSON.valNoCallback = Mathf.Max(val, gazeMaxDurationJSON.val);
+        gazeMinDurationJSON.setCallbackFunction = val => gazeMinDurationJSON.valNoCallback = Mathf.Min(val, gazeMinDurationJSON.val);
     }
 
     public override bool BeforeEnable()
@@ -90,8 +106,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public void Rescan()
     {
-        UpdateMirrors();
-        UpdateObjects();
+        SyncMirrors();
+        SyncObjects();
     }
 
     public override void OnEnable()
@@ -106,7 +122,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         SuperController.singleton.onAtomUIDsChangedHandlers += ONAtomUIDsChanged;
     }
 
-    private void UpdateMirrors()
+    private void SyncMirrors()
     {
         _mirrors.Clear();
 
@@ -119,7 +135,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             .Where(c => c != null));
     }
 
-    private void UpdateObjects()
+    private void SyncObjects()
     {
         _objects.Clear();
 
@@ -187,98 +203,130 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
          if(_eyeBehavior.currentLookMode != EyesControl.LookMode.Target)
              _eyeBehavior.currentLookMode = _eyeBehaviorRestoreLookMode;
 
+         _lookAtMirror = null;
          _mirrors.Clear();
          _objects.Clear();
+         _lockTargetCandidates.Clear();
+         _nextMirrorScan = 0f;
+         _nextObjectsScan = 0f;
+         _nextLockTarget = 0f;
     }
 
     public void Update()
     {
         var eyesCenter = (_lEye.position + _rEye.position) / 2f;
 
-        BoxCollider lookAtMirror;
-        var lookAtMirrorDistance = float.PositiveInfinity;
-        if (_mirrors.Count > 0)
-        {
-            if (_mirrors.Count == 1)
-            {
-                lookAtMirror = _mirrors[0];
-            }
-            else
-            {
-                var headPosition = _head.position;
-                var ray = new Ray(eyesCenter, _head.forward);
-                lookAtMirror = null;
-                var closestMirrorDistance = float.PositiveInfinity;
-                BoxCollider closestMirror = null;
-                for (var i = 0; i < _mirrors.Count; i++)
-                {
-                    var potentialMirror = _mirrors[i];
-                    var potentialMirrorDistance = Vector3.Distance(headPosition, potentialMirror.transform.position);
-                    if (potentialMirrorDistance < closestMirrorDistance)
-                    {
-                        closestMirrorDistance = potentialMirrorDistance;
-                        closestMirror = potentialMirror;
-                    }
-                    RaycastHit hit;
-                    if (!potentialMirror.Raycast(ray, out hit, 20f))
-                        continue;
-                    if (hit.distance > lookAtMirrorDistance) continue;
-                    lookAtMirrorDistance = hit.distance;
-                    lookAtMirror = potentialMirror;
-                }
+        ScanMirrors(eyesCenter);
+        ScanObjects(eyesCenter);
 
-                if (ReferenceEquals(lookAtMirror, null))
-                {
-                    if (ReferenceEquals(closestMirror, null)) return;
-                    lookAtMirror = closestMirror;
-                }
-            }
-        }
-        else
+        SuperController.singleton.ClearMessages();
+        SuperController.LogMessage(_lockTargetCandidates.Count == 0 ? "No targets" : string.Join(", ", _lockTargetCandidates.Select(t => t.transform.name).ToArray()));
+        SuperController.LogMessage($"Now: {(_lockTarget != null ? _lockTarget.name : "none")}, Next: {_nextLockTarget:0.00}");
+
+        if (_nextLockTarget < Time.time)
         {
-            lookAtMirror = null;
+            _nextLockTarget = Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
+            // TODO: Prefer closer
+            if (_lockTargetCandidates.Count > 0)
+                _lockTarget = _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count - 1)].transform;
         }
 
-        if (_objects.Count > 0)
+        if (!ReferenceEquals(_lockTarget, null))
         {
-            var lastDistance = float.PositiveInfinity;
-            var lastPosition = Vector3.zero;
-            // var lastName = "none";
-            //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-            CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.35f, 100f, _frustrumPlanes);
-
-            foreach (var o in _objects)
-            {
-                var position = o.position;
-                var bounds = new Bounds(position, new Vector3(0.25f, 0.25f, 0.25f));
-                if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
-                var distance = Vector3.Distance(bounds.center, eyesCenter);
-                if (distance > lastDistance || distance > lookAtMirrorDistance) continue;
-                lastDistance = distance;
-                lastPosition = position;
-                // lastName = o.parent.parent.name;
-            }
-
-            if (!float.IsPositiveInfinity(lastDistance))
-            {
-                _eyeTarget.control.position = lastPosition;
-                return;
-            }
+            _eyeTarget.control.position = _lockTarget.transform.position;
+            return;
         }
 
-        if (!ReferenceEquals(lookAtMirror, null))
+        if (!ReferenceEquals(_lookAtMirror, null))
         {
-            var mirrorTransform = lookAtMirror.transform;
+            var mirrorTransform = _lookAtMirror.transform;
             var mirrorPosition = mirrorTransform.position;
             var mirrorNormal = mirrorTransform.up;
             var plane = new Plane(mirrorNormal, mirrorPosition);
             var planePoint = plane.ClosestPointOnPlane(eyesCenter);
             var reflectPosition = planePoint - (eyesCenter - planePoint);
             _eyeTarget.control.position = reflectPosition;
+            return;
         }
-        else
+
+        _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance;
+    }
+
+    private void ScanObjects(Vector3 eyesCenter)
+    {
+        if (_nextObjectsScan < Time.time) return;
+        _nextObjectsScan = Time.time + _objectScanSpan;
+
+        var originalCount = _objects.Count;
+        _objects.Clear();
+        if (_objects.Count <= 0) return;
+
+        //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
+        CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.35f, 100f, _frustrumPlanes);
+
+        foreach (var o in _objects)
         {
-            _eyeTarget.control.position = eyesCenter + _head.forward * 0.4f;
+            var position = o.position;
+            var bounds = new Bounds(position, new Vector3(0.25f, 0.25f, 0.25f));
+            if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
+            var distance = Vector3.Distance(bounds.center, eyesCenter);
+            if (distance > _lookAtMirrorDistance) continue;
+            _lockTargetCandidates.Add(new EyeTargetReference
+            {
+                transform = o,
+                distance = distance
+            });
+        }
+
+        if (_objects.Count != originalCount)
+            _nextLockTarget = 0;
+    }
+
+    private void ScanMirrors(Vector3 eyesCenter)
+    {
+        if (_nextMirrorScan < Time.time) return;
+        _nextMirrorScan = Time.time + _mirrorScanSpan;
+
+        _lookAtMirror = null;
+        _lookAtMirrorDistance = float.PositiveInfinity;
+
+        if (_mirrors.Count <= 0)
+            return;
+
+        var headPosition = _head.position;
+
+        if (_mirrors.Count == 1)
+        {
+            _lookAtMirror = _mirrors[0];
+            _lookAtMirrorDistance = Vector3.Distance(headPosition, _lookAtMirror.transform.position);
+            return;
+        }
+
+        var ray = new Ray(eyesCenter, _head.forward);
+        var closestMirrorDistance = float.PositiveInfinity;
+        BoxCollider closestMirror = null;
+        for (var i = 0; i < _mirrors.Count; i++)
+        {
+            var potentialMirror = _mirrors[i];
+            var potentialMirrorDistance = Vector3.Distance(headPosition, potentialMirror.transform.position);
+            if (potentialMirrorDistance < closestMirrorDistance)
+            {
+                closestMirrorDistance = potentialMirrorDistance;
+                closestMirror = potentialMirror;
+            }
+
+            RaycastHit hit;
+            if (!potentialMirror.Raycast(ray, out hit, 20f))
+                continue;
+            if (hit.distance > _lookAtMirrorDistance) continue;
+            _lookAtMirrorDistance = hit.distance;
+            _lookAtMirror = potentialMirror;
+        }
+
+        if (ReferenceEquals(_lookAtMirror, null))
+        {
+            if (ReferenceEquals(closestMirror, null)) return;
+            _lookAtMirror = closestMirror;
         }
     }
 
@@ -353,5 +401,11 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         trackPersonsJSON.SetValToDefault();
         trackObjectsJSON.SetValToDefault();
         frustrumJSON.SetValToDefault();
+    }
+
+    public struct EyeTargetReference
+    {
+        public float distance;
+        public Transform transform;
     }
 }

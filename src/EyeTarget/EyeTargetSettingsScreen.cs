@@ -15,6 +15,8 @@
 
         CreateToggle(_eyeTarget.trackMirrorsJSON, true).label = "Look At Mirrors";
 
+        CreateSpacer(true).height = 40f;
+
         CreateSlider(_eyeTarget.frustrumJSON, true).label = "Objects Field Of View Angle Filter";
 
         CreateToggle(_eyeTarget.trackWindowCameraJSON, true).label = "Look At Window Camera";
@@ -22,5 +24,10 @@
         CreateToggle(_eyeTarget.trackSelfHandsJSON, true).label = "Look At Self (Hands)";
         CreateToggle(_eyeTarget.trackSelfGenitalsJSON, true).label = "Look At Self (Genitals)";
         CreateToggle(_eyeTarget.trackObjectsJSON, true).label = "Look At Objects (Controls)";
+
+        CreateSpacer(true).height = 40f;
+
+        CreateSlider(_eyeTarget.gazeMinDurationJSON, true).label = "Gaze Min. Duration (s)";
+        CreateSlider(_eyeTarget.gazeMaxDurationJSON, true).label = "Gaze Max. Duration (s)";
     }
 }
