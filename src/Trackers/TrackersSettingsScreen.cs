@@ -205,5 +205,17 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false), false);
+
+        if (MotionControlNames.IsHands(motionControl.name))
+        {
+            _section.CreateButton("Sync to other hand").button.onClick.AddListener(() =>
+            {
+                var otherHand = motionControl.name == MotionControlNames.LeftHand ? _trackers.rightHandMotionControl : _trackers.leftHandMotionControl;
+
+                otherHand.offsetControllerCustom = new Vector3(-motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z);
+                otherHand.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, -motionControl.rotateControllerCustom.y, -motionControl.rotateControllerCustom.z);
+                otherHand.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, -motionControl.rotateAroundTracker.y, -motionControl.rotateAroundTracker.z);
+            });
+        }
     }
 }
