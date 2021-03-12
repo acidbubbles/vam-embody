@@ -55,10 +55,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
     public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackWindowCamera", true);
-    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackSelfHands", true);
-    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackSelfGenitals", true);
-    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackPersons", true);
-    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackObjects", true);
+    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackSelfHands", false);
+    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackSelfGenitals", false);
+    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackPersons", false);
+    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackObjects", false);
     public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
     public JSONStorableFloat gazeMinDurationJSON { get; } = new JSONStorableFloat("GazeMinDuration", 0.5f, 0f, 10f, false);
     public JSONStorableFloat gazeMaxDurationJSON { get; } = new JSONStorableFloat("GazeMaxDuration", 2f, 0f, 10f, false);
