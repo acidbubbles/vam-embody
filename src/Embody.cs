@@ -206,7 +206,7 @@ public class Embody : MVRScript, IEmbody
         if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath)) return;
         var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
         if (profile == null) return;
-        RestoreFromJSON(profile, _restored);
+        RestoreFromJSONInternal(profile, _restored);
     }
 
     public override void InitUI()
@@ -448,11 +448,11 @@ public class Embody : MVRScript, IEmbody
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
     {
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
-        if (RestoreFromJSON(jc, false))
+        if (RestoreFromJSONInternal(jc, false))
             _restored = true;
     }
 
-    private bool RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    private bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults)
     {
         var version = jc["Version"].AsInt;
         if (version <= 0) return false;
