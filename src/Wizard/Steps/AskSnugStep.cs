@@ -9,7 +9,9 @@ Do you want to setup <b>Snug</b>?
 
 Snug dynamically adjusts your hands so despite body proportion differences, your in-game hands position will match your own in relation to your body. In other words, <b>you can touch yourself in the real world and it should feel right in VR</b>!
 
-Select <b>Next to use Snug</b> (possession will be activated, but hands will be disabled)
+If it's your first time using Embody, <b>skip Snug until you're comfortable with base possession</b>. Getting Snug right may require multiple tries.
+
+Select <b>Next to use Snug</b> (possession will be activated, but hands will be disabled).
 
 <b>Skip to disable Snug</b>.".TrimStart();
 

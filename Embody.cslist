@@ -65,6 +65,7 @@ src\Wizard\Steps\RecordPlayerHeightStep.cs
 src\Wizard\Steps\RecordViveTrackersFeetStep.cs
 src\Wizard\Steps\RecordViveTrackersStep.cs
 src\Wizard\Steps\ResetPoseStep.cs
+src\Wizard\Steps\ResetSettingsStep.cs
 src\Wizard\IWizardStep.cs
 src\Wizard\WizardModule.cs
 src\Wizard\WizardScreen.cs

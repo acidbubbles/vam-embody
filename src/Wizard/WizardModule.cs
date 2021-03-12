@@ -273,16 +273,13 @@ When you are ready, select <b>Start Wizard</b>.".TrimStart();
         // NOTE: We use Count because we want to sync all available motion controls, not only the first one
         var useViveTrackers = context.trackers.viveTrackers.Count(t => t.SyncMotionControl());
 
-        steps.Add(new ResetPoseStep(context, useViveTrackers == 0));
-
+        steps.Add(new ResetSettingsStep(context));
+        steps.Add(new ResetPoseStep(context));
         steps.Add(new RecordPlayerHeightStep(context));
-
         if (useViveTrackers > 0)
             steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
-
         if (context.LeftHand() != null && context.RightHand() != null)
             steps.Add(new AskSnugStep(context, steps));
-
         steps.Add(new MakeDefaultsStep(context));
 
         return steps;

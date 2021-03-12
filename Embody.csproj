@@ -137,6 +137,7 @@
     <Compile Include="src\Wizard\Steps\RecordViveTrackersFeetStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\ResetPoseStep.cs" />
+    <Compile Include="src\Wizard\Steps\ResetSettingsStep.cs" />
     <Compile Include="src\Wizard\WizardModule.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorDepthAndOffsetStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureAnchorWidthStep.cs" />
