@@ -46,5 +46,11 @@ public class FreeControllerV3Snapshot
         if (control == null) return;
         control.position = _position;
         control.rotation = _rotation;
+        if (controller.followWhenOff != null)
+        {
+            controller.followWhenOff.position = _position;
+            controller.followWhenOff.rotation = _rotation;
+            controller.PauseComply();
+        }
     }
 }
