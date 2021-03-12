@@ -18,6 +18,7 @@ Only skip this if you know what you are doing!").TrimStart();
 
     public bool Apply()
     {
+        var key = context.automation.toggleKey;
         var leftOffsetControllerCustom = context.trackers.leftHandMotionControl.offsetControllerCustom;
         var leftRotateControllerCustom = context.trackers.leftHandMotionControl.rotateControllerCustom;
         var leftRotateAroundTrackerCustom = context.trackers.leftHandMotionControl.rotateAroundTrackerCustom;
@@ -25,6 +26,7 @@ Only skip this if you know what you are doing!").TrimStart();
         var rightRotateControllerCustom = context.trackers.rightHandMotionControl.rotateControllerCustom;
         var rightRotateAroundTrackerCustom = context.trackers.rightHandMotionControl.rotateAroundTrackerCustom;
         Utilities.ResetToDefaults(context);
+        context.automation.toggleKey = key;
         context.trackers.leftHandMotionControl.offsetControllerCustom = leftOffsetControllerCustom;
         context.trackers.leftHandMotionControl.rotateControllerCustom = leftRotateControllerCustom;
         context.trackers.leftHandMotionControl.rotateAroundTrackerCustom = leftRotateAroundTrackerCustom;
