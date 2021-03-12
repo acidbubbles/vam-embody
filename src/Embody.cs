@@ -13,6 +13,7 @@ public interface IEmbody
     JSONStorableStringChooser presetsJSON { get; }
     void LoadFromDefaults();
     void StoreJSON(JSONClass json, bool includeProfile);
+    bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults);
 }
 
 public class Embody : MVRScript, IEmbody
@@ -441,7 +442,7 @@ public class Embody : MVRScript, IEmbody
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
         {
             var jc = new JSONClass();
-            c.StoreJSON(jc, includeProfile);
+            c.StoreJSON(jc, includeProfile || _context.diagnostics.enabledJSON.val);
             json[c.storeId] = jc;
         }
     }
@@ -453,7 +454,7 @@ public class Embody : MVRScript, IEmbody
             _restored = true;
     }
 
-    private bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults)
+    public bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults)
     {
         var version = jc["Version"].AsInt;
         if (version <= 0) return false;

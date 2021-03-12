@@ -1,4 +1,5 @@
-﻿using MVR.FileManagementSecure;
+﻿using System;
+using MVR.FileManagementSecure;
 using SimpleJSON;
 
 public class ImportExportScreen : ScreenBase, IScreen
@@ -70,9 +71,9 @@ public class ImportExportScreen : ScreenBase, IScreen
     {
         SuperController.singleton.fileBrowserUI.fileFormat = null;
         if (string.IsNullOrEmpty(path)) return;
-        if (!path.ToLower().EndsWith($".{SaveFormat.SaveExt}")) path += $".{SaveFormat.SaveExt}";
-        var jc = context.plugin.GetJSON();
-        jc.Remove("id");
+        if (!path.EndsWith($".{SaveFormat.SaveExt}", StringComparison.InvariantCultureIgnoreCase)) path += $".{SaveFormat.SaveExt}";
+        var jc = new JSONClass();
+        context.embody.StoreJSON(jc, true);
         context.plugin.SaveJSON(jc, path);
     }
 
@@ -80,8 +81,8 @@ public class ImportExportScreen : ScreenBase, IScreen
     {
         if (string.IsNullOrEmpty(path)) return;
         _embody.activeJSON.val = false;
-        var jc = (JSONClass) context.plugin.LoadJSON(path);
-        context.plugin.RestoreFromJSON(jc);
+        var jc = context.plugin.LoadJSON(path).AsObject;
+        context.embody.RestoreFromJSONInternal(jc, false);
     }
 
     private void MakeDefault()
