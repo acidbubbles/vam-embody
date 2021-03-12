@@ -160,9 +160,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                     {
                         foreach (var bone in context.bones)
                         {
-                            if (trackSelfHandsJSON.val && bone.name == "lHand" || bone.name == "rHand")
+                            if (trackSelfHandsJSON.val && (bone.name == "lHand" || bone.name == "rHand"))
                                 _objects.Add(bone.transform);
-                            else if (trackSelfGenitalsJSON.val && bone.name == "Gen1" || bone.name == "Gen3")
+                            else if (trackSelfGenitalsJSON.val && (bone.name == "Gen1" || bone.name == "Gen3"))
                                 _objects.Add(bone.transform);
                         }
                         continue;
