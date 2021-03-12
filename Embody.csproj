@@ -59,6 +59,9 @@
     <Reference Include="UnityEngine.VRModule">
       <HintPath>../../../../VaM_Data/Managed/UnityEngine.VRModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.XRModule">
+      <HintPath>../../../../VaM_Data/Managed/UnityEngine.XRModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.AssetBundleModule">
       <HintPath>../../../../VaM_Data/Managed/UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
