@@ -73,9 +73,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private readonly List<EyeTargetReference> _lockTargetCandidates = new List<EyeTargetReference>();
     private BoxCollider _lookAtMirror;
     private float _lookAtMirrorDistance;
-    private float _nextMirrorScan;
-    private float _nextObjectsScan;
-    private float _nextLockTarget;
+    private float _nextMirrorScanTime;
+    private float _nextObjectsScanTime;
+    private float _nextLockTargetTime;
     private Transform _lockTarget;
 
     public override void Awake()
@@ -94,7 +94,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         trackPersonsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         trackObjectsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         gazeMinDurationJSON.setCallbackFunction = val => gazeMaxDurationJSON.valNoCallback = Mathf.Max(val, gazeMaxDurationJSON.val);
-        gazeMinDurationJSON.setCallbackFunction = val => gazeMinDurationJSON.valNoCallback = Mathf.Min(val, gazeMinDurationJSON.val);
+        gazeMaxDurationJSON.setCallbackFunction = val => gazeMinDurationJSON.valNoCallback = Mathf.Min(val, gazeMinDurationJSON.val);
     }
 
     public override bool BeforeEnable()
@@ -207,9 +207,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
          _mirrors.Clear();
          _objects.Clear();
          _lockTargetCandidates.Clear();
-         _nextMirrorScan = 0f;
-         _nextObjectsScan = 0f;
-         _nextLockTarget = 0f;
+         _nextMirrorScanTime = 0f;
+         _nextObjectsScanTime = 0f;
+         _nextLockTargetTime = 0f;
     }
 
     public void Update()
@@ -218,18 +218,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         ScanMirrors(eyesCenter);
         ScanObjects(eyesCenter);
-
-        SuperController.singleton.ClearMessages();
-        SuperController.LogMessage(_lockTargetCandidates.Count == 0 ? "No targets" : string.Join(", ", _lockTargetCandidates.Select(t => t.transform.name).ToArray()));
-        SuperController.LogMessage($"Now: {(_lockTarget != null ? _lockTarget.name : "none")}, Next: {_nextLockTarget:0.00}");
-
-        if (_nextLockTarget < Time.time)
-        {
-            _nextLockTarget = Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
-            // TODO: Prefer closer
-            if (_lockTargetCandidates.Count > 0)
-                _lockTarget = _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count - 1)].transform;
-        }
+        SelectLockTarget();
 
         if (!ReferenceEquals(_lockTarget, null))
         {
@@ -252,18 +241,39 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance;
     }
 
+    private void SelectLockTarget()
+    {
+        if (_nextLockTargetTime > Time.time) return;
+        _nextLockTargetTime = Time.time + Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
+
+        // SuperController.LogMessage($"{Time.time} {_nextLockTargetTime}");
+
+        // SuperController.singleton.ClearMessages();
+        // SuperController.LogMessage($"{_objects.Count}" + (_lockTargetCandidates.Count == 0 ? "No targets" : string.Join(", ", _lockTargetCandidates.Select(t => t.transform.name).ToArray())));
+        // SuperController.LogMessage($"Now: {(_lockTarget != null ? _lockTarget.name : "none")}, Next: {_nextLockTarget:0.00}");
+
+        // TODO: Prefer closer
+        if (_lockTargetCandidates.Count > 0)
+            _lockTarget = _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count)].transform;
+        else
+            _lockTarget = null;
+    }
+
     private void ScanObjects(Vector3 eyesCenter)
     {
-        if (_nextObjectsScan < Time.time) return;
-        _nextObjectsScan = Time.time + _objectScanSpan;
+        if (_nextObjectsScanTime > Time.time) return;
+        _nextObjectsScanTime = Time.time + _objectScanSpan;
 
-        var originalCount = _objects.Count;
-        _objects.Clear();
-        if (_objects.Count <= 0) return;
+        if (_objects.Count == 0) return;
+
+        var originalCount = _lockTargetCandidates.Count;
+        _lockTargetCandidates.Clear();
 
         //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
         CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.35f, 100f, _frustrumPlanes);
 
+        Transform closest = null;
+        var closestDistance = float.PositiveInfinity;
         foreach (var o in _objects)
         {
             var position = o.position;
@@ -276,16 +286,29 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                 transform = o,
                 distance = distance
             });
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                closest = o;
+            }
         }
 
-        if (_objects.Count != originalCount)
-            _nextLockTarget = 0;
+        if (_lockTargetCandidates.Count != originalCount)
+        {
+            if (_lockTargetCandidates.Count > 0)
+            {
+                _lockTarget = closest;
+                _nextLockTargetTime = Time.time + Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
+            }
+
+            _nextLockTargetTime = 0;
+        }
     }
 
     private void ScanMirrors(Vector3 eyesCenter)
     {
-        if (_nextMirrorScan < Time.time) return;
-        _nextMirrorScan = Time.time + _mirrorScanSpan;
+        if (_nextMirrorScanTime > Time.time) return;
+        _nextMirrorScanTime = Time.time + _mirrorScanSpan;
 
         _lookAtMirror = null;
         _lookAtMirrorDistance = float.PositiveInfinity;
