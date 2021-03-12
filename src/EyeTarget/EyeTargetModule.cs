@@ -14,6 +14,9 @@ public interface IEyeTargetModule : IEmbodyModule
     JSONStorableFloat frustrumJSON { get; }
     JSONStorableFloat gazeMinDurationJSON { get; }
     JSONStorableFloat gazeMaxDurationJSON { get; }
+    JSONStorableFloat shakeMinDurationJSON { get; }
+    JSONStorableFloat shakeMaxDurationJSON { get; }
+    JSONStorableFloat shakeRangeJSON { get; }
     void Rescan();
 }
 
@@ -59,6 +62,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
     public JSONStorableFloat gazeMinDurationJSON { get; } = new JSONStorableFloat("GazeMinDuration", 0.5f, 0f, 10f, false);
     public JSONStorableFloat gazeMaxDurationJSON { get; } = new JSONStorableFloat("GazeMaxDuration", 2f, 0f, 10f, false);
+    public JSONStorableFloat shakeMinDurationJSON { get; } = new JSONStorableFloat("ShakeMinDuration", 0.2f, 0f, 1f, false);
+    public JSONStorableFloat shakeMaxDurationJSON { get; } = new JSONStorableFloat("ShakeMaxDuration", 0.5f, 0f, 1f, false);
+    public JSONStorableFloat shakeRangeJSON { get; } = new JSONStorableFloat("ShakeRangeDuration", 0.015f, 0f, 0.1f, true);
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -76,6 +82,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private float _nextMirrorScanTime;
     private float _nextObjectsScanTime;
     private float _nextLockTargetTime;
+    private float _nextShakeTime;
+    private Vector3 _shakeValue;
     private Transform _lockTarget;
 
     public override void Awake()
@@ -95,6 +103,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         trackObjectsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         gazeMinDurationJSON.setCallbackFunction = val => gazeMaxDurationJSON.valNoCallback = Mathf.Max(val, gazeMaxDurationJSON.val);
         gazeMaxDurationJSON.setCallbackFunction = val => gazeMinDurationJSON.valNoCallback = Mathf.Min(val, gazeMinDurationJSON.val);
+        shakeMinDurationJSON.setCallbackFunction = val => shakeMaxDurationJSON.valNoCallback = Mathf.Max(val, shakeMaxDurationJSON.val);
+        shakeMaxDurationJSON.setCallbackFunction = val => shakeMinDurationJSON.valNoCallback = Mathf.Min(val, shakeMinDurationJSON.val);
     }
 
     public override bool BeforeEnable()
@@ -210,6 +220,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
          _nextMirrorScanTime = 0f;
          _nextObjectsScanTime = 0f;
          _nextLockTargetTime = 0f;
+         _nextShakeTime = 0f;
+         _shakeValue = Vector3.zero;
     }
 
     public void Update()
@@ -222,7 +234,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         if (!ReferenceEquals(_lockTarget, null))
         {
-            _eyeTarget.control.position = _lockTarget.transform.position;
+            SelectShake();
+            _eyeTarget.control.position = _lockTarget.transform.position + _shakeValue;
             return;
         }
 
@@ -241,22 +254,24 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance;
     }
 
+    private void SelectShake()
+    {
+        if (_nextShakeTime > Time.time) return;
+        _nextShakeTime = Time.time + Random.Range(shakeMinDurationJSON.val, shakeMaxDurationJSON.val);
+
+        _shakeValue = Random.insideUnitSphere * shakeRangeJSON.val;
+    }
+
     private void SelectLockTarget()
     {
         if (_nextLockTargetTime > Time.time) return;
         _nextLockTargetTime = Time.time + Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
 
-        // SuperController.LogMessage($"{Time.time} {_nextLockTargetTime}");
-
-        // SuperController.singleton.ClearMessages();
-        // SuperController.LogMessage($"{_objects.Count}" + (_lockTargetCandidates.Count == 0 ? "No targets" : string.Join(", ", _lockTargetCandidates.Select(t => t.transform.name).ToArray())));
-        // SuperController.LogMessage($"Now: {(_lockTarget != null ? _lockTarget.name : "none")}, Next: {_nextLockTarget:0.00}");
-
-        // TODO: Prefer closer
-        if (_lockTargetCandidates.Count > 0)
-            _lockTarget = _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count)].transform;
-        else
-            _lockTarget = null;
+        _lockTarget = _lockTargetCandidates.Count > 0
+            ? _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count)].transform
+            : null;
+        _shakeValue = Vector3.zero;
+        _nextShakeTime = Time.time + Random.Range(shakeMinDurationJSON.val, shakeMaxDurationJSON.val);
     }
 
     private void ScanObjects(Vector3 eyesCenter)

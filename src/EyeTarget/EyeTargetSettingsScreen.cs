@@ -13,21 +13,27 @@
     {
         CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors, and automatically looks at other objects in front of the head."), true);
 
-        CreateToggle(_eyeTarget.trackMirrorsJSON, true).label = "Look At Mirrors";
+        CreateSpacer().height = 40f;
 
-        CreateSpacer(true).height = 40f;
+        CreateToggle(_eyeTarget.trackMirrorsJSON).label = "Look At Mirrors";
 
-        CreateSlider(_eyeTarget.frustrumJSON, true).label = "Objects Field Of View Angle Filter";
+        CreateSpacer().height = 40f;
 
-        CreateToggle(_eyeTarget.trackWindowCameraJSON, true).label = "Look At Window Camera";
-        CreateToggle(_eyeTarget.trackPersonsJSON, true).label = "Look At Other Persons";
-        CreateToggle(_eyeTarget.trackSelfHandsJSON, true).label = "Look At Self (Hands)";
-        CreateToggle(_eyeTarget.trackSelfGenitalsJSON, true).label = "Look At Self (Genitals)";
-        CreateToggle(_eyeTarget.trackObjectsJSON, true).label = "Look At Objects (Controls)";
+        CreateSlider(_eyeTarget.frustrumJSON).label = "Objects Field Of View Angle Filter";
 
-        CreateSpacer(true).height = 40f;
+        CreateToggle(_eyeTarget.trackWindowCameraJSON).label = "Look At Window Camera";
+        CreateToggle(_eyeTarget.trackPersonsJSON).label = "Look At Other Persons";
+        CreateToggle(_eyeTarget.trackSelfHandsJSON).label = "Look At Self (Hands)";
+        CreateToggle(_eyeTarget.trackSelfGenitalsJSON).label = "Look At Self (Genitals)";
+        CreateToggle(_eyeTarget.trackObjectsJSON).label = "Look At Objects (Controls)";
 
         CreateSlider(_eyeTarget.gazeMinDurationJSON, true).label = "Gaze Min. Duration (s)";
         CreateSlider(_eyeTarget.gazeMaxDurationJSON, true).label = "Gaze Max. Duration (s)";
+
+        CreateSpacer(true).height = 40f;
+
+        CreateSlider(_eyeTarget.shakeMinDurationJSON, true).label = "Shake Min. Duration (s)";
+        CreateSlider(_eyeTarget.shakeMaxDurationJSON, true).label = "Shake Max. Duration (s)";
+        CreateSlider(_eyeTarget.shakeRangeJSON, true).label = "Shake Range";
     }
 }
