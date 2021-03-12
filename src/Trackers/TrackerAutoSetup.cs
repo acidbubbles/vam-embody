@@ -89,7 +89,7 @@ public class TrackerAutoSetup
             customOffsetRotation.y > 180 ? customOffsetRotation.y - 360 : customOffsetRotation.y,
             customOffsetRotation.z > 180 ? customOffsetRotation.z - 360 : customOffsetRotation.z
         );
-        motionControl.rotateAroundTracker = Vector3.zero;
+        motionControl.rotateAroundTrackerCustom = Vector3.zero;
         motionControl.controlRotation = !_disableRotationControllers.Contains(controller.name);
         if (_centeredControllers.Contains(controller.name))
         {

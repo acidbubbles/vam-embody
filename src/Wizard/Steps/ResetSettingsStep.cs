@@ -18,7 +18,19 @@ Only skip this if you know what you are doing!").TrimStart();
 
     public bool Apply()
     {
+        var leftOffsetControllerCustom = context.trackers.leftHandMotionControl.offsetControllerCustom;
+        var leftRotateControllerCustom = context.trackers.leftHandMotionControl.rotateControllerCustom;
+        var leftRotateAroundTrackerCustom = context.trackers.leftHandMotionControl.rotateAroundTrackerCustom;
+        var rightOffsetControllerCustom = context.trackers.rightHandMotionControl.offsetControllerCustom;
+        var rightRotateControllerCustom = context.trackers.rightHandMotionControl.rotateControllerCustom;
+        var rightRotateAroundTrackerCustom = context.trackers.rightHandMotionControl.rotateAroundTrackerCustom;
         Utilities.ResetToDefaults(context);
+        context.trackers.leftHandMotionControl.offsetControllerCustom = leftOffsetControllerCustom;
+        context.trackers.leftHandMotionControl.rotateControllerCustom = leftRotateControllerCustom;
+        context.trackers.leftHandMotionControl.rotateAroundTrackerCustom = leftRotateAroundTrackerCustom;
+        context.trackers.rightHandMotionControl.offsetControllerCustom = rightOffsetControllerCustom;
+        context.trackers.rightHandMotionControl.rotateControllerCustom = rightRotateControllerCustom;
+        context.trackers.rightHandMotionControl.rotateAroundTrackerCustom = rightRotateAroundTrackerCustom;
         return true;
     }
 }

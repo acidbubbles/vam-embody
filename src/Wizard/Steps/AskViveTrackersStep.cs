@@ -29,7 +29,7 @@ Skip this if you want to setup Vive trackers manually.".TrimStart();
             mc.controlRotation = true;
             mc.offsetControllerCustom = Vector3.zero;
             mc.rotateControllerCustom = Vector3.zero;
-            mc.rotateAroundTracker = Vector3.zero;
+            mc.rotateAroundTrackerCustom = Vector3.zero;
             mc.enabled = true;
         }
 

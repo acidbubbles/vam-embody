@@ -22,7 +22,7 @@ public class MotionControllerWithCustomPossessPoint
     private Vector3 _rotateControllerBase;
     private Vector3 _offsetControllerCustom;
     private Vector3 _rotateControllerCustom;
-    private Vector3 _rotateAroundTracker;
+    private Vector3 _rotateAroundTrackerCustom;
     private bool _showPreview;
     private bool _highlighted;
 
@@ -50,10 +50,10 @@ public class MotionControllerWithCustomPossessPoint
         set { _rotateControllerCustom = value; SyncOffset(); }
     }
 
-    public Vector3 rotateAroundTracker
+    public Vector3 rotateAroundTrackerCustom
     {
-        get { return _rotateAroundTracker; }
-        set { _rotateAroundTracker = value; SyncOffset(); }
+        get { return _rotateAroundTrackerCustom; }
+        set { _rotateAroundTrackerCustom = value; SyncOffset(); }
     }
 
     public Vector3 offsetControllerCombined => _offsetControllerBase + _offsetControllerCustom;
@@ -75,7 +75,7 @@ public class MotionControllerWithCustomPossessPoint
     {
         if (trackerPointTransform == null) return;
         trackerPointTransform.localPosition = Vector3.zero;
-        trackerPointTransform.localEulerAngles = _rotateAroundTracker;
+        trackerPointTransform.localEulerAngles = _rotateAroundTrackerCustom;
         controllerPointTransform.localPosition = offsetControllerCombined;
         controllerPointTransform.localEulerAngles = rotateControllerCombined;
         SyncOffsetPreview();
@@ -161,7 +161,7 @@ public class MotionControllerWithCustomPossessPoint
         {
             {"OffsetPosition", offsetControllerCustom.ToJSON()},
             {"OffsetRotation", rotateControllerCustom.ToJSON()},
-            {"PossessPointRotation", rotateAroundTracker.ToJSON()},
+            {"PossessPointRotation", rotateAroundTrackerCustom.ToJSON()},
             {"Controller", mappedControllerName},
             {"Enabled", enabled ? "true" : "false"},
             {"ControlRotation", controlRotation ? "true" : "false"},
@@ -175,7 +175,7 @@ public class MotionControllerWithCustomPossessPoint
     {
         offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
-        rotateAroundTracker = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
+        rotateAroundTrackerCustom = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
         mappedControllerName = jc["Controller"].Value;
         enabled = jc["Enabled"].Value != "false";
         controlRotation = jc["ControlRotation"].Value != "false";
@@ -188,7 +188,7 @@ public class MotionControllerWithCustomPossessPoint
     {
         offsetControllerCustom = Vector3.zero;
         rotateControllerCustom = Vector3.zero;
-        rotateAroundTracker = Vector3.zero;
+        rotateAroundTrackerCustom = Vector3.zero;
         if (onlyPersonalData) return;
         if (!MotionControlNames.IsHeadOrHands(name))
             mappedControllerName = null;

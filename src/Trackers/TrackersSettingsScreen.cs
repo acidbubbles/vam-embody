@@ -184,24 +184,24 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker X",
-            motionControl.rotateAroundTracker.x,
-            val => motionControl.rotateAroundTracker = new Vector3(val, motionControl.rotateAroundTracker.y, motionControl.rotateAroundTracker.z),
+            motionControl.rotateAroundTrackerCustom.x,
+            val => motionControl.rotateAroundTrackerCustom = new Vector3(val, motionControl.rotateAroundTrackerCustom.y, motionControl.rotateAroundTrackerCustom.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Y",
-            motionControl.rotateAroundTracker.y,
-            val => motionControl.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, val, motionControl.rotateAroundTracker.z),
+            motionControl.rotateAroundTrackerCustom.y,
+            val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, val, motionControl.rotateAroundTrackerCustom.z),
             -180,
             180,
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Z",
-            motionControl.rotateAroundTracker.z,
-            val => motionControl.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, motionControl.rotateAroundTracker.y, val),
+            motionControl.rotateAroundTrackerCustom.z,
+            val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, motionControl.rotateAroundTrackerCustom.y, val),
             -180,
             180,
             false), false);
@@ -214,7 +214,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
                 otherHand.offsetControllerCustom = new Vector3(-motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z);
                 otherHand.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, -motionControl.rotateControllerCustom.y, -motionControl.rotateControllerCustom.z);
-                otherHand.rotateAroundTracker = new Vector3(motionControl.rotateAroundTracker.x, -motionControl.rotateAroundTracker.y, -motionControl.rotateAroundTracker.z);
+                otherHand.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, -motionControl.rotateAroundTrackerCustom.y, -motionControl.rotateAroundTrackerCustom.z);
             });
         }
     }
