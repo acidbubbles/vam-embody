@@ -134,7 +134,7 @@ public class Embody : MVRScript, IEmbody
                         _restoreNavigationRigCoroutine = null;
                     }
 
-                    if(_navigationRigSnapshot == null && (modules.Contains(_context.trackers) || modules.Contains(_context.passenger)))
+                    if(_navigationRigSnapshot == null && ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false)))
                         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
                     foreach (var module in modulesToEnable)
