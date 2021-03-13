@@ -301,7 +301,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             var position = o.position;
             var bounds = new Bounds(position, new Vector3(0.25f, 0.25f, 0.25f));
             if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
-            var distance = Vector3.Distance(bounds.center, eyesCenter);
+            var distance = Vector3.SqrMagnitude(bounds.center - eyesCenter);
             if (distance > _lookAtMirrorDistance) continue;
             _lockTargetCandidates.Add(new EyeTargetReference
             {
