@@ -46,7 +46,8 @@ public static class Utilities
         var atomControl = atom.mainController.transform;
         var headPosition = head.position;
         var headRotation = Quaternion.LookRotation(Vector3.Scale(head.forward, new Vector3(1f, 0f, 1f)), Vector3.up);
-        atomControl.position = headPosition - (new Vector3(0, headPosition.y, 0) / 2f) + headRotation * (Vector3.forward * 0.5f);
+        const float mirrorDistance = 0.8f;
+        atomControl.position = headPosition - (new Vector3(0, headPosition.y, 0) / 2f) + headRotation * (Vector3.forward * mirrorDistance);
         atomControl.rotation = headRotation;
         atomControl.Rotate(Vector3.right, -90);
 
@@ -60,9 +61,9 @@ public static class Utilities
         var reflection = atom.GetStorableByID("MirrorRender") as MirrorReflection;
         if (reflection != null)
         {
-            reflection.reflectionOpacity = 1f;
+            reflection.reflectionOpacity = 0.92f;
             reflection.surfaceTexturePower = 0.001f;
-            reflection.specularIntensity = 0.2f;
+            reflection.specularIntensity = 0.05f;
             reflection.textureSize = 2048;
             reflection.SetReflectionColor(new HSVColor {V = 1});
         }
