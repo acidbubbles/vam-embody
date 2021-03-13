@@ -251,6 +251,7 @@ public class Embody : MVRScript, IEmbody
             _context.trackers.leftHandMotionControl.useLeapPositioning = false;
             SuperController.singleton.disableLeap = true;
         }));
+        bindings.Add(new JSONStorableAction("StartRecord", () => Utilities.StartRecord(_context)));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
