@@ -108,6 +108,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             foreach (var controller in controllers)
             {
+                if (controller.controller.control == null) continue;
                 controller.snapshot = FreeControllerV3Snapshot.Snap(controller.controller);
             }
         }
