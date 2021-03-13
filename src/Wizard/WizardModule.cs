@@ -23,12 +23,20 @@ public class WizardStatusChangedEvent : UnityEvent<bool> { }
 
 public class WizardModule : EmbodyModuleBase, IWizard
 {
-    private static readonly string _wizardIntroMessage = @"
-This wizard will <b>walk you through</b> the main Embody features and help you <b>configure</b> them so you can make the most out of this plugin.
+    private static readonly string _wizardIntroMessage = (@"
+This wizard will <b>walk you through</b> the main Embody features, and help you <b>configure</b> them so you can make the most out of this plugin.
 
-Press <b>A</b> on your controller to go to the next step; you don't have to use the Next button.
+Before starting:
 
-When you are ready, select <b>Start Wizard</b>.".TrimStart();
+- Try <b>activating Embody with the default settings</b>, it might work without further adjustments for you! " + (SuperController.singleton.isOVR ? "" : @"
+
+- You should also <b>adjust your hands</b> in the <i>Configure Trackers...</i> menu first, if they don't feel right.") + @"
+
+- <b>Press A on your controller</b> to go to the next step; you don't have to use the Next button.
+
+- The wizard <i>cannot be closed</i> and other atoms cannot be selected until you <i>Stop</i> the wizard.
+
+When you are ready, select <b>Start Wizard</b>.").TrimStart();
     private const string _noHandsMessage = "Cannot start the wizard. No hand trackers were found. Are you running in Desktop mode?";
 
     public const string Label = "Wizard";

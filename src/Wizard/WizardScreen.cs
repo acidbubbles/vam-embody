@@ -15,17 +15,17 @@ public class WizardScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Automatically configures optimal settings for the current person and the selected modules."), true);
-
-        var startButton = CreateButton("Start Wizard", true);
-        startButton.button.onClick.AddListener(() => _wizard.StartWizard());
-        startButton.buttonColor = Color.green;
-
         var statusText = CreateText(_wizard.statusJSON, true);
-        statusText.height = 600;
+        statusText.height = 980;
 
-        var nextButton = CreateButton("Next Step >", true);
-        nextButton.button.onClick.AddListener(() => _wizard.Next());
+        var nextButton = CreateButton("Start Wizard >", true);
+        nextButton.button.onClick.AddListener(() =>
+        {
+            if (_wizard.isRunning)
+                _wizard.Next();
+            else
+                _wizard.StartWizard();
+        });
         nextButton.buttonColor = Color.green;
 
         var skipButton = CreateButton("Skip Step >", true);
@@ -38,9 +38,8 @@ public class WizardScreen : ScreenBase, IScreen
 
         _onStatusChanged = isRunning =>
         {
-            startButton.button.interactable = !isRunning;
+            nextButton.label = isRunning ? "Next Step >" : "Start Wizard >";
             stopButton.button.interactable = isRunning;
-            nextButton.button.interactable = isRunning;
             skipButton.button.interactable = isRunning;
             context.embody.activeToggle.toggle.interactable = !isRunning;
         };
