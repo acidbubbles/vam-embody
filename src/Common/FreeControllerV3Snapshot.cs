@@ -50,7 +50,8 @@ public class FreeControllerV3Snapshot
         {
             controller.followWhenOff.position = _position;
             controller.followWhenOff.rotation = _rotation;
-            controller.PauseComply();
         }
+        if(controller.currentPositionState == FreeControllerV3.PositionState.Comply)
+            controller.PauseComply();
     }
 }
