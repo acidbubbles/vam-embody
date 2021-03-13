@@ -151,8 +151,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     {
         _objects.Clear();
 
-        if (!trackObjectsJSON.val) return;
-
         foreach (var atom in SuperController.singleton.GetAtoms())
         {
             if (!atom.on) continue;
