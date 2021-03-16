@@ -5,7 +5,7 @@
     <TargetFramework>net45</TargetFramework>
     <OutputType>Library</OutputType>
     <LangVersion>6</LangVersion>
-    <DefineConstants>VAM_GT_1_20</DefineConstants>
+    <DefineConstants>VAM_GT_1_20;VAM_GT_1_20_77_0</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'Unity' ">

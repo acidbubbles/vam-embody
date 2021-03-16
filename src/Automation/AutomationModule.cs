@@ -35,6 +35,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         if (context.embody.activeJSON.val)
         {
+#if(VAM_GT_1_20_77_0)
             if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
@@ -43,6 +44,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 context.embody.activeJSON.val = false;
                 return;
             }
+#endif
         }
         else
         {
@@ -53,6 +55,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 return;
             }
 
+#if(VAM_GT_1_20_77_0)
             if (takeOverVamPossess.val)
             {
                 if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
@@ -67,6 +70,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                     }
                 }
             }
+#endif
 
             if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
             {

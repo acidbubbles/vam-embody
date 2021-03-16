@@ -23,7 +23,9 @@ public class MoreScreen : ScreenBase, IScreen
 
         CreateToggle(context.automation.autoArmForRecord).label = "Auto Arm On Active*";
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(() => Utilities.StartRecord(context));
+#if(VAM_GT_1_20_77_0)
         CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
+#endif
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key*", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
             val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
