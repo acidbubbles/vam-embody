@@ -111,14 +111,6 @@ public static class Utilities
             mac.ClearAnimation();
             mac.armedForRecord = true;
         }
-
-        if (context.eyeTarget.enabledJSON.val)
-        {
-            var controller = context.plugin.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-            var mac = controller.GetComponent<MotionAnimationControl>();
-            mac.ClearAnimation();
-            mac.armedForRecord = true;
-        }
     }
 
     private static IEnumerator WaitForRecordComplete(EmbodyContext context)

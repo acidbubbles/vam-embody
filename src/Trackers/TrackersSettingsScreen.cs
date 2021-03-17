@@ -206,6 +206,11 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             180,
             false), false);
 
+        _section.CreateToggle(new JSONStorableBool(
+            "Keep current physics hold strength",
+            motionControl.keepCurrentPhysicsHoldStrength,
+            val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
+
         if (MotionControlNames.IsHands(motionControl.name))
         {
             _section.CreateButton("Sync to other hand").button.onClick.AddListener(() =>

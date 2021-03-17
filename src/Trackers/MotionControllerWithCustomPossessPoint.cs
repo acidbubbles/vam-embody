@@ -14,6 +14,7 @@ public class MotionControllerWithCustomPossessPoint
     public bool useLeapPositioning;
     public bool fingersTracking = true;
     public string mappedControllerName;
+    public bool keepCurrentPhysicsHoldStrength;
     public Transform currentMotionControl { get; private set; }
     private Func<Transform> _getMotionControl;
     private Action<MotionControllerWithCustomPossessPoint> _configure;
@@ -167,6 +168,7 @@ public class MotionControllerWithCustomPossessPoint
             {"ControlRotation", controlRotation ? "true" : "false"},
             {"UseLeap", useLeapPositioning ? "true" : "false"},
             {"FingersTracking", fingersTracking ? "true" : "false"},
+            {"KeepCurrentPhysicsHoldStrength", keepCurrentPhysicsHoldStrength ? "true" : "false"},
         };
         return motionControlJSON;
     }
@@ -177,11 +179,12 @@ public class MotionControllerWithCustomPossessPoint
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
         rotateAroundTrackerCustom = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
         mappedControllerName = jc["Controller"].Value;
+        if (mappedControllerName == "") mappedControllerName = null;
         enabled = jc["Enabled"].Value != "false";
         controlRotation = jc["ControlRotation"].Value != "false";
         useLeapPositioning = jc["UseLeap"].Value == "true";
         fingersTracking = jc["FingersTracking"].Value != "false";
-        if (mappedControllerName == "") mappedControllerName = null;
+        keepCurrentPhysicsHoldStrength = jc["KeepCurrentPhysicsHoldStrength"].Value == "true";
     }
 
     public void ResetToDefault(bool onlyPersonalData = false)
@@ -196,5 +199,6 @@ public class MotionControllerWithCustomPossessPoint
         useLeapPositioning = false;
         fingersTracking = true;
         enabled = true;
+        keepCurrentPhysicsHoldStrength = false;
     }
 }

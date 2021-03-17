@@ -148,6 +148,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private IEnumerator OnEnableCo(NavigationRigSnapshot rigSnapshot)
     {
+        // Once bound, prevent vam from moving the head elsewhere due to world scale change
         yield return new WaitForEndOfFrame();
         rigSnapshot.Restore();
         yield return 0f;
@@ -230,6 +231,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             {
                 c.controller.RestorePreLinkState();
                 c.controller.possessed = false;
+                c.controller.startedPossess = false;
 
                 var mac = c.controller.GetComponent<MotionAnimationControl>();
                 if (mac != null)
@@ -267,17 +269,22 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.possessed = true;
 
+        var mac = controller.GetComponent<MotionAnimationControl>();
+        if (mac != null)
+        {
+            mac.suspendPositionPlayback = true;
+            if (motionControl.controlRotation)
+                mac.suspendRotationPlayback = true;
+        }
+
+        if (!motionControl.keepCurrentPhysicsHoldStrength)
+        {
+            controller.RBHoldPositionSpring = sc.possessPositionSpring;
+            if (motionControl.controlRotation)
+                controller.RBHoldRotationSpring = sc.possessRotationSpring;
+        }
+
         var motionControllerRB = motionControl.controllerPointRB;
-        var motionAnimationControl = controller.GetComponent<MotionAnimationControl>();
-
-        controller.canGrabPosition = true;
-        motionAnimationControl.suspendPositionPlayback = true;
-        controller.RBHoldPositionSpring = sc.possessPositionSpring;
-
-        controller.canGrabRotation = motionControl.controlRotation;
-        motionAnimationControl.suspendRotationPlayback = true;
-        controller.RBHoldRotationSpring = sc.possessRotationSpring;
-
         controller.SelectLinkToRigidbody(
             motionControllerRB,
             motionControl.controlRotation
