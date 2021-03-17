@@ -11,7 +11,7 @@
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors, and automatically looks at other objects in front of the head."), true);
+        CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors and window camera.\n\nFor advanced features, check out the Glance plugin by AcidBubbles."), true);
 
         CreateSpacer().height = 40f;
 
@@ -19,16 +19,8 @@
 
         CreateSpacer().height = 40f;
 
-        CreateSlider(_eyeTarget.frustrumJSON).label = "Objects Field Of View Angle Filter";
-
+        CreateSlider(_eyeTarget.frustrumJSON).label = "Field Of View";
         CreateToggle(_eyeTarget.trackWindowCameraJSON).label = "Look At Window Camera";
-        CreateToggle(_eyeTarget.trackPersonsJSON).label = "Look At Other Persons";
-        CreateToggle(_eyeTarget.trackSelfHandsJSON).label = "Look At Self (Hands)";
-        CreateToggle(_eyeTarget.trackSelfGenitalsJSON).label = "Look At Self (Genitals)";
-        CreateToggle(_eyeTarget.trackObjectsJSON).label = "Look At Objects (Controls)";
-
-        CreateSlider(_eyeTarget.gazeMinDurationJSON, true).label = "Gaze Min. Duration (s)";
-        CreateSlider(_eyeTarget.gazeMaxDurationJSON, true).label = "Gaze Max. Duration (s)";
 
         CreateSpacer(true).height = 40f;
 

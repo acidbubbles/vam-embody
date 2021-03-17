@@ -7,13 +7,7 @@ public interface IEyeTargetModule : IEmbodyModule
 {
     JSONStorableBool trackMirrorsJSON { get; }
     JSONStorableBool trackWindowCameraJSON { get; }
-    JSONStorableBool trackSelfHandsJSON { get; }
-    JSONStorableBool trackSelfGenitalsJSON { get; }
-    JSONStorableBool trackPersonsJSON { get; }
-    JSONStorableBool trackObjectsJSON { get; }
     JSONStorableFloat frustrumJSON { get; }
-    JSONStorableFloat gazeMinDurationJSON { get; }
-    JSONStorableFloat gazeMaxDurationJSON { get; }
     JSONStorableFloat shakeMinDurationJSON { get; }
     JSONStorableFloat shakeMaxDurationJSON { get; }
     JSONStorableFloat shakeRangeJSON { get; }
@@ -35,36 +29,16 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         "ReflectiveWoodPanel",
     });
 
-    private static readonly HashSet<string> _bonesLookAt = new HashSet<string>
-    {
-        "lHand",
-        "rHand",
-        "lEye",
-        "rEye",
-        "tongue03",
-        "abdomen",
-        "chest",
-        "pelvis",
-        "Gen3",
-        "Testes",
-    };
-
     public override string storeId => "EyeTarget";
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
 
     public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
     public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackWindowCamera", true);
-    public JSONStorableBool trackSelfHandsJSON { get; } = new JSONStorableBool("TrackSelfHands", false);
-    public JSONStorableBool trackSelfGenitalsJSON { get; } = new JSONStorableBool("TrackSelfGenitals", false);
-    public JSONStorableBool trackPersonsJSON { get; } = new JSONStorableBool("TrackPersons", false);
-    public JSONStorableBool trackObjectsJSON { get; } = new JSONStorableBool("TrackObjects", false);
-    public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 6f, 0f, 45f, true);
-    public JSONStorableFloat gazeMinDurationJSON { get; } = new JSONStorableFloat("GazeMinDuration", 0.5f, 0f, 10f, false);
-    public JSONStorableFloat gazeMaxDurationJSON { get; } = new JSONStorableFloat("GazeMaxDuration", 2f, 0f, 10f, false);
+    public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 16f, 0f, 45f, true);
     public JSONStorableFloat shakeMinDurationJSON { get; } = new JSONStorableFloat("ShakeMinDuration", 0.2f, 0f, 1f, false);
     public JSONStorableFloat shakeMaxDurationJSON { get; } = new JSONStorableFloat("ShakeMaxDuration", 0.5f, 0f, 1f, false);
-    public JSONStorableFloat shakeRangeJSON { get; } = new JSONStorableFloat("ShakeRangeDuration", 0.015f, 0f, 0.1f, true);
+    public JSONStorableFloat shakeRangeJSON { get; } = new JSONStorableFloat("ShakeRange", 0.015f, 0f, 0.1f, true);
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -81,7 +55,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private float _lookAtMirrorDistance;
     private float _nextMirrorScanTime;
     private float _nextObjectsScanTime;
-    private float _nextLockTargetTime;
     private float _nextShakeTime;
     private Vector3 _shakeValue;
     private Transform _lockTarget;
@@ -97,12 +70,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
         trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        trackSelfHandsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        trackSelfGenitalsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        trackPersonsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        trackObjectsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        gazeMinDurationJSON.setCallbackFunction = val => gazeMaxDurationJSON.valNoCallback = Mathf.Max(val, gazeMaxDurationJSON.val);
-        gazeMaxDurationJSON.setCallbackFunction = val => gazeMinDurationJSON.valNoCallback = Mathf.Min(val, gazeMinDurationJSON.val);
         shakeMinDurationJSON.setCallbackFunction = val => shakeMaxDurationJSON.valNoCallback = Mathf.Max(val, shakeMaxDurationJSON.val);
         shakeMaxDurationJSON.setCallbackFunction = val => shakeMinDurationJSON.valNoCallback = Mathf.Min(val, shakeMinDurationJSON.val);
     }
@@ -119,7 +86,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         ClearState();
         SyncMirrors();
         SyncObjects();
-
     }
 
     public override void OnEnable()
@@ -164,41 +130,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
                     _objects.Add(atom.mainController.control);
                     break;
                 }
-                case "Person":
-                {
-                    if (atom == containingAtom)
-                    {
-                        foreach (var bone in context.bones)
-                        {
-                            if (trackSelfHandsJSON.val && (bone.name == "lHand" || bone.name == "rHand"))
-                                _objects.Add(bone.transform);
-                            else if (trackSelfGenitalsJSON.val && (bone.name == "Gen1" || bone.name == "Gen3"))
-                                _objects.Add(bone.transform);
-                        }
-                        continue;
-                    }
-
-                    if (!trackPersonsJSON.val) continue;
-                    foreach (var bone in atom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>())
-                    {
-                        if (!_bonesLookAt.Contains(bone.name)) continue;
-                        _objects.Add(bone.transform);
-                    }
-                    break;
-                }
-                case "Cube":
-                case "Sphere":
-                case "Dildo":
-                case "Paddle":
-                case "ToyAH":
-                case "ToyBP":
-                case "CustomUnityAsset":
-                case "Torch":
-                {
-                    if (!trackObjectsJSON.val) continue;
-                    _objects.Add(atom.mainController.control);
-                    break;
-                }
             }
         }
     }
@@ -224,7 +155,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _lockTargetCandidates.Clear();
         _nextMirrorScanTime = 0f;
         _nextObjectsScanTime = 0f;
-        _nextLockTargetTime = 0f;
         _nextShakeTime = 0f;
         _shakeValue = Vector3.zero;
     }
@@ -235,11 +165,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         ScanMirrors(eyesCenter);
         ScanObjects(eyesCenter);
-        SelectLockTarget();
+        SelectShake();
 
         if (!ReferenceEquals(_lockTarget, null))
         {
-            SelectShake();
             _eyeTarget.control.position = _lockTarget.transform.position + _shakeValue;
             return;
         }
@@ -252,11 +181,11 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             var plane = new Plane(mirrorNormal, mirrorPosition);
             var planePoint = plane.ClosestPointOnPlane(eyesCenter);
             var reflectPosition = planePoint - (eyesCenter - planePoint);
-            _eyeTarget.control.position = reflectPosition;
+            _eyeTarget.control.position = reflectPosition + _shakeValue;
             return;
         }
 
-        _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance;
+        _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance + _shakeValue;
     }
 
     private void SelectShake()
@@ -265,18 +194,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _nextShakeTime = Time.time + Random.Range(shakeMinDurationJSON.val, shakeMaxDurationJSON.val);
 
         _shakeValue = Random.insideUnitSphere * shakeRangeJSON.val;
-    }
-
-    private void SelectLockTarget()
-    {
-        if (_nextLockTargetTime > Time.time) return;
-        _nextLockTargetTime = Time.time + Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
-
-        _lockTarget = _lockTargetCandidates.Count > 0
-            ? _lockTargetCandidates[Random.Range(0, _lockTargetCandidates.Count)].transform
-            : null;
-        _shakeValue = Vector3.zero;
-        _nextShakeTime = Time.time + Random.Range(shakeMinDurationJSON.val, shakeMaxDurationJSON.val);
     }
 
     private void ScanObjects(Vector3 eyesCenter)
@@ -290,14 +207,14 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _lockTargetCandidates.Clear();
 
         //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-        CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.35f, 100f, _frustrumPlanes);
+        CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.15f, 10f, _frustrumPlanes);
 
         Transform closest = null;
         var closestDistance = float.PositiveInfinity;
         foreach (var o in _objects)
         {
             var position = o.position;
-            var bounds = new Bounds(position, new Vector3(0.25f, 0.25f, 0.25f));
+            var bounds = new Bounds(position, new Vector3(0.001f, 0.001f, 0.001f));
             if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
             var distance = Vector3.SqrMagnitude(bounds.center - eyesCenter);
             if (distance > _lookAtMirrorDistance) continue;
@@ -315,13 +232,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         if (_lockTargetCandidates.Count != originalCount)
         {
-            if (_lockTargetCandidates.Count > 0)
-            {
-                _lockTarget = closest;
-                _nextLockTargetTime = Time.time + Random.Range(gazeMinDurationJSON.val, gazeMaxDurationJSON.val);
-            }
-
-            _nextLockTargetTime = 0;
+            _lockTarget = _lockTargetCandidates.Count > 0 ? closest : null;
         }
     }
 
@@ -413,11 +324,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.StoreJSON(jc);
         trackWindowCameraJSON.StoreJSON(jc);
-        trackSelfHandsJSON.StoreJSON(jc);
-        trackSelfGenitalsJSON.StoreJSON(jc);
-        trackPersonsJSON.StoreJSON(jc);
-        trackObjectsJSON.StoreJSON(jc);
         frustrumJSON.StoreJSON(jc);
+        shakeMinDurationJSON.StoreJSON(jc);
+        shakeMaxDurationJSON.StoreJSON(jc);
+        shakeRangeJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
@@ -426,11 +336,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.RestoreFromJSON(jc);
         trackWindowCameraJSON.RestoreFromJSON(jc);
-        trackSelfHandsJSON.RestoreFromJSON(jc);
-        trackSelfGenitalsJSON.RestoreFromJSON(jc);
-        trackPersonsJSON.RestoreFromJSON(jc);
-        trackObjectsJSON.RestoreFromJSON(jc);
         frustrumJSON.RestoreFromJSON(jc);
+        shakeMinDurationJSON.RestoreFromJSON(jc);
+        shakeMaxDurationJSON.RestoreFromJSON(jc);
+        shakeRangeJSON.RestoreFromJSON(jc);
     }
 
     public override void ResetToDefault()
@@ -439,11 +348,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.SetValToDefault();
         trackWindowCameraJSON.SetValToDefault();
-        trackSelfHandsJSON.SetValToDefault();
-        trackSelfGenitalsJSON.SetValToDefault();
-        trackPersonsJSON.SetValToDefault();
-        trackObjectsJSON.SetValToDefault();
         frustrumJSON.SetValToDefault();
+        shakeMinDurationJSON.SetValToDefault();
+        shakeMaxDurationJSON.SetValToDefault();
+        shakeRangeJSON.SetValToDefault();
     }
 
     public struct EyeTargetReference
