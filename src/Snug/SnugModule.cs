@@ -248,13 +248,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.canGrabPosition = false;
         hand.controller.canGrabRotation = false;
         hand.controller.currentPositionState = FreeControllerV3.PositionState.On;
-        hand.controller.currentRotationState = FreeControllerV3.RotationState.On;
+        if (motionControl.controlRotation)
+            hand.controller.currentRotationState = FreeControllerV3.RotationState.On;
         hand.controller.possessed = true;
-        var motionAnimationControl = hand.controller.GetComponent<MotionAnimationControl>();
-        motionAnimationControl.suspendPositionPlayback = true;
-        hand.controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
-        motionAnimationControl.suspendRotationPlayback = true;
-        hand.controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
+        var mac = hand.controller.GetComponent<MotionAnimationControl>();
+        if (mac != null)
+        {
+            mac.suspendPositionPlayback = true;
+            if (motionControl.controlRotation)
+                mac.suspendRotationPlayback = true;
+        }
+        if (!motionControl.keepCurrentPhysicsHoldStrength)
+        {
+            hand.controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
+            if (motionControl.controlRotation)
+                hand.controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
+        }
         if (previewSnugOffsetJSON.val) hand.showCueLine = true;
     }
 
@@ -280,6 +289,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         hand.controller.possessed = false;
         (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = false;
         hand.active = false;
+        var mac = hand.controller.GetComponent<MotionAnimationControl>();
+        if (mac != null)
+        {
+            mac.suspendPositionPlayback = false;
+            mac.suspendRotationPlayback = false;
+        }
         if (hand.snapshot != null)
         {
             hand.snapshot.Restore(context.trackers.restorePoseAfterPossessJSON.val);
