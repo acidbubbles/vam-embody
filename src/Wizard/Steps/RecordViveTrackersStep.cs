@@ -47,7 +47,7 @@ Press <b>Next</b> when you are ready.
     public bool Apply()
     {
         context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersStep)}.{nameof(Apply)}.Before");
-        var autoSetup = new TrackerAutoSetup(context.containingAtom);
+        var autoSetup = new TrackerAutoSetup(context);
         var hashSet = new HashSet<string>();
         foreach (var mc in context.trackers.viveTrackers)
         {
@@ -58,6 +58,7 @@ Press <b>Next</b> when you are ready.
             {
                 lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
                 context.diagnostics.Log(lastError);
+                mc.mappedControllerName = null;
                 return false;
             }
         }

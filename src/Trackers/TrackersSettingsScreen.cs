@@ -19,7 +19,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         : base(context)
     {
         _trackers = trackers;
-        _trackerAutoSetup = new TrackerAutoSetup(context.containingAtom);
+        _trackerAutoSetup = new TrackerAutoSetup(context);
     }
 
     public void Show()
@@ -52,6 +52,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         _section = null;
         if (_currentMotionControl != null)
             _currentMotionControl.highlighted = false;
+        _currentMotionControl = null;
     }
 
     [SuppressMessage("ReSharper", "Unity.InefficientPropertyAccess")]
@@ -86,6 +87,17 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                     ShowMotionControl(motionControl);
                     context.Refresh();
                 }
+            });
+
+            _section.CreateButton("Align All Vive Trackers", true).button.onClick.AddListener(() =>
+            {
+                _trackerAutoSetup.AlignAll(
+                    () =>
+                    {
+                        if (_currentMotionControl == null || !MotionControlNames.IsViveTracker(_currentMotionControl.name)) return;
+                        ShowMotionControl(_currentMotionControl);
+                        context.Refresh();
+                    });
             });
         }
 

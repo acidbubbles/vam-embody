@@ -49,10 +49,9 @@ Skip if you don't plan on using feet trackers.".TrimStart();
             return false;
         }
 
-        var autoSetup = new TrackerAutoSetup(context.containingAtom);
+        var autoSetup = new TrackerAutoSetup(context);
         foreach (var mc in trackersNearFloor)
         {
-            if (!mc.SyncMotionControl()) continue;
             autoSetup.AttachToClosestNode(mc, feet);
         }
 

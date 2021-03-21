@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -31,16 +32,16 @@ public class TrackerAutoSetup
         "lToeControl", "rToeControl",
     });
 
-    private readonly Atom _containingAtom;
+    private readonly EmbodyContext _context;
 
-    public TrackerAutoSetup(Atom containingAtom)
+    public TrackerAutoSetup(EmbodyContext context)
     {
-        _containingAtom = containingAtom;
+        _context = context;
     }
 
     public void AttachToClosestNode(MotionControllerWithCustomPossessPoint motionControl)
     {
-        var controllers = _containingAtom.freeControllers
+        var controllers = _context.containingAtom.freeControllers
             .Where(fc => fc.name.EndsWith("Control"))
             .Where(fc => fc.control != null);
         AttachToClosestNode(motionControl, controllers);
@@ -96,5 +97,45 @@ public class TrackerAutoSetup
             motionControl.offsetControllerCustom.Scale(new Vector3(1f, 0f, 1f));
             motionControl.rotateControllerCustom.Scale(new Vector3(1f, 0f, 0f));
         }
+    }
+
+    public void AlignAll(Action onComplete)
+    {
+        this._context.containingAtom.StartCoroutine(AlignAllCo(onComplete));
+    }
+
+    private IEnumerator AlignAllCo(Action onComplete)
+    {
+        for (var i = 5; i > 0; i--)
+        {
+            SuperController.singleton.helpText = $"Mapping vive controllers in {i}..";
+            yield return new WaitForSecondsRealtime(1f);
+        }
+
+        _context.diagnostics.TakeSnapshot($"{nameof(TrackerAutoSetup)}.{nameof(AlignAll)}.Before");
+        foreach (var mc in _context.trackers.viveTrackers)
+        {
+            mc.ResetToDefault();
+        }
+        var hashSet = new HashSet<string>();
+        foreach (var mc in _context.trackers.viveTrackers)
+        {
+            if (!mc.SyncMotionControl()) continue;
+            AttachToClosestNode(mc);
+            if (!hashSet.Add(mc.mappedControllerName))
+            {
+                var lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
+                SuperController.LogError(lastError);
+                _context.diagnostics.Log(lastError);
+                mc.mappedControllerName = null;
+            }
+        }
+        onComplete();
+        _context.Refresh();
+        _context.diagnostics.TakeSnapshot($"{nameof(TrackerAutoSetup)}.{nameof(AlignAll)}.After");
+
+        SuperController.singleton.helpText = $"Mapped {_context.trackers.viveTrackers.Count(t => t.mappedControllerName != null)} vive controllers.";
+        yield return new WaitForSecondsRealtime(1f);
+        SuperController.singleton.helpText = "";
     }
 }
