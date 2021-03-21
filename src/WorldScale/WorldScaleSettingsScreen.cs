@@ -37,7 +37,9 @@ public class WorldScaleSettingsScreen : ScreenBase, IScreen
 
     private void RecordPlayerHeight()
     {
+        context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
         _worldScale.playerHeightJSON.val = new PlayerMeasurements(context).MeasureHeight();
         _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
+        context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
     }
 }
