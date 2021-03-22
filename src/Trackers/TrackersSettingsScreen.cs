@@ -88,8 +88,11 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                     context.Refresh();
                 }
             });
+        }
 
-            _section.CreateButton("Align All Vive Trackers", true).button.onClick.AddListener(() =>
+        if (context.trackers.viveTrackers.Any())
+        {
+            _section.CreateButton("Align <i>All</i> Vive Trackers...", true).button.onClick.AddListener(() =>
             {
                 _trackerAutoSetup.AlignAll(
                     () =>
