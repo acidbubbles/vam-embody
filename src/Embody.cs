@@ -204,6 +204,11 @@ public class Embody : MVRScript, IEmbody
 
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
         _screensManager.Show(MainScreen.ScreenName);
+
+        if (Input.GetKey(KeyCode.LeftControl))
+        {
+            _context.diagnostics.enabledJSON.val = true;
+        }
     }
 
     public void LoadFromDefaults()
