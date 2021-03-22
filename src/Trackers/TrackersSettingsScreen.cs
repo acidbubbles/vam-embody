@@ -26,7 +26,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers.\n\nHands have no effect when Snug is enabled, and Head has no effect when Passenger is enabled."), true);
 
-        CreateToggle(_trackers.importDefaultsOnLoad, true).label = "Do Not Save (Use Defaults)";
+        CreateToggle(_trackers.importDefaultsOnLoad, true).label = "* Use Defaults (Don't Save)";
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
@@ -108,7 +108,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         }
 
         _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name} Enabled{(MotionControlNames.IsHands(motionControl.name) ? " (Position)" : "")}",
+            $"{motionControl.name} Enabled{(MotionControlNames.IsHands(motionControl.name) ? " (Position)" : "")}*",
             motionControl.enabled,
             val =>
             {
@@ -131,7 +131,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 }), false);
 
             _section.CreateToggle(new JSONStorableBool(
-                $"{motionControl.name} Controls Rotation",
+                $"{motionControl.name} Controls Rotation*",
                 motionControl.controlRotation,
                 val => motionControl.controlRotation = val
             ), false);
@@ -140,20 +140,20 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         if (MotionControlNames.IsHands(motionControl.name))
         {
             _section.CreateToggle(new JSONStorableBool(
-                $"Enabled (Fingers Tracking)",
+                $"Enabled (Fingers Tracking)*",
                 motionControl.fingersTracking,
                 val => motionControl.fingersTracking = val
             ), false);
 
             _section.CreateToggle(new JSONStorableBool(
-                $"Allow Leap Motion (Position)",
+                $"Allow Leap Motion (Position)*",
                 motionControl.useLeapPositioning,
                 val => motionControl.useLeapPositioning = val
             ), false);
         }
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Offset X",
+            $"Offset X*",
             motionControl.offsetControllerCustom.x,
             val => motionControl.offsetControllerCustom = new Vector3(val, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z),
             -0.5f,
@@ -161,7 +161,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Offset Y",
+            $"Offset Y*",
             motionControl.offsetControllerCustom.y,
             val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, val, motionControl.offsetControllerCustom.z),
             -0.5f,
@@ -169,7 +169,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Offset Z",
+            $"Offset Z*",
             motionControl.offsetControllerCustom.z,
             val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, val),
             -0.5f,
@@ -177,7 +177,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Controller X",
+            $"Rotate Controller X*",
             motionControl.rotateControllerCustom.x,
             val => motionControl.rotateControllerCustom = new Vector3(val, motionControl.rotateControllerCustom.y, motionControl.rotateControllerCustom.z),
             -180,
@@ -185,7 +185,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Controller Y",
+            $"Rotate Controller Y*",
             motionControl.rotateControllerCustom.y,
             val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, val, motionControl.rotateControllerCustom.z),
             -180,
@@ -193,7 +193,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Controller Z",
+            $"Rotate Controller Z*",
             motionControl.rotateControllerCustom.z,
             val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, motionControl.rotateControllerCustom.y, val),
             -180,
@@ -201,7 +201,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Around Tracker X",
+            $"Rotate Around Tracker X*",
             motionControl.rotateAroundTrackerCustom.x,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(val, motionControl.rotateAroundTrackerCustom.y, motionControl.rotateAroundTrackerCustom.z),
             -180,
@@ -209,7 +209,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Around Tracker Y",
+            $"Rotate Around Tracker Y*",
             motionControl.rotateAroundTrackerCustom.y,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, val, motionControl.rotateAroundTrackerCustom.z),
             -180,
@@ -217,7 +217,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateSlider(new JSONStorableFloat(
-            $"Rotate Around Tracker Z",
+            $"Rotate Around Tracker Z*",
             motionControl.rotateAroundTrackerCustom.z,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, motionControl.rotateAroundTrackerCustom.y, val),
             -180,
@@ -225,7 +225,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             false), false);
 
         _section.CreateToggle(new JSONStorableBool(
-            "Keep current physics hold strength",
+            "Keep current physics hold strength*",
             motionControl.keepCurrentPhysicsHoldStrength,
             val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
 
