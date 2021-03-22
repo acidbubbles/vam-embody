@@ -99,7 +99,10 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                     {
                         if (_currentMotionControl == null || !MotionControlNames.IsViveTracker(_currentMotionControl.name)) return;
                         ShowMotionControl(_currentMotionControl);
-                        context.Refresh();
+                        if (context.embody.activeJSON.val)
+                            context.Refresh();
+                        else
+                            context.embody.activeJSON.val = true;
                     });
             });
         }
