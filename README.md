@@ -4,6 +4,8 @@
 
 Improve Virt-A-Mate's possession experience (includes Improved PoV, Passenger and Snug).
 
+> Looking for documentation? [Check out the wiki!](https://github.com/acidbubbles/vam-embody/wiki)
+
 Currently, the possession mode (point-of-view) in Virt-A-Mate places the camera in _front_ of the head. That feels like you're floating in front of someone's body.
 
 We want the camera to be exactly where the eyes are, with the same eye distance. The simple solution is to simply place the camera in the "right spot", and increase the minimum clipping distance, but that creates other problems, such as visual artefacts when moving the head, and close objects clipping. This plugin solves all of this:
