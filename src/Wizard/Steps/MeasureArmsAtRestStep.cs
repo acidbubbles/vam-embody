@@ -54,5 +54,14 @@ Try not to overstretch your arms and match as closely as you can the hands posit
     {
         _leftHandSnapshot.Restore(true);
         _rightHandSnapshot.Restore(true);
+
+        if (final)
+        {
+            context.snug.previewSnugOffsetJSON.val = false;
+            context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
+            context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
+            context.trackers.motionControls.First(mc => mc.mappedControllerName == "lElbowControl").enabled = true;
+            context.trackers.motionControls.First(mc => mc.mappedControllerName == "rElbowControl").enabled = true;
+        }
     }
 }

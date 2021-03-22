@@ -9,7 +9,9 @@ Align your feet to match the model's feet position and angle as closely as possi
 
 Press <b>Next</b> when ready.
 
-Skip if you don't plan on using feet trackers.".TrimStart();
+Skip if you don't plan on using feet trackers.
+
+You can also press Escape to align without possession.".TrimStart();
 
     public RecordViveTrackersFeetStep(EmbodyContext context)
         : base(context)

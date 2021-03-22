@@ -12,6 +12,8 @@ Your Vive trackers will be mapped to a control on the atom. Their offset and rot
 - You can adjust the <b>hip</b> node
 
 Press <b>Next</b> when you are ready.
+
+You can also press Escape to align without possession.
 ".TrimStart();
 
     private float _heightAdjust;
@@ -59,6 +61,12 @@ Press <b>Next</b> when you are ready.
                 lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
                 context.diagnostics.Log(lastError);
                 mc.mappedControllerName = null;
+                foreach (var mc2 in context.trackers.viveTrackers)
+                {
+                    if (mc2.currentMotionControl == null || mc2.mappedControllerName.EndsWith("FootControl"))
+                        continue;
+                    mc2.ResetToDefault();
+                }
                 return false;
             }
         }

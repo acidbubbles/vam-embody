@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class AskViveTrackersStep : WizardStepBase, IWizardStep
 {
@@ -25,12 +24,7 @@ Skip this if you want to setup Vive trackers manually.".TrimStart();
     {
         foreach (var mc in context.trackers.viveTrackers)
         {
-            mc.mappedControllerName = null;
-            mc.controlRotation = true;
-            mc.offsetControllerCustom = Vector3.zero;
-            mc.rotateControllerCustom = Vector3.zero;
-            mc.rotateAroundTrackerCustom = Vector3.zero;
-            mc.enabled = true;
+            mc.ResetToDefault();
         }
 
         foreach (var mc in context.trackers.headAndHands)

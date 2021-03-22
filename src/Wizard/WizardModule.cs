@@ -36,6 +36,8 @@ Before starting:
 
 - The wizard <i>cannot be closed</i> and other atoms cannot be selected until you <i>Stop</i> the wizard.
 
+- The wizard is experimental, if it doesn't work reach out to AcidBubbles!
+
 When you are ready, select <b>Start Wizard</b>.").TrimStart();
     private const string _noHandsMessage = "Cannot start the wizard. No hand trackers were found. Are you running in Desktop mode?";
 
@@ -110,20 +112,13 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
             _step = null;
         }
 
+        context.embody.activeJSON.val = false;
+
         statusJSON.val = message ?? _wizardIntroMessage;
         _next = false;
         _skip = false;
         statusChanged.Invoke(false);
         enabledJSON.val = false;
-
-        // TODO: This ugly fix is for when you're canceling during Snug setup, we need some way to restore the hands after. Maybe a cleanup step would be better.
-        context.embody.activeJSON.val = false;
-        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
-        context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
-        var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
-        if (lElbowMotionControl != null) lElbowMotionControl.enabled = true;
-        var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
-        if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
 
         if (_poseJSON != null)
         {

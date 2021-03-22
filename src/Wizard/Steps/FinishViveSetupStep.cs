@@ -5,6 +5,8 @@
 
 Try them out! You can fine tune them in the <i>Trackers Settings</i> menu later, or restart the wizard and try again.
 
+If you exit the wizard to make adjustments, you can return and skip previous step.
+
 Press <b>Next</b> when you are ready to continue.".TrimStart();
 
     public FinishViveSetupStep(EmbodyContext context)

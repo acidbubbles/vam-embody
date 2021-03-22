@@ -30,10 +30,8 @@ Select <b>Next to use Snug</b> (possession will be activated, but hands will be 
 
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = false;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = false;
-        var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
-        if (lElbowMotionControl != null) lElbowMotionControl.enabled = false;
-        var rElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
-        if (rElbowMotionControl != null) rElbowMotionControl.enabled = false;
+        context.trackers.motionControls.First(mc => mc.mappedControllerName == "lElbowControl").enabled = false;
+        context.trackers.motionControls.First(mc => mc.mappedControllerName == "rElbowControl").enabled = false;
         context.embody.activeJSON.val = true;
 
         var idx = _steps.IndexOf(this);
@@ -66,5 +64,17 @@ Select <b>Next to use Snug</b> (possession will be activated, but hands will be 
         _steps.Insert(++idx, new FinishSnugSetupStep(context));
 
         return true;
+    }
+
+    public override void Leave(bool final)
+    {
+        base.Leave(final);
+        if (final)
+        {
+            context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
+            context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
+            context.trackers.motionControls.First(mc => mc.mappedControllerName == "lElbowControl").enabled = true;
+            context.trackers.motionControls.First(mc => mc.mappedControllerName == "rElbowControl").enabled = true;
+        }
     }
 }
