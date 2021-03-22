@@ -120,4 +120,21 @@ public static class Utilities
         context.motionAnimationMaster.StopPlayback();
         context.motionAnimationMaster.ResetAnimation();
     }
+
+    public static void DisableUntrackedControls(EmbodyContext context)
+    {
+        foreach (var control in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
+        {
+            if (control.name == "eyeTargetControl") continue;
+            if (context.trackers.motionControls.Any(mc => mc.mappedControllerName == control.name))
+            {
+                control.deactivateOtherControlsOnPossess = false;
+            }
+            else
+            {
+                control.currentPositionState = FreeControllerV3.PositionState.Off;
+                control.currentRotationState = FreeControllerV3.RotationState.Off;
+            }
+        }
+    }
 }

@@ -24,7 +24,7 @@ public class MoreScreen : ScreenBase, IScreen
 #if(VAM_GT_1_20_77_0)
         CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
 #endif
-        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key*", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
+        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key*",
             val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
         toggleKeyPopup.popupPanelHeight = 700f;
@@ -38,6 +38,7 @@ public class MoreScreen : ScreenBase, IScreen
             pose.Apply();
         });
         CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
+        CreateButton("Disable Untracked Controls").button.onClick.AddListener(() => Utilities.DisableUntrackedControls(context));
 
         CreateSpacer().height = 20f;
 
