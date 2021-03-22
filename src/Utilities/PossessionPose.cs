@@ -40,6 +40,11 @@ public class PossessionPose
         var lHand = _context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         var rHand = _context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
 
+        foreach (var control in _context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
+        {
+            control.deactivateOtherControlsOnPossess = false;
+        }
+
         var position = (pelvis.control.position + hip.control.position) / 2f;
         position.Scale(new Vector3(1f, 0f, 1f));
         var direction = (
