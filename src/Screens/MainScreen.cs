@@ -47,6 +47,10 @@ This further builds on previous features, but also adds body proportion adjustme
 <b>Passenger</b>
 
 Instead of you possessing the VR model, the VR model will ""possess you"". This means that if the VR model is moving, e.g. with Timeline or animation patterns, your VR view will move. This can be an extremely satisfying experience, but can also make some people sick. Only try this if you are comfortable with VR camera movement.
+
+<b>About profiles</b>
+
+Whenever you add this plugin, you default profile will be loaded. Options with an asterisk* will be overwritten by what you saved in your profile and not with the scene, so make sure to save your default profile if you make changes to them! For example if you record your height, every scene you load will use your real height, so the world scale will feel right without having to manually tweak scenes you download.
 ".Trim()), true);
         }
         else
@@ -79,6 +83,8 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         {
             CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
             CreateConfigButton(ImportExportScreen.ScreenName, $"<i>Import, Export & Default Settings...</i>");
+            CreateSpacer(true).height = 40f;
+            CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
         }
     }
 
