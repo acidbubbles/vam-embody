@@ -257,6 +257,7 @@ public class Embody : MVRScript, IEmbody
             SuperController.singleton.disableLeap = true;
         }));
         bindings.Add(new JSONStorableAction("StartRecord", () => Utilities.StartRecord(_context)));
+        bindings.Add(new JSONStorableAction("ApplyPossessionPose", () => new PossessionPose(_context).Apply()));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
