@@ -38,7 +38,7 @@ public class WizardScreen : ScreenBase, IScreen
 
         _onStatusChanged = isRunning =>
         {
-            nextButton.label = isRunning ? "Next Step >" : "Start Wizard >";
+            nextButton.label = isRunning ? "Next (Press [A] Anywhere) >" : "Start Wizard >";
             stopButton.button.interactable = isRunning;
             skipButton.button.interactable = isRunning;
             context.embody.activeToggle.toggle.interactable = !isRunning;
