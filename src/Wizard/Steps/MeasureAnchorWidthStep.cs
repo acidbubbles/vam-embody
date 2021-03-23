@@ -110,8 +110,10 @@ Press <b>A</b> when ready.".TrimStart();
             context.snug.previewSnugOffsetJSON.val = false;
             context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
             context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
-            context.trackers.motionControls.First(mc => mc.mappedControllerName == "lElbowControl").enabled = true;
-            context.trackers.motionControls.First(mc => mc.mappedControllerName == "rElbowControl").enabled = true;
+            var lElbowControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
+            if (lElbowControl != null) lElbowControl.enabled = true;
+            var rElbowControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
+            if (rElbowControl != null) rElbowControl.enabled = true;
         }
     }
 }
