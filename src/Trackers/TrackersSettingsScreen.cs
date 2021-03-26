@@ -131,6 +131,12 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 }), false);
 
             _section.CreateToggle(new JSONStorableBool(
+                $"{motionControl.name} Controls Position*",
+                motionControl.controlPosition,
+                val => motionControl.controlPosition = val
+            ), false);
+
+            _section.CreateToggle(new JSONStorableBool(
                 $"{motionControl.name} Controls Rotation*",
                 motionControl.controlRotation,
                 val => motionControl.controlRotation = val
@@ -143,6 +149,12 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 $"Enabled (Fingers Tracking)*",
                 motionControl.fingersTracking,
                 val => motionControl.fingersTracking = val
+            ), false);
+
+            _section.CreateToggle(new JSONStorableBool(
+                $"Enabled (Motion Controllers)*",
+                motionControl.controlPosition,
+                val => motionControl.controlPosition = motionControl.controlRotation = val
             ), false);
 
             _section.CreateToggle(new JSONStorableBool(

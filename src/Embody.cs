@@ -309,13 +309,14 @@ public class Embody : MVRScript, IEmbody
     {
         var jss = new JSONStorableStringChooser("Presets", new List<string>
         {
-            "VaM Possession",
+            "Legacy Possession",
             "Improved Possession",
             "Improved Possession w/ Leap",
             "Snug",
             "Passenger",
             "Passenger w/ Hands",
             "Passenger w/ Leap",
+            "Leap Only"
         }, "(Select To Apply)", "Apply Preset")
         {
             isStorable = false
@@ -342,26 +343,30 @@ public class Embody : MVRScript, IEmbody
 
         switch (val)
         {
-            case "VaM Possession":
+            case "Legacy Possession":
+                _context.trackers.selectedJSON.val = false;
+                _context.snug.selectedJSON.val = false;
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.offsetCamera.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = true;
                 break;
             case "Improved Possession":
                 _context.trackers.selectedJSON.val = true;
+                ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
             case "Improved Possession w/ Leap":
                 _context.trackers.selectedJSON.val = true;
-                _context.trackers.leftHandMotionControl.useLeapPositioning = true;
-                _context.trackers.rightHandMotionControl.useLeapPositioning = true;
+                ConfigureHandsPresets(true, true, true, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
             case "Snug":
                 _context.trackers.selectedJSON.val = true;
+                ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.snug.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
@@ -374,19 +379,41 @@ public class Embody : MVRScript, IEmbody
                 break;
             case "Passenger w/ Hands":
                 _context.trackers.selectedJSON.val = true;
+                ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
             case "Passenger w/ Leap":
                 _context.trackers.selectedJSON.val = true;
-                _context.trackers.leftHandMotionControl.useLeapPositioning = true;
-                _context.trackers.rightHandMotionControl.useLeapPositioning = true;
+                ConfigureHandsPresets(true, true, true, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
+            case "Leap Only":
+                _context.trackers.selectedJSON.val = true;
+                _context.trackers.headMotionControl.enabled = false;
+                ConfigureHandsPresets(true, false, false, true);
+                _context.hideGeometry.selectedJSON.val = false;
+                _context.passenger.selectedJSON.val = true;
+                _context.worldScale.selectedJSON.val = false;
+                break;
         }
+    }
+
+    private void ConfigureHandsPresets(bool trackerEnabled, bool position, bool leap, bool fingers)
+    {
+        _context.trackers.leftHandMotionControl.enabled = trackerEnabled;
+        _context.trackers.leftHandMotionControl.controlPosition = position;
+        _context.trackers.leftHandMotionControl.controlRotation = position;
+        _context.trackers.leftHandMotionControl.useLeapPositioning = leap;
+        _context.trackers.leftHandMotionControl.fingersTracking = fingers;
+        _context.trackers.rightHandMotionControl.enabled = trackerEnabled;
+        _context.trackers.rightHandMotionControl.controlPosition = position;
+        _context.trackers.rightHandMotionControl.controlRotation = position;
+        _context.trackers.rightHandMotionControl.useLeapPositioning = leap;
+        _context.trackers.rightHandMotionControl.fingersTracking = fingers;
     }
 
     public void OnEnable()

@@ -242,6 +242,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         if (motionControl == null) return;
         if (!motionControl.enabled) return;
         if (!motionControl.SyncMotionControl()) return;
+        if (!motionControl.controlPosition) return;
         hand.motionControl = motionControl;
         hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
         hand.active = true;

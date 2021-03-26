@@ -180,7 +180,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
         else
         {
-            controller.control.SetPositionAndRotation(motionControl.controllerPointTransform.position, motionControl.controllerPointTransform.rotation);
+            if (motionControl.controlRotation)
+                controller.control.rotation = motionControl.controllerPointTransform.rotation;
+            if (motionControl.controlPosition)
+                controller.control.position = motionControl.controllerPointTransform.position;
         }
 
         controllerWithSnapshot.active = true;
@@ -265,6 +268,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private static void Possess(MotionControllerWithCustomPossessPoint motionControl, FreeControllerV3 controller)
     {
+        if (!motionControl.controlPosition && !motionControl.controlRotation) return;
+
         var sc = SuperController.singleton;
 
         controller.possessed = true;
@@ -272,24 +277,31 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var mac = controller.GetComponent<MotionAnimationControl>();
         if (mac != null)
         {
-            mac.suspendPositionPlayback = true;
+            if (motionControl.controlPosition)
+                mac.suspendPositionPlayback = true;
             if (motionControl.controlRotation)
                 mac.suspendRotationPlayback = true;
         }
 
         if (!motionControl.keepCurrentPhysicsHoldStrength)
         {
-            controller.RBHoldPositionSpring = sc.possessPositionSpring;
+            if (motionControl.controlPosition)
+                controller.RBHoldPositionSpring = sc.possessPositionSpring;
             if (motionControl.controlRotation)
                 controller.RBHoldRotationSpring = sc.possessRotationSpring;
         }
 
         var motionControllerRB = motionControl.controllerPointRB;
+        FreeControllerV3.SelectLinkState linkState;
+        if (!motionControl.controlRotation)
+            linkState = FreeControllerV3.SelectLinkState.Position;
+        else if (!motionControl.controlPosition)
+            linkState = FreeControllerV3.SelectLinkState.Rotation;
+        else
+            linkState = FreeControllerV3.SelectLinkState.PositionAndRotation;
         controller.SelectLinkToRigidbody(
             motionControllerRB,
-            motionControl.controlRotation
-                ? FreeControllerV3.SelectLinkState.PositionAndRotation
-                : FreeControllerV3.SelectLinkState.Position
+            linkState
         );
 
         controller.canGrabPosition = false;

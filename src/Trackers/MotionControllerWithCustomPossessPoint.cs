@@ -10,6 +10,7 @@ public class MotionControllerWithCustomPossessPoint
     public Transform controllerPointTransform;
     public Rigidbody controllerPointRB;
     public bool enabled = true;
+    public bool controlPosition = true;
     public bool controlRotation = true;
     public bool useLeapPositioning;
     public bool fingersTracking = true;
@@ -166,6 +167,7 @@ public class MotionControllerWithCustomPossessPoint
             {"Controller", mappedControllerName},
             {"Enabled", enabled ? "true" : "false"},
             {"ControlRotation", controlRotation ? "true" : "false"},
+            {"ControlPosition", controlPosition ? "true" : "false"},
             {"UseLeap", useLeapPositioning ? "true" : "false"},
             {"FingersTracking", fingersTracking ? "true" : "false"},
             {"KeepCurrentPhysicsHoldStrength", keepCurrentPhysicsHoldStrength ? "true" : "false"},
@@ -182,6 +184,7 @@ public class MotionControllerWithCustomPossessPoint
         if (mappedControllerName == "") mappedControllerName = null;
         enabled = jc["Enabled"].Value != "false";
         controlRotation = jc["ControlRotation"].Value != "false";
+        controlPosition = jc["ControlPosition"].Value != "false";
         useLeapPositioning = jc["UseLeap"].Value == "true";
         fingersTracking = jc["FingersTracking"].Value != "false";
         keepCurrentPhysicsHoldStrength = jc["KeepCurrentPhysicsHoldStrength"].Value == "true";
@@ -196,6 +199,7 @@ public class MotionControllerWithCustomPossessPoint
         if (!MotionControlNames.IsHeadOrHands(name))
             mappedControllerName = null;
         controlRotation = true;
+        controlPosition = true;
         useLeapPositioning = false;
         fingersTracking = true;
         enabled = true;
