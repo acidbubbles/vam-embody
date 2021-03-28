@@ -19,22 +19,42 @@ public class DiagnosticsScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateToggle(_diagnostics.enabledJSON).label = "Record Diagnostics Data";
+        UIDynamicButton takeSnapshot = null;
+        var enabledJSON = new JSONStorableBool("Enabled", _diagnostics.enabledJSON.val, val =>
+        {
+            context.diagnostics.enabledJSON.val = val;
+            // ReSharper disable AccessToModifiedClosure
+            if (takeSnapshot == null) return;
+            takeSnapshot.button.interactable = val;
+            // ReSharper restore AccessToModifiedClosure
+        });
+        CreateToggle(enabledJSON).label = "Record Diagnostics Data";
 
         var logs = _diagnostics.logs.ToArray();
         var logsJSON = new JSONStorableString("", logs.Length == 0 ? "Enabling diagnostics will record all VaM errors and your physical position during possession.\n\n<b>ONLY enable this if Acidbubbles asks you to.</b>\n\nAlso keep in mind this will give information about your height and body size, if you are not comfortable sharing this information, please keep diagnostics off." : string.Join(", ", logs));
         CreateText(logsJSON, true).height = 1200f;
-
-        if (!Input.GetKey(KeyCode.LeftControl)) return;
-
-        CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
 
         var snapshotsJSON = new JSONStorableStringChooser("",
             new List<string>(),
             $"",
             "Snapshots",
             val => ShowSnapshot(logsJSON, val));
+
+        takeSnapshot = CreateButton("Take Snapshot");
+        takeSnapshot.button.onClick.AddListener(() =>
+        {
+            context.diagnostics.TakeSnapshot("ManualSnapshot");
+            RefreshSnapshots(snapshotsJSON);
+            logsJSON.val = $"{context.diagnostics.snapshots.Count} snapshot{(context.diagnostics.snapshots.Count != 1 ? "s" : "")}";
+        });
+        takeSnapshot.button.interactable = context.diagnostics.enabledJSON.val;
+
+        if (!Input.GetKey(KeyCode.LeftControl)) return;
+
         RefreshSnapshots(snapshotsJSON);
+
+        CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
+
         CreateScrollablePopup(snapshotsJSON);
 
         CreateButton("Remove Fake Trackers").button.onClick.AddListener(() =>
@@ -66,12 +86,6 @@ public class DiagnosticsScreen : ScreenBase, IScreen
                 return;
             }
             context.diagnostics.RestoreTrackers(snapshot);
-        });
-        CreateButton("Take Snapshot").button.onClick.AddListener(() =>
-        {
-            context.diagnostics.TakeSnapshot("ManualSnapshot");
-            RefreshSnapshots(snapshotsJSON);
-            logsJSON.val = "";
         });
         CreateButton("Delete Snapshot").button.onClick.AddListener(() =>
         {
