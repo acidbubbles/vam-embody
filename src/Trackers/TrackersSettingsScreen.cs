@@ -108,7 +108,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         }
 
         _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name} Enabled{(MotionControlNames.IsHands(motionControl.name) ? " (Position)" : "")}*",
+            $"{motionControl.name} Enabled*",
             motionControl.enabled,
             val =>
             {
@@ -146,19 +146,19 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         if (MotionControlNames.IsHands(motionControl.name))
         {
             _section.CreateToggle(new JSONStorableBool(
-                $"Enabled (Fingers Tracking)*",
+                $"Fingers Tracking*",
                 motionControl.fingersTracking,
                 val => motionControl.fingersTracking = val
             ), false);
 
             _section.CreateToggle(new JSONStorableBool(
-                $"Enabled (Motion Controllers)*",
+                $"Position Tracking*",
                 motionControl.controlPosition,
                 val => motionControl.controlPosition = motionControl.controlRotation = val
             ), false);
 
             _section.CreateToggle(new JSONStorableBool(
-                $"Allow Leap Motion (Position)*",
+                $"Use Leap Motion Position*",
                 motionControl.useLeapPositioning,
                 val => motionControl.useLeapPositioning = val
             ), false);

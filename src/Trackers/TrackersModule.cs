@@ -194,9 +194,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void BindFingers()
     {
-        if (leftHandMotionControl.fingersTracking && _leftHandController.handControl != null)
+        if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null)
             _leftHandController.handControl.possessed = true;
-        if (rightHandMotionControl.fingersTracking && _rightHandController.handControl != null)
+        if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null)
             _rightHandController.handControl.possessed = true;
     }
 

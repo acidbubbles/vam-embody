@@ -347,6 +347,7 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = false;
                 _context.snug.selectedJSON.val = false;
                 _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = false;
                 _context.offsetCamera.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
@@ -354,6 +355,7 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
@@ -361,6 +363,7 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 ConfigureHandsPresets(true, true, true, true);
                 _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
@@ -369,6 +372,7 @@ public class Embody : MVRScript, IEmbody
                 ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.snug.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
@@ -396,7 +400,7 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.headMotionControl.enabled = false;
                 ConfigureHandsPresets(true, false, false, true);
                 _context.hideGeometry.selectedJSON.val = false;
-                _context.passenger.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = false;
                 break;
         }
