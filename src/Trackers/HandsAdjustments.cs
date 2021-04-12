@@ -7,7 +7,7 @@ public static class HandsAdjustments
     public static readonly Vector3 OVRRightOffset = Vector3.Scale(OVRLeftOffset, new Vector3(-1f, 1f, 1f));
     public static readonly Vector3 OVRRightRotate = Vector3.Scale(OVRLeftRotate, new Vector3(1f, -1f, -1f));
 
-    private static readonly Vector3 _viveLeftOffset = new Vector3(-0.03247f, -0.03789f, -0.22116f);
+    private static readonly Vector3 _viveLeftOffset = new Vector3(-0.03247f, -0.08473f, -0.13298f);
     private static readonly Vector3 _viveLeftRotate = new Vector3(-90, 90, 0);
     private static readonly Vector3 _viveRightOffset = Vector3.Scale(_viveLeftOffset, new Vector3(-1f, 1f, 1f));
     private static readonly Vector3 _viveRightRotate = Vector3.Scale(_viveLeftRotate, new Vector3(1f, -1f, -1f));
