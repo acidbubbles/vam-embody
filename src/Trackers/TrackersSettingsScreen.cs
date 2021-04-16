@@ -108,7 +108,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         }
 
         _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name} Enabled*",
+            $"{motionControl.name} Enabled",
             motionControl.enabled,
             val =>
             {
@@ -123,7 +123,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 "",
                 new[] {_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),
                 motionControl.mappedControllerName,
-                "Map to control",
+                "Map to control*",
                 val =>
                 {
                     motionControl.mappedControllerName = val == _none ? null : val;

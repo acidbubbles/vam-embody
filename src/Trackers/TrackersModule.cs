@@ -351,17 +351,17 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             importDefaultsOnLoad.RestoreFromJSON(jc);
         }
 
-        if (importDefaultsOnLoad.val || !fromDefaults)
+        var doImportDefaults = importDefaultsOnLoad.val || !fromDefaults;
+        if (doImportDefaults)
         {
             restorePoseAfterPossessJSON.RestoreFromJSON(jc);
-
-            var motionControlsJSON = jc["MotionControls"].AsObject;
-            foreach (var motionControlName in motionControlsJSON.Keys)
-            {
-                var motionControlJSON = motionControlsJSON[motionControlName];
-                var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
-                motionControl?.RestoreFromJSON(motionControlJSON);
-            }
+        }
+        var motionControlsJSON = jc["MotionControls"].AsObject;
+        foreach (var motionControlName in motionControlsJSON.Keys)
+        {
+            var motionControlJSON = motionControlsJSON[motionControlName];
+            var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
+            motionControl?.RestoreFromJSON(motionControlJSON, doImportDefaults);
         }
     }
 

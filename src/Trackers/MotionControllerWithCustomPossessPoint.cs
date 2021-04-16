@@ -175,14 +175,15 @@ public class MotionControllerWithCustomPossessPoint
         return motionControlJSON;
     }
 
-    public void RestoreFromJSON(JSONNode jc)
+    public void RestoreFromJSON(JSONNode jc, bool doImportDefaults)
     {
+        enabled = jc["Enabled"].Value != "false";
+        if (mappedControllerName == "") mappedControllerName = null;
+        if (!doImportDefaults) return;
         offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
         rotateAroundTrackerCustom = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
         mappedControllerName = jc["Controller"].Value;
-        if (mappedControllerName == "") mappedControllerName = null;
-        enabled = jc["Enabled"].Value != "false";
         controlRotation = jc["ControlRotation"].Value != "false";
         controlPosition = jc["ControlPosition"].Value != "false";
         useLeapPositioning = jc["UseLeap"].Value == "true";
