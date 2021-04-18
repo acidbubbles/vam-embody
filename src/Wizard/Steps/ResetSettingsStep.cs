@@ -3,7 +3,7 @@
 public class ResetSettingsStep : WizardStepBase, IWizardStep
 {
     public string helpText => (@"
-All Embody settings will now be <b>reset</b> to their default value, except for hand adjustments.
+All Embody settings will now be <b>reset</b> to their default value, except for hand and head adjustments.
 
 Only skip this if you know what you are doing!").TrimStart();
 
@@ -15,6 +15,9 @@ Only skip this if you know what you are doing!").TrimStart();
     public bool Apply()
     {
         var key = context.automation.toggleKey;
+        var headOffsetControllerCustom = context.trackers.headMotionControl.offsetControllerCustom;
+        var headRotateControllerCustom = context.trackers.headMotionControl.rotateControllerBase;
+        var headRotateAroundTrackerCustom = context.trackers.headMotionControl.rotateAroundTrackerCustom;
         var leftOffsetControllerCustom = context.trackers.leftHandMotionControl.offsetControllerCustom;
         var leftRotateControllerCustom = context.trackers.leftHandMotionControl.rotateControllerCustom;
         var leftRotateAroundTrackerCustom = context.trackers.leftHandMotionControl.rotateAroundTrackerCustom;
@@ -23,6 +26,9 @@ Only skip this if you know what you are doing!").TrimStart();
         var rightRotateAroundTrackerCustom = context.trackers.rightHandMotionControl.rotateAroundTrackerCustom;
         Utilities.ResetToDefaults(context);
         context.automation.toggleKey = key;
+        context.trackers.headMotionControl.offsetControllerCustom = headOffsetControllerCustom;
+        context.trackers.headMotionControl.rotateControllerCustom = headRotateControllerCustom;
+        context.trackers.headMotionControl.rotateAroundTrackerCustom = headRotateAroundTrackerCustom;
         context.trackers.leftHandMotionControl.offsetControllerCustom = leftOffsetControllerCustom;
         context.trackers.leftHandMotionControl.rotateControllerCustom = leftRotateControllerCustom;
         context.trackers.leftHandMotionControl.rotateAroundTrackerCustom = leftRotateAroundTrackerCustom;

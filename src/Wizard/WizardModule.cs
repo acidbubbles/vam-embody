@@ -28,15 +28,26 @@ This wizard will <b>walk you through</b> the main Embody features, and help you 
 
 Before starting:
 
-- Try <b>activating Embody with the default settings</b>, it might work without further adjustments for you! " + (SuperController.singleton.isOVR ? "" : @"
+- Try <b>activating Embody with the
+  default settings</b>, it might work
+  fine without further adjustments!
+- You can <b>adjust your hands</b> in the
+  <i>Configure Trackers</i> menu if they
+  don't feel right.
+- Try looking around, you can tweak the
+  head center (<b>offset</b>) in the
+  <i>Configure Trackers</i> menu.
 
-- You should also <b>adjust your hands</b> in the <i>Configure Trackers...</i> menu first, if they don't feel right.") + @"
+Keep in mind that:
 
-- <b>Press A on your controller</b> to go to the next step; you don't have to use the Next button.
-
-- The wizard <i>cannot be closed</i> and other atoms cannot be selected until you <i>Stop</i> the wizard.
-
-- The wizard is experimental, if it doesn't work reach out to AcidBubbles!
+- <b>Press A on your controller</b> to go to
+  the next step; you don't have to use
+  the Next button.
+- The wizard <i>cannot be closed</i> and
+  other atoms cannot be selected until
+  you <i>Stop</i> the wizard.
+- The wizard is experimental, if it
+  doesn't work. reach out to me!
 
 When you are ready, select <b>Start Wizard</b>.").TrimStart();
     private const string _noHandsMessage = "Cannot start the wizard. No hand trackers were found. Are you running in Desktop mode?";

@@ -19,6 +19,7 @@ Skip to keep the defaults untouched.".TrimStart();
     {
         base.Enter();
 
+        SuperController.singleton.worldScale = 1f;
         if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod)
             context.worldScale.selectedJSON.val = true;
     }
