@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using Common;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class CollapsibleSection
 {
@@ -54,5 +56,21 @@ public class CollapsibleSection
     public UIDynamicTextField CreateText(JSONStorableString jss, bool rightSide = false) { return _textFields.AddAndReturn(_plugin.CreateTextField(jss, rightSide)); }
     public void RemoveText(UIDynamicTextField component) { _plugin.RemoveTextField(component); _textFields.Remove(component); }
     public UIDynamic CreateSpacer(bool rightSide = false) { return _spacers.AddAndReturn(_plugin.CreateSpacer(rightSide)); }
+    public UIDynamic CreateTitle(string text, bool rightSide = false) { return _spacers.AddAndReturn(CreateTitleInternal(text, rightSide)); }
     public void RemoveSpacer(UIDynamic component) { _plugin.RemoveSpacer(component); _spacers.Remove(component); }
+
+    private UIDynamic CreateTitleInternal(string text, bool rightSide)
+    {
+        var spacer = CreateSpacer(rightSide);
+        spacer.height = 40f;
+
+        var textComponent = spacer.gameObject.AddComponent<Text>();
+        textComponent.text = text;
+        textComponent.font = _plugin.manager.configurableTextFieldPrefab.GetComponentInChildren<Text>().font;
+        textComponent.fontSize = 30;
+        textComponent.fontStyle = FontStyle.Bold;
+        textComponent.color = new Color(0.95f, 0.9f, 0.92f);
+
+        return spacer;
+    }
 }
