@@ -15,6 +15,14 @@ Skip to keep the defaults untouched.".TrimStart();
     {
     }
 
+    public override void Enter()
+    {
+        base.Enter();
+
+        if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod)
+            context.worldScale.selectedJSON.val = true;
+    }
+
     public bool Apply()
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);

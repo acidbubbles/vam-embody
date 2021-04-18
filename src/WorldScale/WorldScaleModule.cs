@@ -29,12 +29,17 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
 
+    public override bool BeforeEnable()
+    {
+        base.BeforeEnable();
+        _originalShowNavigationHologrid = SuperController.singleton.showNavigationHologrid;
+        _originalWorldScale = SuperController.singleton.worldScale;
+        return true;
+    }
+
     public override void OnEnable()
     {
         base.OnEnable();
-
-        _originalShowNavigationHologrid = SuperController.singleton.showNavigationHologrid;
-        _originalWorldScale = SuperController.singleton.worldScale;
 
         SuperController.singleton.showNavigationHologrid = false;
 
@@ -64,7 +69,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         // TODO: Figure out a way to avoid that. Probably wait one second before re-enabling it...
         if (_originalShowNavigationHologrid)
             SuperController.singleton.showNavigationHologrid = true;
-        _originalWorldScale = 0f;
     }
 
     private void UseEyeDistanceMethod()
@@ -86,7 +90,6 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         if (Math.Abs(SuperController.singleton.worldScale - worldScale) < 0.0001f)
             return;
 
-        _originalWorldScale = SuperController.singleton.worldScale;
         SuperController.singleton.worldScale = worldScale;
     }
 

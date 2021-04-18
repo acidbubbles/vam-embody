@@ -28,4 +28,13 @@ Press <b>Next</b> when ready.".TrimStart();
 
         return true;
     }
+
+    public override void Leave(bool final)
+    {
+        base.Leave(final);
+
+        context.worldScale.selectedJSON.val = false;
+        if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod)
+            context.worldScale.ApplyWorldScale();
+    }
 }

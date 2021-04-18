@@ -119,6 +119,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         _skip = false;
         statusChanged.Invoke(false);
         enabledJSON.val = false;
+        SuperController.singleton.worldScale = 1f;
 
         if (_poseJSON != null)
         {
