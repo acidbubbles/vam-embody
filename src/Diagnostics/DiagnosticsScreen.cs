@@ -57,14 +57,13 @@ public class DiagnosticsScreen : ScreenBase, IScreen
 
         CreateScrollablePopup(snapshotsJSON);
 
-        CreateButton("Remove Fake Trackers").button.onClick.AddListener(() =>
-        {
-            context.diagnostics.RemoveFakeTrackers();
-        });
-        CreateToggle(_diagnostics.attachToHeadJSON).label = "Trackers Attached To Head";
         CreateButton("Create Fake Trackers").button.onClick.AddListener(() =>
         {
             context.diagnostics.CreateFakeTrackers(context.diagnostics.snapshots.FirstOrDefault(s => s.name == snapshotsJSON.val));
+        });
+        CreateButton("Remove Fake Trackers").button.onClick.AddListener(() =>
+        {
+            context.diagnostics.RemoveFakeTrackers();
         });
         CreateToggle(_restoreWorldStateJSON);
         CreateButton("Load Snapshot").button.onClick.AddListener(() =>
@@ -76,16 +75,6 @@ public class DiagnosticsScreen : ScreenBase, IScreen
                 return;
             }
             context.diagnostics.RestoreSnapshot(snapshot, _restoreWorldStateJSON.val);
-        });
-        CreateButton("Load Fake Trackers").button.onClick.AddListener(() =>
-        {
-            var snapshot = FindSnapshot(snapshotsJSON);
-            if (snapshot == null)
-            {
-                logsJSON.val = "Select a snapshot first";
-                return;
-            }
-            context.diagnostics.RestoreTrackers(snapshot);
         });
         CreateButton("Delete Snapshot").button.onClick.AddListener(() =>
         {
