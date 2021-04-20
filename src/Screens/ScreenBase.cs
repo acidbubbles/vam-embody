@@ -30,5 +30,6 @@
         protected UIDynamicPopup CreateFilterablePopup(JSONStorableStringChooser jss, bool rightSide = false) => _root.CreateFilterablePopup(jss, rightSide);
         protected UIDynamicButton CreateButton(string label, bool rightSide = false) => _root.CreateButton(label, rightSide);
         protected UIDynamicTextField CreateText(JSONStorableString jss, bool rightSide = false) => _root.CreateText(jss, rightSide);
+        protected UIDynamic CreateTitle(string text, bool rightSide = false) => _root.CreateTitle(text, rightSide);
         protected UIDynamic CreateSpacer(bool rightSide = false) => _root.CreateSpacer(rightSide);
     }
