@@ -113,13 +113,19 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         enabled = true;
     }
 
-    public override bool BeforeEnable()
+    public override bool Validate()
     {
         if (_preferences.useHeadCollider)
         {
             SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
             return false;
         }
+
+        return true;
+    }
+
+    public override void PreActivate()
+    {
         if (context.containingAtom.type == "Person")
         {
             if (context.trackers.selectedJSON.val || allowPersonHeadRotationJSON.val)
@@ -150,7 +156,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         // TODO: Deal with upside down (Vector3.Dot?)
         var rigRotationOffset = Vector3.ProjectOnPlane(SuperController.singleton.navigationRig.forward, Vector3.up) - Vector3.ProjectOnPlane(SuperController.singleton.navigationRig.forward, Vector3.up);
         _rigRotationOffset = Quaternion.Euler(rigRotationOffset);
-        return true;
     }
 
     public override void OnEnable()
@@ -195,7 +200,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             if (allowPersonHeadRotationJSON.val)
             {
-                _headControlSnapshot.Restore(true);
+                _headControlSnapshot.Restore(false);
             }
             else
             {

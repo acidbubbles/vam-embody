@@ -36,8 +36,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private SnugHand _rHand;
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
 
-    private readonly List<FreeControllerV3Snapshot> _previousState = new List<FreeControllerV3Snapshot>();
-
     public override void Awake()
     {
         try
@@ -191,7 +189,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     #region Lifecycle
 
-    public override bool BeforeEnable()
+    public override bool Validate()
     {
         if (!context.trackers.selectedJSON.val)
         {
@@ -199,9 +197,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             return false;
         }
 
-        autoSetup.AutoSetup();
-
         return true;
+    }
+
+    public override void PreActivate()
+    {
+        autoSetup.AutoSetup();
     }
 
     public override void OnEnable()
@@ -216,8 +217,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                 if (!fc.canGrabPosition && !fc.canGrabRotation) continue;
                 if (!fc.name.EndsWith("Control")) continue;
                 if (fc.control == null) continue;
-                if (!context.trackers.motionControls.Any(mc => mc.mappedControllerName == fc.name && mc.enabled))
-                    _previousState.Add(FreeControllerV3Snapshot.Snap(fc));
                 fc.canGrabPosition = false;
                 fc.canGrabRotation = false;
             }
@@ -271,17 +270,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public override void OnDisable()
     {
         base.OnDisable();
-
         context.trackers.ReleaseFingers();
         DisableHand(_lHand);
         DisableHand(_rHand);
-
-        foreach (var c in _previousState)
-        {
-            c.controller.canGrabPosition = c.canGrabPosition;
-            c.controller.canGrabRotation = c.canGrabRotation;
-        }
-        _previousState.Clear();
     }
 
     private void DisableHand(SnugHand hand)
@@ -298,7 +289,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
         if (hand.snapshot != null)
         {
-            hand.snapshot.Restore(context.trackers.restorePoseAfterPossessJSON.val);
+            hand.snapshot.Restore(false);
             hand.snapshot = null;
         }
         hand.showCueLine = false;

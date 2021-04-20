@@ -97,22 +97,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         return motionControl;
     }
 
-    public override bool BeforeEnable()
+    public override void PreActivate()
     {
         if (headMotionControl.enabled && !context.passenger.selectedJSON.val)
         {
             AdjustHeadToEyesOffset();
         }
-
-        if (restorePoseAfterPossessJSON.val)
-        {
-            foreach (var controller in controllers)
-            {
-                if (controller.controller.control == null) continue;
-                controller.snapshot = FreeControllerV3Snapshot.Snap(controller.controller);
-            }
-        }
-        return true;
     }
 
     private void AdjustHeadToEyesOffset()
@@ -253,14 +243,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
                 c.active = false;
             }
-
-            if (c.snapshot != null)
-            {
-                c.snapshot.Restore(restorePoseAfterPossessJSON.val);
-                c.snapshot = null;
-            }
         }
-
     }
 
     public void OnDestroy()

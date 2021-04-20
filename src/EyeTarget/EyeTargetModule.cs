@@ -74,10 +74,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         shakeMaxDurationJSON.setCallbackFunction = val => shakeMinDurationJSON.valNoCallback = Mathf.Min(val, shakeMinDurationJSON.val);
     }
 
-    public override bool BeforeEnable()
+    public override bool Validate()
     {
         Rescan();
-
         return _mirrors.Count > 0 || _objects.Count > 0;
     }
 
@@ -88,12 +87,15 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         SyncObjects();
     }
 
+    public override void PreActivate()
+    {
+        _eyeBehaviorRestoreLookMode = _eyeBehavior.currentLookMode;
+        _eyeTargetRestorePosition = _eyeTarget.control.position;
+    }
+
     public override void OnEnable()
     {
         base.OnEnable();
-
-        _eyeTargetRestorePosition = _eyeTarget.control.position;
-        _eyeBehaviorRestoreLookMode = _eyeBehavior.currentLookMode;
 
         _eyeBehavior.currentLookMode = EyesControl.LookMode.Target;
 
@@ -140,11 +142,14 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         SuperController.singleton.onAtomUIDsChangedHandlers -= ONAtomUIDsChanged;
 
+         ClearState();
+    }
+
+    public override void PostDeactivate()
+    {
          _eyeTarget.control.position = _eyeTargetRestorePosition;
          if(_eyeBehavior.currentLookMode != EyesControl.LookMode.Target)
              _eyeBehavior.currentLookMode = _eyeBehaviorRestoreLookMode;
-
-         ClearState();
     }
 
     private void ClearState()

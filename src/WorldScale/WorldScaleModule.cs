@@ -29,12 +29,10 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
 
-    public override bool BeforeEnable()
+    public override void PreActivate()
     {
-        base.BeforeEnable();
         _originalShowNavigationHologrid = SuperController.singleton.showNavigationHologrid;
         _originalWorldScale = SuperController.singleton.worldScale;
-        return true;
     }
 
     public override void OnEnable()
@@ -48,21 +46,25 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     public void ApplyWorldScale()
     {
+        float worldScale;
         switch (worldScaleMethodJSON.val)
         {
             case EyeDistanceMethod:
-                UseEyeDistanceMethod();
+                worldScale = UseEyeDistanceMethod();
                 break;
             case PlayerHeightMethod:
-                UsePersonHeightMethod();
+                worldScale = UsePersonHeightMethod();
                 break;
+            default:
+                throw new NotImplementedException($"Unknown method: '{worldScaleMethodJSON.val}'");
         }
+
+        if (worldScale > 0f && Mathf.Abs(worldScale - SuperController.singleton.worldScale) > 0.005f)
+            SuperController.singleton.worldScale = worldScale;
     }
 
-    public override void OnDisable()
+    public override void PostDeactivate()
     {
-        base.OnDisable();
-
         if (_originalWorldScale == 0f) return;
 
         SuperController.singleton.worldScale = _originalWorldScale;
@@ -71,26 +73,26 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
             SuperController.singleton.showNavigationHologrid = true;
     }
 
-    private void UseEyeDistanceMethod()
+    private float UseEyeDistanceMethod()
     {
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var lEye = eyes.FirstOrDefault(eye => eye.name == "lEye");
         var rEye = eyes.FirstOrDefault(eye => eye.name == "rEye");
         if (lEye == null || rEye == null)
-            return;
+            return 0;
         var atomEyeDistance = Vector3.Distance(lEye.transform.position, rEye.transform.position);
 
         var rigEyesDistance = GetRigEyesDistance();
         if (rigEyesDistance <= float.Epsilon)
-            return;
+            return 0;
 
         var scale = atomEyeDistance / rigEyesDistance;
         var worldScale = SuperController.singleton.worldScale * scale;
 
         if (Math.Abs(SuperController.singleton.worldScale - worldScale) < 0.0001f)
-            return;
+            return 0;
 
-        SuperController.singleton.worldScale = worldScale;
+        return worldScale;
     }
 
     private static float GetRigEyesDistance()
@@ -106,15 +108,15 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         return 0;
     }
 
-    private void UsePersonHeightMethod()
+    private float UsePersonHeightMethod()
     {
-        if (playerHeightJSON.val == 0) return;
+        if (playerHeightJSON.val == 0) return 0f;
 
         var measurements = new PersonMeasurements(context);
         var measure = measurements.MeasureHeight();
 
         var ratio = measure / playerHeightJSON.val;
-        SuperController.singleton.worldScale = ratio;
+        return ratio;
     }
 
     public void ClearPersonalData()

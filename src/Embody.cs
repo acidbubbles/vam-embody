@@ -33,6 +33,7 @@ public class Embody : MVRScript, IEmbody
     private NavigationRigSnapshot _navigationRigSnapshot;
     private Coroutine _restoreNavigationRigCoroutine;
     private List<IEmbodyModule> _enabledModules = new List<IEmbodyModule>();
+    private JSONArray _poseJSON;
 
     public override void Init()
     {
@@ -144,8 +145,6 @@ public class Embody : MVRScript, IEmbody
             return;
         }
 
-        activeJSON.valNoCallback = true;
-
         // TODO: Immediately clear others
 
         _enabledModules.Clear();
@@ -159,7 +158,7 @@ public class Embody : MVRScript, IEmbody
                 continue;
             }
 
-            if (module.BeforeEnable())
+            if (module.Validate())
                 _enabledModules.Add(module);
         }
 
@@ -172,6 +171,25 @@ public class Embody : MVRScript, IEmbody
         if (_navigationRigSnapshot == null && ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false)))
         {
             _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        }
+
+        if (_context.trackers?.restorePoseAfterPossessJSON.val == true)
+        {
+            _poseJSON = containingAtom.GetStorableIDs()
+                .Select(s => containingAtom.GetStorableByID(s))
+                .Where(t => !t.exclude && t.gameObject.activeInHierarchy)
+                .Where(t => t is FreeControllerV3 || t is DAZBone)
+                .Select(t => t.GetJSON())
+                .Aggregate(new JSONArray(), (arrayJSON, storableJSON) =>
+                {
+                    arrayJSON.Add(storableJSON);
+                    return arrayJSON;
+                });
+        }
+
+        foreach (var module in _enabledModules)
+        {
+            module.PreActivate();
         }
 
         foreach (var module in _enabledModules)
@@ -195,7 +213,27 @@ public class Embody : MVRScript, IEmbody
             module.enabledJSON.val = false;
         }
 
+        foreach (var module in _enabledModules)
+        {
+            module.PostDeactivate();
+        }
+
         _enabledModules.Clear();
+
+        if (_poseJSON != null && _context.trackers?.restorePoseAfterPossessJSON.val == true)
+        {
+            foreach (var storableJSON in _poseJSON.Childs)
+            {
+                var storableId = storableJSON["id"].Value;
+                if (string.IsNullOrEmpty(storableId)) continue;
+                var storable = containingAtom.GetStorableByID(storableId);
+                if (storable == null) continue;
+                storable.PreRestore();
+                storable.RestoreFromJSON(storableJSON.AsObject);
+                storable.PostRestore();
+            }
+            _poseJSON = null;
+        }
 
         _navigationRigSnapshot?.Restore();
         _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
