@@ -76,6 +76,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public override bool Validate()
     {
+        if (context.containingAtom.GetStorableIDs().Any(id => id.EndsWith("Glance"))) return false;
         Rescan();
         return _mirrors.Count > 0 || _objects.Count > 0;
     }
