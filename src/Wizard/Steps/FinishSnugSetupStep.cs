@@ -18,7 +18,7 @@ Select Next to exit possession.".TrimStart();
     {
         base.Enter();
 
-        context.embody.activeJSON.val = false;
+        context.embody.RefreshDelayed();
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
         var lElbowMotionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");
@@ -27,7 +27,6 @@ Select Next to exit possession.".TrimStart();
         if (rElbowMotionControl != null) rElbowMotionControl.enabled = true;
         context.snug.previewSnugOffsetJSON.val = true;
         context.snug.selectedJSON.val = true;
-        context.embody.activeJSON.val = true;
     }
 
     public bool Apply()
@@ -42,8 +41,6 @@ Select Next to exit possession.".TrimStart();
         base.Leave(final);
 
         context.embody.activeJSON.val = false;
-        context.snug.previewSnugOffsetJSON.val = false;
-
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
         var lElbowControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");

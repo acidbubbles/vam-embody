@@ -75,23 +75,4 @@ You can also press Escape to align without possession.
 
         return true;
     }
-
-    public override void Leave(bool final)
-    {
-        base.Leave(final);
-
-        if (final)
-        {
-            context.embody.activeJSON.val = false;
-            context.trackers.previewTrackerOffsetJSON.val = false;
-        }
-        else
-        {
-            context.trackers.TryBindTrackers();
-        }
-        /*
-        context.worldScale.enabledJSON.val = false;
-        _navigationRigSnapshot?.Restore();
-        */
-    }
 }

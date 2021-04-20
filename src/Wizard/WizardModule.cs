@@ -124,6 +124,8 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         }
 
         context.embody.activeJSON.val = false;
+        context.trackers.previewTrackerOffsetJSON.val = false;
+        context.snug.previewSnugOffsetJSON.val = false;
 
         statusJSON.val = message ?? _wizardIntroMessage;
         _next = false;

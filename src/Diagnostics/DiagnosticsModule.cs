@@ -55,6 +55,15 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     public void Start()
     {
+        BindFakeTrackers();
+
+        // context.plugin.StartCoroutine(DebugCo());
+    }
+
+    private void BindFakeTrackers()
+    {
+        RemoveFakeTrackers();
+
         head = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.Head}");
         leftHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.LeftHand}");
         rightHand = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.RightHand}");
@@ -66,8 +75,6 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         viveTracker6 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}6");
         viveTracker7 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}7");
         viveTracker8 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}8");
-
-        // context.plugin.StartCoroutine(DebugCo());
     }
 
     private IEnumerator DebugCo()
@@ -113,6 +120,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
     {
         base.OnEnable();
         Application.logMessageReceived += CaptureLog;
+        BindFakeTrackers();
     }
 
     public override void OnDisable()

@@ -76,8 +76,6 @@ public class EmbodyContext
 
     public void Refresh()
     {
-        if (!embody.activeJSON.val) return;
-        embody.activeJSON.val = false;
-        embody.activeJSON.val = true;
+        embody.Refresh();
     }
 }

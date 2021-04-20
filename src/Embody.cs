@@ -11,6 +11,8 @@ public interface IEmbody
     JSONStorableBool activeJSON { get; }
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
+    void Refresh();
+    IEnumerator RefreshDelayed();
     void LoadFromDefaults();
     void StoreJSON(JSONClass json, bool includeProfile);
     bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults);
@@ -30,6 +32,7 @@ public class Embody : MVRScript, IEmbody
     private EmbodyScaleChangeReceiver _scaleChangeReceiver;
     private NavigationRigSnapshot _navigationRigSnapshot;
     private Coroutine _restoreNavigationRigCoroutine;
+    private List<IEmbodyModule> _enabledModules = new List<IEmbodyModule>();
 
     public override void Init()
     {
@@ -104,63 +107,12 @@ public class Embody : MVRScript, IEmbody
                 _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
             }
 
-            var modulesToEnable = new List<IEmbodyModule>();
             activeJSON.setCallbackFunction = val =>
             {
                 if (val)
-                {
-                    if (!enabled)
-                    {
-                        activeJSON.valNoCallback = false;
-                        return;
-                    }
-
-                    modulesToEnable.Clear();
-
-                    foreach (var module in _modules.GetComponents<IEmbodyModule>())
-                    {
-                        if (module.skipChangeEnabledWhenActive) continue;
-                        if (!module.selectedJSON.val)
-                        {
-                            module.enabledJSON.val = false;
-                            continue;
-                        }
-                        if (module.BeforeEnable())
-                            modulesToEnable.Add(module);
-                    }
-
-                    if (_restoreNavigationRigCoroutine != null)
-                    {
-                        StopCoroutine(_restoreNavigationRigCoroutine);
-                        _restoreNavigationRigCoroutine = null;
-                    }
-                    if (_navigationRigSnapshot == null && ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false)))
-                    {
-                        _navigationRigSnapshot = NavigationRigSnapshot.Snap();
-                    }
-
-                    foreach (var module in modulesToEnable)
-                    {
-                        module.enabledJSON.val = true;
-                    }
-
-                    modulesToEnable.Clear();
-
-                    if(_context.automation?.autoArmForRecord.val ?? false)
-                        Utilities.MarkForRecord(_context);
-                }
+                    Activate();
                 else
-                {
-                    automationModule.Reset();
-                    foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
-                    {
-                        if (module.skipChangeEnabledWhenActive) continue;
-                        module.enabledJSON.val = false;
-                    }
-
-                    _navigationRigSnapshot?.Restore();
-                    _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
-                }
+                    Deactivate();
             };
             RegisterBool(activeJSON);
 
@@ -181,6 +133,104 @@ public class Embody : MVRScript, IEmbody
             enabledJSON.val = false;
             if (_modules != null) Destroy(_modules);
             throw;
+        }
+    }
+
+    private void Activate()
+    {
+        if (!enabled)
+        {
+            activeJSON.valNoCallback = false;
+            return;
+        }
+
+        activeJSON.valNoCallback = true;
+
+        // TODO: Immediately clear others
+
+        _enabledModules.Clear();
+
+        foreach (var module in _modules.GetComponents<IEmbodyModule>())
+        {
+            if (module.skipChangeEnabledWhenActive) continue;
+            if (!module.selectedJSON.val)
+            {
+                module.enabledJSON.val = false;
+                continue;
+            }
+
+            if (module.BeforeEnable())
+                _enabledModules.Add(module);
+        }
+
+        if (_restoreNavigationRigCoroutine != null)
+        {
+            StopCoroutine(_restoreNavigationRigCoroutine);
+            _restoreNavigationRigCoroutine = null;
+        }
+
+        if (_navigationRigSnapshot == null && ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false)))
+        {
+            _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        }
+
+        foreach (var module in _enabledModules)
+        {
+            module.enabledJSON.val = true;
+        }
+
+        if (_context.automation?.autoArmForRecord.val ?? false)
+            Utilities.MarkForRecord(_context);
+    }
+
+    private void Deactivate()
+    {
+        activeJSON.valNoCallback = false;
+
+        _context.automation.Reset();
+
+        foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
+        {
+            if (module.skipChangeEnabledWhenActive) continue;
+            module.enabledJSON.val = false;
+        }
+
+        _enabledModules.Clear();
+
+        _navigationRigSnapshot?.Restore();
+        _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
+    }
+
+    public void Refresh()
+    {
+        if (!activeJSON.val) return;
+
+        foreach (var module in _enabledModules)
+        {
+            module.enabledJSON.val = false;
+        }
+
+        foreach (var module in _enabledModules)
+        {
+            module.enabledJSON.val = true;
+        }
+    }
+
+    public IEnumerator RefreshDelayed()
+    {
+        if (!activeJSON.val) yield break;
+
+        foreach (var module in _enabledModules)
+        {
+            module.enabledJSON.val = false;
+        }
+
+        yield return 0;
+        yield return 0;
+
+        foreach (var module in _enabledModules)
+        {
+            module.enabledJSON.val = true;
         }
     }
 

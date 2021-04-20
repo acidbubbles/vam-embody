@@ -69,19 +69,4 @@ You can also press Escape to align without possession.".TrimStart();
         context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.After");
         return true;
     }
-
-    public override void Leave(bool final)
-    {
-        base.Leave(final);
-
-        if (final)
-        {
-            context.embody.activeJSON.val = false;
-            context.trackers.previewTrackerOffsetJSON.val = false;
-        }
-        else
-        {
-            context.trackers.TryBindTrackers();
-        }
-    }
 }

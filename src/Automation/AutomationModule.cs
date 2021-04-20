@@ -8,6 +8,7 @@ public interface IAutomationModule : IEmbodyModule
     KeyCode toggleKey { get; set; }
     JSONStorableBool takeOverVamPossess { get; }
     JSONStorableBool autoArmForRecord { get; }
+    void Reset();
 }
 
 public class AutomationModule : EmbodyModuleBase, IAutomationModule
