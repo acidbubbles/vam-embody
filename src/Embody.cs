@@ -176,7 +176,7 @@ public class Embody : MVRScript, IEmbody
         if (_context.trackers?.restorePoseAfterPossessJSON.val == true)
         {
             _poseJSON = containingAtom.GetStorableIDs()
-                .Select(s => containingAtom.GetStorableByID(s))
+                .Select(s => _context.containingAtom.GetStorableByID(s))
                 .Where(t => !t.exclude && t.gameObject.activeInHierarchy)
                 .Where(t => t is FreeControllerV3 || t is DAZBone)
                 .Select(t => t.GetJSON())
@@ -226,7 +226,7 @@ public class Embody : MVRScript, IEmbody
             {
                 var storableId = storableJSON["id"].Value;
                 if (string.IsNullOrEmpty(storableId)) continue;
-                var storable = containingAtom.GetStorableByID(storableId);
+                var storable = _context.containingAtom.GetStorableByID(storableId);
                 if (storable == null) continue;
                 storable.PreRestore();
                 storable.RestoreFromJSON(storableJSON.AsObject);
