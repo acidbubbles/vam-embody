@@ -295,13 +295,14 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         steps.Add(new RecordPlayerHeightStep(context));
         if (useViveTrackers > 0)
             steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
+        /* Removed until I can figure out an easier and more reliable way to setup Snug
         if (context.LeftHand() != null && context.RightHand() != null)
             steps.Add(new AskSnugStep(context, steps));
+        */
         steps.Add(new MakeDefaultsStep(context));
 
         return steps;
     }
-
 
     private bool AreAnyStartRecordKeysDown()
     {
