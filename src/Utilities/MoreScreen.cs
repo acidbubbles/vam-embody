@@ -55,6 +55,7 @@ public class MoreScreen : ScreenBase, IScreen
 
         CreateSpacer(true).height = 20f;
         CreateTitle("Advanced", true);
+        CreateToggle(context.wizard.experimentalSnugWizardJSON).label = "Experimental: Snug Wizard";
         CreateButton("<i>Diagnostics...</i>", true).button.onClick.AddListener(() =>
         {
             screensManager.Show(DiagnosticsScreen.ScreenName);

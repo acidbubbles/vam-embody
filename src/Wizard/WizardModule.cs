@@ -11,6 +11,7 @@ public interface IWizard : IEmbodyModule
 {
     WizardStatusChangedEvent statusChanged { get; }
     JSONStorableString statusJSON { get; }
+    JSONStorableBool experimentalSnugWizardJSON { get; }
     bool isRunning { get; }
     bool forceReopen { get; set; }
     void StartWizard();
@@ -58,7 +59,8 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
     public override bool skipChangeEnabledWhenActive => true;
 
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
-    public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "");
+    public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "") {isStorable = false};
+    public JSONStorableBool experimentalSnugWizardJSON { get; } = new JSONStorableBool("ExperimentalSnugWizard", false);
     public bool isRunning => _coroutine != null;
     public bool forceReopen { get; set; } = true;
 
@@ -295,10 +297,11 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         steps.Add(new RecordPlayerHeightStep(context));
         if (useViveTrackers > 0)
             steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
-        /* Removed until I can figure out an easier and more reliable way to setup Snug
-        if (context.LeftHand() != null && context.RightHand() != null)
-            steps.Add(new AskSnugStep(context, steps));
-        */
+        if (experimentalSnugWizardJSON.val)
+        {
+            if (context.LeftHand() != null && context.RightHand() != null)
+                steps.Add(new AskSnugStep(context, steps));
+        }
         steps.Add(new MakeDefaultsStep(context));
 
         return steps;
@@ -328,5 +331,28 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         }
         if (Input.GetKeyDown(KeyCode.Space)) return true;
         return false;
+    }
+
+    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    {
+        base.StoreJSON(jc, includeProfile);
+
+        if (includeProfile)
+            experimentalSnugWizardJSON.StoreJSON(jc);
+    }
+
+    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    {
+        base.RestoreFromJSON(jc, fromDefaults);
+
+        if (fromDefaults)
+            experimentalSnugWizardJSON.RestoreFromJSON(jc);
+    }
+
+    public override void ResetToDefault()
+    {
+        base.ResetToDefault();
+
+        experimentalSnugWizardJSON.SetValToDefault();
     }
 }

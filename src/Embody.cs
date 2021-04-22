@@ -594,7 +594,7 @@ public class Embody : MVRScript, IEmbody
         }
         if (version > SaveFormat.Version)
         {
-            SuperController.LogError("Embody: This scene was saved with a more recent Embody version than the one you have install. Please get the latest version.");
+            SuperController.LogError("Embody: This scene was saved with a more recent Embody version than the one you have installed. Please get the latest version.");
             return false;
         }
 
