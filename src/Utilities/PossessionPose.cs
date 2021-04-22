@@ -35,8 +35,10 @@ public class PossessionPose
         var hip = _context.containingAtom.freeControllers.First(fc => fc.name == "hipControl");
         var lFoot = _context.containingAtom.freeControllers.First(fc => fc.name == "lFootControl");
         var rFoot = _context.containingAtom.freeControllers.First(fc => fc.name == "rFootControl");
+        /*
         var lToe = _context.containingAtom.freeControllers.First(fc => fc.name == "lToeControl");
         var rToe = _context.containingAtom.freeControllers.First(fc => fc.name == "rToeControl");
+        */
         var lHand = _context.containingAtom.freeControllers.First(fc => fc.name == "lHandControl");
         var rHand = _context.containingAtom.freeControllers.First(fc => fc.name == "rHandControl");
 

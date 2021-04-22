@@ -12,7 +12,7 @@ public interface IEmbody
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void Refresh();
-    IEnumerator RefreshDelayed();
+    void RefreshDelayed();
     void LoadFromDefaults();
     void StoreJSON(JSONClass json, bool includeProfile);
     bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults);
@@ -32,7 +32,7 @@ public class Embody : MVRScript, IEmbody
     private EmbodyScaleChangeReceiver _scaleChangeReceiver;
     private NavigationRigSnapshot _navigationRigSnapshot;
     private Coroutine _restoreNavigationRigCoroutine;
-    private List<IEmbodyModule> _enabledModules = new List<IEmbodyModule>();
+    private readonly List<IEmbodyModule> _enabledModules = new List<IEmbodyModule>();
     private JSONArray _poseJSON;
 
     public override void Init()
@@ -99,7 +99,7 @@ public class Embody : MVRScript, IEmbody
                 _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
                 _screensManager.Add(EyeTargetSettingsScreen.ScreenName, new EyeTargetSettingsScreen(_context, eyeTargetModule));
                 _screensManager.Add(WizardScreen.ScreenName, new WizardScreen(_context, wizardModule));
-                _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context, this, worldScaleModule, snugModule));
+                _screensManager.Add(ImportExportScreen.ScreenName, new ImportExportScreen(_context));
                 _screensManager.Add(MoreScreen.ScreenName, new MoreScreen(_context));
                 _screensManager.Add(DiagnosticsScreen.ScreenName, new DiagnosticsScreen(_context, diagnosticsModule));
             }
@@ -254,7 +254,12 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
-    public IEnumerator RefreshDelayed()
+    public void RefreshDelayed()
+    {
+        StartCoroutine(RefreshDelayedCo());
+    }
+
+    private IEnumerator RefreshDelayedCo()
     {
         if (!activeJSON.val) yield break;
 

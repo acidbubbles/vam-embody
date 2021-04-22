@@ -4,10 +4,6 @@
 
     public string lastError { get; set; }
 
-    protected WizardStepBase()
-    {
-    }
-
     protected WizardStepBase(EmbodyContext context)
     {
         this.context = context;

@@ -6,7 +6,7 @@ public static class SuperControllerExtensions
     {
         var up = sc.navigationRig.up;
 
-        sc.navigationRig.rotation = ComputeRotation(sc.navigationRig, controller, motionControl, up);
+        sc.navigationRig.rotation = ComputeRotation(sc.navigationRig, controller, up);
 
         if (alignControl)
             controller.AlignTo(motionControl.controllerPointTransform, true);
@@ -29,12 +29,13 @@ public static class SuperControllerExtensions
         }
     }
 
+    // ReSharper disable once UnusedParameter.Global
     public static void AlignTransformAndController(this SuperController _, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, bool alignControl = true)
     {
         var transform = motionControl.currentMotionControl;
         var up = transform.up;
 
-        transform.rotation = ComputeRotation(transform, controller, motionControl, up);
+        transform.rotation = ComputeRotation(transform, controller, up);
 
         if (alignControl)
             controller.AlignTo(motionControl.controllerPointTransform, true);
@@ -44,7 +45,7 @@ public static class SuperControllerExtensions
         transform.position = position;
     }
 
-    private static Quaternion ComputeRotation(Transform transform, FreeControllerV3 controller, MotionControllerWithCustomPossessPoint motionControl, Vector3 up)
+    private static Quaternion ComputeRotation(Transform transform, FreeControllerV3 controller, Vector3 up)
     {
         var forwardPossessAxis = controller.GetForwardPossessAxis();
         var upPossessAxis = controller.GetUpPossessAxis();

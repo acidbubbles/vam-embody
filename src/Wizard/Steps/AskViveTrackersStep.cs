@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class AskViveTrackersStep : WizardStepBase, IWizardStep
 {
     private readonly List<IWizardStep> _steps;
-    private readonly int _useViveTrackers;
+
     public string helpText => @"<b>Vive trackers</b> were detected.
 
 Possession will now be activated only for your head and hands.
@@ -13,11 +13,10 @@ Press <b>Next</b> to continue.
 
 Skip this if you want to setup Vive trackers manually.".TrimStart();
 
-    public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps, int useViveTrackers)
+    public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps)
         : base(context)
     {
         _steps = steps;
-        _useViveTrackers = useViveTrackers;
     }
 
     public bool Apply()

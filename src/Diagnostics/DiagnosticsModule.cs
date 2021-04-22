@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
@@ -77,6 +78,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         viveTracker8 = GetDebugAtom($"{_embodyDebugPrefix}{MotionControlNames.ViveTrackerPrefix}8");
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
     private IEnumerator DebugCo()
     {
         if (_once) yield break;

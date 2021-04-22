@@ -7,16 +7,17 @@ public interface IEyeTargetModule : IEmbodyModule
 {
     JSONStorableBool trackMirrorsJSON { get; }
     JSONStorableBool trackWindowCameraJSON { get; }
-    JSONStorableFloat frustrumJSON { get; }
-    JSONStorableFloat shakeMinDurationJSON { get; }
-    JSONStorableFloat shakeMaxDurationJSON { get; }
-    JSONStorableFloat shakeRangeJSON { get; }
+    JSONStorableFloat frustumJSON { get; }
+    JSONStorableFloat saccadeMinDurationJSON { get; }
+    JSONStorableFloat saccadeMaxDurationJSON { get; }
+    JSONStorableFloat saccadeRangeJSON { get; }
     void Rescan();
 }
 
 public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 {
     public const string Label = "Eye Target";
+
     private const float _mirrorScanSpan = 0.5f;
     private const float _objectScanSpan = 0.1f;
     private const float _naturalLookDistance = 0.4f;
@@ -35,10 +36,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
     public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackWindowCamera", true);
-    public JSONStorableFloat frustrumJSON { get; } = new JSONStorableFloat("FrustrumFOV", 16f, 0f, 45f, true);
-    public JSONStorableFloat shakeMinDurationJSON { get; } = new JSONStorableFloat("ShakeMinDuration", 0.2f, 0f, 1f, false);
-    public JSONStorableFloat shakeMaxDurationJSON { get; } = new JSONStorableFloat("ShakeMaxDuration", 0.5f, 0f, 1f, false);
-    public JSONStorableFloat shakeRangeJSON { get; } = new JSONStorableFloat("ShakeRange", 0.015f, 0f, 0.1f, true);
+    public JSONStorableFloat frustumJSON { get; } = new JSONStorableFloat("FrustumFOV", 16f, 0f, 45f, true);
+    public JSONStorableFloat saccadeMinDurationJSON { get; } = new JSONStorableFloat("SaccadeMinDuration", 0.2f, 0f, 1f, false);
+    public JSONStorableFloat saccadeMaxDurationJSON { get; } = new JSONStorableFloat("SaccadeMaxDuration", 0.5f, 0f, 1f, false);
+    public JSONStorableFloat saccadeRangeJSON { get; } = new JSONStorableFloat("SaccadeRange", 0.015f, 0f, 0.1f, true);
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -50,7 +51,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Vector3 _eyeTargetRestorePosition;
     private EyesControl.LookMode _eyeBehaviorRestoreLookMode;
     private readonly Plane[] _frustrumPlanes = new Plane[6];
-    private readonly List<EyeTargetReference> _lockTargetCandidates = new List<EyeTargetReference>();
     private BoxCollider _lookAtMirror;
     private float _lookAtMirrorDistance;
     private float _nextMirrorScanTime;
@@ -70,8 +70,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
         trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        shakeMinDurationJSON.setCallbackFunction = val => shakeMaxDurationJSON.valNoCallback = Mathf.Max(val, shakeMaxDurationJSON.val);
-        shakeMaxDurationJSON.setCallbackFunction = val => shakeMinDurationJSON.valNoCallback = Mathf.Min(val, shakeMinDurationJSON.val);
+        saccadeMinDurationJSON.setCallbackFunction = val => saccadeMaxDurationJSON.valNoCallback = Mathf.Max(val, saccadeMaxDurationJSON.val);
+        saccadeMaxDurationJSON.setCallbackFunction = val => saccadeMinDurationJSON.valNoCallback = Mathf.Min(val, saccadeMinDurationJSON.val);
     }
 
     public override bool Validate()
@@ -158,7 +158,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         _lookAtMirror = null;
         _mirrors.Clear();
         _objects.Clear();
-        _lockTargetCandidates.Clear();
         _nextMirrorScanTime = 0f;
         _nextObjectsScanTime = 0f;
         _nextShakeTime = 0f;
@@ -197,9 +196,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private void SelectShake()
     {
         if (_nextShakeTime > Time.time) return;
-        _nextShakeTime = Time.time + Random.Range(shakeMinDurationJSON.val, shakeMaxDurationJSON.val);
+        _nextShakeTime = Time.time + Random.Range(saccadeMinDurationJSON.val, saccadeMaxDurationJSON.val);
 
-        _shakeValue = Random.insideUnitSphere * shakeRangeJSON.val;
+        _shakeValue = Random.insideUnitSphere * saccadeRangeJSON.val;
     }
 
     private void ScanObjects(Vector3 eyesCenter)
@@ -209,11 +208,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         if (_objects.Count == 0) return;
 
-        var originalCount = _lockTargetCandidates.Count;
-        _lockTargetCandidates.Clear();
-
         //var planes = GeometryUtility.CalculateFrustumPlanes(SuperController.singleton.centerCameraTarget.targetCamera);
-        CalculateFrustum(eyesCenter, _head.forward, frustrumJSON.val * Mathf.Deg2Rad, 1.3f, 0.15f, 10f, _frustrumPlanes);
+        CalculateFrustum(eyesCenter, _head.forward, frustumJSON.val * Mathf.Deg2Rad, 1.3f, 0.15f, 10f, _frustrumPlanes);
 
         Transform closest = null;
         var closestDistance = float.PositiveInfinity;
@@ -224,11 +220,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             if (!GeometryUtility.TestPlanesAABB(_frustrumPlanes, bounds)) continue;
             var distance = Vector3.SqrMagnitude(bounds.center - eyesCenter);
             if (distance > _lookAtMirrorDistance) continue;
-            _lockTargetCandidates.Add(new EyeTargetReference
-            {
-                transform = o,
-                distance = distance
-            });
             if (distance < closestDistance)
             {
                 closestDistance = distance;
@@ -236,10 +227,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             }
         }
 
-        if (_lockTargetCandidates.Count != originalCount)
-        {
-            _lockTarget = _lockTargetCandidates.Count > 0 ? closest : null;
-        }
+        _lockTarget = closest;
     }
 
     private void ScanMirrors(Vector3 eyesCenter)
@@ -330,10 +318,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.StoreJSON(jc);
         trackWindowCameraJSON.StoreJSON(jc);
-        frustrumJSON.StoreJSON(jc);
-        shakeMinDurationJSON.StoreJSON(jc);
-        shakeMaxDurationJSON.StoreJSON(jc);
-        shakeRangeJSON.StoreJSON(jc);
+        frustumJSON.StoreJSON(jc);
+        saccadeMinDurationJSON.StoreJSON(jc);
+        saccadeMaxDurationJSON.StoreJSON(jc);
+        saccadeRangeJSON.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
@@ -342,10 +330,10 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.RestoreFromJSON(jc);
         trackWindowCameraJSON.RestoreFromJSON(jc);
-        frustrumJSON.RestoreFromJSON(jc);
-        shakeMinDurationJSON.RestoreFromJSON(jc);
-        shakeMaxDurationJSON.RestoreFromJSON(jc);
-        shakeRangeJSON.RestoreFromJSON(jc);
+        frustumJSON.RestoreFromJSON(jc);
+        saccadeMinDurationJSON.RestoreFromJSON(jc);
+        saccadeMaxDurationJSON.RestoreFromJSON(jc);
+        saccadeRangeJSON.RestoreFromJSON(jc);
     }
 
     public override void ResetToDefault()
@@ -354,15 +342,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
         trackMirrorsJSON.SetValToDefault();
         trackWindowCameraJSON.SetValToDefault();
-        frustrumJSON.SetValToDefault();
-        shakeMinDurationJSON.SetValToDefault();
-        shakeMaxDurationJSON.SetValToDefault();
-        shakeRangeJSON.SetValToDefault();
-    }
-
-    public struct EyeTargetReference
-    {
-        public float distance;
-        public Transform transform;
+        frustumJSON.SetValToDefault();
+        saccadeMinDurationJSON.SetValToDefault();
+        saccadeMaxDurationJSON.SetValToDefault();
+        saccadeRangeJSON.SetValToDefault();
     }
 }

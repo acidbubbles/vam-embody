@@ -19,13 +19,13 @@
 
         CreateSpacer().height = 40f;
 
-        CreateSlider(_eyeTarget.frustrumJSON).label = "Field Of View";
+        CreateSlider(_eyeTarget.frustumJSON).label = "Field Of View";
         CreateToggle(_eyeTarget.trackWindowCameraJSON).label = "Look At Window Camera";
 
         CreateSpacer(true).height = 40f;
 
-        CreateSlider(_eyeTarget.shakeMinDurationJSON, true).label = "Shake Min. Duration (s)";
-        CreateSlider(_eyeTarget.shakeMaxDurationJSON, true).label = "Shake Max. Duration (s)";
-        CreateSlider(_eyeTarget.shakeRangeJSON, true).label = "Shake Range";
+        CreateSlider(_eyeTarget.saccadeMinDurationJSON, true).label = "Shake Min. Duration (s)";
+        CreateSlider(_eyeTarget.saccadeMaxDurationJSON, true).label = "Shake Max. Duration (s)";
+        CreateSlider(_eyeTarget.saccadeRangeJSON, true).label = "Shake Range";
     }
 }

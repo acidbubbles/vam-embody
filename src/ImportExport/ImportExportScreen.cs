@@ -4,18 +4,12 @@ public class ImportExportScreen : ScreenBase, IScreen
 {
     public const string ScreenName = "Import / Export";
 
-    private readonly IEmbody _embody;
-    private readonly IWorldScaleModule _worldScale;
-    private readonly ISnugModule _snug;
-    private Storage _storage;
+    private readonly Storage _storage;
 
-    public ImportExportScreen(EmbodyContext context, IEmbody embody, IWorldScaleModule worldScale, ISnugModule snug)
+    public ImportExportScreen(EmbodyContext context)
         : base(context)
     {
         _storage = new Storage(context);
-        _embody = embody;
-        _worldScale = worldScale;
-        _snug = snug;
     }
 
     public void Show()

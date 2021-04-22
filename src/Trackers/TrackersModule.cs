@@ -17,7 +17,6 @@ public interface ITrackersModule : IEmbodyModule
     MotionControllerWithCustomPossessPoint leftHandMotionControl { get; }
     MotionControllerWithCustomPossessPoint rightHandMotionControl { get; }
     List<FreeControllerV3WithSnapshot> controllers { get; }
-    void TryBindTrackers();
     void BindFingers();
     void ReleaseFingers();
     void ClearPersonalData();

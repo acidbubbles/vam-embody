@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
 public static class VisualCuesHelper
 {
-    public static List<GameObject> Cues = new List<GameObject>();
+    public static readonly List<GameObject> Cues = new List<GameObject>();
 
     public static GameObject Cross(Color color)
     {

@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-public class WorldScaleSettingsScreen : ScreenBase, IScreen
+﻿public class WorldScaleSettingsScreen : ScreenBase, IScreen
 {
     private readonly IWorldScaleModule _worldScale;
     public const string ScreenName = WorldScaleModule.Label;

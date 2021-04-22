@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-public class RecordPlayerHeightStep : WizardStepBase, IWizardStep
+﻿public class RecordPlayerHeightStep : WizardStepBase, IWizardStep
 {
     private readonly PlayerMeasurements _playerMeasurements;
 

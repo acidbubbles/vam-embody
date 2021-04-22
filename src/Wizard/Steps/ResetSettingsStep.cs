@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-public class ResetSettingsStep : WizardStepBase, IWizardStep
+﻿public class ResetSettingsStep : WizardStepBase, IWizardStep
 {
     public string helpText => (@"
 All Embody settings will now be <b>reset</b> to their default value, except for hand and head adjustments.

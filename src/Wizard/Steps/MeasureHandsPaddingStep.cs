@@ -20,11 +20,15 @@ Put your hands together like you're praying, and press Next when ready.
 
     public override void Update()
     {
-        _leftHandControl.control.position = _head.position + _head.transform.forward * 0.3f + Vector3.down * 0.2f + _head.transform.right * -0.01f;
+        var headTransform = _head.transform;
+        var right = headTransform.right;
+        var forward = headTransform.forward;
+
+        _leftHandControl.control.position = _head.position + forward * 0.3f + Vector3.down * 0.2f + right * -0.01f;
         _leftHandControl.control.eulerAngles = _head.rotation.eulerAngles;
         _leftHandControl.control.Rotate(new Vector3(180, 0, 90 + 10));
 
-        _rightHandControl.control.position = _head.position + _head.transform.forward * 0.3f + Vector3.down * 0.2f + _head.transform.right * 0.01f;
+        _rightHandControl.control.position = _head.position + forward * 0.3f + Vector3.down * 0.2f + right * 0.01f;
         _rightHandControl.control.eulerAngles = _head.rotation.eulerAngles;
         _rightHandControl.control.Rotate(new Vector3(180, 0, 270 - 10));
     }

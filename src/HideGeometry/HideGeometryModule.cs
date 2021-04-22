@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Handlers;
 using SimpleJSON;
@@ -261,6 +262,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         RegisterHandlers();
     }
 
+    [SuppressMessage("ReSharper", "RedundantJumpStatement")]
     public void Update()
     {
         try

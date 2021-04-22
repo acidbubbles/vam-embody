@@ -13,7 +13,6 @@ public interface IWizard : IEmbodyModule
     JSONStorableString statusJSON { get; }
     JSONStorableBool experimentalSnugWizardJSON { get; }
     bool isRunning { get; }
-    bool forceReopen { get; set; }
     void StartWizard();
     void StopWizard(string message = null);
     void Next();
@@ -243,7 +242,6 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
                     {
                         i--;
                         error = true;
-                        continue;
                     }
                 }
             }
@@ -296,7 +294,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         steps.Add(new ResetPoseStep(context));
         steps.Add(new RecordPlayerHeightStep(context));
         if (useViveTrackers > 0)
-            steps.Add(new AskViveTrackersStep(context, steps, useViveTrackers));
+            steps.Add(new AskViveTrackersStep(context, steps));
         if (experimentalSnugWizardJSON.val)
         {
             if (context.LeftHand() != null && context.RightHand() != null)

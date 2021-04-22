@@ -11,9 +11,6 @@ public class SnugHand
     public MotionControllerWithCustomPossessPoint motionControl;
     public FreeControllerV3Snapshot snapshot { get; set; }
     public readonly Vector3[] visualCueLinePoints = new Vector3[2];
-    public float pull;
-    public float pullVelocity;
-    public float previousDistance;
 
     public FreeControllerV3 controller
     {

@@ -38,21 +38,21 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateSlider(new JSONStorableFloat(
             "Rotation X",
             0f,
-            (float val) => _passenger.rotationOffset = new Vector3(val, _passenger.rotationOffset.y, _passenger.rotationOffset.z),
+            val => _passenger.rotationOffset = new Vector3(val, _passenger.rotationOffset.y, _passenger.rotationOffset.z),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.x }, true);
         CreateSlider(new JSONStorableFloat(
             "Rotation Y",
             0f,
-            (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, val, _passenger.rotationOffset.z),
+            val => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, val, _passenger.rotationOffset.z),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.y }, true);
         CreateSlider(new JSONStorableFloat(
             "Rotation Z",
             0f,
-            (float val) => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, _passenger.rotationOffset.y, val),
+            val => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, _passenger.rotationOffset.y, val),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.z }, true);
@@ -60,7 +60,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateSlider(new JSONStorableFloat(
             "Position X",
             0f,
-            (float val) => _passenger.positionOffset = new Vector3(val, _passenger.positionOffset.y, _passenger.positionOffset.z),
+            val => _passenger.positionOffset = new Vector3(val, _passenger.positionOffset.y, _passenger.positionOffset.z),
             -2f,
             2f,
             false
@@ -68,7 +68,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateSlider(new JSONStorableFloat(
             "Position Y",
             0f,
-            (float val) => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, val, _passenger.positionOffset.z),
+            val => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, val, _passenger.positionOffset.z),
             -2f,
             2f,
             false
@@ -76,7 +76,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateSlider(new JSONStorableFloat(
             "Position Z",
             0f,
-            (float val) => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, _passenger.positionOffset.y, val),
+            val => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, _passenger.positionOffset.y, val),
             -2f,
             2f,
             false

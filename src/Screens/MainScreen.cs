@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class MainScreen : ScreenBase, IScreen
 {
@@ -75,8 +74,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
             var selectToggle = CreateToggle(module.selectedJSON, false);
             selectToggle.label = $"Select {module.label}";
             var label = module.label;
-            /*var configureButton = */CreateConfigButton(label, $"Configure {label}..."/*, module.selectedJSON.val*/);
-            // selectToggle.toggle.onValueChanged.AddListener(val => configureButton.button.interactable = val);
+            CreateConfigButton(label, $"Configure {label}...");
         }
 
         if (context.containingAtom.type == "Person")
@@ -88,14 +86,12 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         }
     }
 
-    private UIDynamicButton CreateConfigButton(string screenName, string btnLabel/*, bool interactable = true*/)
+    private void CreateConfigButton(string screenName, string btnLabel)
     {
         var configureButton = CreateButton(btnLabel, true);
         configureButton.buttonText.alignment = TextAnchor.MiddleLeft;
         configureButton.buttonText.GetComponent<RectTransform>().offsetMin = new Vector2(20, 0f);
         configureButton.buttonColor = new Color(0.8f, 0.7f, 0.8f);
         configureButton.button.onClick.AddListener(() => screensManager.Show(screenName));
-        // configureButton.button.interactable = interactable;
-        return configureButton;
     }
 }
