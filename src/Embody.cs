@@ -113,7 +113,7 @@ public class Embody : MVRScript, IEmbody
                 if (val)
                     Activate();
                 else
-                    Deactivate();
+                    Deactivate(true);
             };
             RegisterBool(activeJSON);
 
@@ -145,7 +145,24 @@ public class Embody : MVRScript, IEmbody
             return;
         }
 
-        // TODO: Immediately clear others
+        try
+        {
+            foreach (var atom in SuperController.singleton.GetAtoms())
+            {
+                foreach (var storableId in atom.GetStorableIDs())
+                {
+                    if (!storableId.EndsWith("Embody")) continue;
+                    var storable = atom.GetStorableByID(storableId);
+                    if (storable == null) continue;
+                    if (storable == this) continue;
+                    storable.SendMessage(nameof(EmbodyDeactivateImmediate), SendMessageOptions.DontRequireReceiver);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            SuperController.LogError($"Embody: Failed deactivating other instances of Embody. {e}");
+        }
 
         _enabledModules.Clear();
 
@@ -201,7 +218,7 @@ public class Embody : MVRScript, IEmbody
             Utilities.MarkForRecord(_context);
     }
 
-    private void Deactivate()
+    private void Deactivate(bool defer)
     {
         activeJSON.valNoCallback = false;
 
@@ -236,7 +253,16 @@ public class Embody : MVRScript, IEmbody
         }
 
         _navigationRigSnapshot?.Restore();
-        _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
+        if (defer)
+            _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
+        else
+            _navigationRigSnapshot = null;
+    }
+
+    public void EmbodyDeactivateImmediate()
+    {
+        if (!activeJSON.val) return;
+        Deactivate(false);
     }
 
     public void Refresh()
