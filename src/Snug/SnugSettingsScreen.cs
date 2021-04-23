@@ -32,7 +32,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         if (!context.embody.activeJSON.val)
             _snug.autoSetup.AutoSetup();
 
-        CreateToggle(_snug.importDefaultsOnLoad, true).label = "* Use Defaults (Don't Save)";
+        CreateToggle(_snug.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
         CreateToggle(_snug.previewSnugOffsetJSON, true).label = "Preview Offset (Real v.s. In-Game)";
         CreateToggle(_snug.disableSelfGrabJSON, true).label = "Disable Person Grab*";
         CreateSlider(_snug.falloffDistanceJSON, true).label = "Falloff Distance*";

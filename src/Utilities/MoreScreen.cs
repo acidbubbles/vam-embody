@@ -16,10 +16,6 @@ public class MoreScreen : ScreenBase, IScreen
         CreateText(new JSONStorableString("", "Additional tools and options can be found here.\n\nOptions marked with an asterisk will only be saved in your profile."), true);
 
         CreateSpacer().height = 20f;
-        CreateTitle("Create Atoms");
-        CreateButton("Create Mirror").button.onClick.AddListener(() => SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
-
-        CreateSpacer().height = 20f;
         CreateTitle("Animation");
         CreateToggle(context.automation.autoArmForRecord).label = "Auto Arm On Active*";
         CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(() => Utilities.StartRecord(context));

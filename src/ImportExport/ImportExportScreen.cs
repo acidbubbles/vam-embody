@@ -1,4 +1,5 @@
 ﻿using MVR.FileManagementSecure;
+using UnityEngine;
 
 public class ImportExportScreen : ScreenBase, IScreen
 {
@@ -16,7 +17,8 @@ public class ImportExportScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms.\n\nMake Default will save your settings so that whenever you load this plugin on a new atom, the parameters will be automatically applied.\n\nTo clear your height and body proportions from this instance, e.g. before making a scene public, use Clear Personal Data."), true);
 
-        var loadPresetUI = CreateButton("Import Profile", true);
+        CreateTitle("Import / Export", true);
+        var loadPresetUI = CreateButton("Import Profile...", true);
         loadPresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
@@ -24,7 +26,7 @@ public class ImportExportScreen : ScreenBase, IScreen
             SuperController.singleton.GetMediaPathDialog(_storage.LoadProfile, SaveFormat.SaveExt, SaveFormat.SaveFolder, false, true, false, null, false, shortcuts);
         });
 
-        var savePresetUI = CreateButton("Export Profile", true);
+        var savePresetUI = CreateButton("Export Profile...", true);
         savePresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
@@ -44,6 +46,7 @@ public class ImportExportScreen : ScreenBase, IScreen
         });
 
         CreateSpacer(true).height = 40f;
+        CreateTitle("Default Profile", true);
 
         var makeDefaults = CreateButton("Save As Default Profile", true);
         makeDefaults.button.onClick.AddListener(_storage.MakeDefault);
@@ -55,9 +58,9 @@ public class ImportExportScreen : ScreenBase, IScreen
         clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
 
         CreateSpacer(true).height = 40f;
+        CreateTitle("Clear Data", true);
 
         CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(_storage.ClearPersonalData);
-
         CreateButton("Reset To Built-In Defaults", true).button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
     }
 }

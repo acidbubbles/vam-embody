@@ -13,7 +13,7 @@
     {
         CreateText(new JSONStorableString("", "Changes the world scale based on your real height and the in-game model height.\n\nUse the Record Player Height button while standing straight to get accurate world scale."), true);
 
-        CreateToggle(_worldScale.importDefaultsOnLoad, true).label = "* Use Defaults (Don't Save)";
+        CreateToggle(_worldScale.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
         CreateScrollablePopup(_worldScale.worldScaleMethodJSON, true).label = "Method*";
         CreateSlider(_worldScale.playerHeightJSON, true).label = "Player Height*";
         CreateButton("Record Player Height (stand straight)", true).button.onClick.AddListener(RecordPlayerHeight);

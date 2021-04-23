@@ -13,19 +13,21 @@
     {
         CreateText(new JSONStorableString("", "Moves the eye target so you will be looking back when looking at mirrors and window camera.\n\nFor advanced features, check out the Glance plugin by AcidBubbles."), true);
 
-        CreateSpacer().height = 40f;
+        CreateSpacer().height = 20f;
+        CreateTitle("Look Targets");
 
         CreateToggle(_eyeTarget.trackMirrorsJSON).label = "Look At Mirrors";
-
-        CreateSpacer().height = 40f;
-
-        CreateSlider(_eyeTarget.frustumJSON).label = "Field Of View";
         CreateToggle(_eyeTarget.trackWindowCameraJSON).label = "Look At Window Camera";
 
-        CreateSpacer(true).height = 40f;
+        CreateSpacer().height = 20f;
+        CreateTitle("Field Of View");
 
-        CreateSlider(_eyeTarget.saccadeMinDurationJSON, true).label = "Shake Min. Duration (s)";
-        CreateSlider(_eyeTarget.saccadeMaxDurationJSON, true).label = "Shake Max. Duration (s)";
-        CreateSlider(_eyeTarget.saccadeRangeJSON, true).label = "Shake Range";
+        CreateSlider(_eyeTarget.frustumJSON).label = "Field Of View Angle";
+
+        CreateTitle("Eye Saccade", true);
+
+        CreateSlider(_eyeTarget.saccadeMinDurationJSON, true).label = "Saccade Min. Duration";
+        CreateSlider(_eyeTarget.saccadeMaxDurationJSON, true).label = "Saccade Max. Duration";
+        CreateSlider(_eyeTarget.saccadeRangeJSON, true).label = "Saccade Range";
     }
 }

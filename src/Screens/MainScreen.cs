@@ -15,14 +15,16 @@ public class MainScreen : ScreenBase, IScreen
     {
         if (context.containingAtom.type == "Person")
         {
-            CreateSpacer().height = 38f;
+            CreateSpacer().height = 21f;
 
             var wizardBtn = CreateButton("Launch Wizard...");
             wizardBtn.button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
             if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.EyeDistanceMethod)
                 wizardBtn.buttonColor = Color.green;
+            CreateButton("Create Mirror").button.onClick.AddListener(() => context.plugin.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
+            CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() => new PossessionPose(context).Apply());
 
-            CreateSpacer().height = 37f;
+            CreateSpacer().height = 64;
 
             CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
@@ -62,9 +64,13 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         }
 
         if (context.containingAtom.type == "Person")
+        {
+            CreateButton("Manage Presets...", true).button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
+            CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
             CreateScrollablePopup(context.embody.presetsJSON, true);
+        }
 
-        CreateSpacer(true).height = 6f;
+        CreateSpacer(true).height = 15f;
 
         foreach (var module in _modules)
         {
@@ -79,10 +85,8 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
 
         if (context.containingAtom.type == "Person")
         {
-            CreateConfigButton(MoreScreen.ScreenName, "<i>More tools & options...</i>");
-            CreateConfigButton(ImportExportScreen.ScreenName, $"<i>Import, Export & Default Settings...</i>");
+            CreateConfigButton(MoreScreen.ScreenName, "<i>Other settings...</i>");
             CreateSpacer(true).height = 40f;
-            CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
         }
     }
 

@@ -32,4 +32,12 @@
         protected UIDynamicTextField CreateText(JSONStorableString jss, bool rightSide = false) => _root.CreateText(jss, rightSide);
         protected UIDynamic CreateTitle(string text, bool rightSide = false) => _root.CreateTitle(text, rightSide);
         protected UIDynamic CreateSpacer(bool rightSide = false) => _root.CreateSpacer(rightSide);
+
+        protected UIDynamicToggle CreateToggle(JSONStorableBool jsb, bool rightSide, string labelOn, string labelOff)
+        {
+            var toggle = CreateToggle(jsb, rightSide);
+            toggle.label = jsb.val ? labelOn : labelOff;
+            toggle.toggle.onValueChanged.AddListener(on => toggle.label = on ? labelOn : labelOff);
+            return toggle;
+        }
     }
