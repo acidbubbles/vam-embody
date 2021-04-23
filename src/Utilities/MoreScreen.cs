@@ -54,9 +54,14 @@ public class MoreScreen : ScreenBase, IScreen
         patreonBtn.button.onClick.AddListener(() => Application.OpenURL("https://www.patreon.com/acidbubbles"));
 
         CreateSpacer(true).height = 20f;
-        CreateTitle("Advanced", true);
-        CreateToggle(context.wizard.experimentalSnugWizardJSON).label = "Experimental: Snug Wizard";
-        CreateButton("<i>Diagnostics...</i>", true).button.onClick.AddListener(() =>
+        CreateTitle("Experimental Flags", true);
+        CreateToggle(context.wizard.experimentalViveTrackersWizardJSON, true).label = "Vive Trackers Wizard";
+        CreateToggle(context.wizard.experimentalSnugWizardJSON, true).label = "Snug Wizard";
+
+        CreateSpacer(true).height = 20f;
+        CreateTitle("Diagnostics", true);
+        CreateToggle(context.diagnostics.enabledJSON, true).label = "Diagnostics: Record Diag. Data";
+        CreateButton("<i>Open Diagnostics...</i>", true).button.onClick.AddListener(() =>
         {
             screensManager.Show(DiagnosticsScreen.ScreenName);
         });

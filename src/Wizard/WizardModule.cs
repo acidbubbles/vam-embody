@@ -13,6 +13,7 @@ public interface IWizard : IEmbodyModule
     JSONStorableString statusJSON { get; }
     JSONStorableBool experimentalSnugWizardJSON { get; }
     bool isRunning { get; }
+    JSONStorableBool experimentalViveTrackersWizardJSON { get; }
     void StartWizard();
     void StopWizard(string message = null);
     void Next();
@@ -60,6 +61,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
     public WizardStatusChangedEvent statusChanged { get; } = new WizardStatusChangedEvent();
     public JSONStorableString statusJSON { get; } = new JSONStorableString("WizardStatus", "") {isStorable = false};
     public JSONStorableBool experimentalSnugWizardJSON { get; } = new JSONStorableBool("ExperimentalSnugWizard", false);
+    public JSONStorableBool experimentalViveTrackersWizardJSON { get; } = new JSONStorableBool("ExperimentalViveTrackersWizard", false);
     public bool isRunning => _coroutine != null;
     public bool forceReopen { get; set; } = true;
 
@@ -293,8 +295,13 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         steps.Add(new ResetSettingsStep(context));
         steps.Add(new ResetPoseStep(context));
         steps.Add(new RecordPlayerHeightStep(context));
-        if (useViveTrackers > 0)
-            steps.Add(new AskViveTrackersStep(context, steps));
+        if (experimentalViveTrackersWizardJSON.val)
+        {
+            if (useViveTrackers > 0)
+            {
+                steps.Add(new AskViveTrackersStep(context, steps));
+            }
+        }
         if (experimentalSnugWizardJSON.val)
         {
             if (context.LeftHand() != null && context.RightHand() != null)
@@ -336,7 +343,10 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         base.StoreJSON(jc, includeProfile);
 
         if (includeProfile)
+        {
             experimentalSnugWizardJSON.StoreJSON(jc);
+            experimentalViveTrackersWizardJSON.StoreJSON(jc);
+        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
@@ -344,7 +354,10 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         base.RestoreFromJSON(jc, fromDefaults);
 
         if (fromDefaults)
+        {
             experimentalSnugWizardJSON.RestoreFromJSON(jc);
+            experimentalViveTrackersWizardJSON.RestoreFromJSON(jc);
+        }
     }
 
     public override void ResetToDefault()
@@ -352,5 +365,6 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         base.ResetToDefault();
 
         experimentalSnugWizardJSON.SetValToDefault();
+        experimentalViveTrackersWizardJSON.SetValToDefault();
     }
 }
