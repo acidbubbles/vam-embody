@@ -11,7 +11,7 @@
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Hides the face and hair when possessing a model, except in mirrors."), true);
+        CreateText(new JSONStorableString("", "Hides the face and hair from the VR camera when possessing a model, so it's still visible in mirrors.\n\nHair and clothing visibility is determined based on their tags and label."), true);
 
         CreateToggle(_hideGeometry.hideFaceJSON, true).label = "Hide face (skin, eyes, eyelashes)";
         CreateToggle(_hideGeometry.hideHairJSON, true).label = "Hide hair";

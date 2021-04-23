@@ -14,26 +14,29 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateTitle("Control");
+        CreateToggle(_passenger.positionLockJSON).label = "Lock Camera Position";
+        CreateToggle(_passenger.rotationLockJSON).label = "Lock Camera Rotation";
+        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Controller Rotation";
+
+        CreateTitle("Options");
         CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open";
+        CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll";
+        CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
+
         if (context.containingAtom.type == "Person")
         {
+            CreateTitle("Look At");
             CreateToggle(_passenger.lookAtJSON).label = "Look At Eye Target";
             CreateButton("Select Eye Target").button.onClick.AddListener(() =>
             {
                 var eyeTarget = context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
                 if (eyeTarget != null) SuperController.singleton.SelectController(eyeTarget);
             });
-
+            CreateSlider(_passenger.lookAtWeightJSON).label = "Look At Weight";
         }
 
-        if (context.containingAtom.type == "Person")
-            CreateSlider(_passenger.lookAtWeightJSON).label = "Look At Weight";
-        CreateToggle(_passenger.positionLockJSON).label = "Control Camera Position";
-        CreateToggle(_passenger.rotationLockJSON).label = "Control Camera Rotation";
-        CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll";
-        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "Camera Controls Rotation";
-        CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
-
+        CreateTitle("Rotation", true);
         CreateSlider(_passenger.rotationSmoothingJSON, true);
         CreateSlider(new JSONStorableFloat(
             "Rotation X",
@@ -56,6 +59,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.z }, true);
+        CreateTitle("Position", true);
         CreateSlider(_passenger.positionSmoothingJSON, true);
         CreateSlider(new JSONStorableFloat(
             "Position X",
