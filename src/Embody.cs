@@ -428,14 +428,14 @@ public class Embody : MVRScript, IEmbody
     {
         var jss = new JSONStorableStringChooser("Presets", new List<string>
         {
-            "Legacy Possession",
             "Improved Possession",
             "Improved Possession w/ Leap",
             "Snug",
             "Passenger",
             "Passenger w/ Hands",
             "Passenger w/ Leap",
-            "Leap Only"
+            "Leap Fingers Only",
+            "Legacy Possession",
         }, "(Select To Apply)", "Apply Preset")
         {
             isStorable = false
