@@ -56,7 +56,7 @@ Whenever you add this plugin, you default profile will be loaded. Options with a
         }
         else
         {
-            CreateSpacer().height = 26f;
+            CreateSpacer().height = 50f;
 
             CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, only Passenger is available.

@@ -95,11 +95,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         };
         allowPersonHeadRotationJSON.setCallbackFunction = val =>
         {
-            if (_eyeTargetControl == null)
-            {
-                allowPersonHeadRotationJSON.valNoCallback = false;
-                return;
-            }
             if (val) rotationLockJSON.valNoCallback = false;
             Reapply();
         };
