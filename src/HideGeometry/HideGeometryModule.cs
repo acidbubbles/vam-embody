@@ -236,6 +236,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         if (c.displayName.IndexOf("brows", StringComparison.OrdinalIgnoreCase) > -1) return true;
         if (c.displayName.IndexOf("hair", StringComparison.OrdinalIgnoreCase) > -1) return true;
         if (c.displayName.IndexOf("face", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (c.displayName.IndexOf("lips", StringComparison.OrdinalIgnoreCase) > -1) return true;
         if (c.tagsArray == null) return false;
         if (c.tagsArray.Length == 0) return false;
         if (Array.IndexOf(c.tagsArray, "head") > -1) return true;
