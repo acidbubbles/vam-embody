@@ -96,30 +96,19 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         return motionControl;
     }
 
-    public override void PreActivate()
-    {
-        if (headMotionControl.enabled && !context.passenger.selectedJSON.val)
-        {
-            AdjustHeadToEyesOffset();
-        }
-    }
-
     private void AdjustHeadToEyesOffset()
     {
-        var motionControl = motionControls.First(mc => mc.name == MotionControlNames.Head);
-        var controller = FindController(motionControl)?.controller;
+        var controller = FindController(headMotionControl)?.controller;
         if (controller == null) return;
 
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.localPosition + eyes.First(eye => eye.name == "rEye").transform.localPosition) / 2f;
-        motionControl.offsetControllerBase = -eyesCenter;
+        headMotionControl.offsetControllerBase = -eyesCenter;
     }
 
     public override void OnEnable()
     {
         base.OnEnable();
-
-        SuperController.singleton.ClearPossess();
 
         TryBindTrackers();
     }
@@ -158,6 +147,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             // Reduce the stretch between the head and the eye by matching the controller and the head bone
             controller.control.position = context.bones.First(b => b.name == "head").transform.position;
+            AdjustHeadToEyesOffset();
             if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
             {
                 SuperController.singleton.AlignRigAndController(controller, motionControl);

@@ -18,15 +18,15 @@ public static class SuperControllerExtensions
         sc.navigationRig.position = position;
         sc.playerHeightAdjust += upDelta;
 
-        if (sc.MonitorCenterCamera != null)
-        {
-            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
-            monitorCenterCameraTransform.LookAt(controller.transform.position + controller.GetForwardPossessAxis());
-            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
-            localEulerAngles.y = 0f;
-            localEulerAngles.z = 0f;
-            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
-        }
+        // if (sc.MonitorCenterCamera != null)
+        // {
+        //     var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
+        //     monitorCenterCameraTransform.LookAt(controller.transform.position + controller.GetForwardPossessAxis());
+        //     var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
+        //     localEulerAngles.y = 0f;
+        //     localEulerAngles.z = 0f;
+        //     monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
+        // }
     }
 
     // ReSharper disable once UnusedParameter.Global

@@ -145,6 +145,8 @@ public class Embody : MVRScript, IEmbody
             return;
         }
 
+        SuperController.singleton.ClearPossess();
+
         try
         {
             foreach (var atom in SuperController.singleton.GetAtoms())
