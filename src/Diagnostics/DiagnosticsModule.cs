@@ -208,6 +208,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
     public void Log(string message)
     {
+        if (!enabled) return;
         _logs.Add($"[INF] {Time.realtimeSinceStartup:0.00} {message}");
     }
 

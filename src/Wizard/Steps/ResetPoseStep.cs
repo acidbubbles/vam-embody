@@ -21,6 +21,7 @@ Skip if you'd like to run the wizard using the current pose instead.".TrimStart(
         new PossessionPose(context).Apply();
         if (SuperController.singleton.GetAtoms().All(a => a.type != "Glass"))
             SuperController.singleton.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom));
+        context.diagnostics.Log("Wizard: Reset Pose");
         return true;
     }
 }

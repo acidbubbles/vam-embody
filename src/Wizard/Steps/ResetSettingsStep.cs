@@ -33,6 +33,7 @@ Only skip this if you know what you are doing!").TrimStart();
         context.trackers.rightHandMotionControl.offsetControllerCustom = rightOffsetControllerCustom;
         context.trackers.rightHandMotionControl.rotateControllerCustom = rightRotateControllerCustom;
         context.trackers.rightHandMotionControl.rotateAroundTrackerCustom = rightRotateAroundTrackerCustom;
+        context.diagnostics.Log("Wizard: Reset Settings");
         return true;
     }
 }

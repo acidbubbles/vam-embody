@@ -170,6 +170,8 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
 
     private IEnumerator WizardCoroutine()
     {
+        context.diagnostics.TakeSnapshot("Start Wizard");
+
         context.embody.activeJSON.val = false;
 
         yield return 0;
