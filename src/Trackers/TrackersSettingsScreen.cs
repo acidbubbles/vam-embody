@@ -12,6 +12,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     private readonly ITrackersModule _trackers;
     private CollapsibleSection _section;
     private JSONStorableStringChooser _motionControlJSON;
+    private JSONStorableBool _handsToggleJSON;
     private readonly TrackerAutoSetup _trackerAutoSetup;
     private MotionControllerWithCustomPossessPoint _currentMotionControl;
 
@@ -26,9 +27,38 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers.\n\nHands have no effect when Snug is enabled, and Head has no effect when Passenger is enabled."), true);
 
+        CreateTitle("Settings", true);
         CreateToggle(_trackers.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
+
+        CreateSpacer().height = 20f;
+        CreateTitle("Utilities", true);
+
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
+        if (context.trackers.viveTrackers.Any(v => v.SyncMotionControl()))
+        {
+            CreateButton("Align <i>All</i> Vive Trackers...", true).button.onClick.AddListener(() =>
+            {
+                _trackerAutoSetup.AlignAll(
+                    () =>
+                    {
+                        if (_currentMotionControl == null || !MotionControlNames.IsViveTracker(_currentMotionControl.name)) return;
+                        ShowMotionControl(_currentMotionControl);
+                        context.Refresh();
+                        context.embody.activeJSON.val = true;
+                    });
+            });
+        }
+
+        _handsToggleJSON = new JSONStorableBool("Enable Hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
+        CreateToggle(_handsToggleJSON, true);
+        _handsToggleJSON.setCallbackFunction = val =>
+        {
+            _trackers.leftHandMotionControl.enabled = val;
+            _trackers.rightHandMotionControl.enabled = val;
+            if (_currentMotionControl != null && MotionControlNames.IsHands(_currentMotionControl.name))
+                ShowMotionControl(_currentMotionControl);
+        };
 
         _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
@@ -90,27 +120,14 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             });
         }
 
-        if (context.trackers.viveTrackers.Any())
-        {
-            _section.CreateButton("Align <i>All</i> Vive Trackers...", true).button.onClick.AddListener(() =>
-            {
-                _trackerAutoSetup.AlignAll(
-                    () =>
-                    {
-                        if (_currentMotionControl == null || !MotionControlNames.IsViveTracker(_currentMotionControl.name)) return;
-                        ShowMotionControl(_currentMotionControl);
-                        context.Refresh();
-                        context.embody.activeJSON.val = true;
-                    });
-            });
-        }
-
         _section.CreateToggle(new JSONStorableBool(
             $"{motionControl.name} Enabled",
             motionControl.enabled,
             val =>
             {
                 motionControl.enabled = val;
+                if (MotionControlNames.IsHands(motionControl.name))
+                    _handsToggleJSON.valNoCallback = _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled;
                 context.Refresh();
             }
         ));
