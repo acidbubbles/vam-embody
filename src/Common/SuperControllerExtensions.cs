@@ -18,15 +18,15 @@ public static class SuperControllerExtensions
         sc.navigationRig.position = position;
         sc.playerHeightAdjust += upDelta;
 
-        // if (sc.MonitorCenterCamera != null)
-        // {
-        //     var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
-        //     monitorCenterCameraTransform.LookAt(controller.transform.position + controller.GetForwardPossessAxis());
-        //     var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
-        //     localEulerAngles.y = 0f;
-        //     localEulerAngles.z = 0f;
-        //     monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
-        // }
+        if (sc.MonitorCenterCamera != null)
+        {
+            var monitorCenterCameraTransform = sc.MonitorCenterCamera.transform;
+            monitorCenterCameraTransform.LookAt(controller.transform.position + controller.GetForwardPossessAxis());
+            var localEulerAngles = monitorCenterCameraTransform.localEulerAngles;
+            localEulerAngles.y = 0f;
+            localEulerAngles.z = 0f;
+            monitorCenterCameraTransform.localEulerAngles = localEulerAngles;
+        }
     }
 
     // ReSharper disable once UnusedParameter.Global
@@ -52,6 +52,11 @@ public static class SuperControllerExtensions
 
         var fromDirection = Vector3.ProjectOnPlane(transform.forward, up);
         var toDirection = Vector3.ProjectOnPlane(forwardPossessAxis, up);
+        if (Vector3.Dot(fromDirection, toDirection) < -0.98f)
+        {
+            transform.Rotate(0f, 180f, 0f);
+            toDirection = -toDirection;
+        }
         if (Vector3.Dot(upPossessAxis, up) < 0f && Vector3.Dot(transform.up, up) > 0f)
             toDirection = -toDirection;
 
