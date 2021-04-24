@@ -17,10 +17,10 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateTitle("Control");
         CreateToggle(_passenger.positionLockJSON).label = "Lock Camera Position";
         CreateToggle(_passenger.rotationLockJSON).label = "Lock Camera Rotation";
-        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Controller Rotation";
+        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Driven Rotation";
 
         CreateTitle("Options");
-        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open";
+        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open*";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll";
         CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
 
