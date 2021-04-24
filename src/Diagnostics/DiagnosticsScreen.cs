@@ -112,6 +112,7 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         if (snapshot == null) return;
         var sb = new StringBuilder();
         sb.AppendLine($"<b>Snapshot</b>:\n{snapshot.name}");
+        sb.AppendLine($"<b>Active</b>:\n{snapshot.active?.ToString() ?? "Unknown"}");
         sb.AppendLine($"<b>Pose</b>:\n{((snapshot.poseJSON?.Count ?? 0) > 0 ? $"{snapshot.poseJSON.Count} nodes" : "None")}");
         sb.AppendLine($"<b>Player Height Adjust</b>:\n{snapshot.playerHeightAdjust}");
         sb.AppendLine($"<b>World Scale</b>:\n{snapshot.worldScale}");

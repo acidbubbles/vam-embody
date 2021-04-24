@@ -5,6 +5,7 @@ using UnityEngine;
 public class EmbodyDebugSnapshot
 {
     public string name;
+    public bool? active;
     public JSONClass pluginJSON;
     public JSONArray poseJSON;
     public float worldScale;
@@ -28,6 +29,7 @@ public class EmbodyDebugSnapshot
         var jc = new JSONClass
         {
             {"Name", name ?? "Unnamed"},
+            {"Active", active == null ? "Null" : active.ToString() },
             {"VRMode", vrMode ?? "Unspecified"},
             {"WorldScale", worldScale.ToString(NumberFormatInfo.InvariantInfo)},
             {"PlayerHeightAdjust", playerHeightAdjust.ToString(NumberFormatInfo.InvariantInfo)},
@@ -54,6 +56,7 @@ public class EmbodyDebugSnapshot
         return new EmbodyDebugSnapshot
         {
             name = jc.HasKey("Name") ? jc["Name"].Value : null,
+            active = jc.HasKey("Active") && jc["Active"].Value != "Null" ? jc["Active"].AsBool : (bool?) null,
             vrMode = jc.HasKey("VRMode") ? jc["VRMode"].Value : null,
             worldScale = jc.HasKey("WorldScale") ? jc["WorldScale"].AsFloat : 0f,
             playerHeightAdjust = jc.HasKey("PlayerHeightAdjust") ? jc["PlayerHeightAdjust"].AsFloat : 0f,
