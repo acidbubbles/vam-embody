@@ -67,7 +67,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         {
             CreateButton("Manage Presets...", true).button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
             CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
-            CreateScrollablePopup(context.embody.presetsJSON, true);
+            CreateFilterablePopup(context.embody.presetsJSON, true);
         }
 
         CreateSpacer(true).height = 15f;
