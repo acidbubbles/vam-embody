@@ -6,6 +6,8 @@ public class WizardScreen : ScreenBase, IScreen
     public const string ScreenName = WizardModule.Label;
     private readonly IWizard _wizard;
     private UnityAction<bool> _onStatusChanged;
+    private UIDynamicToggle _experimentalViveTrackersToggle;
+    private UIDynamicToggle _experimentalSnugToggle;
 
     public WizardScreen(EmbodyContext context, IWizard wizard)
         : base(context)
@@ -15,6 +17,12 @@ public class WizardScreen : ScreenBase, IScreen
 
     public void Show()
     {
+        CreateTitle("Experimental Flags");
+        _experimentalViveTrackersToggle = CreateToggle(context.wizard.experimentalViveTrackersWizardJSON);
+        _experimentalViveTrackersToggle.label = "Vive Trackers Wizard";
+        _experimentalSnugToggle = CreateToggle(context.wizard.experimentalSnugWizardJSON);
+        _experimentalSnugToggle.label = "Snug Wizard";
+
         var statusText = CreateText(_wizard.statusJSON, true);
         statusText.height = 980;
 
@@ -42,6 +50,8 @@ public class WizardScreen : ScreenBase, IScreen
             stopButton.button.interactable = isRunning;
             skipButton.button.interactable = isRunning;
             context.embody.activeToggle.toggle.interactable = !isRunning;
+            _experimentalViveTrackersToggle.toggle.interactable = !isRunning;
+            _experimentalSnugToggle.toggle.interactable = !isRunning;
         };
         _wizard.statusChanged.AddListener(_onStatusChanged);
         _onStatusChanged(_wizard.isRunning);
