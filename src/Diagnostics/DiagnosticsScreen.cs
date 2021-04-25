@@ -49,11 +49,18 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         });
         takeSnapshot.button.interactable = context.diagnostics.enabledJSON.val;
 
+        var clearDiagnosticsData = CreateButton("Clear Diagnostics Data");
+        clearDiagnosticsData.button.onClick.AddListener(() =>
+        {
+            _diagnostics.ResetToDefault();
+            logsJSON.val = "Logs cleared!";
+        });
+
         if (!Input.GetKey(KeyCode.LeftControl)) return;
 
         RefreshSnapshots(snapshotsJSON);
 
-        CreateButton("Show Logged Errors").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No errors log were recorded" : string.Join(", ", logs));
+        CreateButton("Show Logs").button.onClick.AddListener(() => logsJSON.val = logs.Length == 0 ? "No logs were recorded" : string.Join("\r\n", logs));
 
         CreateScrollablePopup(snapshotsJSON);
 

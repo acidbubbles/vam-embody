@@ -88,6 +88,8 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
             return;
         }
 
+        context.diagnostics.Log("Wizard: Start");
+
         _navigationRigSnapshot = NavigationRigSnapshot.Snap();
 
         _poseJSON = containingAtom.GetStorableIDs()
@@ -109,6 +111,8 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
     public void StopWizard(string message = null)
     {
         if (!enabledJSON.val) return;
+
+        context.diagnostics.Log("Wizard: Stop");
 
         StopCoroutine(_coroutine);
         _coroutine = null;
@@ -202,6 +206,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
 
             try
             {
+                context.diagnostics.Log($"Wizard: Enter {_step}");
                 _step.Enter();
             }
             catch (Exception exc)
