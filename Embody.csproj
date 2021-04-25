@@ -128,13 +128,14 @@
     <Compile Include="src\Utilities\Utilities.cs" />
     <Compile Include="src\Utilities\MoreScreen.cs" />
     <Compile Include="src\Wizard\IWizardStep.cs" />
-    <Compile Include="src\Wizard\Steps\AskViveTrackersStep.cs" />
+    <Compile Include="src\Wizard\Steps\ExperimentalAskViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\AskSnugStep.cs" />
     <Compile Include="src\Wizard\Steps\FinishSnugSetupStep.cs" />
-    <Compile Include="src\Wizard\Steps\FinishViveSetupStep.cs" />
+    <Compile Include="src\Wizard\Steps\ExperimentalFinishViveSetupStep.cs" />
     <Compile Include="src\Wizard\Steps\MakeDefaultsStep.cs" />
     <Compile Include="src\Wizard\Steps\MeasureArmsAtRestStep.cs" />
-    <Compile Include="src\Wizard\Steps\RecordViveTrackersFeetStep.cs" />
+    <Compile Include="src\Wizard\Steps\ExperimentalRecordViveTrackersFeetStep.cs" />
+    <Compile Include="src\Wizard\Steps\ExperimentalRecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\RecordViveTrackersStep.cs" />
     <Compile Include="src\Wizard\Steps\ResetPoseStep.cs" />
     <Compile Include="src\Wizard\Steps\ResetSettingsStep.cs" />

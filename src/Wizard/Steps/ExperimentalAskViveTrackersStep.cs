@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class AskViveTrackersStep : WizardStepBase, IWizardStep
+public class ExperimentalAskViveTrackersStep : WizardStepBase, IWizardStep
 {
     private readonly List<IWizardStep> _steps;
 
@@ -13,7 +13,7 @@ Press <b>Next</b> to continue.
 
 Skip this if you want to setup Vive trackers manually.".TrimStart();
 
-    public AskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps)
+    public ExperimentalAskViveTrackersStep(EmbodyContext context, List<IWizardStep> steps)
         : base(context)
     {
         _steps = steps;
@@ -32,11 +32,11 @@ Skip this if you want to setup Vive trackers manually.".TrimStart();
         context.trackers.previewTrackerOffsetJSON.val = true;
 
         var idx = _steps.IndexOf(this);
-        if (idx == -1) throw new InvalidOperationException($"{nameof(AskViveTrackersStep)} was not found in the steps list");
+        if (idx == -1) throw new InvalidOperationException($"{nameof(ExperimentalAskViveTrackersStep)} was not found in the steps list");
 
-        _steps.Insert(++idx, new RecordViveTrackersFeetStep(context));
-        _steps.Insert(++idx, new RecordViveTrackersStep(context));
-        _steps.Insert(++idx, new FinishViveSetupStep(context));
+        _steps.Insert(++idx, new ExperimentalRecordViveTrackersFeetStep(context));
+        _steps.Insert(++idx, new ExperimentalRecordViveTrackersStep(context));
+        _steps.Insert(++idx, new ExperimentalFinishViveSetupStep(context));
 
         return true;
     }

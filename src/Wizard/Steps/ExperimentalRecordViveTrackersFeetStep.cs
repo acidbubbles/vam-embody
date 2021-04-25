@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-public class RecordViveTrackersFeetStep : WizardStepBase, IWizardStep
+public class ExperimentalRecordViveTrackersFeetStep : WizardStepBase, IWizardStep
 {
     private float _heightAdjust;
 
@@ -13,7 +13,7 @@ Skip if you don't plan on using feet trackers.
 
 You can also press Escape to align without possession.".TrimStart();
 
-    public RecordViveTrackersFeetStep(EmbodyContext context)
+    public ExperimentalRecordViveTrackersFeetStep(EmbodyContext context)
         : base(context)
     {
 
@@ -35,7 +35,7 @@ You can also press Escape to align without possession.".TrimStart();
 
     public bool Apply()
     {
-        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.Before");
+        context.diagnostics.TakeSnapshot($"{nameof(ExperimentalRecordViveTrackersFeetStep)}.{nameof(Apply)}.Before");
         var feet = context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("FootControl")).ToList();
         var eyes = context.head.position.y;
         var floor = context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.PlayerHeightMethod ? eyes - (context.worldScale.playerHeightJSON.val * SuperController.singleton.worldScale) : 0f;
@@ -66,7 +66,7 @@ You can also press Escape to align without possession.".TrimStart();
         }
 
         context.Refresh();
-        context.diagnostics.TakeSnapshot($"{nameof(RecordViveTrackersFeetStep)}.{nameof(Apply)}.After");
+        context.diagnostics.TakeSnapshot($"{nameof(ExperimentalRecordViveTrackersFeetStep)}.{nameof(Apply)}.After");
         return true;
     }
 }

@@ -31,7 +31,7 @@ public class DiagnosticsScreen : ScreenBase, IScreen
         CreateToggle(enabledJSON).label = "Record Diagnostics Data";
 
         var logs = _diagnostics.logs.ToArray();
-        var logsJSON = new JSONStorableString("", logs.Length == 0 ? "Enabling diagnostics will record all VaM errors and your physical position during possession.\n\n<b>ONLY enable this if Acidbubbles asks you to.</b>\n\nAlso keep in mind this will give information about your height and body size, if you are not comfortable sharing this information, please keep diagnostics off." : string.Join(", ", logs));
+        var logsJSON = new JSONStorableString("", logs.Length == 0 ? "Enabling diagnostics will record all VaM errors and your physical position during possession.\n\n<b>ONLY enable this if Acidbubbles asks you to.</b>\n\nAlso keep in mind this will give information about your height and body size, if you are not comfortable sharing this information, please keep diagnostics off." : string.Join("\r\n", logs));
         CreateText(logsJSON, true).height = 1200f;
 
         var snapshotsJSON = new JSONStorableStringChooser("",
@@ -88,10 +88,6 @@ public class DiagnosticsScreen : ScreenBase, IScreen
             snapshotsJSON.choices = context.diagnostics.snapshots.Select(s => s.name).ToList();
             snapshotsJSON.val = $"{context.diagnostics.snapshots.Count} snapshots";
             logsJSON.val = "";
-        });
-        CreateButton("Record Vive Trackers").button.onClick.AddListener(() =>
-        {
-            new RecordViveTrackersStep(context).Apply();
         });
     }
 

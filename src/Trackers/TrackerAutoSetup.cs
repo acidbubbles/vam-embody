@@ -113,23 +113,7 @@ public class TrackerAutoSetup
         }
 
         _context.diagnostics.TakeSnapshot($"{nameof(TrackerAutoSetup)}.{nameof(AlignAll)}.Before");
-        foreach (var mc in _context.trackers.viveTrackers)
-        {
-            mc.ResetToDefault();
-        }
-        var hashSet = new HashSet<string>();
-        foreach (var mc in _context.trackers.viveTrackers)
-        {
-            if (!mc.SyncMotionControl()) continue;
-            AttachToClosestNode(mc);
-            if (!hashSet.Add(mc.mappedControllerName))
-            {
-                var lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
-                SuperController.LogError(lastError);
-                _context.diagnostics.Log(lastError);
-                mc.mappedControllerName = null;
-            }
-        }
+        AlignAllNow();
         onComplete();
         _context.Refresh();
         _context.diagnostics.TakeSnapshot($"{nameof(TrackerAutoSetup)}.{nameof(AlignAll)}.After");
@@ -137,5 +121,29 @@ public class TrackerAutoSetup
         SuperController.singleton.helpText = $"Mapped {_context.trackers.viveTrackers.Count(t => t.mappedControllerName != null)} vive controllers.";
         yield return new WaitForSecondsRealtime(1f);
         SuperController.singleton.helpText = "";
+    }
+
+    public string AlignAllNow()
+    {
+        foreach (var mc in _context.trackers.viveTrackers)
+        {
+            mc.ResetToDefault();
+        }
+
+        var hashSet = new HashSet<string>();
+        string lastError = null;
+        foreach (var mc in _context.trackers.viveTrackers)
+        {
+            if (!mc.SyncMotionControl()) continue;
+            AttachToClosestNode(mc);
+            if (!hashSet.Add(mc.mappedControllerName))
+            {
+                lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
+                SuperController.LogError(lastError);
+                _context.diagnostics.Log(lastError);
+                mc.mappedControllerName = null;
+            }
+        }
+        return lastError;
     }
 }

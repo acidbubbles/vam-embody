@@ -1,4 +1,4 @@
-﻿public class FinishViveSetupStep : WizardStepBase, IWizardStep
+﻿public class ExperimentalFinishViveSetupStep : WizardStepBase, IWizardStep
 {
     public string helpText => @"
 <b>Vive trackers setup is complete</b>.
@@ -9,7 +9,7 @@ If you exit the wizard to make adjustments, you can return and skip previous ste
 
 Press <b>Next</b> when you are ready to continue.".TrimStart();
 
-    public FinishViveSetupStep(EmbodyContext context)
+    public ExperimentalFinishViveSetupStep(EmbodyContext context)
         : base(context)
     {
     }

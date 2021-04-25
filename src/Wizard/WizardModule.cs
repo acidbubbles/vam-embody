@@ -297,13 +297,14 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         steps.Add(new ResetSettingsStep(context));
         steps.Add(new ResetPoseStep(context));
         steps.Add(new RecordPlayerHeightStep(context));
-        if (experimentalViveTrackersWizardJSON.val)
+        if (useViveTrackers > 0)
         {
-            if (useViveTrackers > 0)
-            {
-                steps.Add(new AskViveTrackersStep(context, steps));
-            }
+            if (experimentalViveTrackersWizardJSON.val)
+                steps.Add(new ExperimentalAskViveTrackersStep(context, steps));
+            else
+                steps.Add(new RecordViveTrackersStep(context));
         }
+
         if (experimentalSnugWizardJSON.val)
         {
             if (context.LeftHand() != null && context.RightHand() != null)
