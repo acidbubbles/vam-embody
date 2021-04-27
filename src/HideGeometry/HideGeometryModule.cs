@@ -348,18 +348,18 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
         hideFaceJSON.StoreJSON(jc);
         hideHairJSON.StoreJSON(jc);
         hideClothingJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
         hideFaceJSON.RestoreFromJSON(jc);
         hideHairJSON.RestoreFromJSON(jc);

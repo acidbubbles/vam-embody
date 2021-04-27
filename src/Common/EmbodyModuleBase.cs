@@ -59,15 +59,14 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
         enabledJSON.valNoCallback = false;
     }
 
-    public virtual void StoreJSON(JSONClass jc, bool includeProfile)
+    public virtual void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
         selectedJSON.StoreJSON(jc);
     }
 
-    public virtual void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public virtual void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        if (!fromDefaults)
-            selectedJSON.RestoreFromJSON(jc);
+        selectedJSON.RestoreFromJSON(jc);
     }
 
     public virtual void ResetToDefault()

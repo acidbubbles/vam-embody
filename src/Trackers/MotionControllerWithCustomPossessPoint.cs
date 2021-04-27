@@ -157,29 +157,36 @@ public class MotionControllerWithCustomPossessPoint
         };
     }
 
-    public JSONClass GetJSON()
+    public JSONClass GetJSON(bool exportDefaults)
     {
-        var motionControlJSON = new JSONClass
+        if (!exportDefaults)
         {
+            return new JSONClass
+            {
+                {"Enabled", enabled ? "true" : "false"},
+            };
+        }
+
+        return new JSONClass
+        {
+            {"Enabled", enabled ? "true" : "false"},
             {"OffsetPosition", offsetControllerCustom.ToJSON()},
             {"OffsetRotation", rotateControllerCustom.ToJSON()},
             {"PossessPointRotation", rotateAroundTrackerCustom.ToJSON()},
             {"Controller", mappedControllerName},
-            {"Enabled", enabled ? "true" : "false"},
             {"ControlRotation", controlRotation ? "true" : "false"},
             {"ControlPosition", controlPosition ? "true" : "false"},
             {"UseLeap", useLeapPositioning ? "true" : "false"},
             {"FingersTracking", fingersTracking ? "true" : "false"},
             {"KeepCurrentPhysicsHoldStrength", keepCurrentPhysicsHoldStrength ? "true" : "false"},
         };
-        return motionControlJSON;
     }
 
-    public void RestoreFromJSON(JSONNode jc, bool doImportDefaults)
+    public void RestoreFromJSON(JSONNode jc, bool importDefaults)
     {
         enabled = jc["Enabled"].Value != "false";
         if (mappedControllerName == "") mappedControllerName = null;
-        if (!doImportDefaults) return;
+        if (!importDefaults) return;
         offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
         rotateAroundTrackerCustom = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);

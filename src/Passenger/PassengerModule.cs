@@ -296,9 +296,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
+
+        if (toProfile)
+            exitOnMenuOpen.StoreJSON(jc);
 
         lookAtJSON.StoreJSON(jc);
         lookAtWeightJSON.StoreJSON(jc);
@@ -311,14 +314,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         eyesToHeadDistanceOffsetJSON.StoreJSON(jc);
         jc["PositionOffset"] = positionOffset.ToJSON();
         jc["RotationOffset"] = rotationOffset.ToJSON();
-
-        if (includeProfile)
-            exitOnMenuOpen.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
+
+        if(fromProfile)
+            exitOnMenuOpen.RestoreFromJSON(jc);
 
         lookAtJSON.RestoreFromJSON(jc);
         lookAtWeightJSON.RestoreFromJSON(jc);
@@ -331,9 +334,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         eyesToHeadDistanceOffsetJSON.RestoreFromJSON(jc);
         positionOffset = jc["PositionOffset"].ToVector3(Vector3.zero);
         rotationOffset = jc["RotationOffset"].ToVector3(Vector3.zero);
-
-        if(fromDefaults)
-            exitOnMenuOpen.RestoreFromJSON(jc);
     }
 
     public override void ResetToDefault()

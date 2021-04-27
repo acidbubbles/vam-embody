@@ -312,9 +312,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         Rescan();
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
         trackMirrorsJSON.StoreJSON(jc);
         trackWindowCameraJSON.StoreJSON(jc);
@@ -324,9 +324,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         saccadeRangeJSON.StoreJSON(jc);
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
         trackMirrorsJSON.RestoreFromJSON(jc);
         trackWindowCameraJSON.RestoreFromJSON(jc);

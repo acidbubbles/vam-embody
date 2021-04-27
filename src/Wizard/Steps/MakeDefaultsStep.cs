@@ -28,7 +28,7 @@ Skip to keep the defaults untouched.".TrimStart();
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
         var jc = new JSONClass();
-        context.embody.StoreJSON(jc, true);
+        context.embody.StoreJSON(jc, true, false);
         context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
         return true;
     }

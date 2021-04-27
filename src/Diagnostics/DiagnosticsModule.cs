@@ -217,7 +217,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         if (!enabled) return;
         Log(snapshotName);
         var pluginJSON = new JSONClass();
-        context.embody.StoreJSON(pluginJSON, true);
+        context.embody.StoreJSON(pluginJSON, true, true);
         pluginJSON.Remove(storeId);
         snapshots.Add(new EmbodyDebugSnapshot
         {
@@ -299,9 +299,11 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         CreateFakeTrackers(snapshot);
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
+
+        if (!toScene) return;
 
         if (_logs.Count > 0)
             jc["Logs"] = _logs;
@@ -314,11 +316,12 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
         }
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
-        if (fromDefaults) return;
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
+        if (!fromScene) return;
         if (_restored) return;
+        if (fromProfile) return;
         _restored = true;
         if (jc.HasKey("Logs"))
             _logs = jc["Logs"].AsArray;

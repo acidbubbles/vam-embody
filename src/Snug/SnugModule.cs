@@ -7,7 +7,7 @@ using UnityEngine;
 
 public interface ISnugModule : IEmbodyModule
 {
-    JSONStorableBool importDefaultsOnLoad { get; }
+    JSONStorableBool useProfileJSON { get; }
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffDistanceJSON { get; }
     JSONStorableFloat falloffMidPointJSON { get; }
@@ -27,7 +27,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public SnugAutoSetup autoSetup { get; private set; }
 
-    public JSONStorableBool importDefaultsOnLoad { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
+    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool previewSnugOffsetJSON { get; } = new JSONStorableBool("PreviewSnugOffset", false);
     public JSONStorableBool disableSelfGrabJSON { get; } = new JSONStorableBool("DisablePersonGrab", true);
     public JSONStorableFloat falloffDistanceJSON { get; } = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
@@ -483,16 +483,16 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     #region Load / Save
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
-        if (!includeProfile)
+        if (toScene)
         {
-            importDefaultsOnLoad.StoreJSON(jc);
+            useProfileJSON.StoreJSON(jc);
         }
 
-        if (!importDefaultsOnLoad.val || includeProfile)
+        if (toScene && !useProfileJSON.val || toProfile)
         {
             falloffDistanceJSON.StoreJSON(jc);
             disableSelfGrabJSON.StoreJSON(jc);
@@ -516,16 +516,16 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        if (!fromDefaults)
+        if (fromScene)
         {
-            importDefaultsOnLoad.RestoreFromJSON(jc);
+            useProfileJSON.RestoreFromJSON(jc);
         }
 
-        if (importDefaultsOnLoad.val || !fromDefaults)
+        if (fromScene && !useProfileJSON.val || fromProfile)
         {
             disableSelfGrabJSON.RestoreFromJSON(jc);
             falloffDistanceJSON.RestoreFromJSON(jc);
@@ -542,7 +542,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                     */
                     anchor.realLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.realLifeOffset);
                     anchor.realLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.realLifeSize);
-                    if (!fromDefaults)
+                    if (!fromProfile)
                         anchor.active = anchorJSON["Active"]?.Value != "false";
                     anchor.Update();
                 }
@@ -554,7 +554,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.ResetToDefault();
 
-        importDefaultsOnLoad.SetValToDefault();
+        useProfileJSON.SetValToDefault();
         disableSelfGrabJSON.SetValToDefault();
         falloffDistanceJSON.SetValToDefault();
 

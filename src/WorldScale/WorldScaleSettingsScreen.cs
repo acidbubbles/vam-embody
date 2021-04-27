@@ -17,7 +17,7 @@
         CreateSlider(_worldScale.playerHeightJSON).label = "Player Height*";
         CreateButton("Record Player Height (stand straight)").button.onClick.AddListener(RecordPlayerHeight);
 
-        CreateToggle(_worldScale.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
+        CreateToggle(_worldScale.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
 
         CreateSpacer(true).height = 20f;
 

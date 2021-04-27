@@ -17,7 +17,7 @@ public class Storage
         if (string.IsNullOrEmpty(path)) return;
         if (!path.EndsWith($".{SaveFormat.SaveExt}", StringComparison.InvariantCultureIgnoreCase)) path += $".{SaveFormat.SaveExt}";
         var jc = new JSONClass();
-        _context.embody.StoreJSON(jc, true);
+        _context.embody.StoreJSON(jc, true, false);
         _context.plugin.SaveJSON(jc, path);
     }
 
@@ -26,14 +26,14 @@ public class Storage
         if (string.IsNullOrEmpty(path)) return;
         _context.embody.activeJSON.val = false;
         var jc = _context.plugin.LoadJSON(path).AsObject;
-        _context.embody.RestoreFromJSONInternal(jc, false);
+        _context.embody.RestoreFromJSONInternal(jc, false, false, true);
     }
 
     public void MakeDefault()
     {
         FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
         var jc = new JSONClass();
-        _context.embody.StoreJSON(jc, true);
+        _context.embody.StoreJSON(jc, true, false);
         jc.Remove(_context.diagnostics.storeId);
         _context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
     }

@@ -346,22 +346,22 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         return false;
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
-        if (includeProfile)
+        if (toProfile)
         {
             experimentalSnugWizardJSON.StoreJSON(jc);
             experimentalViveTrackersWizardJSON.StoreJSON(jc);
         }
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        if (fromDefaults)
+        if (fromProfile)
         {
             experimentalSnugWizardJSON.RestoreFromJSON(jc);
             experimentalViveTrackersWizardJSON.RestoreFromJSON(jc);

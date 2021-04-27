@@ -93,27 +93,27 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         }
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
         jc["ToggleKey"] = toggleKey.ToString();
-        if (includeProfile)
+        if (toProfile)
         {
             autoArmForRecord.val = true;
             takeOverVamPossess.val = true;
         }
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
         var toggleKeyString = jc["ToggleKey"].Value;
         if (!string.IsNullOrEmpty(toggleKeyString) && toggleKeyString != KeyCode.None.ToString())
             toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString);
 
-        if (fromDefaults)
+        if (fromProfile)
         {
             autoArmForRecord.RestoreFromJSON(jc);
             takeOverVamPossess.RestoreFromJSON(jc);

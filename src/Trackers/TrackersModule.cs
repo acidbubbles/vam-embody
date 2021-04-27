@@ -7,7 +7,7 @@ using UnityEngine;
 
 public interface ITrackersModule : IEmbodyModule
 {
-    JSONStorableBool importDefaultsOnLoad { get; }
+    JSONStorableBool useProfileJSON { get; }
     JSONStorableBool restorePoseAfterPossessJSON { get; }
     JSONStorableBool previewTrackerOffsetJSON { get; }
     List<MotionControllerWithCustomPossessPoint> motionControls { get; }
@@ -43,7 +43,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         .Where(t => MotionControlNames.IsHeadOrHands(t.name));
 
     public List<FreeControllerV3WithSnapshot> controllers { get; } = new List<FreeControllerV3WithSnapshot>();
-    public JSONStorableBool importDefaultsOnLoad { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
+    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool restorePoseAfterPossessJSON { get; } = new JSONStorableBool("RestorePoseAfterPossess", true);
     public JSONStorableBool previewTrackerOffsetJSON { get; } = new JSONStorableBool("PreviewTrackerOffset", false);
 
@@ -294,37 +294,38 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             mc.ResetToDefault(true);
     }
 
-    public override void StoreJSON(JSONClass jc, bool includeProfile)
+    public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, includeProfile);
+        base.StoreJSON(jc, toProfile, toScene);
 
-        if (!includeProfile)
+        if (toScene)
         {
-            importDefaultsOnLoad.StoreJSON(jc);
+            useProfileJSON.StoreJSON(jc);
         }
 
-        if (!importDefaultsOnLoad.val || includeProfile)
+        var doExportProfile = toScene && !useProfileJSON.val || toProfile;
+        if (doExportProfile)
         {
             restorePoseAfterPossessJSON.StoreJSON(jc);
-
-            var motionControlsJSON = new JSONClass();
-            foreach (var motionControl in motionControls)
-                motionControlsJSON[motionControl.name] = motionControl.GetJSON();
-            jc["MotionControls"] = motionControlsJSON;
         }
+
+        var motionControlsJSON = new JSONClass();
+        foreach (var motionControl in motionControls)
+            motionControlsJSON[motionControl.name] = motionControl.GetJSON(doExportProfile);
+        jc["MotionControls"] = motionControlsJSON;
     }
 
-    public override void RestoreFromJSON(JSONClass jc, bool fromDefaults)
+    public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromDefaults);
+        base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        if (!fromDefaults)
+        if (fromScene)
         {
-            importDefaultsOnLoad.RestoreFromJSON(jc);
+            useProfileJSON.RestoreFromJSON(jc);
         }
 
-        var doImportDefaults = importDefaultsOnLoad.val || !fromDefaults;
-        if (doImportDefaults)
+        var doImportProfile = fromScene && !useProfileJSON.val || fromProfile;
+        if (doImportProfile)
         {
             restorePoseAfterPossessJSON.RestoreFromJSON(jc);
         }
@@ -333,7 +334,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             var motionControlJSON = motionControlsJSON[motionControlName];
             var motionControl = motionControls.FirstOrDefault(fc => fc.name == motionControlName);
-            motionControl?.RestoreFromJSON(motionControlJSON, doImportDefaults);
+            motionControl?.RestoreFromJSON(motionControlJSON, doImportProfile);
         }
     }
 
@@ -341,7 +342,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.ResetToDefault();
 
-        importDefaultsOnLoad.SetValToDefault();
+        useProfileJSON.SetValToDefault();
         restorePoseAfterPossessJSON.SetValToDefault();
         previewTrackerOffsetJSON.SetValToDefault();
 

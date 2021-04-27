@@ -14,8 +14,8 @@ public interface IEmbody
     void Refresh();
     void RefreshDelayed();
     void LoadFromDefaults();
-    void StoreJSON(JSONClass json, bool includeProfile);
-    bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults);
+    void StoreJSON(JSONClass json, bool toProfile, bool toScene);
+    bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults, bool fromScene, bool fromProfile);
 }
 
 public class Embody : MVRScript, IEmbody
@@ -127,6 +127,7 @@ public class Embody : MVRScript, IEmbody
 
             RegisterAction(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
 
+            LoadFromDefaults();
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
         catch (Exception)
@@ -317,27 +318,28 @@ public class Embody : MVRScript, IEmbody
     {
         yield return new WaitForEndOfFrame();
         if (!_restored)
-        {
             containingAtom.RestoreFromLast(this);
-        }
-        LoadFromDefaults();
-        _restored = true;
 
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
         _screensManager.Show(MainScreen.ScreenName);
 
         if (Input.GetKey(KeyCode.LeftControl))
-        {
             _context.diagnostics.enabledJSON.val = true;
-        }
     }
 
     public void LoadFromDefaults()
     {
-        if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath)) return;
-        var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
-        if (profile == null) return;
-        RestoreFromJSONInternal(profile, _restored);
+        try
+        {
+            if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath)) return;
+            var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
+            if (profile == null) return;
+            RestoreFromJSONInternal(profile, true, false, false);
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: Error loading defaults file: {exc}");
+        }
     }
 
     public override void InitUI()
@@ -593,18 +595,18 @@ public class Embody : MVRScript, IEmbody
     public override JSONClass GetJSON(bool includePhysical = true, bool includeAppearance = true, bool forceStore = false)
     {
         var json = base.GetJSON(includePhysical, includeAppearance, forceStore);
-        StoreJSON(json, false);
+        StoreJSON(json, false, true);
         needsStore = true;
         return json;
     }
 
-    public void StoreJSON(JSONClass json, bool includeProfile)
+    public void StoreJSON(JSONClass json, bool toProfile, bool toScene)
     {
         json["Version"].AsInt = SaveFormat.Version;
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
         {
             var jc = new JSONClass();
-            c.StoreJSON(jc, includeProfile || _context.diagnostics.enabledJSON.val);
+            c.StoreJSON(jc, toProfile || _context.diagnostics.enabledJSON.val, toScene);
             json[c.storeId] = jc;
         }
     }
@@ -612,11 +614,11 @@ public class Embody : MVRScript, IEmbody
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
     {
         base.RestoreFromJSON(jc, restorePhysical, restoreAppearance, presetAtoms, setMissingToDefault);
-        if (RestoreFromJSONInternal(jc, false))
-            _restored = true;
+        RestoreFromJSONInternal(jc, false, true, false);
+        _restored = true;
     }
 
-    public bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults)
+    public bool RestoreFromJSONInternal(JSONClass jc, bool fromDefaults, bool fromScene, bool fromProfile)
     {
         var version = jc["Version"].AsInt;
         if (version <= 0) return false;
@@ -632,7 +634,7 @@ public class Embody : MVRScript, IEmbody
         }
 
         foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
-            c.RestoreFromJSON(jc[c.storeId].AsObject, fromDefaults);
+            c.RestoreFromJSON(jc[c.storeId].AsObject, fromDefaults, fromScene);
 
         return false;
     }

@@ -17,11 +17,11 @@ public class WizardScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateTitle("Experimental Flags");
+        CreateTitle("Experimental Features");
         _experimentalViveTrackersToggle = CreateToggle(context.wizard.experimentalViveTrackersWizardJSON);
-        _experimentalViveTrackersToggle.label = "Vive Trackers Wizard";
+        _experimentalViveTrackersToggle.label = "Vive Trackers 2-Step Wizard";
         _experimentalSnugToggle = CreateToggle(context.wizard.experimentalSnugWizardJSON);
-        _experimentalSnugToggle.label = "Snug Wizard";
+        _experimentalSnugToggle.label = "Snug Wizard (Outside-In Headsets)";
 
         var statusText = CreateText(_wizard.statusJSON, true);
         statusText.height = 980;

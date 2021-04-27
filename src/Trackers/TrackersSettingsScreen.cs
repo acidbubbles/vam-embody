@@ -28,7 +28,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers.\n\nHands have no effect when Snug is enabled, and Head has no effect when Passenger is enabled."), true);
 
         CreateTitle("Settings", true);
-        CreateToggle(_trackers.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
+        CreateToggle(_trackers.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
 
         CreateSpacer(true).height = 20f;
