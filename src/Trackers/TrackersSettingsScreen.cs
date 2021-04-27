@@ -31,13 +31,26 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         CreateToggle(_trackers.importDefaultsOnLoad, true, "Use Defaults* <i>(Not Saved)</i>", "Use Defaults* <i>(Save With Scene)</i>");
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
 
-        CreateSpacer().height = 20f;
+        CreateSpacer(true).height = 20f;
         CreateTitle("Utilities", true);
 
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
+
+        _handsToggleJSON = new JSONStorableBool("Enable Hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
+        CreateToggle(_handsToggleJSON, true);
+        _handsToggleJSON.setCallbackFunction = val =>
+        {
+            _trackers.leftHandMotionControl.enabled = val;
+            _trackers.rightHandMotionControl.enabled = val;
+            if (_currentMotionControl != null && MotionControlNames.IsHands(_currentMotionControl.name))
+                ShowMotionControl(_currentMotionControl);
+        };
+
         if (context.trackers.viveTrackers.Any(v => v.SyncMotionControl()))
         {
-            CreateButton("Align <i>All</i> Vive Trackers...", true).button.onClick.AddListener(() =>
+            CreateSpacer(true).height = 20f;
+
+            CreateButton("Align <i>All</i> Vive Trackers (5s timer)", true).button.onClick.AddListener(() =>
             {
                 _trackerAutoSetup.AlignAll(
                     () =>
@@ -49,16 +62,6 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                     });
             });
         }
-
-        _handsToggleJSON = new JSONStorableBool("Enable Hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
-        CreateToggle(_handsToggleJSON, true);
-        _handsToggleJSON.setCallbackFunction = val =>
-        {
-            _trackers.leftHandMotionControl.enabled = val;
-            _trackers.rightHandMotionControl.enabled = val;
-            if (_currentMotionControl != null && MotionControlNames.IsHands(_currentMotionControl.name))
-                ShowMotionControl(_currentMotionControl);
-        };
 
         _motionControlJSON = _motionControlJSON ?? new JSONStorableStringChooser(
             "",
