@@ -126,6 +126,9 @@ public class Embody : MVRScript, IEmbody
             RegisterAction(launchWizardJSON);
 
             RegisterAction(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
+            RegisterAction(new JSONStorableAction("Activate_Possession", () => ActivatePreset("Improved Possession")));
+            RegisterAction(new JSONStorableAction("Activate_LeapMotion", () => ActivatePreset("Improved Possession w/ Leap")));
+            RegisterAction(new JSONStorableAction("Activate_Passenger", () => ActivatePreset("Passenger")));
 
             LoadFromDefaults();
             SuperController.singleton.StartCoroutine(DeferredInit());
@@ -136,6 +139,18 @@ public class Embody : MVRScript, IEmbody
             if (_modules != null) Destroy(_modules);
             throw;
         }
+    }
+
+    private void ActivatePreset(string presetVal)
+    {
+        if (activeJSON.val)
+        {
+            activeJSON.val = false;
+            return;
+        }
+
+        presetsJSON.val = presetVal;
+        activeJSON.val = true;
     }
 
     private void Activate()
