@@ -150,6 +150,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             AdjustHeadToEyesOffset();
             if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
             {
+                UserPreferences.singleton.headCollider.gameObject.SetActive(false);
                 SuperController.singleton.AlignRigAndController(controller, motionControl);
             }
             else
@@ -233,6 +234,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
                 c.active = false;
             }
         }
+
+        UserPreferences.singleton.headCollider.gameObject.SetActive(UserPreferences.singleton.useHeadCollider);
     }
 
     public void OnDestroy()
