@@ -108,17 +108,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         enabled = true;
     }
 
-    public override bool Validate()
-    {
-        if (_preferences.useHeadCollider)
-        {
-            SuperController.LogError("Embody: Do not enable the head collider with Passenger, they do not work together!");
-            return false;
-        }
-
-        return true;
-    }
-
     public override void PreActivate()
     {
         if (context.containingAtom.type == "Person")
@@ -157,6 +146,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void OnEnable()
     {
         base.OnEnable();
+
+        UserPreferences.singleton.headCollider.gameObject.SetActive(false);
 
         _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;
@@ -209,6 +200,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _currentPositionVelocity = Vector3.zero;
         _currentRotationVelocity = Quaternion.identity;
+
+        UserPreferences.singleton.headCollider.gameObject.SetActive(UserPreferences.singleton.useHeadCollider);
     }
 
     public void OnDestroy()
