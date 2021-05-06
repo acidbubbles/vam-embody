@@ -74,7 +74,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
-        _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.First();
+        _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object") ?? containingAtom.rigidbodies.First();
         // ReSharper disable once Unity.NoNullPropagation
         _headTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
