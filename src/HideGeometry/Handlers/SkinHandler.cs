@@ -29,13 +29,17 @@ namespace Handlers
                 {
                     material.shader = shader;
                     materialInfo.alphaAdjustSupport = material.HasProperty("_AlphaAdjust");
+                    materialInfo.alphaCutoffSupport = material.HasProperty("_Cutoff");
                     materialInfo.specColorSupport = material.HasProperty("_SpecColor");
                 }
                 else
                 {
                     materialInfo.alphaAdjustSupport = materialInfo.originalAlphaAdjustSupport;
+                    materialInfo.alphaCutoffSupport = materialInfo.originalAlphaCutoffSupport;
                     materialInfo.specColorSupport = materialInfo.originalSpecColorSupport;
                 }
+
+                    SuperController.LogMessage($"{materialInfo.material.name}: {(materialInfo.originalShader == materialInfo.material.shader ? "KEEP" : "CHANGE")}  {(materialInfo.alphaCutoffSupport ? "CUTOFF" : "")}");
 
                 _materialRefs.Add(materialInfo);
             }
@@ -62,6 +66,8 @@ namespace Handlers
             {
                 var materialRef = _materialRefs[i];
                 var material = materialRef.material;
+                if (materialRef.alphaCutoffSupport)
+                    material.SetFloat("_Cutoff", 0.3f);
                 if (materialRef.alphaAdjustSupport)
                     material.SetFloat("_AlphaAdjust", -1f);
                 var color = material.GetColor("_Color");
@@ -77,6 +83,8 @@ namespace Handlers
             {
                 var materialRef = _materialRefs[i];
                 var material = materialRef.material;
+                if (materialRef.alphaCutoffSupport)
+                    material.SetFloat("_Cutoff", materialRef.originalAlphaCutoff);
                 if (materialRef.alphaAdjustSupport)
                     material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
                 var color = material.GetColor("_Color");
