@@ -1,13 +1,13 @@
 ﻿using MVR.FileManagementSecure;
 using UnityEngine;
 
-public class ImportExportScreen : ScreenBase, IScreen
+public class ProfilesScreen : ScreenBase, IScreen
 {
-    public const string ScreenName = "Import / Export";
+    public const string ScreenName = "Profiles";
 
     private readonly Storage _storage;
 
-    public ImportExportScreen(EmbodyContext context)
+    public ProfilesScreen(EmbodyContext context)
         : base(context)
     {
         _storage = new Storage(context);
@@ -15,18 +15,31 @@ public class ImportExportScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Export all settings so you can easily re-use them in other scenes or on other atoms.\n\nMake Default will save your settings so that whenever you load this plugin on a new atom, the parameters will be automatically applied.\n\nTo clear your height and body proportions from this instance, e.g. before making a scene public, use Clear Personal Data."), true);
+        CreateText(new JSONStorableString("", "Export and import settings so you can easily re-use them in other scenes or on other atoms.\n\nSave Default Profile will save your settings so that whenever you load this plugin on a new atom, the parameters will be automatically applied.\n\nTo clear your height and body proportions from this instance, e.g. before making a scene public, use Clear Personal Data."), true);
 
-        CreateTitle("Import / Export", true);
-        var loadPresetUI = CreateButton("Import Profile...", true);
+        CreateTitle("Profiles", true);
+        var loadPresetUI = CreateButton("Load Profile...", true);
         loadPresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
             var shortcuts = FileManagerSecure.GetShortCutsForDirectory(SaveFormat.SaveFolder);
-            SuperController.singleton.GetMediaPathDialog(_storage.LoadProfile, SaveFormat.SaveExt, SaveFormat.SaveFolder, false, true, false, null, false, shortcuts);
+            SuperController.singleton.GetMediaPathDialog(
+                path =>
+                {
+                    _storage.LoadProfile(path);
+                    screensManager.Show(MainScreen.ScreenName);
+                },
+                SaveFormat.SaveExt,
+                SaveFormat.SaveFolder,
+                false,
+                true,
+                false,
+                null,
+                false,
+                shortcuts);
         });
 
-        var savePresetUI = CreateButton("Export Profile...", true);
+        var savePresetUI = CreateButton("Save Profile As...", true);
         savePresetUI.button.onClick.AddListener(() =>
         {
             FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
@@ -48,7 +61,7 @@ public class ImportExportScreen : ScreenBase, IScreen
         CreateSpacer(true).height = 40f;
         CreateTitle("Default Profile", true);
 
-        var makeDefaults = CreateButton("Save As Default Profile", true);
+        var makeDefaults = CreateButton("Save Default Profile", true);
         makeDefaults.button.onClick.AddListener(_storage.MakeDefault);
 
         var applyDefaults = CreateButton("Load Default Profile", true);

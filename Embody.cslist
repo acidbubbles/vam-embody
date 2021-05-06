@@ -24,7 +24,7 @@ src\HideGeometry\Handlers\SkinHandler.cs
 src\HideGeometry\Handlers\SkinShaderMaterialSnapshot.cs
 src\HideGeometry\HideGeometryModule.cs
 src\HideGeometry\HideGeometrySettingsScreen.cs
-src\ImportExport\ImportExportScreen.cs
+src\ImportExport\ProfilesScreen.cs
 src\ImportExport\SaveFormat.cs
 src\ImportExport\Storage.cs
 src\OffsetCamera\OffsetCameraModule.cs

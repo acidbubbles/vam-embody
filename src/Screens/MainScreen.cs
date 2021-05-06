@@ -65,7 +65,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
 
         if (context.containingAtom.type == "Person")
         {
-            CreateButton("Manage Presets...", true).button.onClick.AddListener(() => screensManager.Show(ImportExportScreen.ScreenName));
+            CreateButton("Manage Presets...", true).button.onClick.AddListener(() => screensManager.Show(ProfilesScreen.ScreenName));
             CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
             CreateFilterablePopup(context.embody.presetsJSON, true);
         }

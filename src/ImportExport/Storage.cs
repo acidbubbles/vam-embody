@@ -26,7 +26,7 @@ public class Storage
         if (string.IsNullOrEmpty(path)) return;
         _context.embody.activeJSON.val = false;
         var jc = _context.plugin.LoadJSON(path).AsObject;
-        _context.embody.RestoreFromJSONInternal(jc, false, false, true);
+        _context.embody.RestoreFromJSONInternal(jc, true, false);
     }
 
     public void MakeDefault()
