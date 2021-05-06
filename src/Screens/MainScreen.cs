@@ -24,7 +24,7 @@ public class MainScreen : ScreenBase, IScreen
             CreateButton("Create Mirror").button.onClick.AddListener(() => context.plugin.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
             CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() => new PossessionPose(context).Apply());
 
-            CreateSpacer().height = 64;
+            CreateSpacer().height = 84;
 
             CreateText(new JSONStorableString("", @"
 Welcome to <b>Embody</b>! This plugin improves possession on many levels. Select a mode, run the wizard and select the Active toggle to start!
