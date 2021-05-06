@@ -115,7 +115,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             if (context.trackers.selectedJSON.val || allowPersonHeadRotationJSON.val)
             {
                 // This avoids hands influencing head position, and in turn head position influencing hands causing havoc
-                _cameraCenter.SetParent(_headControl.control, false);
+                _cameraCenter.SetParent(_headControlRB.transform, false);
             }
             else
             {
@@ -154,7 +154,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _headControl.canGrabRotation = false;
 
         _previousInterpolation = _headControlRB.interpolation;
-        _headControlRB.interpolation = RigidbodyInterpolation.Interpolate;
+        if (!allowPersonHeadRotationJSON.val)
+            _headControlRB.interpolation = RigidbodyInterpolation.Interpolate;
 
         if (!allowPersonHeadRotationJSON.val)
             GlobalSceneOptions.singleton.disableNavigation = true;
@@ -279,9 +280,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             navigationRig.rotation = navigationRigRotation;
         }
-        if (allowPersonHeadRotationJSON.val)
+        else if (allowPersonHeadRotationJSON.val)
         {
-            _headControl.transform.rotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
+            var cameraRotation = CameraTarget.centerTarget.targetCamera.transform.rotation;
+            _headControl.control.rotation = cameraRotation;
+            _headControlRB.transform.rotation = cameraRotation;
         }
         if (force || positionLockJSON.val)
         {
