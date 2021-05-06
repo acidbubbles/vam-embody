@@ -49,6 +49,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
+    private bool? _restoreLeftHandEnabled;
+    private bool? _restoreRightHandEnabled;
 
     public override void Awake()
     {
@@ -176,12 +178,16 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null)
         {
+            _restoreLeftHandEnabled = SuperController.singleton.commonHandModelControl.leftHandEnabled;
+            SuperController.singleton.commonHandModelControl.leftHandEnabled = false;
             if (leftHandMotionControl.fingersTracking)
                 _leftHandController.handControl.allowPossessFingerControlJSON.val = true;
             _leftHandController.handControl.possessed = true;
         }
         if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null)
         {
+            _restoreRightHandEnabled = SuperController.singleton.commonHandModelControl.rightHandEnabled;
+            SuperController.singleton.commonHandModelControl.rightHandEnabled = false;
             if (rightHandMotionControl.fingersTracking)
                 _rightHandController.handControl.allowPossessFingerControlJSON.val = true;
             _rightHandController.handControl.possessed = true;
@@ -192,8 +198,18 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         if (_leftHandController.handControl != null)
             _leftHandController.handControl.possessed = false;
+        if (_restoreLeftHandEnabled != null)
+        {
+            SuperController.singleton.commonHandModelControl.leftHandEnabled = _restoreLeftHandEnabled.Value;
+            _restoreLeftHandEnabled = null;
+        }
         if (_rightHandController.handControl != null)
             _rightHandController.handControl.possessed = false;
+        if (_restoreRightHandEnabled != null)
+        {
+            SuperController.singleton.commonHandModelControl.rightHandEnabled = _restoreRightHandEnabled.Value;
+            _restoreRightHandEnabled = null;
+        }
     }
 
     private FreeControllerV3WithSnapshot FindController(MotionControllerWithCustomPossessPoint motionControl)
