@@ -39,8 +39,6 @@ namespace Handlers
                     materialInfo.specColorSupport = materialInfo.originalSpecColorSupport;
                 }
 
-                    SuperController.LogMessage($"{materialInfo.material.name}: {(materialInfo.originalShader == materialInfo.material.shader ? "KEEP" : "CHANGE")}  {(materialInfo.alphaCutoffSupport ? "CUTOFF" : "")}");
-
                 _materialRefs.Add(materialInfo);
             }
 
