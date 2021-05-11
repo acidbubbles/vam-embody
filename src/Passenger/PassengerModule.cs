@@ -55,7 +55,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     protected override bool shouldBeSelectedByDefault => context.containingAtom.type != "Person";
 
     private Rigidbody _headControlRB;
-    private Transform _headTransform;
+    private Transform _headBoneTransform;
     private FreeControllerV3 _headControl;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
@@ -76,11 +76,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
         _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object") ?? containingAtom.rigidbodies.First();
         // ReSharper disable once Unity.NoNullPropagation
-        _headTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
+        _headBoneTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
         _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
 
         _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
-        _cameraCenter.SetParent(_headTransform, false);
+        _cameraCenter.SetParent(_headBoneTransform, false);
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
 
@@ -122,7 +122,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             else
             {
                 // This avoids stretched head control moving outside of the head center
-                _cameraCenter.SetParent(_headTransform, false);
+                _cameraCenter.SetParent(_headBoneTransform, false);
             }
 
             var lEye = context.bones.First(b => b.name == "lEye").transform;
