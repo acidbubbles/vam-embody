@@ -84,31 +84,33 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
 
-        lookAtJSON.setCallbackFunction = _ => Reapply();
-        positionLockJSON.setCallbackFunction = _ => Reapply();
-        eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => Reapply();
-        rotationLockNoRollJSON.setCallbackFunction = _ => Reapply();
+        eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => SyncCameraParent();
         rotationLockJSON.setCallbackFunction = val =>
         {
             if (val) allowPersonHeadRotationJSON.valNoCallback = false;
-            Reapply();
+            SyncCameraParent();
         };
         allowPersonHeadRotationJSON.setCallbackFunction = val =>
         {
             if (val) rotationLockJSON.valNoCallback = false;
-            Reapply();
+            SyncCameraParent();
         };
     }
 
-    private void Reapply()
+    public override void PreActivate()
     {
-        if (!enabled) return;
-        enabled = false;
-        // ReSharper disable once Unity.InefficientPropertyAccess
-        enabled = true;
+        SyncCameraParent();
+        if (exitOnMenuOpen.val)
+        {
+            SuperController.singleton.HideMainHUD();
+        }
+        // TODO: Deal with upside down (Vector3.Dot?)
+        var navigationRigForward = SuperController.singleton.navigationRig.forward;
+        var rigRotationOffset = Vector3.ProjectOnPlane(navigationRigForward, Vector3.up) - Vector3.ProjectOnPlane(navigationRigForward, Vector3.up);
+        _rigRotationOffset = Quaternion.Euler(rigRotationOffset);
     }
 
-    public override void PreActivate()
+    private void SyncCameraParent()
     {
         if (context.containingAtom.type == "Person")
         {
@@ -122,6 +124,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
                 // This avoids stretched head control moving outside of the head center
                 _cameraCenter.SetParent(_headTransform, false);
             }
+
             var lEye = context.bones.First(b => b.name == "lEye").transform;
             var rEye = context.bones.First(b => b.name == "rEye").transform;
             var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
@@ -133,14 +136,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             _cameraCenter.localPosition = Vector3.zero;
         }
-        if (exitOnMenuOpen.val)
-        {
-            SuperController.singleton.HideMainHUD();
-        }
-        // TODO: Deal with upside down (Vector3.Dot?)
-        var navigationRigForward = SuperController.singleton.navigationRig.forward;
-        var rigRotationOffset = Vector3.ProjectOnPlane(navigationRigForward, Vector3.up) - Vector3.ProjectOnPlane(navigationRigForward, Vector3.up);
-        _rigRotationOffset = Quaternion.Euler(rigRotationOffset);
     }
 
     public override void OnEnable()
