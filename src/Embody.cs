@@ -34,6 +34,8 @@ public class Embody : MVRScript, IEmbody
     private Coroutine _restoreNavigationRigCoroutine;
     private readonly List<IEmbodyModule> _enabledModules = new List<IEmbodyModule>();
     private JSONArray _poseJSON;
+    private bool? _restoreLeftHandEnabled;
+    private bool? _restoreRightHandEnabled;
 
     public override void Init()
     {
@@ -163,6 +165,14 @@ public class Embody : MVRScript, IEmbody
 
         SuperController.singleton.ClearPossess();
 
+        if ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false))
+        {
+            _restoreLeftHandEnabled = SuperController.singleton.commonHandModelControl.leftHandEnabled;
+            SuperController.singleton.commonHandModelControl.leftHandEnabled = false;
+            _restoreRightHandEnabled = SuperController.singleton.commonHandModelControl.rightHandEnabled;
+            SuperController.singleton.commonHandModelControl.rightHandEnabled = false;
+        }
+
         try
         {
             foreach (var atom in SuperController.singleton.GetAtoms())
@@ -268,6 +278,17 @@ public class Embody : MVRScript, IEmbody
                 storable.PostRestore();
             }
             _poseJSON = null;
+        }
+
+        if (_restoreLeftHandEnabled != null)
+        {
+            SuperController.singleton.commonHandModelControl.leftHandEnabled = _restoreLeftHandEnabled.Value;
+            _restoreLeftHandEnabled = null;
+        }
+        if (_restoreRightHandEnabled != null)
+        {
+            SuperController.singleton.commonHandModelControl.rightHandEnabled = _restoreRightHandEnabled.Value;
+            _restoreRightHandEnabled = null;
         }
 
         if (_navigationRigSnapshot != null)
