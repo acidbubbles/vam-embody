@@ -208,7 +208,7 @@ public class Embody : MVRScript, IEmbody
             _navigationRigSnapshot = NavigationRigSnapshot.Snap();
         }
 
-        if (_context.trackers?.restorePoseAfterPossessJSON.val == true)
+        if ((_context.trackers?.selectedJSON?.val ?? false) && _context.trackers?.restorePoseAfterPossessJSON.val == true)
         {
             _poseJSON = containingAtom.GetStorableIDs()
                 .Select(s => _context.containingAtom.GetStorableByID(s))
@@ -270,11 +270,14 @@ public class Embody : MVRScript, IEmbody
             _poseJSON = null;
         }
 
-        _navigationRigSnapshot?.Restore();
-        if (defer)
-            _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
-        else
-            _navigationRigSnapshot = null;
+        if (_navigationRigSnapshot != null)
+        {
+            _navigationRigSnapshot.Restore();
+            if (defer)
+                _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
+            else
+                _navigationRigSnapshot = null;
+        }
     }
 
     public void EmbodyDeactivateImmediate()
