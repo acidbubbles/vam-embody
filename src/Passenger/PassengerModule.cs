@@ -144,6 +144,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         UserPreferences.singleton.headCollider.gameObject.SetActive(false);
 
+        if (SuperController.singleton.MonitorCenterCamera != null)
+        {
+            var monitorCenterCameraTransform = SuperController.singleton.MonitorCenterCamera.transform;
+            monitorCenterCameraTransform.localEulerAngles = Vector3.zero;
+        }
+
         _headControlSnapshot = FreeControllerV3Snapshot.Snap(_headControl);
         _headControl.canGrabPosition = false;
         _headControl.canGrabRotation = false;
