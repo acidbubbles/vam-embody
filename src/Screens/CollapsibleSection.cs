@@ -30,7 +30,11 @@ public class CollapsibleSection
         foreach (var slider in _sliders) _plugin.RemoveSlider(slider);
         _sliders.Clear();
 
-        foreach (var popup in _popups) _plugin.RemovePopup(popup);
+        foreach (var popup in _popups)
+        {
+            popup.popup.visible = false;
+            _plugin.RemovePopup(popup);
+        }
         _popups.Clear();
 
         foreach (var button in _buttons) _plugin.RemoveButton(button);
