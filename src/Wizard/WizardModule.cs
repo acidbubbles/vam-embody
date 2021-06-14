@@ -47,8 +47,6 @@ Keep in mind that:
 - The wizard <i>cannot be closed</i> and
   other atoms cannot be selected until
   you <i>Stop</i> the wizard.
-- The wizard is experimental, if it
-  doesn't work. reach out to me!
 
 When you are ready, select <b>Start Wizard</b>.").TrimStart();
     private const string _noHandsMessage = "Cannot start the wizard. No hand trackers were found. Are you running in Desktop mode?";
