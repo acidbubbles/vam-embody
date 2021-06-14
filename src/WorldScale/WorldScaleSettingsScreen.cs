@@ -15,7 +15,8 @@
 
         CreateScrollablePopup(_worldScale.worldScaleMethodJSON).label = "Method*";
         CreateSlider(_worldScale.playerHeightJSON).label = "Player Height*";
-        CreateButton("Record Player Height (stand straight)").button.onClick.AddListener(RecordPlayerHeight);
+        var recordHeightBtn = CreateButton("Record Player Height (stand straight)");
+        recordHeightBtn.button.onClick.AddListener(() => recordHeightBtn.label = RecordPlayerHeight());
 
         CreateToggle(_worldScale.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
 
@@ -34,11 +35,15 @@
         });
     }
 
-    private void RecordPlayerHeight()
+    private string RecordPlayerHeight()
     {
         context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
         _worldScale.playerHeightJSON.val = new PlayerMeasurements(context).MeasureHeight();
         _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
         context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
+
+        return PlayerMeasurements.lastMeasurementUsedControllerAsFloor
+            ? "Height recorded (using controller)"
+            : "Height recorded (using VR floor)";
     }
 }
