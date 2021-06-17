@@ -138,7 +138,7 @@ public class TrackerAutoSetup
             AttachToClosestNode(mc);
             if (!hashSet.Add(mc.mappedControllerName))
             {
-                lastError = $"The same controller was bound more than once: {mc.mappedControllerName}";
+                lastError = $"The tracker {mc.currentMotionControl.name} could not be bound to {mc.mappedControllerName} because that node was already bound to another tracker";
                 SuperController.LogError(lastError);
                 _context.diagnostics.Log(lastError);
                 mc.mappedControllerName = null;

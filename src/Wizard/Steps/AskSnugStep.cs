@@ -11,6 +11,8 @@ Snug dynamically adjusts your hands so despite body proportion differences, your
 
 If it's your first time using Embody, <b>skip Snug until you're comfortable with base possession</b>. Getting Snug right may require multiple tries.
 
+NOTE: Inside-out tracking VR headsets like the Oculus Go will have trouble registering your hands when near your body, both this wizard and Snug may have trouble registering your movements.
+
 Select <b>Next to use Snug</b> (possession will be activated, but hands will be disabled).
 
 <b>Skip to disable Snug</b>.".TrimStart();

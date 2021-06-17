@@ -62,7 +62,7 @@ You can also press Escape to align without possession.
                 mc.mappedControllerName = null;
                 foreach (var mc2 in context.trackers.viveTrackers)
                 {
-                    if (mc2.currentMotionControl == null || mc2.mappedControllerName.EndsWith("FootControl"))
+                    if (mc2.mappedControllerName == null || mc2.mappedControllerName.EndsWith("FootControl"))
                         continue;
                     mc2.ResetToDefault();
                 }
