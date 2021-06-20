@@ -132,7 +132,6 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Thighs",
             label = "Thighs",
-            // TODO: We could try and average this instead, OR define an absolute value
             bone = bones.First(rb => rb.name == "pelvis").transform,
             inGameOffsetDefault = new Vector3(0, -0.35f, 0),
             inGameSizeDefault = new Vector3(0.38f, 0, 0.2f),
@@ -145,14 +144,15 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Feet",
             label = "Feet",
-            // TODO: We could try and average this instead, OR define an absolute value
             bone = bones.First(rb => rb.name == "lFoot").transform,
+            altBone = bones.First(rb => rb.name == "rFoot").transform,
             inGameOffsetDefault = new Vector3(0, 0, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
             auto = false,
-            locked = true
+            locked = true,
+            floor = true
         });
 
         foreach (var anchorPoint in anchorPoints)
@@ -371,6 +371,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var upperPosition = upper.GetAdjustedWorldPosition();
         // ReSharper disable once PossibleNullReferenceException
         var lowerPosition = lower.GetAdjustedWorldPosition();
+        if (lower.floor) lowerPosition = new Vector3(motionControlPosition.x, Mathf.Min(lowerPosition.y, lower.GetAdjustedWorldPosition(lower.altBone).y), motionControlPosition.z);
         var yUpperDelta = upperPosition.y - motionControlPosition.y;
         var yLowerDelta = motionControlPosition.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;
@@ -426,12 +427,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         return a + b * Mathf.Exp(c * inputValue);
     }
 
-    private static Vector3 ComputeHandPositionFromAnchor(Vector3 upperPosition, Vector3 motionControlPosition, ControllerAnchorPoint upper)
+    private static Vector3 ComputeHandPositionFromAnchor(Vector3 anchorPosition, Vector3 motionControlPosition, ControllerAnchorPoint anchorPoint)
     {
-        var anchorPosition = upperPosition;
-        var realLifeSize = upper.realLifeSize;
-        var realOffset = upper.realLifeOffset;
-        var inGameSize = upper.inGameSize;
+        var realLifeSize = anchorPoint.realLifeSize;
+        var realOffset = anchorPoint.realLifeOffset;
+        var inGameSize = anchorPoint.inGameSize;
         var scale = new Vector3(inGameSize.x / realLifeSize.x, 1f, inGameSize.z / realLifeSize.z);
         var actualRelativePosition = motionControlPosition - anchorPosition;
         var scaled = Vector3.Scale(actualRelativePosition, scale);

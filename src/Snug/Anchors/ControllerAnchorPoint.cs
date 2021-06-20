@@ -2,23 +2,25 @@
 
 public class ControllerAnchorPoint
 {
-    public EmbodyScaleChangeReceiver scaleChangeReceiver { get; set; }
-    public string id { get; set; }
-    public string label { get; set; }
-    public Transform bone { get; set; }
-    public Vector3 realLifeOffsetDefault { get; set; }
-    public Vector3 realLifeOffset { get; set; }
-    public Vector3 realLifeSizeDefault { get; set; }
-    public Vector3 realLifeSize { get; set; }
-    public Vector3 inGameOffsetDefault { get; set; }
-    public Vector3 inGameOffset { get; set; }
-    public Vector3 inGameSizeDefault { get; set; }
-    public Vector3 inGameSize { get; set; }
-    public ControllerAnchorPointVisualCue inGameCue { get; set; }
-    public ControllerAnchorPointVisualCue realLifeCue { get; set; }
-    public bool active { get; set; } = true;
-    public bool locked { get; set; }
-    public bool auto { get; set; } = true;
+    public EmbodyScaleChangeReceiver scaleChangeReceiver;
+    public string id;
+    public string label;
+    public Transform bone;
+    public Transform altBone;
+    public Vector3 realLifeOffsetDefault;
+    public Vector3 realLifeOffset;
+    public Vector3 realLifeSizeDefault;
+    public Vector3 realLifeSize;
+    public Vector3 inGameOffsetDefault;
+    public Vector3 inGameOffset;
+    public Vector3 inGameSizeDefault;
+    public Vector3 inGameSize;
+    public ControllerAnchorPointVisualCue inGameCue;
+    public ControllerAnchorPointVisualCue realLifeCue;
+    public bool active = true;
+    public bool auto = true;
+    public bool locked;
+    public bool floor;
 
     public Vector3 GetInGameWorldPosition()
     {
@@ -29,7 +31,11 @@ public class ControllerAnchorPoint
 
     public Vector3 GetAdjustedWorldPosition()
     {
-        var rigidBodyTransform = bone.transform;
+        return GetAdjustedWorldPosition(bone.transform);
+    }
+
+    public Vector3 GetAdjustedWorldPosition(Transform rigidBodyTransform)
+    {
         return rigidBodyTransform.position + rigidBodyTransform.rotation * ((inGameOffset * scaleChangeReceiver.scale + realLifeOffset));
     }
 
