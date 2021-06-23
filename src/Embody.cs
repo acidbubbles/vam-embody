@@ -474,6 +474,7 @@ public class Embody : MVRScript, IEmbody
             "Improved Possession",
             "Improved Possession w/ Leap",
             "Snug",
+            "Snug Hands Only",
             "Passenger",
             "Passenger w/ Hands",
             "Passenger w/ Leap",
@@ -500,16 +501,16 @@ public class Embody : MVRScript, IEmbody
             module.selectedJSON.val = false;
         }
 
+        _context.trackers.headMotionControl.enabled = true;
+        _context.trackers.leftHandMotionControl.enabled = true;
+        _context.trackers.rightHandMotionControl.enabled = true;
         _context.trackers.leftHandMotionControl.useLeapPositioning = false;
         _context.trackers.rightHandMotionControl.useLeapPositioning = false;
 
         switch (val)
         {
             case "Legacy Possession":
-                _context.trackers.selectedJSON.val = false;
-                _context.snug.selectedJSON.val = false;
                 _context.hideGeometry.selectedJSON.val = true;
-                _context.passenger.selectedJSON.val = false;
                 _context.offsetCamera.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
@@ -517,7 +518,6 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
-                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
@@ -525,7 +525,6 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 ConfigureHandsPresets(true, true, true, true);
                 _context.hideGeometry.selectedJSON.val = true;
-                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
                 break;
@@ -534,9 +533,15 @@ public class Embody : MVRScript, IEmbody
                 ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.snug.selectedJSON.val = true;
-                _context.passenger.selectedJSON.val = false;
                 _context.worldScale.selectedJSON.val = true;
                 _context.eyeTarget.selectedJSON.val = true;
+                break;
+            case "Snug Hands Only":
+                _context.trackers.selectedJSON.val = true;
+                _context.trackers.headMotionControl.enabled = false;
+                ConfigureHandsPresets(true, true, false, true);
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.snug.selectedJSON.val = true;
                 break;
             case "Passenger":
                 _context.hideGeometry.selectedJSON.val = true;
@@ -561,9 +566,6 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 _context.trackers.headMotionControl.enabled = false;
                 ConfigureHandsPresets(true, false, false, true);
-                _context.hideGeometry.selectedJSON.val = false;
-                _context.passenger.selectedJSON.val = false;
-                _context.worldScale.selectedJSON.val = false;
                 break;
         }
     }
