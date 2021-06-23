@@ -6,7 +6,6 @@ public class ControllerAnchorPoint
     public string id;
     public string label;
     public Transform bone;
-    public Transform altBone;
     public Vector3 realLifeOffsetDefault;
     public Vector3 realLifeOffset;
     public Vector3 realLifeSizeDefault;
@@ -36,7 +35,7 @@ public class ControllerAnchorPoint
 
     public Vector3 GetAdjustedWorldPosition(Transform rigidBodyTransform)
     {
-        return rigidBodyTransform.position + rigidBodyTransform.rotation * ((inGameOffset * scaleChangeReceiver.scale + realLifeOffset));
+        return rigidBodyTransform.position + rigidBodyTransform.rotation * (inGameOffset * scaleChangeReceiver.scale + realLifeOffset);
     }
 
     public void Update()

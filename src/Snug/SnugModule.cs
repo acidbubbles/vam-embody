@@ -32,9 +32,13 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool disableSelfGrabJSON { get; } = new JSONStorableBool("DisablePersonGrab", true);
     public JSONStorableFloat falloffDistanceJSON { get; } = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
     public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
+    public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
+
     private SnugHand _lHand;
     private SnugHand _rHand;
-    public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
+
+    private DAZBone lToe;
+    private DAZBone rToe;
 
     public override void Awake()
     {
@@ -44,8 +48,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
-            _lHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "lHandControl") };
-            _rHand = new SnugHand { controller = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "rHandControl") };
+            _lHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "lHandControl") };
+            _rHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "rHandControl") };
+
+            lToe = context.bones.First(b => b.name == "lToe");
+            lToe = context.bones.First(b => b.name == "rToe");
 
             InitAnchors();
             InitVisualCues();
@@ -144,9 +151,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Feet",
             label = "Feet",
-            bone = bones.First(rb => rb.name == "lFoot").transform,
-            altBone = bones.First(rb => rb.name == "rFoot").transform,
-            inGameOffsetDefault = new Vector3(0, 0, 0),
+            bone = bones.First(rb => rb.name == "pelvis").transform,
+            inGameOffsetDefault = new Vector3(0, -1.2f, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
             realLifeSizeDefault = new Vector3(0.2f, 0, 0.2f),
@@ -371,7 +377,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var upperPosition = upper.GetAdjustedWorldPosition();
         // ReSharper disable once PossibleNullReferenceException
         var lowerPosition = lower.GetAdjustedWorldPosition();
-        if (lower.floor) lowerPosition = new Vector3(motionControlPosition.x, Mathf.Min(lowerPosition.y, lower.GetAdjustedWorldPosition(lower.altBone).y), motionControlPosition.z);
+        if (lower.floor) lowerPosition = new Vector3(motionControlPosition.x, Mathf.Min(lToe.transform.position.y, rToe.transform.position.y), motionControlPosition.z);
         var yUpperDelta = upperPosition.y - motionControlPosition.y;
         var yLowerDelta = motionControlPosition.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;

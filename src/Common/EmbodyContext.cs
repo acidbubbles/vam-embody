@@ -63,7 +63,7 @@ public class EmbodyContext
     public Transform viveTracker8 => diagnostics.viveTracker8 ?? SuperController.singleton.viveTracker8;
     // ReSharper restore Unity.NoNullCoalescing
 
-    public DAZBone[] bones { get; private set; }
+    public DAZBone[] bones { get; }
 
     public EmbodyContext(MVRScript plugin, IEmbody embody)
     {
@@ -71,7 +71,9 @@ public class EmbodyContext
         this.embody = embody;
         containingAtom = plugin.containingAtom;
         if (containingAtom.type == "Person")
+        {
             bones = containingAtom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>();
+        }
     }
 
     public void Refresh()
