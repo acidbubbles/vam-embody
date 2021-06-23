@@ -185,6 +185,11 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             ), false);
         }
 
+        _section.CreateToggle(new JSONStorableBool(
+            "Keep physics hold strength*",
+            motionControl.keepCurrentPhysicsHoldStrength,
+            val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
+
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset X*",
             motionControl.offsetControllerCustom.x,
@@ -256,11 +261,6 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             -180,
             180,
             false), false);
-
-        _section.CreateToggle(new JSONStorableBool(
-            "Keep current physics hold strength*",
-            motionControl.keepCurrentPhysicsHoldStrength,
-            val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
 
         if (MotionControlNames.IsHands(motionControl.name))
         {
