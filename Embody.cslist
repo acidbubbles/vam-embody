@@ -7,6 +7,7 @@ src\Common\NavigationRigSnapshot.cs
 src\Common\QuaternionExtensions.cs
 src\Common\SuperControllerExtensions.cs
 src\Common\UIDynamicPopupExtensions.cs
+src\Common\VamConstants.cs
 src\Common\Vector3Extensions.cs
 src\Common\VisualCuesHelper.cs
 src\Diagnostics\DiagnosticsModule.cs

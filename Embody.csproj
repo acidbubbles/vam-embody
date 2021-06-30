@@ -75,6 +75,7 @@
     <Compile Include="src\Common\QuaternionExtensions.cs" />
     <Compile Include="src\Common\SuperControllerExtensions.cs" />
     <Compile Include="src\Common\UIDynamicPopupExtensions.cs" />
+    <Compile Include="src\Common\VamConstants.cs" />
     <Compile Include="src\Common\Vector3Extensions.cs" />
     <Compile Include="src\Common\VisualCuesHelper.cs" />
     <Compile Include="src\Diagnostics\DiagnosticsModule.cs" />

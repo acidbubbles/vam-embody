@@ -54,9 +54,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, "headControl");
-        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false), "lHandControl", mc => HandsAdjustments.ConfigureHand(mc, false));
-        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false), "rHandControl", mc => HandsAdjustments.ConfigureHand(mc, true));
+        headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, VamConstants.HeadControlName);
+        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false), VamConstants.LeftHandControlName, mc => HandsAdjustments.ConfigureHand(mc, false));
+        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false), VamConstants.RightHandControlName, mc => HandsAdjustments.ConfigureHand(mc, true));
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1 != null && context.viveTracker1.gameObject.activeInHierarchy ? context.viveTracker1 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2 != null && context.viveTracker2.gameObject.activeInHierarchy ? context.viveTracker2 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3 != null && context.viveTracker3.gameObject.activeInHierarchy ? context.viveTracker3 : null);
@@ -66,12 +66,12 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}7", () => context.viveTracker7 != null && context.viveTracker7.gameObject.activeInHierarchy ? context.viveTracker7 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}8", () => context.viveTracker8 != null && context.viveTracker8.gameObject.activeInHierarchy ? context.viveTracker8 : null);
 
-        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith("Control")))
+        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith(VamConstants.ControlSuffix)))
         {
             var snapshot = new FreeControllerV3WithSnapshot(controller);
             controllers.Add(snapshot);
-            if (controller.name == "lHandControl") _leftHandController = snapshot;
-            if (controller.name == "rHandControl") _rightHandController = snapshot;
+            if (controller.name == VamConstants.LeftHandControlName) _leftHandController = snapshot;
+            if (controller.name == VamConstants.RightHandControlName) _rightHandController = snapshot;
         }
 
         previewTrackerOffsetJSON.setCallbackFunction = val =>
@@ -102,7 +102,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (controller == null) return;
 
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
-        var eyesCenter = (eyes.First(eye => eye.name == "lEye").transform.localPosition + eyes.First(eye => eye.name == "rEye").transform.localPosition) / 2f;
+        var eyesCenter = (eyes.First(eye => eye.name == VamConstants.LeftEyeBoneName).transform.localPosition + eyes.First(eye => eye.name == VamConstants.RightEyeBoneName).transform.localPosition) / 2f;
         headMotionControl.offsetControllerBase = -eyesCenter;
     }
 
@@ -146,7 +146,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (motionControl.name == MotionControlNames.Head)
         {
             // Reduce the stretch between the head and the eye by matching the controller and the head bone
-            controller.control.position = context.bones.First(b => b.name == "head").transform.position;
+            controller.control.position = context.bones.First(b => b.name == VamConstants.HeadBoneName).transform.position;
             AdjustHeadToEyesOffset();
             if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
             {
