@@ -149,7 +149,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public override void PostDeactivate()
     {
          _eyeTarget.control.position = _eyeTargetRestorePosition;
-         if(_eyeBehavior.currentLookMode != EyesControl.LookMode.Target)
+         if(_eyeBehavior.currentLookMode == EyesControl.LookMode.Target)
              _eyeBehavior.currentLookMode = _eyeBehaviorRestoreLookMode;
     }
 
