@@ -479,6 +479,7 @@ public class Embody : MVRScript, IEmbody
             "Passenger w/ Hands",
             "Passenger w/ Leap",
             "Leap Fingers Only",
+            "Puppeteer (Head)",
             "Legacy Possession",
         }, "(Select To Apply)", "Apply Preset")
         {
@@ -566,6 +567,13 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.selectedJSON.val = true;
                 _context.trackers.headMotionControl.enabled = false;
                 ConfigureHandsPresets(true, false, false, true);
+                break;
+            case "Puppeteer (Head)":
+                _context.trackers.selectedJSON.val = true;
+                ConfigureHandsPresets(true, true, false, false);
+                _context.trackers.headMotionControl.mappedControllerName = null;
+                _context.trackers.leftHandMotionControl.mappedControllerName = null;
+                _context.trackers.rightHandMotionControl.mappedControllerName = VamConstants.HeadControlName;
                 break;
         }
     }
