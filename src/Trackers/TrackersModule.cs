@@ -54,9 +54,23 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.Awake();
 
-        headMotionControl = AddMotionControl(MotionControlNames.Head, () => context.head, VamConstants.HeadControlName);
-        leftHandMotionControl = AddMotionControl(MotionControlNames.LeftHand, () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false), VamConstants.LeftHandControlName, mc => HandsAdjustments.ConfigureHand(mc, false));
-        rightHandMotionControl = AddMotionControl(MotionControlNames.RightHand, () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false), VamConstants.RightHandControlName, mc => HandsAdjustments.ConfigureHand(mc, true));
+        headMotionControl = AddMotionControl(
+            MotionControlNames.Head,
+            () => context.head,
+            VamConstants.HeadControlName
+        );
+        leftHandMotionControl = AddMotionControl(
+            MotionControlNames.LeftHand,
+            () => context.LeftHand(leftHandMotionControl?.useLeapPositioning ?? false),
+            VamConstants.LeftHandControlName,
+            mc => HandsAdjustments.ConfigureHand(mc, false)
+        );
+        rightHandMotionControl = AddMotionControl(
+            MotionControlNames.RightHand,
+            () => context.RightHand(rightHandMotionControl?.useLeapPositioning ?? false),
+            VamConstants.RightHandControlName,
+            mc => HandsAdjustments.ConfigureHand(mc, true)
+        );
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}1", () => context.viveTracker1 != null && context.viveTracker1.gameObject.activeInHierarchy ? context.viveTracker1 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}2", () => context.viveTracker2 != null && context.viveTracker2.gameObject.activeInHierarchy ? context.viveTracker2 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}3", () => context.viveTracker3 != null && context.viveTracker3.gameObject.activeInHierarchy ? context.viveTracker3 : null);
@@ -98,9 +112,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     private void AdjustHeadToEyesOffset()
     {
-        var controller = FindController(headMotionControl)?.controller;
-        if (controller == null) return;
-
         var eyes = containingAtom.GetComponentsInChildren<LookAtWithLimits>();
         var eyesCenter = (eyes.First(eye => eye.name == VamConstants.LeftEyeBoneName).transform.localPosition + eyes.First(eye => eye.name == VamConstants.RightEyeBoneName).transform.localPosition) / 2f;
         headMotionControl.offsetControllerBase = -eyesCenter;
@@ -145,9 +156,13 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         if (motionControl.name == MotionControlNames.Head)
         {
-            // Reduce the stretch between the head and the eye by matching the controller and the head bone
-            controller.control.position = context.bones.First(b => b.name == VamConstants.HeadBoneName).transform.position;
-            AdjustHeadToEyesOffset();
+            if (motionControl.mappedControllerName == VamConstants.HeadControlName)
+            {
+                // Reduce the stretch between the head and the eye by matching the controller and the head bone
+                controller.control.position = context.bones.First(b => b.name == VamConstants.HeadBoneName).transform.position;
+                AdjustHeadToEyesOffset();
+            }
+
             if (motionControl.currentMotionControl == SuperController.singleton.centerCameraTarget.transform)
             {
                 UserPreferences.singleton.headCollider.gameObject.SetActive(false);
@@ -174,13 +189,13 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void BindFingers()
     {
-        if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null)
+        if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null && leftHandMotionControl.mappedControllerName == VamConstants.LeftHandControlName)
         {
             if (leftHandMotionControl.fingersTracking)
                 _leftHandController.handControl.allowPossessFingerControlJSON.val = true;
             _leftHandController.handControl.possessed = true;
         }
-        if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null)
+        if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null && rightHandMotionControl.mappedControllerName == VamConstants.RightHandControlName)
         {
             if (rightHandMotionControl.fingersTracking)
                 _rightHandController.handControl.allowPossessFingerControlJSON.val = true;
@@ -201,7 +216,14 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         if (!motionControl.enabled) return null;
         if (motionControl.mappedControllerName == null) return null;
         if (context.passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
-        if (context.snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand)) return null;
+        if (context.snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand))
+        {
+            if (motionControl.name == MotionControlNames.LeftHand && motionControl.mappedControllerName != VamConstants.LeftHandControlName)
+                SuperController.LogError($"Embody: Left hand control is mapped to {motionControl.mappedControllerName} but since Snug is activated, your setting will be ignored");
+            if (motionControl.name == MotionControlNames.RightHand && motionControl.mappedControllerName != VamConstants.RightHandControlName)
+                SuperController.LogError($"Embody: Left hand control is mapped to {motionControl.mappedControllerName} but since Snug is activated, your setting will be ignored");
+            return null;
+        }
         var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
         if (controllerWithSnapshot == null) return null;
         var controller = controllerWithSnapshot.controller;

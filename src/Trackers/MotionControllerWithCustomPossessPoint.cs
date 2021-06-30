@@ -85,30 +85,61 @@ public class MotionControllerWithCustomPossessPoint
 
     public bool SyncMotionControl()
     {
+        var previousMotionControl = currentMotionControl;
         currentMotionControl = _getMotionControl();
         if (currentMotionControl == null)
         {
-            trackerPointTransform = null;
-            controllerPointTransform = null;
-            controllerPointRB = null;
-            DestroyOffsetPreview();
+            DestroyChildren();
             return false;
         }
-        InitializeMotionControlChildren();
+
+        if (previousMotionControl == null)
+        {
+            InitializeMotionControlChildren();
+        }
+        else if (previousMotionControl != currentMotionControl)
+        {
+            DestroyChildren();
+            InitializeMotionControlChildren();
+        }
         _configure?.Invoke(this);
-        if(!_showPreview)
+
+        var hasOffsetPreview = _offsetPreview != null;
+        if(!_showPreview && hasOffsetPreview)
             DestroyOffsetPreview();
-        else
+        else if(showPreview && !hasOffsetPreview)
             CreatOffsetPreview();
+
         SyncOffset();
+
         return true;
+    }
+
+    private void DestroyChildren()
+    {
+        if (trackerPointTransform != null)
+        {
+            Object.Destroy(trackerPointTransform.gameObject);
+            trackerPointTransform = null;
+        }
+        if(controllerPointTransform != null)
+        {
+            Object.Destroy(controllerPointTransform.gameObject);
+            controllerPointTransform = null;
+            controllerPointRB = null;
+        }
+        DestroyOffsetPreview();
+    }
+
+    private void DestroyOffsetPreview()
+    {
+        if (_offsetPreview == null) return;
+        Object.Destroy(_offsetPreview.gameObject);
+        _offsetPreview = null;
     }
 
     private void InitializeMotionControlChildren()
     {
-        if (trackerPointTransform != null && trackerPointTransform.parent == currentMotionControl)
-            return;
-
         var trackerPointGO = new GameObject($"EmbodyTrackerPoint_{name}");
         trackerPointTransform = trackerPointGO.transform;
         trackerPointTransform.SetParent(currentMotionControl, false);
@@ -132,13 +163,6 @@ public class MotionControllerWithCustomPossessPoint
 
         _offsetPreview.currentMotionControl = currentMotionControl;
         _offsetPreview.Sync(_highlighted);
-    }
-
-    private void DestroyOffsetPreview()
-    {
-        if (_offsetPreview == null) return;
-        Object.Destroy(_offsetPreview.gameObject);
-        _offsetPreview = null;
     }
 
     private void SyncOffsetPreview()
