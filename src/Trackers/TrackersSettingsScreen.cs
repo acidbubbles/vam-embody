@@ -105,8 +105,11 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         _currentMotionControl = motionControl;
         _currentMotionControl.highlighted = true;
 
+
         if (MotionControlNames.IsViveTracker(motionControl.name))
         {
+            _section.CreateTitle("Vive Trackers", true);
+
             _section.CreateButton("Map to Closest Control", true).button.onClick.AddListener(() =>
             {
                 _trackerAutoSetup.AttachToClosestNode(motionControl);
@@ -126,8 +129,10 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             });
         }
 
+        _section.CreateTitle($"{motionControl.name} Options", false);
+
         _section.CreateToggle(new JSONStorableBool(
-            $"{motionControl.name} Enabled",
+            "Enabled",
             motionControl.enabled,
             val =>
             {
@@ -189,6 +194,8 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             "Keep physics hold strength*",
             motionControl.keepCurrentPhysicsHoldStrength,
             val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
+
+        _section.CreateTitle($"Controller Offset", false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset X*",
@@ -278,6 +285,34 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 otherHand.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, -motionControl.rotateControllerCustom.y, -motionControl.rotateControllerCustom.z);
                 otherHand.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, -motionControl.rotateAroundTrackerCustom.y, -motionControl.rotateAroundTrackerCustom.z);
             });
+        }
+
+        if (MotionControlNames.IsHeadOrHands(motionControl.name))
+        {
+            _section.CreateTitle("Puppeteering");
+
+            _section.CreateFilterablePopup(new JSONStorableStringChooser(
+                "",
+                new[] {_none}.Concat(_trackers.controllers.Select(mc => mc.controller.name)).ToList(),
+                motionControl.mappedControllerName,
+                "Map to control*",
+                val =>
+                {
+                    motionControl.mappedControllerName = val == _none ? null : val;
+                    context.Refresh();
+                }), false);
+
+            _section.CreateToggle(new JSONStorableBool(
+                $"{motionControl.name} Controls Position*",
+                motionControl.controlPosition,
+                val => motionControl.controlPosition = val
+            ), false);
+
+            _section.CreateToggle(new JSONStorableBool(
+                $"{motionControl.name} Controls Rotation*",
+                motionControl.controlRotation,
+                val => motionControl.controlRotation = val
+            ), false);
         }
     }
 }
