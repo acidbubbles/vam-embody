@@ -268,6 +268,12 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             {
                 var otherHand = motionControl.name == MotionControlNames.LeftHand ? _trackers.rightHandMotionControl : _trackers.leftHandMotionControl;
 
+                otherHand.enabled = motionControl.enabled;
+                otherHand.controlPosition = otherHand.controlPosition;
+                otherHand.controlRotation = motionControl.controlRotation;
+                otherHand.fingersTracking = motionControl.fingersTracking;
+                otherHand.useLeapPositioning = motionControl.useLeapPositioning;
+                otherHand.keepCurrentPhysicsHoldStrength = motionControl.keepCurrentPhysicsHoldStrength;
                 otherHand.offsetControllerCustom = new Vector3(-motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z);
                 otherHand.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, -motionControl.rotateControllerCustom.y, -motionControl.rotateControllerCustom.z);
                 otherHand.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, -motionControl.rotateAroundTrackerCustom.y, -motionControl.rotateAroundTrackerCustom.z);
