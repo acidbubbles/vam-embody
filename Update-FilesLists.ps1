@@ -17,6 +17,6 @@ $sourceFiles > .\Embody.cslist
 # meta.json
 $allFiles = (ls ./src/*.cs -Recurse) + (ls *.cslist) `
     | % { $_.FullName.Substring((pwd).Path.Length + 1) }
-( Get-Content ".\meta.json" -Raw ) -Replace "(?sm)(?<=^  `"contentList`": \[`r?`n).*?(?=`r?`n  \],)", `
+( Get-Content ".\meta.json" -Raw ) -Replace "(?sm)(?<=^ *`"contentList`" ?: ?\[ ?`r?`n).*?(?=`r?`n *\],)", `
     [System.String]::Join("`r`n", ($allFiles | % { "    `"Custom\\Scripts\\AcidBubbles\\Embody\\$($_.Replace("\", "\\"))`"," } ) ).Trim(",") `
 | Set-Content ".\meta.json" -NoNewline
