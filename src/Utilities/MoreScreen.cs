@@ -29,6 +29,7 @@ public class MoreScreen : ScreenBase, IScreen
         });
         CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
         CreateButton("Disable Untracked Controls").button.onClick.AddListener(() => Utilities.DisableUntrackedControls(context));
+        CreateButton("Apply Possession Spring Permanently").button.onClick.AddListener(() => Utilities.ApplyPossessionSpring(context));
 
         CreateTitle("General Settings", true);
 #if(VAM_GT_1_20_77_0)

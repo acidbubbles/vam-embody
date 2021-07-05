@@ -140,4 +140,16 @@ public static class Utilities
             }
         }
     }
+
+    public static void ApplyPossessionSpring(EmbodyContext context)
+    {
+        foreach (var controller in context.trackers.motionControls
+            .Where(mc => mc.enabled && mc.mappedControllerName != null)
+            .Select(mc => context.containingAtom.freeControllers.FirstOrDefault(fc => fc.name == mc.mappedControllerName))
+            .Where(fc => fc != null))
+        {
+            controller.RBHoldPositionSpring = SuperController.singleton.possessPositionSpring;
+            controller.RBHoldRotationSpring = SuperController.singleton.possessRotationSpring;
+        }
+    }
 }
