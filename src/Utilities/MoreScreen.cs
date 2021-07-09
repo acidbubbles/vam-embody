@@ -15,25 +15,33 @@ public class MoreScreen : ScreenBase, IScreen
     {
         CreateText(new JSONStorableString("", "Additional tools and options can be found here.\n\nOptions marked with an asterisk will only be saved in your profile."), true);
 
-        CreateSpacer().height = 20f;
-        CreateTitle("Animation");
-        CreateToggle(context.automation.autoArmForRecord).label = "Auto Arm On Active*";
-        CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(() => Utilities.StartRecord(context));
-
-        CreateSpacer().height = 20f;
-        CreateTitle("Posing");
-        CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() =>
+        if (context.containingAtom.type == "Person")
         {
-            var pose = new PossessionPose(context);
-            pose.Apply();
-        });
-        CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
-        CreateButton("Disable Untracked Controls").button.onClick.AddListener(() => Utilities.DisableUntrackedControls(context));
-        CreateButton("Apply Possession Spring Permanently").button.onClick.AddListener(() => Utilities.ApplyPossessionSpring(context));
+            CreateSpacer().height = 20f;
+
+            CreateTitle("Animation");
+            CreateToggle(context.automation.autoArmForRecord).label = "Auto Arm On Active*";
+            CreateButton("Arm Possessed Controllers & Record").button.onClick.AddListener(() => Utilities.StartRecord(context));
+
+            CreateSpacer().height = 20f;
+
+            CreateTitle("Posing");
+            CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() =>
+            {
+                var pose = new PossessionPose(context);
+                pose.Apply();
+            });
+            CreateButton("Re-Center Pose Near Root").button.onClick.AddListener(() => Utilities.ReCenterPose(context.containingAtom));
+            CreateButton("Disable Untracked Controls").button.onClick.AddListener(() => Utilities.DisableUntrackedControls(context));
+            CreateButton("Apply Possession Spring Permanently").button.onClick.AddListener(() => Utilities.ApplyPossessionSpring(context));
+        }
 
         CreateTitle("General Settings", true);
 #if(VAM_GT_1_20_77_0)
-        CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
+        if (context.containingAtom.type == "Person")
+        {
+            CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
+        }
 #endif
         var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key*",
             val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
@@ -50,13 +58,13 @@ public class MoreScreen : ScreenBase, IScreen
         patreonBtn.buttonColor = Color.white;
         patreonBtn.button.onClick.AddListener(() => Application.OpenURL("https://www.patreon.com/acidbubbles"));
 
-        CreateSpacer(true).height = 20f;
-        CreateTitle("Diagnostics", true);
-        CreateToggle(context.diagnostics.enabledJSON, true).label = "Diagnostics: Record Diag. Data";
-        CreateButton("<i>Open Diagnostics...</i>", true).button.onClick.AddListener(() =>
+        if (context.containingAtom.type == "Person")
         {
-            screensManager.Show(DiagnosticsScreen.ScreenName);
-        });
+            CreateSpacer(true).height = 20f;
+            CreateTitle("Diagnostics", true);
+            CreateToggle(context.diagnostics.enabledJSON, true).label = "Diagnostics: Record Diag. Data";
+            CreateButton("<i>Open Diagnostics...</i>", true).button.onClick.AddListener(() => { screensManager.Show(DiagnosticsScreen.ScreenName); });
+        }
     }
 
     private static List<string> _keys;

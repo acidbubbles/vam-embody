@@ -108,6 +108,7 @@ public class Embody : MVRScript, IEmbody
             else
             {
                 _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
+                _screensManager.Add(MoreScreen.ScreenName, new MoreScreen(_context));
             }
 
             activeJSON.setCallbackFunction = val =>

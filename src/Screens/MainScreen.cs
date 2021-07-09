@@ -83,11 +83,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
             CreateConfigButton(label, $"Configure {label}...");
         }
 
-        if (context.containingAtom.type == "Person")
-        {
-            CreateConfigButton(MoreScreen.ScreenName, "<i>Other Settings...</i>");
-            CreateSpacer(true).height = 40f;
-        }
+        CreateConfigButton(MoreScreen.ScreenName, "<i>Other Settings...</i>");
     }
 
     private void CreateConfigButton(string screenName, string btnLabel)
