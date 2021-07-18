@@ -155,7 +155,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (!allowPersonHeadRotationJSON.val)
             _headControlRB.interpolation = RigidbodyInterpolation.Interpolate;
 
-        if (!allowPersonHeadRotationJSON.val && !rotationLockJSON.val)
+        if (rotationLockJSON.val)
             GlobalSceneOptions.singleton.disableNavigation = true;
 
         StartCoroutine(OnEnableCo());
