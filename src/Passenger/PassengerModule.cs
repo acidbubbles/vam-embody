@@ -104,10 +104,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             SuperController.singleton.HideMainHUD();
         }
-        // TODO: Deal with upside down (Vector3.Dot?)
-        var navigationRigForward = SuperController.singleton.navigationRig.forward;
-        var rigRotationOffset = Vector3.ProjectOnPlane(navigationRigForward, Vector3.up);
-        _rigRotationOffset = Quaternion.Euler(rigRotationOffset);
+        _rigRotationOffset = Quaternion.identity;
     }
 
     private void SyncCameraParent()
