@@ -479,6 +479,7 @@ public class Embody : MVRScript, IEmbody
             "Passenger",
             "Passenger w/ Hands",
             "Passenger w/ Leap",
+            "Passenger (Free Look)",
             "Leap Fingers Only",
             "Puppeteer (Head)",
             "Legacy Possession",
@@ -563,6 +564,11 @@ public class Embody : MVRScript, IEmbody
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
+                break;
+            case "Passenger (Free Look)":
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = true;
+                _context.passenger.rotationLockJSON.val = false;
                 break;
             case "Leap Only":
                 _context.trackers.selectedJSON.val = true;
