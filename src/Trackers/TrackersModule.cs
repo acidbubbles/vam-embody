@@ -20,6 +20,7 @@ public interface ITrackersModule : IEmbodyModule
     void BindFingers();
     void ReleaseFingers();
     void ClearPersonalData();
+    void RefreshHands();
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -124,10 +125,23 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         TryBindTrackers();
     }
 
+    public void RefreshHands()
+    {
+        if (!enabled) return;
+
+        ReleaseFingers();
+        foreach (var c in controllers.Where(c => c.handControl != null))
+            Release(c);
+
+        Bind(leftHandMotionControl);
+        Bind(rightHandMotionControl);
+        BindFingers();
+    }
+
     public void TryBindTrackers()
     {
         if(Bind(headMotionControl))
-            StartCoroutine(OnEnableCo(NavigationRigSnapshot.Snap()));
+            StartCoroutine(KeepHeadInPlaceCo(NavigationRigSnapshot.Snap()));
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
@@ -135,7 +149,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             Bind(motionControl);
     }
 
-    private IEnumerator OnEnableCo(NavigationRigSnapshot rigSnapshot)
+    private static IEnumerator KeepHeadInPlaceCo(NavigationRigSnapshot rigSnapshot)
     {
         // Once bound, prevent vam from moving the head elsewhere due to world scale change
         yield return new WaitForEndOfFrame();
@@ -240,24 +254,28 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         foreach (var c in controllers)
         {
-            if (c.active)
-            {
-                c.controller.RestorePreLinkState();
-                c.controller.possessed = false;
-                c.controller.startedPossess = false;
-
-                var mac = c.controller.GetComponent<MotionAnimationControl>();
-                if (mac != null)
-                {
-                    mac.suspendPositionPlayback = false;
-                    mac.suspendRotationPlayback = false;
-                }
-
-                c.active = false;
-            }
+            Release(c);
         }
 
         UserPreferences.singleton.headCollider.gameObject.SetActive(UserPreferences.singleton.useHeadCollider);
+    }
+
+    private static void Release(FreeControllerV3WithSnapshot c)
+    {
+        if (!c.active) return;
+
+        c.controller.RestorePreLinkState();
+        c.controller.possessed = false;
+        c.controller.startedPossess = false;
+
+        var mac = c.controller.GetComponent<MotionAnimationControl>();
+        if (mac != null)
+        {
+            mac.suspendPositionPlayback = false;
+            mac.suspendRotationPlayback = false;
+        }
+
+        c.active = false;
     }
 
     public void OnDestroy()

@@ -16,6 +16,7 @@ public interface ISnugModule : IEmbodyModule
     SnugAutoSetup autoSetup { get; }
     void ClearPersonalData();
     void ScaleChanged();
+    void RefreshHands();
 }
 
 public class SnugModule : EmbodyModuleBase, ISnugModule
@@ -305,6 +306,19 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         OnDisable();
         DestroyVisualCues();
+    }
+
+    public void RefreshHands()
+    {
+        if (!enabled) return;
+
+        context.trackers.ReleaseFingers();
+        DisableHand(_lHand);
+        DisableHand(_rHand);
+
+        EnableHand(_lHand, MotionControlNames.LeftHand);
+        EnableHand(_rHand, MotionControlNames.RightHand);
+        context.trackers.BindFingers();
     }
 
     #endregion

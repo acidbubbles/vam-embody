@@ -441,6 +441,14 @@ public class Embody : MVRScript, IEmbody
         }));
         bindings.Add(new JSONStorableAction("StartRecord", () => Utilities.StartRecord(_context)));
         bindings.Add(new JSONStorableAction("ApplyPossessionPose", () => new PossessionPose(_context).Apply()));
+        bindings.Add(new JSONStorableAction("ToggleHands", () =>
+        {
+            var areHandsEnabled = _context.trackers.leftHandMotionControl.enabled || _context.trackers.rightHandMotionControl.enabled;
+            _context.trackers.leftHandMotionControl.enabled = !areHandsEnabled;
+            _context.trackers.rightHandMotionControl.enabled = !areHandsEnabled;
+            _context.trackers.RefreshHands();
+            _context.snug.RefreshHands();
+        }));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
