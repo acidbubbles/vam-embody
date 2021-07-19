@@ -419,7 +419,7 @@ public class Embody : MVRScript, IEmbody
         bindings.Add(new JSONStorableAction("Activate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = true; } }));
         bindings.Add(new JSONStorableAction("Deactivate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = false; } }));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
-        bindings.Add(new JSONStorableAction("SpawnMirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
+        bindings.Add(new JSONStorableAction("Add_Mirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
         bindings.Add(new JSONStorableAction("Preset_Passenger", () => SelectPreset("Passenger")));
         bindings.Add(new JSONStorableAction("Preset_Snug", () => SelectPreset("Snug")));
         bindings.Add(new JSONStorableAction("Preset_ImprovedPossession", () => SelectPreset("Improved Possession")));
