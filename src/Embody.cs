@@ -23,6 +23,8 @@ public class Embody : MVRScript, IEmbody
     public JSONStorableBool activeJSON { get; private set; }
     public UIDynamicToggle activeToggle { get; private set; }
     public JSONStorableStringChooser presetsJSON { get; private set; }
+    private JSONStorableUrl _loadProfileWithPathUrlJSON;
+    private JSONStorableActionPresetFilePath _loadProfileWithPathJSON;
 
     private GameObject _modules;
     private ScreensManager _screensManager;
@@ -124,6 +126,24 @@ public class Embody : MVRScript, IEmbody
             activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
+
+            _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, (string url) => new Storage(_context).LoadProfile(url), SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
+            {
+                allowFullComputerBrowse = false,
+                allowBrowseAboveSuggestedPath = true,
+                hideExtension = false,
+                showDirs = true,
+                isRestorable = false,
+                isStorable = false,
+                beginBrowseWithObjectCallback = jsurl =>
+                {
+                    FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
+                    jsurl.shortCuts = FileManagerSecure.GetShortCutsForDirectory(SaveFormat.SaveFolder, false, false, true, true);
+                }
+            };
+            RegisterUrl(_loadProfileWithPathUrlJSON);
+            _loadProfileWithPathJSON = new JSONStorableActionPresetFilePath("LoadProfileWithPath", url => _loadProfileWithPathUrlJSON.SetFilePath(url), _loadProfileWithPathUrlJSON);
+            RegisterPresetFilePathAction(_loadProfileWithPathJSON);
 
             var launchWizardJSON = new JSONStorableAction("LaunchWizard", () => StartCoroutine(LaunchWizard()));
             RegisterAction(launchWizardJSON);

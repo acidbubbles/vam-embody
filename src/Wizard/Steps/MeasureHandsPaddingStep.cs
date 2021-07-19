@@ -35,8 +35,6 @@ Put your hands together like you're praying, and press Next when ready.
 
     public bool Apply()
     {
-        SuperController.LogMessage($"Hands distance: {Vector3.Distance(context.LeftHand().position, context.RightHand().position)}");
-
         return true;
     }
 }
