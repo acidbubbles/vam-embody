@@ -27,6 +27,7 @@ public class Embody : MVRScript, IEmbody
     private JSONStorableActionPresetFilePath _loadProfileWithPathJSON;
 
     private GameObject _modules;
+    private readonly List<IEmbodyModule> _modulesList = new List<IEmbodyModule>();
     private ScreensManager _screensManager;
     private EmbodyContext _context;
     private bool _restored;
@@ -457,6 +458,7 @@ public class Embody : MVRScript, IEmbody
         module.enabled = false;
         module.context = context;
         module.activeJSON = activeJSON;
+        _modulesList.Add(module);
         return module;
     }
 
@@ -525,8 +527,7 @@ public class Embody : MVRScript, IEmbody
 
     private void SelectPreset(string val)
     {
-        var modules = _modules.GetComponents<IEmbodyModule>();
-        foreach (var module in modules)
+        foreach (var module in _modulesList)
         {
             if (module.skipChangeEnabledWhenActive) continue;
             module.selectedJSON.val = false;
@@ -642,7 +643,8 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
         if (activeJSON != null) activeJSON.val = false;
-        if (_modules != null) _modules.GetComponent<WizardModule>()?.StopWizard("The wizard was canceled because Embody was disabled.");
+        if (_context?.wizard != null)
+            _context.wizard.StopWizard("The wizard was canceled because Embody was disabled.");
     }
 
     // ReSharper disable once UnusedMember.Local
@@ -687,7 +689,7 @@ public class Embody : MVRScript, IEmbody
     public void StoreJSON(JSONClass json, bool toProfile, bool toScene)
     {
         json["Version"].AsInt = SaveFormat.Version;
-        foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
+        foreach (var c in _modulesList)
         {
             var jc = new JSONClass();
             c.StoreJSON(jc, toProfile || _context.diagnostics.enabledJSON.val, toScene);
@@ -717,7 +719,7 @@ public class Embody : MVRScript, IEmbody
             return false;
         }
 
-        foreach (var c in _modules.GetComponents<EmbodyModuleBase>())
+        foreach (var c in _modulesList)
             c.RestoreFromJSON(jc[c.storeId].AsObject, fromProfile, fromScene);
 
         return false;

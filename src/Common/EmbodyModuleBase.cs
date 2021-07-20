@@ -15,6 +15,9 @@ public interface IEmbodyModule
     void PreActivate();
     void PostDeactivate();
     void ResetToDefault();
+
+    void StoreJSON(JSONClass jc, bool toProfile, bool toScene);
+    void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene);
 }
 
 public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
