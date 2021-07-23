@@ -9,6 +9,7 @@ using UnityEngine;
 public interface IEmbody
 {
     JSONStorableBool activeJSON { get; }
+    JSONStorableBool activateOnLoadJSON { get; }
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void Refresh();
@@ -21,6 +22,7 @@ public interface IEmbody
 public class Embody : MVRScript, IEmbody
 {
     public JSONStorableBool activeJSON { get; private set; }
+    public JSONStorableBool activateOnLoadJSON { get; private set; }
     public UIDynamicToggle activeToggle { get; private set; }
     public JSONStorableStringChooser presetsJSON { get; private set; }
     private JSONStorableUrl _loadProfileWithPathUrlJSON;
@@ -45,6 +47,9 @@ public class Embody : MVRScript, IEmbody
         try
         {
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
+            activateOnLoadJSON = new JSONStorableBool("ActivateOnLoad", false) {isStorable = true};
+            RegisterBool(activateOnLoadJSON);
+
             var isPerson = containingAtom.type == "Person";
 
             _scaleChangeReceiver = gameObject.AddComponent<EmbodyScaleChangeReceiver>();
@@ -378,6 +383,9 @@ public class Embody : MVRScript, IEmbody
     private IEnumerator DeferredInit()
     {
         yield return new WaitForEndOfFrame();
+
+        if (this == null) yield break;
+
         if (!_restored)
             containingAtom.RestoreFromLast(this);
 
@@ -386,6 +394,12 @@ public class Embody : MVRScript, IEmbody
 
         if (Input.GetKey(KeyCode.LeftControl))
             _context.diagnostics.enabledJSON.val = true;
+
+        if (activateOnLoadJSON.val)
+        {
+            if (this != null && enabled)
+                activeJSON.val = true;
+        }
     }
 
     public void LoadFromDefaults()

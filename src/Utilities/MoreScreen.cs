@@ -37,6 +37,8 @@ public class MoreScreen : ScreenBase, IScreen
         }
 
         CreateTitle("General Settings", true);
+        var activateOnLoadToggle = CreateToggle(context.embody.activateOnLoadJSON, true);
+        activateOnLoadToggle.label = "Auto Activate On Load";
 #if(VAM_GT_1_20_77_0)
         if (context.containingAtom.type == "Person")
         {
