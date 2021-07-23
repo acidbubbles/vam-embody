@@ -22,6 +22,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateTitle("Options");
         CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open*";
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll";
+        CreateToggle(_passenger.rotationLockNoTiltJSON).label = "Prevent Camera Tilt";
         CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
 
         if (context.containingAtom.type == "Person")

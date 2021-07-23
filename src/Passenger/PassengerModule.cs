@@ -13,6 +13,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableFloat lookAtWeightJSON { get; }
     JSONStorableBool rotationLockJSON { get; }
     JSONStorableBool rotationLockNoRollJSON { get; }
+    JSONStorableBool rotationLockNoTiltJSON { get; }
     JSONStorableFloat rotationSmoothingJSON { get; }
     JSONStorableBool positionLockJSON { get; }
     JSONStorableFloat positionSmoothingJSON { get; }
@@ -34,6 +35,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableFloat lookAtWeightJSON { get; } = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
     public JSONStorableBool rotationLockJSON { get; } = new JSONStorableBool("ControlRotation", true);
     public JSONStorableBool rotationLockNoRollJSON { get; } = new JSONStorableBool("NoRoll", false);
+    public JSONStorableBool rotationLockNoTiltJSON { get; } = new JSONStorableBool("NoTilt", false);
     public JSONStorableFloat rotationSmoothingJSON { get; } = new JSONStorableFloat("RotationSmoothing", 0f, 0f, 1f, true);
     public JSONStorableBool positionLockJSON { get; } = new JSONStorableBool("ControlPosition", true);
     public JSONStorableFloat positionSmoothingJSON { get; } = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
@@ -89,6 +91,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             if (val) allowPersonHeadRotationJSON.valNoCallback = false;
             SyncCameraParent();
+        };
+        rotationLockNoRollJSON.setCallbackFunction = val =>
+        {
+            if (!val) rotationLockNoTiltJSON.val = false;
+        };
+        rotationLockNoTiltJSON.setCallbackFunction = val =>
+        {
+            if (val) rotationLockNoRollJSON.val = true;
         };
         allowPersonHeadRotationJSON.setCallbackFunction = val =>
         {
@@ -254,7 +264,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         }
 
         if (rotationLockNoRollJSON.val)
+        {
             rotation.SetLookRotation(rotation * Vector3.forward, Vector3.up);
+            if (rotationLockNoTiltJSON.val)
+                rotation = Quaternion.Euler(new Vector3(0, rotation.eulerAngles.y, 0));
+        }
 
         // Move navigation rig
 
@@ -301,6 +315,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         lookAtWeightJSON.StoreJSON(jc);
         rotationLockJSON.StoreJSON(jc);
         rotationLockNoRollJSON.StoreJSON(jc);
+        rotationLockNoTiltJSON.StoreJSON(jc);
         rotationSmoothingJSON.StoreJSON(jc);
         positionLockJSON.StoreJSON(jc);
         positionSmoothingJSON.StoreJSON(jc);
@@ -321,6 +336,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         lookAtWeightJSON.RestoreFromJSON(jc);
         rotationLockJSON.RestoreFromJSON(jc);
         rotationLockNoRollJSON.RestoreFromJSON(jc);
+        rotationLockNoTiltJSON.RestoreFromJSON(jc);
         rotationSmoothingJSON.RestoreFromJSON(jc);
         positionLockJSON.RestoreFromJSON(jc);
         positionSmoothingJSON.RestoreFromJSON(jc);
@@ -343,6 +359,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         lookAtWeightJSON.SetValToDefault();
         allowPersonHeadRotationJSON.SetValToDefault();
         rotationLockNoRollJSON.SetValToDefault();
+        rotationLockNoTiltJSON.SetValToDefault();
         eyesToHeadDistanceOffsetJSON.SetValToDefault();
     }
 }
