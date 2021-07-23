@@ -32,7 +32,7 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
         cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);
         cameraHeightJSON = new JSONStorableFloat("CameraHeightAdjust", 0f, (float val) => Refresh(), -0.05f, 0.05f, false);
         cameraPitchJSON = new JSONStorableFloat("CameraPitchAdjust", 0f, (float val) => Refresh(), -135f, 45f, true);
-        clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, 0.01f, .2f, true);
+        clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, (float val) => Refresh(), 0.01f, .2f, true);
     }
 
     public override void OnEnable()
