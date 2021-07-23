@@ -20,8 +20,13 @@ namespace Handlers
             { "Custom/Subsurface/AlphaMaskComputeBuff", null },
             { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
 
-            // Plugin materials
-            { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", null }
+            // Hunting-Succubus' tesselation material
+            { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", null },
+
+            // Hunting-Succubus' restored tesselation materials
+            { "Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff", null },
+            { "Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff", null },
+            { "Custom/Subsurface/TransparentSeparateAlphaComputeBuff", null }
         };
 
     }
