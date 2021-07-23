@@ -386,8 +386,12 @@ public class Embody : MVRScript, IEmbody
 
         if (this == null) yield break;
 
+        var restoredFromLast = false;
         if (!_restored)
+        {
             containingAtom.RestoreFromLast(this);
+            restoredFromLast = true;
+        }
 
         SuperController.singleton.BroadcastMessage("OnActionsProviderAvailable", this, SendMessageOptions.DontRequireReceiver);
         _screensManager.Show(MainScreen.ScreenName);
@@ -395,7 +399,7 @@ public class Embody : MVRScript, IEmbody
         if (Input.GetKey(KeyCode.LeftControl))
             _context.diagnostics.enabledJSON.val = true;
 
-        if (activateOnLoadJSON.val)
+        if (activateOnLoadJSON.val && !restoredFromLast)
         {
             if (this != null && enabled)
                 activeJSON.val = true;
