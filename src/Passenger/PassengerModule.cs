@@ -225,7 +225,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         {
             if (exitOnMenuOpen.val && SuperController.singleton.mainHUD.gameObject.activeSelf)
             {
-                context.embody.activeJSON.val = false;
+                context.embody.Deactivate();
                 return;
             }
 

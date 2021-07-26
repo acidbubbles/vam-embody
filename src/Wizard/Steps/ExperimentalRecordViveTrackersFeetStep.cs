@@ -24,7 +24,7 @@ You can also press Escape to align without possession.".TrimStart();
         base.Enter();
 
         context.trackers.previewTrackerOffsetJSON.val = true;
-        context.embody.activeJSON.val = true;
+        context.embody.ActivateManually();
         _heightAdjust = SuperController.singleton.playerHeightAdjust;
     }
 

@@ -28,7 +28,7 @@ You can also press Escape to align without possession.
         base.Enter();
 
         context.trackers.previewTrackerOffsetJSON.val = true;
-        context.embody.activeJSON.val = true;
+        context.embody.ActivateManually();
         _heightAdjust = SuperController.singleton.playerHeightAdjust;
         /*
         This method creates less movement noise, but it's harder to precisely align eyes

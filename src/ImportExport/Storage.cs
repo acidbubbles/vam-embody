@@ -24,7 +24,7 @@ public class Storage
     public void LoadProfile(string path)
     {
         if (string.IsNullOrEmpty(path)) return;
-        _context.embody.activeJSON.val = false;
+        _context.embody.Deactivate();
         Utilities.ResetToDefaults(_context);
         var jc = _context.plugin.LoadJSON(path).AsObject;
         _context.embody.RestoreFromJSONInternal(jc, true, false);
@@ -41,7 +41,7 @@ public class Storage
 
     public void ClearPersonalData()
     {
-        _context.embody.activeJSON.val = false;
+        _context.embody.Deactivate();
         _context.snug.ClearPersonalData();
         _context.worldScale.ClearPersonalData();
         _context.trackers.ClearPersonalData();

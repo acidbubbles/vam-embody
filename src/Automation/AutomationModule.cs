@@ -42,7 +42,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                 || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
             {
                 SuperController.singleton.SelectModeOff();
-                context.embody.activeJSON.val = false;
+                context.embody.Deactivate();
                 return;
             }
 #endif
@@ -51,7 +51,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         {
             if (headPossessedInVam)
             {
-                context.embody.activeJSON.val = true;
+                context.embody.ActivateManually();
                 _activatedByVam = true;
                 return;
             }
@@ -66,7 +66,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
                     if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
                     {
                         SuperController.singleton.SelectModeOff();
-                        context.embody.activeJSON.val = true;
+                        context.embody.ActivateManually();
                         return;
                     }
                 }
@@ -75,20 +75,20 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
 
             if (!LookInputModule.singleton.inputFieldActive && toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
             {
-                context.embody.activeJSON.val = true;
+                context.embody.ActivateManually();
                 return;
             }
         }
 
         if (_activatedByVam && context.embody.activeJSON.val && !_headControl.possessed)
         {
-            context.embody.activeJSON.val = false;
+            context.embody.Deactivate();
             return;
         }
 
         if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
         {
-            context.embody.activeJSON.val = false;
+            context.embody.Deactivate();
             return;
         }
     }

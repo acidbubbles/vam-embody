@@ -128,7 +128,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
             _step = null;
         }
 
-        context.embody.activeJSON.val = false;
+        context.embody.Deactivate();
         context.trackers.previewTrackerOffsetJSON.val = false;
         context.snug.previewSnugOffsetJSON.val = false;
 
@@ -174,7 +174,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
     {
         context.diagnostics.TakeSnapshot("Start Wizard");
 
-        context.embody.activeJSON.val = false;
+        context.embody.Deactivate();
 
         yield return 0;
 

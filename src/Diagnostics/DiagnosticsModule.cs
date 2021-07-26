@@ -86,7 +86,7 @@ public class DiagnosticsModule : EmbodyModuleBase, IDiagnosticsModule
 
         yield return 0;
 
-        context.embody.activeJSON.val = true;
+        context.embody.ActivateManually();
 
         /*
         while (context.plugin.isActiveAndEnabled)

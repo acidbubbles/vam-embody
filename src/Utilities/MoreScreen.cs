@@ -36,6 +36,10 @@ public class MoreScreen : ScreenBase, IScreen
             CreateButton("Apply Possession Spring Permanently").button.onClick.AddListener(() => Utilities.ApplyPossessionSpring(context));
         }
 
+        CreateTitle("Deactivating Behavior");
+        CreateToggle(context.passenger.exitOnMenuOpen).label = "Exit On Menu Open (Passenger)*";
+        CreateFilterablePopup(context.embody.returnToSpawnPoint).label = "Deactivate to Spawn Point (Trigger)";
+
         CreateTitle("General Settings", true);
         var activateOnLoadToggle = CreateToggle(context.embody.activateOnLoadJSON, true);
         activateOnLoadToggle.label = "Auto Activate On Load";

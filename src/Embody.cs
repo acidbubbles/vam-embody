@@ -10,8 +10,11 @@ public interface IEmbody
 {
     JSONStorableBool activeJSON { get; }
     JSONStorableBool activateOnLoadJSON { get; }
+    JSONStorableStringChooser returnToSpawnPoint { get; }
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
+    void ActivateManually();
+    void Deactivate();
     void Refresh();
     void RefreshDelayed();
     void LoadFromDefaults();
@@ -21,13 +24,18 @@ public interface IEmbody
 
 public class Embody : MVRScript, IEmbody
 {
+    private const string _returnToClosestSpawnPointValue = "(Closest)";
+
+    private static readonly string[] _returnToSpawnPointInitialValues = new[] {"", _returnToClosestSpawnPointValue};
+
     public JSONStorableBool activeJSON { get; private set; }
     public JSONStorableBool activateOnLoadJSON { get; private set; }
+    public JSONStorableStringChooser returnToSpawnPoint { get; private set; }
     public UIDynamicToggle activeToggle { get; private set; }
     public JSONStorableStringChooser presetsJSON { get; private set; }
+
     private JSONStorableUrl _loadProfileWithPathUrlJSON;
     private JSONStorableActionPresetFilePath _loadProfileWithPathJSON;
-
     private GameObject _modules;
     private readonly List<IEmbodyModule> _modulesList = new List<IEmbodyModule>();
     private ScreensManager _screensManager;
@@ -41,6 +49,8 @@ public class Embody : MVRScript, IEmbody
     private JSONArray _poseJSON;
     private bool? _restoreLeftHandEnabled;
     private bool? _restoreRightHandEnabled;
+    private bool _activatedManually;
+    private bool _active;
 
     public override void Init()
     {
@@ -49,6 +59,9 @@ public class Embody : MVRScript, IEmbody
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
             activateOnLoadJSON = new JSONStorableBool("ActivateOnLoad", false) {isStorable = true};
             RegisterBool(activateOnLoadJSON);
+            returnToSpawnPoint = new JSONStorableStringChooser("ReturnToSpawnPoint", new List<string>(), "", "Return To Spawn Point");
+            SyncAtoms(null);
+            RegisterStringChooser(returnToSpawnPoint);
 
             var isPerson = containingAtom.type == "Person";
 
@@ -122,7 +135,7 @@ public class Embody : MVRScript, IEmbody
             activeJSON.setCallbackFunction = val =>
             {
                 if (val)
-                    Activate();
+                    Activate(false);
                 else
                     Deactivate(true);
             };
@@ -132,8 +145,13 @@ public class Embody : MVRScript, IEmbody
             activeToggle.label = "Active";
             activeToggle.backgroundColor = Color.cyan;
             activeToggle.labelText.fontStyle = FontStyle.Bold;
+            activeToggle.toggle.onValueChanged.AddListener(v =>
+            {
+                if (!v) return;
+                _activatedManually = true;
+            });
 
-            _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, (string url) => new Storage(_context).LoadProfile(url), SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
+            _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, url => new Storage(_context).LoadProfile(url), SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
             {
                 allowFullComputerBrowse = false,
                 allowBrowseAboveSuggestedPath = true,
@@ -172,23 +190,37 @@ public class Embody : MVRScript, IEmbody
 
     private void ActivatePreset(string presetVal)
     {
+        var navigationRigSnapshot = _navigationRigSnapshot;
         if (activeJSON.val)
         {
-            activeJSON.val = false;
-            return;
+            Deactivate(false);
         }
 
         presetsJSON.val = presetVal;
-        activeJSON.val = true;
+
+        ActivateManually();
+
+        _navigationRigSnapshot = navigationRigSnapshot;
     }
 
-    private void Activate()
+    public void ActivateManually()
     {
-        if (!enabled)
+        Activate(true);
+    }
+
+    private void Activate(bool activatedManually)
+    {
+        if (_active) return;
+        _active = true;
+
+        if (!enabled || (activeToggle != null && !activeToggle.toggle.interactable))
         {
             activeJSON.valNoCallback = false;
             return;
         }
+
+        activeJSON.valNoCallback = true;
+        _activatedManually = activatedManually;
 
         SuperController.singleton.ClearPossess();
 
@@ -273,8 +305,18 @@ public class Embody : MVRScript, IEmbody
             Utilities.MarkForRecord(_context);
     }
 
-    private void Deactivate(bool defer)
+    public void Deactivate()
     {
+        Deactivate(true);
+    }
+
+    private void Deactivate(bool restoreNavigationRig)
+    {
+        if (!_active) return;
+        _active = false;
+
+        var wasActivatedManually = _activatedManually;
+        _activatedManually = false;
         activeJSON.valNoCallback = false;
 
         _context.automation.Reset();
@@ -318,13 +360,30 @@ public class Embody : MVRScript, IEmbody
             _restoreRightHandEnabled = null;
         }
 
+        if (!restoreNavigationRig)
+        {
+            _navigationRigSnapshot = null;
+            return;
+        }
+
+        JSONStorableAction spawnAction;
+        if (!wasActivatedManually && TryGetSpawnPoint(out spawnAction))
+        {
+            _navigationRigSnapshot = null;
+            if (spawnAction == null) throw new NullReferenceException("Null spawn action");
+            spawnAction.actionCallback.Invoke();
+            _restoreNavigationRigCoroutine = StartCoroutine(CallNextFrame(spawnAction.actionCallback.Invoke));
+            return;
+        }
+
         if (_navigationRigSnapshot != null)
         {
-            _navigationRigSnapshot.Restore();
-            if (defer)
-                _restoreNavigationRigCoroutine = StartCoroutine(RestoreNavigationRig());
-            else
+            _restoreNavigationRigCoroutine = StartCoroutine(CallNextFrame(() =>
+            {
+                _navigationRigSnapshot?.Restore();
                 _navigationRigSnapshot = null;
+                _restoreNavigationRigCoroutine = null;
+            }));
         }
     }
 
@@ -372,12 +431,11 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
-    private IEnumerator RestoreNavigationRig()
+    private IEnumerator CallNextFrame(Action act)
     {
         yield return 0;
-        _navigationRigSnapshot?.Restore();
-        _navigationRigSnapshot = null;
-        _restoreNavigationRigCoroutine = null;
+        if (this == null) yield break;
+        act();
     }
 
     private IEnumerator DeferredInit()
@@ -402,7 +460,7 @@ public class Embody : MVRScript, IEmbody
         if (activateOnLoadJSON.val && !restoredFromLast)
         {
             if (this != null && enabled)
-                activeJSON.val = true;
+                Activate(false);
         }
     }
 
@@ -434,9 +492,9 @@ public class Embody : MVRScript, IEmbody
         {
             {"Namespace", "Embody"}
         });
-        bindings.Add(new JSONStorableAction("ToggleActive", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = !activeJSON.val; } }));
-        bindings.Add(new JSONStorableAction("Activate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = true; } }));
-        bindings.Add(new JSONStorableAction("Deactivate", () => { if (activeToggle != null && activeToggle.toggle.interactable) { activeJSON.val = false; } }));
+        bindings.Add(new JSONStorableAction("ToggleActive", () => { if(activeJSON.val) Deactivate(); else ActivateManually(); }));
+        bindings.Add(new JSONStorableAction("Activate", ActivateManually));
+        bindings.Add(new JSONStorableAction("Deactivate", Deactivate));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
         bindings.Add(new JSONStorableAction("Add_Mirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
         bindings.Add(new JSONStorableAction("Preset_Passenger", () => SelectPreset("Passenger")));
@@ -545,6 +603,8 @@ public class Embody : MVRScript, IEmbody
 
     private void SelectPreset(string val)
     {
+        if (_context.containingAtom.type != "Person") return;
+
         foreach (var module in _modulesList)
         {
             if (module.skipChangeEnabledWhenActive) continue;
@@ -646,12 +706,91 @@ public class Embody : MVRScript, IEmbody
         _context.trackers.rightHandMotionControl.fingersTracking = fingers;
     }
 
+    private bool TryGetSpawnPoint(out JSONStorableAction spawnAction)
+    {
+        if (string.IsNullOrEmpty(returnToSpawnPoint.val))
+        {
+            spawnAction = null;
+            return false;
+        }
+        return returnToSpawnPoint.val == _returnToClosestSpawnPointValue
+            ? TryGetClosestSpawnPoint(out spawnAction)
+            : TryGetSpecificSpawnPoint(out spawnAction);
+    }
+
+    private bool TryGetClosestSpawnPoint(out JSONStorableAction spawnAction)
+    {
+        Atom closestSpawnPoint = null;
+        var closestDistance = float.MaxValue;
+        var cameraPosition = SuperController.singleton.centerCameraTarget.transform.position;
+        foreach (var spawnPointAtom in GetSpawnPointAtoms())
+        {
+            var distance = Mathf.Abs(Vector3.SqrMagnitude(cameraPosition - spawnPointAtom.mainController.control.position));
+            if (!(distance < closestDistance)) continue;
+            closestDistance = distance;
+            closestSpawnPoint = spawnPointAtom;
+        }
+
+        if (closestSpawnPoint == null)
+        {
+            SuperController.LogError($"Embody '{containingAtom.uid}' could not find any SpawnPoint in the scene to return to");
+            spawnAction = null;
+            return false;
+        }
+
+        spawnAction = closestSpawnPoint
+            .GetStorableIDs()
+            .Select(id => closestSpawnPoint.GetStorableByID(id))
+            .Select(s => s.GetAction("Spawn Now"))
+            .FirstOrDefault(s => s != null);
+
+        if (spawnAction == null)
+        {
+            SuperController.LogError($"Embody '{containingAtom.uid}' cannot find an action storable in '{closestSpawnPoint.uid}' named 'Spawn Now'");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool TryGetSpecificSpawnPoint(out JSONStorableAction spawnAction)
+    {
+        var spawnPointAtom = SuperController.singleton.GetAtoms().FirstOrDefault(a => a.uid == returnToSpawnPoint.val);
+        if (spawnPointAtom == null)
+        {
+            SuperController.LogError($"Embody '{containingAtom.uid}' cannot restore to SpawnPoint '{returnToSpawnPoint.val}' because this atom does not exist in the scene");
+            spawnAction = null;
+            return false;
+        }
+
+        spawnAction = spawnPointAtom
+            .GetStorableIDs()
+            .Select(id => spawnPointAtom.GetStorableByID(id))
+            .Select(s => s.GetAction("Spawn Now"))
+            .FirstOrDefault(act => act != null);
+        if (spawnAction != null) return true;
+
+        SuperController.LogError($"Embody '{containingAtom.uid}' cannot find an action storable in '{spawnPointAtom.uid}' named 'Spawn Now'");
+        return false;
+    }
+
+    private static IEnumerable<Atom> GetSpawnPointAtoms()
+    {
+        return SuperController.singleton.GetAtoms().Where(a => a.GetBoolParamValue("IsSpawnPointHost"));
+    }
+
+    private void SyncAtoms(List<string> _)
+    {
+        returnToSpawnPoint.choices = _returnToSpawnPointInitialValues.Concat(GetSpawnPointAtoms().Select(a => a.uid)).ToList();
+    }
+
     public void OnEnable()
     {
 #if(VAM_GT_1_20_77_0)
         SuperController.singleton.onBeforeSceneSaveHandlers += OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers += OnSceneSaved;
 #endif
+        SuperController.singleton.onAtomUIDsChangedHandlers += SyncAtoms;
     }
 
     public void OnDisable()
@@ -660,7 +799,8 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onBeforeSceneSaveHandlers -= OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
-        if (activeJSON != null) activeJSON.val = false;
+        SuperController.singleton.onAtomUIDsChangedHandlers -= SyncAtoms;
+        if (activeJSON != null) Deactivate();
         if (_context?.wizard != null)
             _context.wizard.StopWizard("The wizard was canceled because Embody was disabled.");
     }
@@ -671,7 +811,11 @@ public class Embody : MVRScript, IEmbody
         if (activeJSON.val)
         {
             _activateAfterSaveComplete = true;
-            activeJSON.val = false;
+            var navigationRigSnapshot = _navigationRigSnapshot;
+            var activatedManually = _activatedManually;
+            Deactivate(false);
+            _navigationRigSnapshot = navigationRigSnapshot;
+            _activatedManually = activatedManually;
         }
     }
 
@@ -681,7 +825,9 @@ public class Embody : MVRScript, IEmbody
         if (_activateAfterSaveComplete)
         {
             _activateAfterSaveComplete = false;
-            activeJSON.val = true;
+            var navigationRigSnapshot = _navigationRigSnapshot;
+            Activate(_activatedManually);
+            _navigationRigSnapshot = navigationRigSnapshot;
         }
     }
 

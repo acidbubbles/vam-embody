@@ -40,7 +40,7 @@ Select Next to exit possession.".TrimStart();
     {
         base.Leave(final);
 
-        context.embody.activeJSON.val = false;
+        context.embody.Deactivate();
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.LeftHand).enabled = true;
         context.trackers.motionControls.First(mc => mc.name == MotionControlNames.RightHand).enabled = true;
         var lElbowControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "lElbowControl");

@@ -18,7 +18,7 @@ Press <b>Next</b> when you are ready to continue.".TrimStart();
     {
         base.Enter();
 
-        context.embody.activeJSON.val = true;
+        context.embody.ActivateManually();
     }
 
     public bool Apply()
@@ -32,6 +32,6 @@ Press <b>Next</b> when you are ready to continue.".TrimStart();
         base.Leave(final);
 
         context.trackers.previewTrackerOffsetJSON.val = false;
-        context.embody.activeJSON.val = false;
+        context.embody.Deactivate();
     }
 }

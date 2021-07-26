@@ -8,7 +8,7 @@ public static class Utilities
 {
     public static void ResetToDefaults(EmbodyContext context)
     {
-        context.embody.activeJSON.val = false;
+        context.embody.Deactivate();
         context.automation.ResetToDefault();
         context.worldScale.ResetToDefault();
         context.hideGeometry.ResetToDefault();
@@ -94,7 +94,7 @@ public static class Utilities
 
     public static void StartRecord(EmbodyContext context)
     {
-        context.embody.activeJSON.val = true;
+        context.embody.ActivateManually();
 
         context.motionAnimationMaster.StopPlayback();
         context.motionAnimationMaster.ResetAnimation();
