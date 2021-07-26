@@ -38,8 +38,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private SnugHand _lHand;
     private SnugHand _rHand;
 
-    private DAZBone lToe;
-    private DAZBone rToe;
+    private DAZBone _lToe;
+    private DAZBone _rToe;
 
     public override void Awake()
     {
@@ -52,8 +52,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
             _lHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "lHandControl") };
             _rHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "rHandControl") };
 
-            lToe = context.bones.First(b => b.name == "lToe");
-            lToe = context.bones.First(b => b.name == "rToe");
+            _lToe = context.bones.First(b => b.name == "lToe");
+            _rToe = context.bones.First(b => b.name == "rToe");
 
             InitAnchors();
             InitVisualCues();
@@ -391,7 +391,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         var upperPosition = upper.GetAdjustedWorldPosition();
         // ReSharper disable once PossibleNullReferenceException
         var lowerPosition = lower.GetAdjustedWorldPosition();
-        if (lower.floor) lowerPosition = new Vector3(motionControlPosition.x, Mathf.Min(lToe.transform.position.y, rToe.transform.position.y), motionControlPosition.z);
+        if (lower.floor) lowerPosition = new Vector3(motionControlPosition.x, Mathf.Min(_lToe.transform.position.y, _rToe.transform.position.y), motionControlPosition.z);
         var yUpperDelta = upperPosition.y - motionControlPosition.y;
         var yLowerDelta = motionControlPosition.y - lowerPosition.y;
         var totalDelta = yLowerDelta + yUpperDelta;
