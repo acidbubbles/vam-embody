@@ -276,7 +276,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
                 var otherHand = motionControl.name == MotionControlNames.LeftHand ? _trackers.rightHandMotionControl : _trackers.leftHandMotionControl;
 
                 otherHand.enabled = motionControl.enabled;
-                otherHand.controlPosition = otherHand.controlPosition;
+                otherHand.controlPosition = motionControl.controlPosition;
                 otherHand.controlRotation = motionControl.controlRotation;
                 otherHand.fingersTracking = motionControl.fingersTracking;
                 otherHand.useLeapPositioning = motionControl.useLeapPositioning;
