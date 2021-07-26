@@ -21,11 +21,12 @@ namespace Handlers
             { "Marmoset/Transparent/Simple Glass/Specular IBLComputeBuff", null },
 
             // Hunting-Succubus' tesselation material
-            { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", null },
+            { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMDetailNoCullSeparateAlphaComputeBuff") },
 
-            // Hunting-Succubus' restored tesselation materials
+            // If we currently work with incorrectly restored materials, let's just keep them
             { "Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff", null },
             { "Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff", null },
+            { "Custom/Subsurface/TransparentGlossNMDetailNoCullSeparateAlphaComputeBuff", null },
             { "Custom/Subsurface/TransparentSeparateAlphaComputeBuff", null }
         };
 
