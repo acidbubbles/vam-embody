@@ -526,6 +526,8 @@ public class Embody : MVRScript, IEmbody
             _context.trackers.RefreshHands();
             _context.snug.RefreshHands();
         }));
+        bindings.Add(new JSONStorableAction("AlignHeadToCamera", () => _context.trackers.AlignHeadToCamera()));
+        bindings.Add(new JSONStorableAction("MoveEyeTargetToCameraRaycastHit", () => _context.trackers.MoveEyeTargetToCameraRaycastHit()));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule

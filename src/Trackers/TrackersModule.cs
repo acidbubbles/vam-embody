@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public interface ITrackersModule : IEmbodyModule
 {
@@ -21,6 +22,8 @@ public interface ITrackersModule : IEmbodyModule
     void ReleaseFingers();
     void ClearPersonalData();
     void RefreshHands();
+    void AlignHeadToCamera();
+    void MoveEyeTargetToCameraRaycastHit();
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -136,6 +139,34 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
+    }
+
+    public void AlignHeadToCamera()
+    {
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        var controller = context.containingAtom.type == "Person"
+            ? context.containingAtom.freeControllers.First(fc => fc.name == "headControl")
+            : context.containingAtom.mainController;
+        controller.control.SetPositionAndRotation(cameraTransform.position, cameraTransform.rotation);
+    }
+
+    public void MoveEyeTargetToCameraRaycastHit()
+    {
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        if (context.containingAtom.type != "Person")
+        {
+            SuperController.LogError($"Embody: Cannot {nameof(MoveEyeTargetToCameraRaycastHit)} on an atom of type {context.containingAtom.type}; only Person atoms are supported.");
+            return;
+        }
+
+        var controller = context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
+        var headPosition = cameraTransform.position;
+        var eyeDistance = 1.8f;
+        RaycastHit hit;
+        if (Physics.Raycast(headPosition, cameraTransform.forward, out hit, 5f))
+            eyeDistance = hit.distance;
+
+        controller.control.position = headPosition + cameraTransform.forward * eyeDistance;
     }
 
     public void TryBindTrackers()
