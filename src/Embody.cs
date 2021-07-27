@@ -526,8 +526,8 @@ public class Embody : MVRScript, IEmbody
             _context.trackers.RefreshHands();
             _context.snug.RefreshHands();
         }));
-        bindings.Add(new JSONStorableAction("AlignHeadToCamera", () => _context.trackers.AlignHeadToCamera()));
-        bindings.Add(new JSONStorableAction("MoveEyeTargetToCameraRaycastHit", () => _context.trackers.MoveEyeTargetToCameraRaycastHit()));
+        bindings.Add(new JSONStorableAction("AlignHeadToCamera", AlignHeadToCamera));
+        bindings.Add(new JSONStorableAction("MoveEyeTargetToCameraRaycastHit", MoveEyeTargetToCameraRaycastHit));
     }
 
     private T CreateModule<T>(EmbodyContext context) where T : MonoBehaviour, IEmbodyModule
@@ -706,6 +706,34 @@ public class Embody : MVRScript, IEmbody
         _context.trackers.rightHandMotionControl.controlRotation = position;
         _context.trackers.rightHandMotionControl.useLeapPositioning = leap;
         _context.trackers.rightHandMotionControl.fingersTracking = fingers;
+    }
+
+    public void AlignHeadToCamera()
+    {
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        var controller = _context.containingAtom.type == "Person"
+            ? _context.containingAtom.freeControllers.First(fc => fc.name == "headControl")
+            : _context.containingAtom.mainController;
+        controller.control.SetPositionAndRotation(cameraTransform.position, cameraTransform.rotation);
+    }
+
+    public void MoveEyeTargetToCameraRaycastHit()
+    {
+        if (_context.containingAtom.type != "Person")
+        {
+            SuperController.LogError($"Embody: Cannot {nameof(MoveEyeTargetToCameraRaycastHit)} on an atom of type {_context.containingAtom.type}; only Person atoms are supported.");
+            return;
+        }
+
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        var cameraPosition = cameraTransform.position;
+        var cameraForward = cameraTransform.forward;
+        var controller = _context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
+        var distance = 1.8f;
+        RaycastHit hit;
+        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f))
+            distance = hit.distance;
+        controller.control.position = cameraPosition + cameraForward * distance;
     }
 
     private bool TryGetSpawnPoint(out JSONStorableAction spawnAction)

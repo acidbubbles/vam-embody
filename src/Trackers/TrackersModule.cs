@@ -22,8 +22,6 @@ public interface ITrackersModule : IEmbodyModule
     void ReleaseFingers();
     void ClearPersonalData();
     void RefreshHands();
-    void AlignHeadToCamera();
-    void MoveEyeTargetToCameraRaycastHit();
 }
 
 public class TrackersModule : EmbodyModuleBase, ITrackersModule
@@ -139,34 +137,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         Bind(leftHandMotionControl);
         Bind(rightHandMotionControl);
         BindFingers();
-    }
-
-    public void AlignHeadToCamera()
-    {
-        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
-        var controller = context.containingAtom.type == "Person"
-            ? context.containingAtom.freeControllers.First(fc => fc.name == "headControl")
-            : context.containingAtom.mainController;
-        controller.control.SetPositionAndRotation(cameraTransform.position, cameraTransform.rotation);
-    }
-
-    public void MoveEyeTargetToCameraRaycastHit()
-    {
-        if (context.containingAtom.type != "Person")
-        {
-            SuperController.LogError($"Embody: Cannot {nameof(MoveEyeTargetToCameraRaycastHit)} on an atom of type {context.containingAtom.type}; only Person atoms are supported.");
-            return;
-        }
-
-        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
-        var cameraPosition = cameraTransform.position;
-        var cameraForward = cameraTransform.forward;
-        var controller = context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-        var distance = 1.8f;
-        RaycastHit hit;
-        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f))
-            distance = hit.distance;
-        controller.control.position = cameraPosition + cameraForward * distance;
     }
 
     public void TryBindTrackers()
