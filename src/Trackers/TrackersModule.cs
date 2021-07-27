@@ -152,21 +152,21 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void MoveEyeTargetToCameraRaycastHit()
     {
-        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
         if (context.containingAtom.type != "Person")
         {
             SuperController.LogError($"Embody: Cannot {nameof(MoveEyeTargetToCameraRaycastHit)} on an atom of type {context.containingAtom.type}; only Person atoms are supported.");
             return;
         }
 
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        var cameraPosition = cameraTransform.position;
+        var cameraForward = cameraTransform.forward;
         var controller = context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-        var headPosition = cameraTransform.position;
-        var eyeDistance = 1.8f;
+        var distance = 1.8f;
         RaycastHit hit;
-        if (Physics.Raycast(headPosition, cameraTransform.forward, out hit, 5f))
-            eyeDistance = hit.distance;
-
-        controller.control.position = headPosition + cameraTransform.forward * eyeDistance;
+        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f))
+            distance = hit.distance;
+        controller.control.position = cameraPosition + cameraForward * distance;
     }
 
     public void TryBindTrackers()
