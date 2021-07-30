@@ -731,9 +731,10 @@ public class Embody : MVRScript, IEmbody
         var controller = _context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
         var distance = 1.8f;
         RaycastHit hit;
-        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f))
+        const int layerMask = ~(1 << 8);
+        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f, layerMask))
             distance = hit.distance;
-        controller.control.position = cameraPosition + cameraForward * distance;
+        controller.control.position = cameraPosition + cameraForward * (0.3f + distance);
     }
 
     private bool TryGetSpawnPoint(out JSONStorableAction spawnAction)
