@@ -725,16 +725,7 @@ public class Embody : MVRScript, IEmbody
             return;
         }
 
-        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
-        var cameraPosition = cameraTransform.position;
-        var cameraForward = cameraTransform.forward;
-        var controller = _context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-        var distance = 1.8f;
-        RaycastHit hit;
-        const int layerMask = ~(1 << 8);
-        if (Physics.Raycast(cameraPosition + cameraForward * 0.3f, cameraForward, out hit, 10f, layerMask))
-            distance = hit.distance;
-        controller.control.position = cameraPosition + cameraForward * (0.3f + distance);
+        Utilities.MoveToCameraRaycastHit(_context.containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl").control);
     }
 
     private bool TryGetSpawnPoint(out JSONStorableAction spawnAction)

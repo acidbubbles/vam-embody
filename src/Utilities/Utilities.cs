@@ -33,6 +33,23 @@ public static class Utilities
         }
     }
 
+    public static void MoveToCameraRaycastHit(Transform transform)
+    {
+        var cameraTransform = SuperController.singleton.centerCameraTarget.transform;
+        var cameraPosition = cameraTransform.position;
+        var cameraForward = cameraTransform.forward;
+        var distance = 1.8f;
+        RaycastHit hit;
+        const int layerMask = ~(1 << 8);
+        const float closest = 0.1f;
+        const float furthest = 10f;
+        if (Physics.Raycast(cameraPosition + cameraForward * closest, cameraForward, out hit, furthest, layerMask))
+            distance = hit.distance;
+
+        transform.position = cameraPosition + cameraForward * (closest + distance);
+
+    }
+
     public static IEnumerator CreateMirror(IEyeTargetModule eyeTarget, Atom containingAtom)
     {
         var uid = CreateUid("Mirror");

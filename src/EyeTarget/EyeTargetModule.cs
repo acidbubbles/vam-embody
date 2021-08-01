@@ -11,6 +11,7 @@ public interface IEyeTargetModule : IEmbodyModule
     JSONStorableFloat saccadeMinDurationJSON { get; }
     JSONStorableFloat saccadeMaxDurationJSON { get; }
     JSONStorableFloat saccadeRangeJSON { get; }
+    JSONStorableBool controlAutoFocusPoint { get; }
     void Rescan();
 }
 
@@ -40,6 +41,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public JSONStorableFloat saccadeMinDurationJSON { get; } = new JSONStorableFloat("SaccadeMinDuration", 0.2f, 0f, 1f, false);
     public JSONStorableFloat saccadeMaxDurationJSON { get; } = new JSONStorableFloat("SaccadeMaxDuration", 0.5f, 0f, 1f, false);
     public JSONStorableFloat saccadeRangeJSON { get; } = new JSONStorableFloat("SaccadeRange", 0.015f, 0f, 0.1f, true);
+    public JSONStorableBool controlAutoFocusPoint { get; } = new JSONStorableBool("ControlAutoFocusPoint", false);
 
     private EyesControl _eyeBehavior;
     private Transform _head;
@@ -58,6 +60,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private float _nextShakeTime;
     private Vector3 _shakeValue;
     private Transform _lockTarget;
+    private Transform _autoFocusPoint;
 
     public override void Awake()
     {
@@ -78,7 +81,13 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     {
         if (context.containingAtom.GetStorableIDs().Any(id => id.EndsWith("Glance"))) return false;
         Rescan();
-        return _mirrors.Count > 0 || _objects.Count > 0;
+        if (controlAutoFocusPoint.val)
+        {
+            _autoFocusPoint = SuperController.singleton.GetAtoms().FirstOrDefault(a => a.type == "Empty" && a.uid == "AutoFocusPoint")?.mainController.control;
+            if(_autoFocusPoint == null)
+                SuperController.LogError("Embody: There is no AutoFocusPoint atom of type Empty in your scene.");
+        }
+        return _mirrors.Count > 0 || _objects.Count > 0 || _autoFocusPoint != null;
     }
 
     public void Rescan()
@@ -166,6 +175,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public void Update()
     {
+        if (controlAutoFocusPoint.val && !ReferenceEquals(_autoFocusPoint, null))
+            Utilities.MoveToCameraRaycastHit(_autoFocusPoint);
+
         var eyesCenter = (_lEye.position + _rEye.position) / 2f;
 
         ScanMirrors(eyesCenter);
@@ -175,10 +187,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         if (!ReferenceEquals(_lockTarget, null))
         {
             _eyeTarget.control.position = _lockTarget.transform.position + _shakeValue;
-            return;
         }
-
-        if (!ReferenceEquals(_lookAtMirror, null))
+        else if (!ReferenceEquals(_lookAtMirror, null))
         {
             var mirrorTransform = _lookAtMirror.transform;
             var mirrorPosition = mirrorTransform.position;
@@ -187,10 +197,11 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
             var planePoint = plane.ClosestPointOnPlane(eyesCenter);
             var reflectPosition = planePoint - (eyesCenter - planePoint);
             _eyeTarget.control.position = reflectPosition + _shakeValue;
-            return;
         }
-
-        _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance + _shakeValue;
+        else
+        {
+            _eyeTarget.control.position = eyesCenter + _head.forward * _naturalLookDistance + _shakeValue;
+        }
     }
 
     private void SelectShake()
@@ -322,6 +333,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         saccadeMinDurationJSON.StoreJSON(jc);
         saccadeMaxDurationJSON.StoreJSON(jc);
         saccadeRangeJSON.StoreJSON(jc);
+        controlAutoFocusPoint.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
@@ -334,6 +346,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         saccadeMinDurationJSON.RestoreFromJSON(jc);
         saccadeMaxDurationJSON.RestoreFromJSON(jc);
         saccadeRangeJSON.RestoreFromJSON(jc);
+        controlAutoFocusPoint.RestoreFromJSON(jc);
     }
 
     public override void ResetToDefault()
@@ -346,5 +359,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
         saccadeMinDurationJSON.SetValToDefault();
         saccadeMaxDurationJSON.SetValToDefault();
         saccadeRangeJSON.SetValToDefault();
+        controlAutoFocusPoint.SetValToDefault();
     }
 }

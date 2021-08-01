@@ -29,5 +29,9 @@
         CreateSlider(_eyeTarget.saccadeMinDurationJSON, true).label = "Saccade Min. Duration";
         CreateSlider(_eyeTarget.saccadeMaxDurationJSON, true).label = "Saccade Max. Duration";
         CreateSlider(_eyeTarget.saccadeRangeJSON, true).label = "Saccade Range";
+
+        CreateTitle("MacGruber PostMagic", true);
+
+        CreateToggle(_eyeTarget.controlAutoFocusPoint, true).label = "Control AutoFocusPoint";
     }
 }
