@@ -39,11 +39,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private Camera _steamvrCamera;
     private Camera _monitorCamera;
 
-    public override void Awake()
+    public override void Init()
     {
         try
         {
-            base.Awake();
+            base.Init();
 
             _person = containingAtom;
             _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();

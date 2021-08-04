@@ -41,11 +41,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private DAZBone _lToe;
     private DAZBone _rToe;
 
-    public override void Awake()
+    public override void Init()
     {
         try
         {
-            base.Awake();
+            base.Init();
 
             autoSetup = new SnugAutoSetup(context.containingAtom, this);
 
@@ -60,7 +60,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
         catch (Exception exc)
         {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Awake)}: {exc}");
+            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Init)}: {exc}");
         }
     }
 

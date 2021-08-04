@@ -62,9 +62,9 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Transform _lockTarget;
     private Transform _autoFocusPoint;
 
-    public override void Awake()
+    public override void Init()
     {
-        base.Awake();
+        base.Init();
 
         _eyeBehavior = (EyesControl) containingAtom.GetStorableByID("Eyes");
         _head = context.bones.First(eye => eye.name == "head").transform;

@@ -535,6 +535,7 @@ public class Embody : MVRScript, IEmbody
         var module = _modules.AddComponent<T>();
         module.enabled = false;
         module.context = context;
+        module.Init();
         module.activeJSON = activeJSON;
         _modulesList.Add(module);
         return module;

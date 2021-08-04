@@ -52,9 +52,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
 
-    public override void Awake()
+    public override void Init()
     {
-        base.Awake();
+        base.Init();
 
         headMotionControl = AddMotionControl(
             MotionControlNames.Head,

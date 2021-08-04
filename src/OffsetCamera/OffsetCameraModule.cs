@@ -23,9 +23,9 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
 
     private Possessor _possessor;
 
-    public override void Awake()
+    public override void Init()
     {
-        base.Awake();
+        base.Init();
 
         _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
 

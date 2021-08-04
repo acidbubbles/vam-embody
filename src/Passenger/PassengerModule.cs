@@ -70,9 +70,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private FreeControllerV3Snapshot _headControlSnapshot;
     private Quaternion _rigRotationOffset;
 
-    public override void Awake()
+    public override void Init()
     {
-        base.Awake();
+        base.Init();
 
         _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
