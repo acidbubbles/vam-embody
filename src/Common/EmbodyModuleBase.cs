@@ -11,7 +11,8 @@ public interface IEmbodyModule
     EmbodyContext context { get; set; }
     JSONStorableBool activeJSON { get; set; }
 
-    void Init();
+    void InitStorables();
+    void InitReferences();
     bool Validate();
     void PreActivate();
     void PostDeactivate();
@@ -34,10 +35,14 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     protected Atom containingAtom => context.plugin.containingAtom;
     protected virtual bool shouldBeSelectedByDefault => false;
 
-    public virtual void Init()
+    public virtual void InitStorables()
     {
         selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, (bool val) => context.embody.Refresh());
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
+    }
+
+    public virtual void InitReferences()
+    {
     }
 
     public virtual bool Validate()

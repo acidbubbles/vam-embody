@@ -62,19 +62,25 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     private Transform _lockTarget;
     private Transform _autoFocusPoint;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        base.Init();
+        base.InitStorables();
+
+        trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
+        saccadeMinDurationJSON.setCallbackFunction = val => saccadeMaxDurationJSON.valNoCallback = Mathf.Max(val, saccadeMaxDurationJSON.val);
+        saccadeMaxDurationJSON.setCallbackFunction = val => saccadeMinDurationJSON.valNoCallback = Mathf.Min(val, saccadeMinDurationJSON.val);
+    }
+
+    public override void InitReferences()
+    {
+        base.InitReferences();
 
         _eyeBehavior = (EyesControl) containingAtom.GetStorableByID("Eyes");
         _head = context.bones.First(eye => eye.name == "head").transform;
         _lEye = context.bones.First(eye => eye.name == "lEye").transform;
         _rEye = context.bones.First(eye => eye.name == "rEye").transform;
         _eyeTarget = containingAtom.freeControllers.First(fc => fc.name == "eyeTargetControl");
-        trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
-        saccadeMinDurationJSON.setCallbackFunction = val => saccadeMaxDurationJSON.valNoCallback = Mathf.Max(val, saccadeMaxDurationJSON.val);
-        saccadeMaxDurationJSON.setCallbackFunction = val => saccadeMinDurationJSON.valNoCallback = Mathf.Min(val, saccadeMinDurationJSON.val);
     }
 
     public override bool Validate()

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleJSON;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public interface ITrackersModule : IEmbodyModule
 {
@@ -52,9 +51,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     private FreeControllerV3WithSnapshot _leftHandController;
     private FreeControllerV3WithSnapshot _rightHandController;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        base.Init();
+        base.InitStorables();
 
         headMotionControl = AddMotionControl(
             MotionControlNames.Head,
@@ -82,14 +81,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}7", () => context.viveTracker7 != null && context.viveTracker7.gameObject.activeInHierarchy ? context.viveTracker7 : null);
         AddMotionControl($"{MotionControlNames.ViveTrackerPrefix}8", () => context.viveTracker8 != null && context.viveTracker8.gameObject.activeInHierarchy ? context.viveTracker8 : null);
 
-        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith(VamConstants.ControlSuffix)))
-        {
-            var snapshot = new FreeControllerV3WithSnapshot(controller);
-            controllers.Add(snapshot);
-            if (controller.name == VamConstants.LeftHandControlName) _leftHandController = snapshot;
-            if (controller.name == VamConstants.RightHandControlName) _rightHandController = snapshot;
-        }
-
         previewTrackerOffsetJSON.setCallbackFunction = val =>
         {
             foreach (var mc in motionControls)
@@ -103,12 +94,36 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         };
     }
 
+    public override void InitReferences()
+    {
+        base.InitReferences();
+
+        foreach (var motionControl in motionControls)
+        {
+            motionControl.SyncMotionControl();
+        }
+
+        foreach (var controller in context.containingAtom.freeControllers.Where(fc => fc.name.EndsWith(VamConstants.ControlSuffix)))
+        {
+            var controllerWithSnapshot = new FreeControllerV3WithSnapshot(controller);
+            controllers.Add(controllerWithSnapshot);
+            switch (controller.name)
+            {
+                case VamConstants.LeftHandControlName:
+                    _leftHandController = controllerWithSnapshot;
+                    break;
+                case VamConstants.RightHandControlName:
+                    _rightHandController = controllerWithSnapshot;
+                    break;
+            }
+        }
+    }
+
     private MotionControllerWithCustomPossessPoint AddMotionControl(string motionControlName, Func<Transform> getMotionControl, string mappedControllerName = null, Action<MotionControllerWithCustomPossessPoint> configure = null)
     {
         var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl, configure);
         motionControl.mappedControllerName = mappedControllerName;
         motionControls.Add(motionControl);
-        motionControl.SyncMotionControl();
         return motionControl;
     }
 

@@ -23,16 +23,21 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
 
     private Possessor _possessor;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        base.Init();
-
-        _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
+        base.InitStorables();
 
         cameraDepthJSON = new JSONStorableFloat("CameraDepthAdjust", 0.054f, (float val) => Refresh(), 0f, 0.2f, false);
         cameraHeightJSON = new JSONStorableFloat("CameraHeightAdjust", 0f, (float val) => Refresh(), -0.05f, 0.05f, false);
         cameraPitchJSON = new JSONStorableFloat("CameraPitchAdjust", 0f, (float val) => Refresh(), -135f, 45f, true);
         clipDistanceJSON = new JSONStorableFloat("ClipDistance", 0.01f, (float val) => Refresh(), 0.01f, .2f, true);
+    }
+
+    public override void InitReferences()
+    {
+        base.InitReferences();
+
+        _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
     }
 
     public override void OnEnable()

@@ -70,9 +70,9 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
     private JSONArray _poseJSON;
     private NavigationRigSnapshot _navigationRigSnapshot;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        base.Init();
+        base.InitStorables();
 
         statusJSON.val = _wizardIntroMessage;
     }

@@ -41,31 +41,12 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     private DAZBone _lToe;
     private DAZBone _rToe;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        try
-        {
-            base.Init();
+        base.InitStorables();
 
-            autoSetup = new SnugAutoSetup(context.containingAtom, this);
+        InitAnchors();
 
-            _lHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "lHandControl") };
-            _rHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "rHandControl") };
-
-            _lToe = context.bones.First(b => b.name == "lToe");
-            _rToe = context.bones.First(b => b.name == "rToe");
-
-            InitAnchors();
-            InitVisualCues();
-        }
-        catch (Exception exc)
-        {
-            SuperController.LogError($"{nameof(SnugModule)}.{nameof(Init)}: {exc}");
-        }
-    }
-
-    private void InitVisualCues()
-    {
         previewSnugOffsetJSON.setCallbackFunction = val =>
         {
             if (val)
@@ -77,14 +58,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void InitAnchors()
     {
-        var bones = context.bones;
-
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Crown",
             label = "Crown",
-            bone = bones.First(rb => rb.name == "head").transform,
+            initBone = () => context.bones.First(rb => rb.name == "head").transform,
             inGameOffsetDefault = new Vector3(0, 0.18f, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
@@ -93,10 +71,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Head",
             label = "Head",
-            bone = bones.First(rb => rb.name == "head").transform,
+            initBone = () => context.bones.First(rb => rb.name == "head").transform,
             inGameOffsetDefault = new Vector3(0, -0.01f, 0.02f),
             inGameSizeDefault = new Vector3(0.15f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
@@ -104,10 +81,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Chest",
             label = "Chest",
-            bone = bones.First(rb => rb.name == "chest").transform,
+            initBone = () => context.bones.First(rb => rb.name == "chest").transform,
             inGameOffsetDefault = new Vector3(0, 0.05f, 0.046f),
             inGameSizeDefault = new Vector3(0.28f, 0, 0.26f),
             realLifeOffsetDefault = Vector3.zero,
@@ -115,10 +91,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Abdomen",
             label = "Abdomen",
-            bone = bones.First(rb => rb.name == "abdomen").transform,
+            initBone = () => context.bones.First(rb => rb.name == "abdomen").transform,
             inGameOffsetDefault = new Vector3(0, 0.078f, 0.042f),
             inGameSizeDefault = new Vector3(0.24f, 0, 0.18f),
             realLifeOffsetDefault = Vector3.zero,
@@ -126,10 +101,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Hips",
             label = "Hips",
-            bone = bones.First(rb => rb.name == "hip").transform,
+            initBone = () => context.bones.First(rb => rb.name == "hip").transform,
             inGameOffsetDefault = new Vector3(0, -0.088f, -0.009f),
             inGameSizeDefault = new Vector3(0.36f, 0, 0.24f),
             realLifeOffsetDefault = Vector3.zero,
@@ -137,10 +111,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Thighs",
             label = "Thighs",
-            bone = bones.First(rb => rb.name == "pelvis").transform,
+            initBone = () => context.bones.First(rb => rb.name == "pelvis").transform,
             inGameOffsetDefault = new Vector3(0, -0.35f, 0),
             inGameSizeDefault = new Vector3(0.38f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
@@ -149,10 +122,9 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         });
         anchorPoints.Add(new ControllerAnchorPoint
         {
-            scaleChangeReceiver = context.scaleChangeReceiver,
             id = "Feet",
             label = "Feet",
-            bone = bones.First(rb => rb.name == "pelvis").transform,
+            initBone = () => context.bones.First(rb => rb.name == "pelvis").transform,
             inGameOffsetDefault = new Vector3(0, -1.2f, 0),
             inGameSizeDefault = new Vector3(0.2f, 0, 0.2f),
             realLifeOffsetDefault = Vector3.zero,
@@ -165,6 +137,26 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         foreach (var anchorPoint in anchorPoints)
         {
             anchorPoint.InitFromDefault();
+        }
+    }
+
+    public override void InitReferences()
+    {
+        base.InitReferences();
+
+        autoSetup = new SnugAutoSetup(context.containingAtom, this);
+
+        _lHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "lHandControl") };
+        _rHand = new SnugHand { controller = containingAtom.freeControllers.First(fc => fc.name == "rHandControl") };
+
+        _lToe = context.bones.First(b => b.name == "lToe");
+        _rToe = context.bones.First(b => b.name == "rToe");
+
+        foreach (var anchorPoint in anchorPoints)
+        {
+            anchorPoint.scaleChangeReceiver = context.scaleChangeReceiver;
+            anchorPoint.bone = anchorPoint.initBone();
+            anchorPoint.Update();
         }
     }
 
@@ -487,8 +479,8 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void DestroyVisualCues()
     {
-        _lHand.showCueLine = false;
-        _rHand.showCueLine = false;
+        if (_lHand != null) _lHand.showCueLine = false;
+        if (_rHand != null) _rHand.showCueLine = false;
 
         foreach (var anchor in anchorPoints)
         {

@@ -70,21 +70,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private FreeControllerV3Snapshot _headControlSnapshot;
     private Quaternion _rigRotationOffset;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        base.Init();
-
-        _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
-        _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
-        _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object") ?? containingAtom.rigidbodies.First();
-        // ReSharper disable once Unity.NoNullPropagation
-        _headBoneTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
-        _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
-
-        _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
-        _cameraCenter.SetParent(_headBoneTransform, false);
-        _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
-        _cameraCenterTarget.SetParent(_cameraCenter, false);
+        base.InitStorables();
 
         eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => SyncCameraParent();
         rotationLockJSON.setCallbackFunction = val =>
@@ -105,6 +93,27 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             if (val) rotationLockJSON.valNoCallback = false;
             SyncCameraParent();
         };
+
+        // Initialized early because this contains the actual storable offsets
+        _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
+        _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
+        _cameraCenterTarget.SetParent(_cameraCenter, false);
+    }
+
+    public override void InitReferences()
+    {
+        base.InitReferences();
+
+        _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
+        _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
+        _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object") ?? containingAtom.rigidbodies.First();
+        // ReSharper disable once Unity.NoNullPropagation
+        _headBoneTransform = (containingAtom.type == "Person" ? context.bones.FirstOrDefault(b => b.name == "head")?.transform : null) ?? _headControlRB.transform;
+        _eyeTargetControl = containingAtom.freeControllers.FirstOrDefault(fc => fc.name == "eyeTargetControl");
+
+        _cameraCenter.SetParent(_headBoneTransform, false);
+
+        SyncCameraParent();
     }
 
     public override void PreActivate()
@@ -119,30 +128,33 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
     private void SyncCameraParent()
     {
-        if (context.containingAtom.type == "Person")
-        {
-            if (context.trackers.selectedJSON.val || allowPersonHeadRotationJSON.val)
-            {
-                // This avoids hands influencing head position, and in turn head position influencing hands causing havoc
-                _cameraCenter.SetParent(_headControlRB.transform, false);
-            }
-            else
-            {
-                // This avoids stretched head control moving outside of the head center
-                _cameraCenter.SetParent(_headBoneTransform, false);
-            }
+        if (ReferenceEquals(_cameraCenter, null)) return;
 
-            var lEye = context.bones.First(b => b.name == "lEye").transform;
-            var rEye = context.bones.First(b => b.name == "rEye").transform;
-            var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
-            var upDelta = eyesCenter.y;
-            _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
-            _headToEyesDistance = eyesToHeadDistanceOffsetJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.localPosition);
+        if (context.containingAtom.type == "Person")
+            SyncCameraParentForPerson();
+        else
+            _cameraCenter.localPosition = Vector3.zero;
+    }
+
+    private void SyncCameraParentForPerson()
+    {
+        if (context.trackers.selectedJSON.val || allowPersonHeadRotationJSON.val)
+        {
+            // This avoids hands influencing head position, and in turn head position influencing hands causing havoc
+            _cameraCenter.SetParent(_headControlRB.transform, false);
         }
         else
         {
-            _cameraCenter.localPosition = Vector3.zero;
+            // This avoids stretched head control moving outside of the head center
+            _cameraCenter.SetParent(_headBoneTransform, false);
         }
+
+        var lEye = context.bones.First(b => b.name == "lEye").transform;
+        var rEye = context.bones.First(b => b.name == "rEye").transform;
+        var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
+        var upDelta = eyesCenter.y;
+        _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);
+        _headToEyesDistance = eyesToHeadDistanceOffsetJSON.val + Vector3.Distance(eyesCenter, _cameraCenter.localPosition);
     }
 
     public override void OnEnable()

@@ -1,10 +1,12 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class ControllerAnchorPoint
 {
     public EmbodyScaleChangeReceiver scaleChangeReceiver;
     public string id;
     public string label;
+    public Func<Transform> initBone;
     public Transform bone;
     public Vector3 realLifeOffsetDefault;
     public Vector3 realLifeOffset;
@@ -40,6 +42,8 @@ public class ControllerAnchorPoint
 
     public void Update()
     {
+        if (ReferenceEquals(scaleChangeReceiver, null)) return;
+
         var scale = scaleChangeReceiver.scale;
 
         if (inGameCue != null)

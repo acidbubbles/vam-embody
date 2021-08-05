@@ -39,26 +39,26 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     private Camera _steamvrCamera;
     private Camera _monitorCamera;
 
-    public override void Init()
+    public override void InitStorables()
     {
-        try
-        {
-            base.Init();
+        base.InitStorables();
 
-            _person = containingAtom;
-            _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
-            _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
+        hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
+        hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());
+        hideClothingJSON = new JSONStorableBool("HideClothing", true, (bool _) => RefreshHandlers());
+    }
 
-            _ovrCamera = SuperController.singleton.OVRCenterCamera;
-            _steamvrCamera = SuperController.singleton.ViveCenterCamera;
-            _monitorCamera = SuperController.singleton.MonitorCenterCamera;
+    public override void InitReferences()
+    {
+        base.InitReferences();
 
-            InitControls();
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to initialize HideGeometry: " + e);
-        }
+        _person = containingAtom;
+        _possessor = SuperController.singleton.centerCameraTarget.transform.GetComponent<Possessor>();
+        _selector = _person.GetComponentInChildren<DAZCharacterSelector>();
+
+        _ovrCamera = SuperController.singleton.OVRCenterCamera;
+        _steamvrCamera = SuperController.singleton.ViveCenterCamera;
+        _monitorCamera = SuperController.singleton.MonitorCenterCamera;
     }
 
     private void OnGeometryPreRender(Camera cam)
@@ -102,20 +102,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         if (ReferenceEquals(cam, _monitorCamera)) return true;
         // if(cam.name == "MiniCamera") return true;
         return false;
-    }
-
-    private void InitControls()
-    {
-        try
-        {
-            hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
-            hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());
-            hideClothingJSON = new JSONStorableBool("HideClothing", true, (bool _) => RefreshHandlers());
-        }
-        catch (Exception e)
-        {
-            SuperController.LogError("Failed to register controls: " + e);
-        }
     }
 
     public override void OnEnable()

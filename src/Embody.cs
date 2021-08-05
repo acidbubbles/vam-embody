@@ -51,6 +51,7 @@ public class Embody : MVRScript, IEmbody
     private bool? _restoreRightHandEnabled;
     private bool _activatedManually;
     private bool _active;
+    private bool _storablesReferencesInitialized;
 
     public override void Init()
     {
@@ -178,6 +179,10 @@ public class Embody : MVRScript, IEmbody
             RegisterAction(new JSONStorableAction("Activate_Passenger", () => ActivatePreset("Passenger")));
 
             LoadFromDefaults();
+
+            if (containingAtom.on)
+                TryInitializeModuleReferences();
+
             SuperController.singleton.StartCoroutine(DeferredInit());
         }
         catch (Exception)
@@ -211,25 +216,11 @@ public class Embody : MVRScript, IEmbody
     private void Activate(bool activatedManually)
     {
         if (_active) return;
-        _active = true;
 
-        if (!enabled || (activeToggle != null && !activeToggle.toggle.interactable))
+        if (!enabled || !containingAtom.on || (activeToggle != null && !activeToggle.toggle.interactable))
         {
             activeJSON.valNoCallback = false;
             return;
-        }
-
-        activeJSON.valNoCallback = true;
-        _activatedManually = activatedManually;
-
-        SuperController.singleton.ClearPossess();
-
-        if ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false))
-        {
-            _restoreLeftHandEnabled = SuperController.singleton.commonHandModelControl.leftHandEnabled;
-            SuperController.singleton.commonHandModelControl.leftHandEnabled = false;
-            _restoreRightHandEnabled = SuperController.singleton.commonHandModelControl.rightHandEnabled;
-            SuperController.singleton.commonHandModelControl.rightHandEnabled = false;
         }
 
         try
@@ -251,9 +242,29 @@ public class Embody : MVRScript, IEmbody
             SuperController.LogError($"Embody: Failed deactivating other instances of Embody. {e}");
         }
 
+        if (!TryInitializeModuleReferences())
+        {
+            activeJSON.valNoCallback = false;
+            return;
+        }
+
+        _active = true;
+        activeJSON.valNoCallback = true;
+        _activatedManually = activatedManually;
+
+        SuperController.singleton.ClearPossess();
+
+        if ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false))
+        {
+            _restoreLeftHandEnabled = SuperController.singleton.commonHandModelControl.leftHandEnabled;
+            SuperController.singleton.commonHandModelControl.leftHandEnabled = false;
+            _restoreRightHandEnabled = SuperController.singleton.commonHandModelControl.rightHandEnabled;
+            SuperController.singleton.commonHandModelControl.rightHandEnabled = false;
+        }
+
         _enabledModules.Clear();
 
-        foreach (var module in _modules.GetComponents<IEmbodyModule>())
+        foreach (var module in _modulesList)
         {
             if (module.skipChangeEnabledWhenActive) continue;
             if (!module.selectedJSON.val)
@@ -305,6 +316,28 @@ public class Embody : MVRScript, IEmbody
             Utilities.MarkForRecord(_context);
     }
 
+    private bool TryInitializeModuleReferences()
+    {
+        if (_storablesReferencesInitialized) return true;
+        if (!containingAtom.on) return false;
+
+        try
+        {
+            _context.InitReferences();
+            foreach (var module in _modulesList)
+            {
+                module.InitReferences();
+            }
+            _storablesReferencesInitialized = true;
+            return true;
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: Failed to initialize embody: {exc}");
+            return false;
+        }
+    }
+
     public void Deactivate()
     {
         Deactivate(true);
@@ -321,7 +354,7 @@ public class Embody : MVRScript, IEmbody
 
         _context.automation.Reset();
 
-        foreach (var module in _modules.GetComponents<IEmbodyModule>().Reverse())
+        foreach (var module in _modulesList.AsEnumerable().Reverse())
         {
             if (module.skipChangeEnabledWhenActive) continue;
             module.enabledJSON.val = false;
@@ -535,7 +568,7 @@ public class Embody : MVRScript, IEmbody
         var module = _modules.AddComponent<T>();
         module.enabled = false;
         module.context = context;
-        module.Init();
+        module.InitStorables();
         module.activeJSON = activeJSON;
         _modulesList.Add(module);
         return module;
