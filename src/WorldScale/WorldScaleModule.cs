@@ -9,6 +9,7 @@ public interface IWorldScaleModule : IEmbodyModule
     JSONStorableBool useProfileJSON { get; }
     JSONStorableStringChooser worldScaleMethodJSON { get; }
     JSONStorableFloat playerHeightJSON { get; }
+    JSONStorableFloat fixedWorldScaleJSON { get; }
     void ApplyWorldScale();
     void ClearPersonalData();
 }
@@ -16,6 +17,7 @@ public interface IWorldScaleModule : IEmbodyModule
 public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 {
     public const string Label = "World Scale";
+    public const string NoneMethod = "None";
     public const string PlayerHeightMethod = "Player Height";
     public const string EyeDistanceMethod = "Eyes Distance";
 
@@ -23,11 +25,23 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public override string label => Label;
     protected override bool shouldBeSelectedByDefault => true;
     public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
-    public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
+    public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{NoneMethod, EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
     public JSONStorableFloat playerHeightJSON { get; } = new JSONStorableFloat("PlayerHeight", 1.7f, 0f, 2f, false);
+    public JSONStorableFloat fixedWorldScaleJSON { get; } = new JSONStorableFloat("FixedWorldScale", 0, 0, 10, false);
 
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
+
+    public override void InitStorables()
+    {
+        fixedWorldScaleJSON.setCallbackFunction = val => fixedWorldScaleJSON.valNoCallback = Mathf.Clamp(fixedWorldScaleJSON.val, 0, SuperController.singleton.worldScaleSlider.maxValue);
+    }
+
+    public override bool Validate()
+    {
+        if (worldScaleMethodJSON.val == NoneMethod && fixedWorldScaleJSON.val == 0) return false;
+        return base.Validate();
+    }
 
     public override void PreActivate()
     {
@@ -47,13 +61,22 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public void ApplyWorldScale()
     {
         float worldScale;
+        if (fixedWorldScaleJSON.val > 0)
+        {
+            SuperController.singleton.worldScale = fixedWorldScaleJSON.val;
+            return;
+        }
+
         switch (worldScaleMethodJSON.val)
         {
+            case NoneMethod:
+                return;
             case EyeDistanceMethod:
                 worldScale = UseEyeDistanceMethod();
                 break;
             case PlayerHeightMethod:
                 worldScale = UsePersonHeightMethod();
+                break;
                 break;
             default:
                 throw new NotImplementedException($"Unknown method: '{worldScaleMethodJSON.val}'");
@@ -132,6 +155,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         if (toScene)
         {
             useProfileJSON.StoreJSON(jc);
+            fixedWorldScaleJSON.StoreJSON(jc);
         }
 
         if (toScene && !useProfileJSON.val || toProfile)
@@ -148,6 +172,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         if (fromScene)
         {
             useProfileJSON.RestoreFromJSON(jc);
+            fixedWorldScaleJSON.RestoreFromJSON(jc);
         }
 
         if (fromScene && !useProfileJSON.val || fromProfile)
@@ -162,6 +187,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         base.ResetToDefault();
 
         useProfileJSON.SetValToDefault();
+        fixedWorldScaleJSON.SetValToDefault();
         worldScaleMethodJSON.SetValToDefault();
         playerHeightJSON.SetValToDefault();
     }

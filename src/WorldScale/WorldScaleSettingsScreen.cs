@@ -18,6 +18,9 @@
         var recordHeightBtn = CreateButton("Record Player Height (stand straight)");
         recordHeightBtn.button.onClick.AddListener(() => recordHeightBtn.label = RecordPlayerHeight());
 
+        CreateTitle("Scene World Scale");
+        CreateSlider(_worldScale.fixedWorldScaleJSON).label = "Specify Override World Scale (Scene)";
+
         CreateToggle(_worldScale.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
 
         CreateSpacer(true).height = 20f;
