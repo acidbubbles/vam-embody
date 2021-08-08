@@ -50,7 +50,7 @@ public static class Utilities
 
     }
 
-    public static IEnumerator CreateMirror(IEyeTargetModule eyeTarget, Atom containingAtom)
+    public static IEnumerator CreateMirrorCo(IEyeTargetModule eyeTarget, Atom containingAtom)
     {
         var uid = CreateUid("Mirror");
         var enumerator = SuperController.singleton.AddAtomByType("Glass", uid, true);

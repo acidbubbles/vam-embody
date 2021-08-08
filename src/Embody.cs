@@ -174,6 +174,7 @@ public class Embody : MVRScript, IEmbody
             RegisterAction(launchWizardJSON);
 
             RegisterAction(new JSONStorableAction("ToggleActive", () => activeJSON.val = !activeJSON.val));
+            RegisterAction(new JSONStorableAction("ReinitializeIfActive", () => StartCoroutine(ReinitializeIfActiveCo())));
             RegisterAction(new JSONStorableAction("Activate_Possession", () => ActivatePreset("Improved Possession")));
             RegisterAction(new JSONStorableAction("Activate_LeapMotion", () => ActivatePreset("Improved Possession w/ Leap")));
             RegisterAction(new JSONStorableAction("Activate_Passenger", () => ActivatePreset("Passenger")));
@@ -215,10 +216,14 @@ public class Embody : MVRScript, IEmbody
 
     private void Activate(bool activatedManually)
     {
-        if (_active) return;
+        if (_active)
+        {
+            return;
+        }
 
         if (!enabled || !containingAtom.on || (activeToggle != null && !activeToggle.toggle.interactable))
         {
+            SuperController.LogError("Embody: Cannot activate because the atom or plugin is currently disabled");
             activeJSON.valNoCallback = false;
             return;
         }
@@ -415,9 +420,33 @@ public class Embody : MVRScript, IEmbody
             {
                 _navigationRigSnapshot?.Restore();
                 _navigationRigSnapshot = null;
-                _restoreNavigationRigCoroutine = null;
+                if (_restoreNavigationRigCoroutine != null)
+                {
+                    StopCoroutine(_restoreNavigationRigCoroutine);
+                    _restoreNavigationRigCoroutine = null;
+                }
             }));
         }
+    }
+
+    private IEnumerator ReinitializeIfActiveCo()
+    {
+        if (!activeJSON.val)
+        {
+            yield break;
+        }
+
+        var restorePoseAfterPossess = _context.trackers.restorePoseAfterPossessJSON.val;
+        _context.trackers.restorePoseAfterPossessJSON.val = false;
+        Deactivate();
+        _context.trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
+        if (_restoreNavigationRigCoroutine != null)
+        {
+            StopCoroutine(_restoreNavigationRigCoroutine);
+            _restoreNavigationRigCoroutine = null;
+        }
+        yield return 0;
+        ActivateManually();
     }
 
     public void EmbodyDeactivateImmediate()
@@ -529,7 +558,7 @@ public class Embody : MVRScript, IEmbody
         bindings.Add(new JSONStorableAction("Activate", ActivateManually));
         bindings.Add(new JSONStorableAction("Deactivate", Deactivate));
         bindings.Add(new JSONStorableAction("OpenUI", SelectAndOpenUI));
-        bindings.Add(new JSONStorableAction("Add_Mirror", () => StartCoroutine(Utilities.CreateMirror(_context.eyeTarget, containingAtom))));
+        bindings.Add(new JSONStorableAction("Add_Mirror", () => StartCoroutine(Utilities.CreateMirrorCo(_context.eyeTarget, containingAtom))));
         bindings.Add(new JSONStorableAction("Preset_Passenger", () => SelectPreset("Passenger")));
         bindings.Add(new JSONStorableAction("Preset_Snug", () => SelectPreset("Snug")));
         bindings.Add(new JSONStorableAction("Preset_ImprovedPossession", () => SelectPreset("Improved Possession")));

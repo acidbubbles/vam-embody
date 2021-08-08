@@ -21,7 +21,7 @@ public class MainScreen : ScreenBase, IScreen
             wizardBtn.button.onClick.AddListener(() => screensManager.Show(WizardScreen.ScreenName));
             if (context.worldScale.worldScaleMethodJSON.val == WorldScaleModule.EyeDistanceMethod)
                 wizardBtn.buttonColor = Color.green;
-            CreateButton("Create Mirror").button.onClick.AddListener(() => context.plugin.StartCoroutine(Utilities.CreateMirror(context.eyeTarget, context.containingAtom)));
+            CreateButton("Create Mirror").button.onClick.AddListener(() => context.plugin.StartCoroutine(Utilities.CreateMirrorCo(context.eyeTarget, context.containingAtom)));
             CreateButton("Apply Possession-Ready Pose").button.onClick.AddListener(() => new PossessionPose(context).Apply());
 
             CreateSpacer().height = 84;
