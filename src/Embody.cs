@@ -407,6 +407,7 @@ public class Embody : MVRScript, IEmbody
         JSONStorableAction spawnAction;
         if (!wasActivatedManually && TryGetSpawnPoint(out spawnAction))
         {
+            _navigationRigSnapshot?.Restore();
             _navigationRigSnapshot = null;
             if (spawnAction == null) throw new NullReferenceException("Null spawn action");
             spawnAction.actionCallback.Invoke();
