@@ -60,8 +60,11 @@ public class Embody : MVRScript, IEmbody
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
             activateOnLoadJSON = new JSONStorableBool("ActivateOnLoad", false) {isStorable = true};
             RegisterBool(activateOnLoadJSON);
-            returnToSpawnPoint = new JSONStorableStringChooser("ReturnToSpawnPoint", new List<string>(), "", "Return To Spawn Point");
-            SyncAtoms(null);
+            returnToSpawnPoint = new JSONStorableStringChooser("ReturnToSpawnPoint", new List<string>(), "", "Return To Spawn Point")
+            {
+                popupOpenCallback = SyncSpawnPointAtoms
+            };
+            SyncSpawnPointAtoms();
             RegisterStringChooser(returnToSpawnPoint);
 
             var isPerson = containingAtom.type == "Person";
@@ -865,7 +868,7 @@ public class Embody : MVRScript, IEmbody
         return SuperController.singleton.GetAtoms().Where(a => a.GetBoolParamValue("IsSpawnPointHost"));
     }
 
-    private void SyncAtoms(List<string> _)
+    private void SyncSpawnPointAtoms()
     {
         returnToSpawnPoint.choices = _returnToSpawnPointInitialValues.Concat(GetSpawnPointAtoms().Select(a => a.uid)).ToList();
     }
@@ -876,7 +879,6 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onBeforeSceneSaveHandlers += OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers += OnSceneSaved;
 #endif
-        SuperController.singleton.onAtomUIDsChangedHandlers += SyncAtoms;
     }
 
     public void OnDisable()
@@ -885,7 +887,6 @@ public class Embody : MVRScript, IEmbody
         SuperController.singleton.onBeforeSceneSaveHandlers -= OnBeforeSceneSave;
         SuperController.singleton.onSceneSavedHandlers -= OnSceneSaved;
 #endif
-        SuperController.singleton.onAtomUIDsChangedHandlers -= SyncAtoms;
         if (activeJSON != null) Deactivate();
         if (_context?.wizard != null)
             _context.wizard.StopWizard("The wizard was canceled because Embody was disabled.");
