@@ -30,6 +30,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
+    private Transform _navigationHologrid;
+    private Transform _fakeHologrid;
 
     public override void InitStorables()
     {
@@ -49,15 +51,20 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         _originalShowNavigationHologrid = SuperController.singleton.showNavigationHologrid;
         _originalWorldScale = SuperController.singleton.worldScale;
+        if (_fakeHologrid == null)
+            _fakeHologrid = new GameObject().transform;
     }
 
     public override void OnEnable()
     {
         base.OnEnable();
 
-        SuperController.singleton.showNavigationHologrid = false;
-        var hologridRenderer = SuperController.singleton.navigationHologrid.GetComponent<MeshRenderer>();
-        hologridRenderer.enabled = false;
+        var sc = SuperController.singleton;
+        sc.showNavigationHologrid = false;
+        _navigationHologrid = sc.navigationHologrid;
+        sc.navigationHologrid = _fakeHologrid;
+        _navigationHologrid.GetComponent<MeshRenderer>().material.SetFloat("_Alpha", 0);
+        _navigationHologrid.gameObject.SetActive(false);
 
         ApplyWorldScale();
     }
@@ -93,11 +100,11 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         if (_originalWorldScale == 0f) return;
 
-        SuperController.singleton.worldScale = _originalWorldScale;
-        var hologridRenderer = SuperController.singleton.navigationHologrid.GetComponent<MeshRenderer>();
-        hologridRenderer.enabled = true;
+        var sc = SuperController.singleton;
+        sc.worldScale = _originalWorldScale;
+        sc.navigationHologrid = _navigationHologrid;
         if (_originalShowNavigationHologrid)
-            SuperController.singleton.showNavigationHologrid = true;
+            sc.showNavigationHologrid = true;
     }
 
     private float UseEyeDistanceMethod()
@@ -194,5 +201,10 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         fixedWorldScaleJSON.SetValToDefault();
         worldScaleMethodJSON.SetValToDefault();
         playerHeightJSON.SetValToDefault();
+    }
+
+    private void OnDestroy()
+    {
+        if (_fakeHologrid != null) Destroy(_fakeHologrid.gameObject);
     }
 }
