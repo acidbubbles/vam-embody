@@ -18,7 +18,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public const string Label = "Hide Geometry";
     public override string storeId => "HideGeometry";
     public override string label => Label;
-    protected override bool shouldBeSelectedByDefault => true;
 
     private Atom _person;
     private Possessor _possessor;
@@ -42,6 +41,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public override void InitStorables()
     {
         base.InitStorables();
+        selectedJSON.defaultVal = true;
 
         hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
         hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());

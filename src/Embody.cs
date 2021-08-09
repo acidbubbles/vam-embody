@@ -79,7 +79,7 @@ public class Embody : MVRScript, IEmbody
 
              var diagnosticsModule = CreateModule<DiagnosticsModule>(_context);
              var automationModule = CreateModule<AutomationModule>(_context);
-             var worldScaleModule = isPerson ? CreateModule<WorldScaleModule>(_context) : null;
+             var worldScaleModule = CreateModule<WorldScaleModule>(_context);
              var hideGeometryModule = isPerson ? CreateModule<HideGeometryModule>(_context) : null;
              var offsetCameraModule = isPerson ? CreateModule<OffsetCameraModule>(_context) : null;
              var passengerModule = CreateModule<PassengerModule>(_context);
@@ -114,8 +114,7 @@ public class Embody : MVRScript, IEmbody
             _context.automation.enabledJSON.val = true;
 
             _screensManager = new ScreensManager();
-            var modules = _modules.GetComponents<IEmbodyModule>();
-            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, modules));
+            _screensManager.Add(MainScreen.ScreenName, new MainScreen(_context, _modulesList));
             if (isPerson)
             {
                 _screensManager.Add(TrackersSettingsScreen.ScreenName, new TrackersSettingsScreen(_context, trackersModule));
@@ -133,6 +132,7 @@ public class Embody : MVRScript, IEmbody
             else
             {
                 _screensManager.Add(PassengerSettingsScreen.ScreenName, new PassengerSettingsScreen(_context, passengerModule));
+                _screensManager.Add(WorldScaleSettingsScreen.ScreenName, new WorldScaleSettingsScreen(_context, worldScaleModule));
                 _screensManager.Add(MoreScreen.ScreenName, new MoreScreen(_context));
             }
 

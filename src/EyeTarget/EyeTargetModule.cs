@@ -33,7 +33,6 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
 
     public override string storeId => "EyeTarget";
     public override string label => Label;
-    protected override bool shouldBeSelectedByDefault => true;
 
     public JSONStorableBool trackMirrorsJSON { get; } = new JSONStorableBool("TrackMirrors", true);
     public JSONStorableBool trackWindowCameraJSON { get; } = new JSONStorableBool("TrackWindowCamera", true);
@@ -65,6 +64,7 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     public override void InitStorables()
     {
         base.InitStorables();
+        selectedJSON.defaultVal = true;
 
         trackMirrorsJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };
         trackWindowCameraJSON.setCallbackFunction = _ => { if(enabled) Rescan(); };

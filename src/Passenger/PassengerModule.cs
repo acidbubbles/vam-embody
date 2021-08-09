@@ -54,14 +54,11 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         set { _cameraCenterTarget.localEulerAngles = value; }
     }
 
-    protected override bool shouldBeSelectedByDefault => context.containingAtom.type != "Person";
-
     private Rigidbody _headControlRB;
     private Transform _headBoneTransform;
     private FreeControllerV3 _headControl;
     private Quaternion _currentRotationVelocity;
     private Vector3 _currentPositionVelocity;
-    private UserPreferences _preferences;
     private RigidbodyInterpolation _previousInterpolation;
     private FreeControllerV3 _eyeTargetControl;
     private Transform _cameraCenterTarget;
@@ -73,6 +70,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void InitStorables()
     {
         base.InitStorables();
+        selectedJSON.defaultVal = context.containingAtom.type != "Person";
 
         eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => SyncCameraParent();
         rotationLockJSON.setCallbackFunction = val =>
@@ -104,7 +102,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.InitReferences();
 
-        _preferences = SuperController.singleton.GetAtomByUid("CoreControl").gameObject.GetComponent<UserPreferences>();
         _headControl = containingAtom.freeControllers.FirstOrDefault(rb => rb.name == "headControl") ?? containingAtom.mainController;
         _headControlRB = containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "head") ?? containingAtom.rigidbodies.FirstOrDefault(rb => rb.name == "object") ?? containingAtom.rigidbodies.First();
         // ReSharper disable once Unity.NoNullPropagation

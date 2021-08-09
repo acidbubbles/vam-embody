@@ -30,8 +30,6 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public override string storeId => "Trackers";
     public override string label => Label;
 
-    protected override bool shouldBeSelectedByDefault => true;
-
     public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();
     public MotionControllerWithCustomPossessPoint headMotionControl { get; private set; }
     public MotionControllerWithCustomPossessPoint leftHandMotionControl { get; private set; }
@@ -54,6 +52,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public override void InitStorables()
     {
         base.InitStorables();
+        selectedJSON.defaultVal = true;
 
         headMotionControl = AddMotionControl(
             MotionControlNames.Head,

@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class MainScreen : ScreenBase, IScreen
 {
-    private readonly IEmbodyModule[] _modules;
+    private readonly List<IEmbodyModule> _modules;
     public const string ScreenName = "Embody (Main)";
 
-    public MainScreen(EmbodyContext context, IEmbodyModule[] modules)
+    public MainScreen(EmbodyContext context, List<IEmbodyModule> modules)
         : base(context)
     {
         _modules = modules;

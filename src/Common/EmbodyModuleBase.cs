@@ -33,11 +33,10 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
     public JSONStorableBool activeJSON { get; set; }
 
     protected Atom containingAtom => context.plugin.containingAtom;
-    protected virtual bool shouldBeSelectedByDefault => false;
 
     public virtual void InitStorables()
     {
-        selectedJSON = new JSONStorableBool("Selected", shouldBeSelectedByDefault, (bool val) => context.embody.Refresh());
+        selectedJSON = new JSONStorableBool("Selected", false, (bool val) => context.embody.Refresh());
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }
 
@@ -80,6 +79,6 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void ResetToDefault()
     {
-        selectedJSON.val = shouldBeSelectedByDefault;
+        selectedJSON.SetValToDefault();
     }
 }
