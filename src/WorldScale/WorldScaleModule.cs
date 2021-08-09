@@ -56,6 +56,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         base.OnEnable();
 
         SuperController.singleton.showNavigationHologrid = false;
+        var hologridRenderer = SuperController.singleton.navigationHologrid.GetComponent<MeshRenderer>();
+        hologridRenderer.enabled = false;
 
         ApplyWorldScale();
     }
@@ -92,7 +94,8 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         if (_originalWorldScale == 0f) return;
 
         SuperController.singleton.worldScale = _originalWorldScale;
-        // TODO: Figure out a way to avoid that. Probably wait one second before re-enabling it...
+        var hologridRenderer = SuperController.singleton.navigationHologrid.GetComponent<MeshRenderer>();
+        hologridRenderer.enabled = true;
         if (_originalShowNavigationHologrid)
             SuperController.singleton.showNavigationHologrid = true;
     }
