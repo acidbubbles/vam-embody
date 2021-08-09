@@ -141,7 +141,7 @@ public class Embody : MVRScript, IEmbody
                 if (val)
                     Activate(false);
                 else
-                    Deactivate(true);
+                    Deactivate();
             };
             RegisterBool(activeJSON);
 
@@ -351,7 +351,7 @@ public class Embody : MVRScript, IEmbody
         Deactivate(true);
     }
 
-    private void Deactivate(bool restoreNavigationRig)
+    private void Deactivate(bool asyncNavigationRigRestore)
     {
         if (!_active) return;
         _active = false;
@@ -401,8 +401,9 @@ public class Embody : MVRScript, IEmbody
             _restoreRightHandEnabled = null;
         }
 
-        if (!restoreNavigationRig)
+        if (!asyncNavigationRigRestore)
         {
+            _navigationRigSnapshot?.Restore();
             _navigationRigSnapshot = null;
             return;
         }
@@ -420,6 +421,7 @@ public class Embody : MVRScript, IEmbody
 
         if (_navigationRigSnapshot != null)
         {
+            _navigationRigSnapshot?.Restore();
             _restoreNavigationRigCoroutine = StartCoroutine(CallNextFrame(() =>
             {
                 _navigationRigSnapshot?.Restore();
@@ -440,17 +442,14 @@ public class Embody : MVRScript, IEmbody
             yield break;
         }
 
+        var previousRigSnapshot = _navigationRigSnapshot;
         var restorePoseAfterPossess = _context.trackers.restorePoseAfterPossessJSON.val;
         _context.trackers.restorePoseAfterPossessJSON.val = false;
-        Deactivate();
+        Deactivate(false);
         _context.trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
-        if (_restoreNavigationRigCoroutine != null)
-        {
-            StopCoroutine(_restoreNavigationRigCoroutine);
-            _restoreNavigationRigCoroutine = null;
-        }
         yield return 0;
         ActivateManually();
+        _navigationRigSnapshot = previousRigSnapshot;
     }
 
     public void EmbodyDeactivateImmediate()
