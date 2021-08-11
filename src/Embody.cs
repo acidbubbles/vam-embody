@@ -57,6 +57,14 @@ public class Embody : MVRScript, IEmbody
     {
         try
         {
+            if (containingAtom.type == "SessionPluginManager" || containingAtom.type == "CoreControl")
+            {
+                SuperController.LogError("Embody: Cannot run as a session or scene plugin");
+                CreateTextField(new JSONStorableString("Error", "Embody cannot run as a session or scene plugin. Please add it to a Person atom, or an Empty."));
+                enabled = false;
+                return;
+            }
+
             activeJSON = new JSONStorableBool("Active", false) {isStorable = false};
             activateOnLoadJSON = new JSONStorableBool("ActivateOnLoad", false) {isStorable = true};
             RegisterBool(activateOnLoadJSON);
