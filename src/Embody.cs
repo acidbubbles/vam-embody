@@ -621,7 +621,7 @@ public class Embody : MVRScript, IEmbody
         #else
         SuperController.singleton.SelectController(containingAtom.mainController);
         #endif
-        SuperController.singleton.ShowMainHUDMonitor();
+        SuperController.singleton.ShowMainHUDAuto();
         StartCoroutine(WaitForUI());
     }
 
@@ -643,7 +643,7 @@ public class Embody : MVRScript, IEmbody
     private IEnumerator LaunchWizard()
     {
         SuperController.singleton.SelectController(containingAtom.mainController);
-        SuperController.singleton.ShowMainHUDMonitor();
+        SuperController.singleton.ShowMainHUDAuto();
         var waitForUI = WaitForUI();
         while (waitForUI.MoveNext())
             yield return waitForUI.Current;

@@ -281,10 +281,7 @@ When you are ready, select <b>Start Wizard</b>.").TrimStart();
         if (context.plugin.UITransform.gameObject.activeInHierarchy) return;
         if (!SuperController.singleton.mainHUD.gameObject.activeInHierarchy) return;
         SuperController.singleton.SelectController(containingAtom.mainController, false, false, false);
-        if(XRDevice.isPresent)
-            SuperController.singleton.ShowMainHUD();
-        else
-            SuperController.singleton.ShowMainHUDMonitor();
+        SuperController.singleton.ShowMainHUDAuto();
         var selector = containingAtom.gameObject.GetComponentInChildren<UITabSelector>();
         selector.SetActiveTab("Plugins");
         context.plugin.UITransform.gameObject.SetActive(true);
