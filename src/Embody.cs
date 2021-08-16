@@ -14,6 +14,7 @@ public interface IEmbody
     UIDynamicToggle activeToggle { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void ActivateManually();
+    void ActivateForced();
     void Deactivate();
     void Refresh();
     void RefreshDelayed();
@@ -225,14 +226,19 @@ public class Embody : MVRScript, IEmbody
         Activate(true);
     }
 
-    private void Activate(bool activatedManually)
+    public void ActivateForced()
+    {
+        Activate(true, true);
+    }
+
+    private void Activate(bool activatedManually, bool force = false)
     {
         if (_active)
         {
             return;
         }
 
-        if (!enabled || !containingAtom.on || (activeToggle != null && !activeToggle.toggle.interactable))
+        if (!enabled || !containingAtom.on || (!force && activeToggle != null && !activeToggle.toggle.interactable))
         {
             SuperController.LogError("Embody: Cannot activate because the atom or plugin is currently disabled");
             activeJSON.valNoCallback = false;

@@ -18,7 +18,7 @@ Press <b>Next</b> when you are ready to continue.".TrimStart();
     {
         base.Enter();
 
-        context.embody.ActivateManually();
+        context.embody.ActivateForced();
     }
 
     public bool Apply()

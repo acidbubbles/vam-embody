@@ -36,7 +36,7 @@ Select <b>Next to use Snug</b> (possession will be activated, but hands will be 
         if (lElbowControl != null) lElbowControl.enabled = false;
         var rElbowControl = context.trackers.motionControls.FirstOrDefault(mc => mc.mappedControllerName == "rElbowControl");
         if (rElbowControl != null) rElbowControl.enabled = false;
-        context.embody.ActivateManually();
+        context.embody.ActivateForced();
 
         var idx = _steps.IndexOf(this);
         if (idx == -1) throw new InvalidOperationException($"{nameof(AskSnugStep)} was not found in the steps list");
