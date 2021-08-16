@@ -14,6 +14,7 @@ public class MotionControllerWithCustomPossessPoint
     public bool controlRotation = true;
     public bool useLeapPositioning;
     public bool fingersTracking = true;
+    public string defaultControllerName;
     public string mappedControllerName;
     public bool keepCurrentPhysicsHoldStrength;
     public Transform currentMotionControl { get; private set; }
@@ -209,7 +210,7 @@ public class MotionControllerWithCustomPossessPoint
     public void RestoreFromJSON(JSONNode jc, bool importDefaults)
     {
         enabled = jc["Enabled"].Value != "false";
-        if (mappedControllerName == "") mappedControllerName = null;
+        if (mappedControllerName == "") mappedControllerName = defaultControllerName;
         if (!importDefaults) return;
         offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
@@ -228,13 +229,12 @@ public class MotionControllerWithCustomPossessPoint
         rotateControllerCustom = Vector3.zero;
         rotateAroundTrackerCustom = Vector3.zero;
         if (onlyPersonalData) return;
-        if (!MotionControlNames.IsHeadOrHands(name))
-            mappedControllerName = null;
+        enabled = true;
+        mappedControllerName = defaultControllerName;
         controlRotation = true;
         controlPosition = true;
         useLeapPositioning = false;
         fingersTracking = true;
-        enabled = true;
         keepCurrentPhysicsHoldStrength = false;
     }
 }

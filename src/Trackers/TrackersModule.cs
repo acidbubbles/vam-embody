@@ -122,6 +122,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         var motionControl = MotionControllerWithCustomPossessPoint.Create(motionControlName, getMotionControl, configure);
         motionControl.mappedControllerName = mappedControllerName;
+        motionControl.defaultControllerName = mappedControllerName;
         motionControls.Add(motionControl);
         return motionControl;
     }
