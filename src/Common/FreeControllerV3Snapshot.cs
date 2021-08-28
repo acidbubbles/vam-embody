@@ -6,12 +6,12 @@ public class FreeControllerV3Snapshot
     public FreeControllerV3 controller;
     public bool canGrabPosition;
     public bool canGrabRotation;
+    public float holdPositionSpring;
+    public float holdRotationSpring;
     private Vector3 _position;
     private Quaternion _rotation;
     private FreeControllerV3.PositionState _positionState;
     private FreeControllerV3.RotationState _rotationState;
-    private float _holdPositionSpring;
-    private float _holdRotationSpring;
 
     public static FreeControllerV3Snapshot Snap(FreeControllerV3 controller)
     {
@@ -27,8 +27,8 @@ public class FreeControllerV3Snapshot
             canGrabRotation = controller.canGrabRotation,
             _positionState = controller.currentPositionState,
             _rotationState = controller.currentRotationState,
-            _holdPositionSpring = controller.RBHoldPositionSpring,
-            _holdRotationSpring = controller.RBHoldRotationSpring
+            holdPositionSpring = controller.RBHoldPositionSpring,
+            holdRotationSpring = controller.RBHoldRotationSpring
         };
     }
 
@@ -39,8 +39,8 @@ public class FreeControllerV3Snapshot
         controller.canGrabRotation = canGrabRotation;
         controller.currentPositionState = _positionState;
         controller.currentRotationState = _rotationState;
-        controller.RBHoldPositionSpring = _holdPositionSpring;
-        controller.RBHoldRotationSpring = _holdRotationSpring;
+        controller.RBHoldPositionSpring = holdPositionSpring;
+        controller.RBHoldRotationSpring = holdRotationSpring;
         if (!restorePose) return;
         var control = controller.control;
         if (control == null) return;

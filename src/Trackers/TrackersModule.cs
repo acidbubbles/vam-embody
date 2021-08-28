@@ -213,7 +213,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         }
 
         controllerWithSnapshot.active = true;
-        Possess(motionControl, controllerWithSnapshot.controller);
+        controllerWithSnapshot.snapshot = FreeControllerV3Snapshot.Snap(controller);
+        Possess(motionControl, controller);
 
         return true;
     }
@@ -290,6 +291,15 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         {
             mac.suspendPositionPlayback = false;
             mac.suspendRotationPlayback = false;
+        }
+
+        if (c.snapshot != null)
+        {
+            c.controller.canGrabPosition = c.snapshot.canGrabPosition;
+            c.controller.canGrabRotation = c.snapshot.canGrabRotation;
+            c.controller.RBHoldPositionSpring = c.snapshot.holdPositionSpring;
+            c.controller.RBHoldRotationSpring = c.snapshot.holdRotationSpring;
+            c.snapshot = null;
         }
 
         c.active = false;
