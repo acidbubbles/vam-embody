@@ -5,7 +5,6 @@ using System.Linq;
 using SimpleJSON;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.XR;
 
 public interface IWizard : IEmbodyModule
 {

@@ -397,9 +397,13 @@ public class Embody : MVRScript, IEmbody
                 if (string.IsNullOrEmpty(storableId)) continue;
                 var storable = _context.containingAtom.GetStorableByID(storableId);
                 if (storable == null) continue;
+                var controller = storable as FreeControllerV3;
+                // NOTE: We use startedPossess to notify users of this (e.g. Timeline) that this is not a recordable movement
+                if (controller != null) controller.startedPossess = true;
                 storable.PreRestore();
                 storable.RestoreFromJSON(storableJSON.AsObject);
                 storable.PostRestore();
+                if (controller != null) controller.startedPossess = false;
             }
             _poseJSON = null;
         }

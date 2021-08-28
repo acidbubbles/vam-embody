@@ -183,6 +183,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             return false;
 
         var controller = controllerWithSnapshot.controller;
+        controller.startedPossess = true;
 
         if (motionControl.name == MotionControlNames.Head)
         {
@@ -312,6 +313,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var sc = SuperController.singleton;
 
         controller.possessed = true;
+        controller.startedPossess = false;
 
         var mac = controller.GetComponent<MotionAnimationControl>();
         if (mac != null)
