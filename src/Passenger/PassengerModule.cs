@@ -8,6 +8,7 @@ using UnityEngine;
 
 public interface IPassengerModule : IEmbodyModule
 {
+    JSONStorableBool useProfileJSON { get; }
     JSONStorableBool exitOnMenuOpen { get; }
     JSONStorableBool lookAtJSON { get; }
     JSONStorableFloat lookAtWeightJSON { get; }
@@ -30,6 +31,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override string storeId => "Passenger";
     public override string label => Label;
 
+    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool exitOnMenuOpen { get; } = new JSONStorableBool("ExitOnMenuOpen", true);
     public JSONStorableBool lookAtJSON { get; } = new JSONStorableBool("LookAtEyeTarget", false);
     public JSONStorableFloat lookAtWeightJSON { get; } = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
@@ -318,8 +320,15 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
-        if (toProfile)
+        if (toScene)
+        {
+            useProfileJSON.StoreJSON(jc);
+        }
+
+        if (toScene && !useProfileJSON.val || toProfile)
+        {
             exitOnMenuOpen.StoreJSON(jc);
+        }
 
         lookAtJSON.StoreJSON(jc);
         lookAtWeightJSON.StoreJSON(jc);
@@ -339,8 +348,15 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        if(fromProfile)
+        if (fromScene)
+        {
+            useProfileJSON.RestoreFromJSON(jc);
+        }
+
+        if (fromScene && !useProfileJSON.val || fromProfile)
+        {
             exitOnMenuOpen.RestoreFromJSON(jc);
+        }
 
         lookAtJSON.RestoreFromJSON(jc);
         lookAtWeightJSON.RestoreFromJSON(jc);
@@ -359,8 +375,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void ResetToDefault()
     {
         base.ResetToDefault();
-        positionOffset = Vector3.zero;
-        rotationOffset = Vector3.zero;
+        useProfileJSON.SetValToDefault();
         lookAtJSON.SetValToDefault();
         positionLockJSON.SetValToDefault();
         positionSmoothingJSON.SetValToDefault();
@@ -371,5 +386,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         rotationLockNoRollJSON.SetValToDefault();
         rotationLockNoTiltJSON.SetValToDefault();
         eyesToHeadDistanceOffsetJSON.SetValToDefault();
+        positionOffset = Vector3.zero;
+        rotationOffset = Vector3.zero;
     }
 }
