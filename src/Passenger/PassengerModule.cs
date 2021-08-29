@@ -70,6 +70,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void InitStorables()
     {
         base.InitStorables();
+
         selectedJSON.defaultVal = context.containingAtom.type != "Person";
 
         eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => SyncCameraParent();
@@ -265,7 +266,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         var position = linkTransform.position;
         var rotation = linkTransform.rotation * _rigRotationOffset;
 
-        if (lookAtJSON.val && lookAtWeightJSON.val > 0)
+        if (lookAtJSON.val && lookAtWeightJSON.val > 0 && !ReferenceEquals(_eyeTargetControl, null))
         {
             var lookAtRotation = Quaternion.LookRotation(_eyeTargetControl.transform.position - linkTransform.position, linkTransform.up);
             lookAtRotation.eulerAngles += _cameraCenterTarget.localEulerAngles;
