@@ -128,6 +128,8 @@ public class PossessionPose
         rHand.RBHoldPositionSpring = 10000f;
         rHand.RBHoldRotationSpring = 1000f;
         rHand.onPositionChangeHandlers?.Invoke(rHand);
+
+        SuperController.singleton.ResetSimulation(5, "Apply Possession Pose", true);
     }
 
     private static void SetState(FreeControllerV3 controller, FreeControllerV3.PositionState positionState, FreeControllerV3.RotationState rotationState)
