@@ -14,6 +14,7 @@ namespace Handlers
             { "Custom/Subsurface/CullComputeBuff", Shader.Find("Custom/Subsurface/TransparentSeparateAlphaComputeBuff") },
 
             // Transparent materials
+            { "Custom/Subsurface/TransparentGlossNMNoCullSeparateAlphaComputeBuff", null },
             { "Custom/Subsurface/TransparentGlossNoCullSeparateAlphaComputeBuff", null },
             { "Custom/Subsurface/TransparentGlossComputeBuff", null },
             { "Custom/Subsurface/TransparentComputeBuff", null },
