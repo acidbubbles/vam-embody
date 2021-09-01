@@ -23,7 +23,7 @@ namespace Handlers
 
                 Shader shader;
                 if (!ReplacementShaders.ShadersMap.TryGetValue(material.shader.name, out shader))
-                    SuperController.LogError("Missing replacement shader: '" + material.shader.name + "'");
+                    SuperController.LogError("Missing replacement shader: '" + material.shader.name + $"' ({material.name} will not be hidden)");
 
                 if (shader != null)
                 {
