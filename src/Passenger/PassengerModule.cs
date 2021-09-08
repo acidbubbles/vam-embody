@@ -67,7 +67,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     private Transform _cameraCenter;
     private float _headToEyesDistance;
     private FreeControllerV3Snapshot _headControlSnapshot;
-    private Quaternion _rigRotationOffset;
+    private Vector3 _rigRotationOffsetSource = Vector3.zero;
+    private Quaternion _rigRotationOffset = Quaternion.identity;
 
     public override void InitStorables()
     {
@@ -119,10 +120,13 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void PreActivate()
     {
         SyncCameraParent();
+
         if (exitOnMenuOpen.val)
         {
             SuperController.singleton.HideMainHUD();
         }
+
+        _rigRotationOffsetSource = Vector3.zero;
         _rigRotationOffset = Quaternion.identity;
     }
 
@@ -241,9 +245,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
                 return;
             }
 
-            var turnAxis = JoystickControl.GetAxis(SuperController.singleton.navigationTurnAxis);
-            if (turnAxis != 0)
-                _rigRotationOffset *= Quaternion.Euler(0f, turnAxis, 0f);
+            const float yawSpeed = 40f;
+            const float pitchSpeed = 32f;
+            _rigRotationOffsetSource += new Vector3(
+                JoystickControl.GetAxis(SuperController.singleton.navigationUpAxis) * pitchSpeed,
+                JoystickControl.GetAxis(SuperController.singleton.navigationTurnAxis) * yawSpeed,
+                0f) * Time.unscaledDeltaTime;
+            _rigRotationOffset = Quaternion.identity * Quaternion.Euler(_rigRotationOffsetSource);
+
             UpdateNavigationRig(false);
         }
         catch (Exception e)
