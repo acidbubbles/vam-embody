@@ -282,20 +282,12 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
                 rotation = Quaternion.Euler(new Vector3(0, rotation.eulerAngles.y, 0));
         }
 
-        // Move navigation rig
-
-        var cameraDelta = centerTargetTransform.position
-                          - navigationRig.position
-                          - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance * SuperController.singleton.worldScale);
-        var navigationRigPosition = position - cameraDelta;
+        // Navigation rig rotation
 
         var navigationRigRotation = rotation;
 
         if (!force)
         {
-            if (positionSmoothing > 0)
-                navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
-
             if (rotationSmoothing > 0)
                 navigationRigRotation = navigationRig.rotation.SmoothDamp(navigationRigRotation, ref _currentRotationVelocity, rotationSmoothing);
         }
@@ -310,6 +302,21 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             _headControl.control.rotation = cameraRotation;
             _headControlRB.transform.rotation = cameraRotation;
         }
+
+        // Navigation rig position
+
+        var cameraDelta = centerTargetTransform.position
+                          - navigationRig.position
+                          - centerTargetTransform.rotation * new Vector3(0, 0, _headToEyesDistance * SuperController.singleton.worldScale);
+        var navigationRigPosition = position - cameraDelta;
+
+
+        if (!force)
+        {
+            if (positionSmoothing > 0)
+                navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
+        }
+
         if (force || positionLockJSON.val)
         {
             navigationRig.position = navigationRigPosition;
