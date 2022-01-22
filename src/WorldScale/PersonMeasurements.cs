@@ -3,9 +3,6 @@ using UnityEngine;
 
 public class PersonMeasurements
 {
-    private const float _feetToGroundDistance = 0.059f;
-    private const float _skeletonSumToStandHeightRatio = 0.945f;
-
     private readonly DAZBone[] _bones;
     private readonly DAZBone _hipBone;
 
@@ -17,18 +14,29 @@ public class PersonMeasurements
 
     public float MeasureHeight()
     {
-        var footToHead = MeasureToHip("head") + ((MeasureToHip("lFoot") + MeasureToHip("rFoot")) / 2f);
+        const float hipToHeadHeightRatio = 0.926f;
+
+        var floorToHip = MeasureHipHeight();
+        var upper = MeasureToHip("head") * hipToHeadHeightRatio;
+        var floorToHead = floorToHip + upper;
 
         var lEye = _bones.First(eye => eye.name == "lEye").transform;
         var eyesToHeadDistance = _bones.First(b => b.name == "head").transform.InverseTransformPoint(lEye.position).y;
 
-        var measure = footToHead + eyesToHeadDistance + _feetToGroundDistance;
-         measure *= _skeletonSumToStandHeightRatio;
-
+        var measure = floorToHead + eyesToHeadDistance;
         return measure;
     }
 
-    public float MeasureToHip(string boneName)
+    public float MeasureHipHeight()
+    {
+        const float feetToHipHeightRatio = 0.992f;
+        const float feetOffset = 0.054f;
+
+        var footToHip = ((MeasureToHip("lFoot") + MeasureToHip("rFoot")) / 2f) * feetToHipHeightRatio;
+        return footToHip + feetOffset;
+    }
+
+    private float MeasureToHip(string boneName)
     {
         var from = _bones.First(b => b.name == boneName);
         return Measure(from, _hipBone);

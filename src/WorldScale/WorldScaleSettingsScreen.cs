@@ -12,7 +12,7 @@
     public void Show()
     {
         if(context.containingAtom.type == "Person")
-            CreateText(new JSONStorableString("", "Changes the world scale based on your real height and the in-game model height.\n\nUse the Record Player Height button while standing straight to get accurate world scale.\n\nOptionally put a controller down before to get a more precise reading."), true);
+            CreateText(new JSONStorableString("", "Changes the world scale based on your real height and the in-game model height.\n\nUse the Record Player Height button while standing straight to get accurate world scale.\n\nOptionally put a controller down before to get a more precise reading.\n\nNote that the height is is VaM units, and from the floor to your eyes."), true);
         else
             CreateText(new JSONStorableString("", "Changes the world scale when activated."), true);
 
@@ -21,8 +21,8 @@
             CreateTitle("Automatic World Scale");
 
             CreateScrollablePopup(_worldScale.worldScaleMethodJSON).label = "Method*";
-            CreateSlider(_worldScale.playerHeightJSON).label = "Player Height*";
-            var recordHeightBtn = CreateButton("Record Player Height (stand straight)");
+            CreateSlider(_worldScale.playerHeightJSON).label = "Player Eyes Height*";
+            var recordHeightBtn = CreateButton("Record Player Eyes Height Now");
             recordHeightBtn.button.onClick.AddListener(() => recordHeightBtn.label = RecordPlayerHeight());
         }
 
@@ -42,7 +42,7 @@
             showPersonHeight.button.onClick.AddListener(() =>
             {
                 var height = new PersonMeasurements(context).MeasureHeight();
-                showPersonHeight.label = $"Height: {height:0.00} (World Scale: {height / context.worldScale.playerHeightJSON.val:0.00})";
+                showPersonHeight.label = $"Floor-Eyes: {height:0.00} (World Scale: {height / context.worldScale.playerHeightJSON.val:0.00})";
             });
             var applyWorldScale = CreateButton("Apply World Scale", true);
             applyWorldScale.button.onClick.AddListener(() => { context.worldScale.ApplyWorldScale(); });
