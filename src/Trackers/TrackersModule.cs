@@ -237,9 +237,9 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void ReleaseFingers()
     {
-        if (_leftHandController.handControl != null)
+        if (_leftHandController?.handControl != null)
             _leftHandController.handControl.possessed = false;
-        if (_rightHandController.handControl != null)
+        if (_rightHandController?.handControl != null)
             _rightHandController.handControl.possessed = false;
     }
 

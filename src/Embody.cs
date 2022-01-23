@@ -351,6 +351,10 @@ public class Embody : MVRScript, IEmbody
                 module.InitReferences();
             }
             _storablesReferencesInitialized = true;
+
+            RegisterBool(_context.leftHandToggle);
+            RegisterBool(_context.rightHandToggle);
+
             return true;
         }
         catch (Exception exc)
@@ -776,6 +780,9 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.rightHandMotionControl.mappedControllerName = VamConstants.HeadControlName;
                 break;
         }
+
+        _context.RefreshTriggers();
+        _context.Refresh();
     }
 
     private void ConfigureHandsPresets(bool trackerEnabled, bool position, bool leap, bool fingers)
@@ -989,6 +996,8 @@ public class Embody : MVRScript, IEmbody
 
         foreach (var c in _modulesList)
             c.RestoreFromJSON(jc[c.storeId].AsObject, fromProfile, fromScene);
+
+        _context.RefreshTriggers();
 
         return false;
     }

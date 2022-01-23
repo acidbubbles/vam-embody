@@ -63,6 +63,9 @@ public class EmbodyContext
     public Transform viveTracker8 => diagnostics.viveTracker8 ?? SuperController.singleton.viveTracker8;
     // ReSharper restore Unity.NoNullCoalescing
 
+    public JSONStorableBool leftHandToggle { get; set; }
+    public JSONStorableBool rightHandToggle { get; set; }
+
     public DAZBone[] bones { get; private set; }
 
     public EmbodyContext(MVRScript plugin, IEmbody embody)
@@ -70,6 +73,19 @@ public class EmbodyContext
         this.plugin = plugin;
         this.embody = embody;
         containingAtom = plugin.containingAtom;
+
+        leftHandToggle = new JSONStorableBool("Left Hand Enabled", true, val =>
+        {
+            trackers.leftHandMotionControl.enabled = val;
+            trackers.RefreshHands();
+            embody.Refresh();
+        }) { isStorable = false };
+        rightHandToggle = new JSONStorableBool("Right Hand Enabled", true, val =>
+        {
+            trackers.rightHandMotionControl.enabled = val;
+            trackers.RefreshHands();
+            embody.Refresh();
+        }) { isStorable = false };
     }
 
     public void InitReferences()
@@ -83,5 +99,11 @@ public class EmbodyContext
     public void Refresh()
     {
         embody.Refresh();
+    }
+
+    public void RefreshTriggers()
+    {
+        leftHandToggle.valNoCallback = trackers.leftHandMotionControl.enabled;
+        rightHandToggle.valNoCallback = trackers.rightHandMotionControl.enabled;
     }
 }

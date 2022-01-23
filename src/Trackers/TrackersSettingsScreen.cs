@@ -138,8 +138,16 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             {
                 motionControl.enabled = val;
                 if (MotionControlNames.IsHands(motionControl.name))
+                {
                     _handsToggleJSON.valNoCallback = _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled;
-                context.Refresh();
+                    context.RefreshTriggers();
+                    context.trackers.RefreshHands();
+                    context.embody.Refresh();
+                }
+                else
+                {
+                    context.Refresh();
+                }
             }
         ));
 

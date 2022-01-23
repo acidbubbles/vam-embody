@@ -276,6 +276,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     private void DisableHand(SnugHand hand)
     {
+        if (hand == null) return;
         if (!hand.active) return;
         hand.controller.possessed = false;
         (hand.controller.GetComponent<HandControl>() ?? hand.controller.GetComponent<HandControlLink>().handControl).possessed = false;
