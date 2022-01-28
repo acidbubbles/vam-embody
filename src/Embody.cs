@@ -889,7 +889,7 @@ public class Embody : MVRScript, IEmbody
 
     private static IEnumerable<Atom> GetSpawnPointAtoms()
     {
-        return SuperController.singleton.GetAtoms().Where(a => a.GetBoolParamValue("IsSpawnPointHost"));
+        return SuperController.singleton.GetAtoms().Where(a => !ReferenceEquals(a.GetBoolJSONParam("IsSpawnPointHost"), null));
     }
 
     private void SyncSpawnPointAtoms()
