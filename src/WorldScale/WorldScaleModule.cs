@@ -62,9 +62,14 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         var sc = SuperController.singleton;
         sc.showNavigationHologrid = false;
         _navigationHologrid = sc.navigationHologrid;
-        sc.navigationHologrid = _fakeHologrid;
-        _navigationHologrid.GetComponent<MeshRenderer>().material.SetFloat("_Alpha", 0);
-        _navigationHologrid.gameObject.SetActive(false);
+        if (_navigationHologrid != null)
+        {
+            sc.navigationHologrid = _fakeHologrid;
+            var meshRenderer = _navigationHologrid.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+                meshRenderer.material.SetFloat("_Alpha", 0);
+            _navigationHologrid.gameObject.SetActive(false);
+        }
 
         ApplyWorldScale();
     }
@@ -102,7 +107,11 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
         var sc = SuperController.singleton;
         sc.worldScale = _originalWorldScale;
-        sc.navigationHologrid = _navigationHologrid;
+        if (_navigationHologrid != null)
+        {
+            sc.navigationHologrid = _navigationHologrid;
+            _navigationHologrid = null;
+        }
         if (_originalShowNavigationHologrid)
             sc.showNavigationHologrid = true;
     }
@@ -205,6 +214,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
 
     private void OnDestroy()
     {
+        if (_navigationHologrid != null) SuperController.singleton.navigationHologrid = _navigationHologrid;
         if (_fakeHologrid != null) Destroy(_fakeHologrid.gameObject);
     }
 }
