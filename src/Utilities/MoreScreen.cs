@@ -49,7 +49,7 @@ public class MoreScreen : ScreenBase, IScreen
             CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
         }
 #endif
-        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key*",
+        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
             val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
         var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
         toggleKeyPopup.popupPanelHeight = 700f;
