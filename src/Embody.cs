@@ -164,7 +164,11 @@ public class Embody : MVRScript, IEmbody
                 _activatedManually = true;
             });
 
-            _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, url => new Storage(_context).LoadProfile(url), SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
+            _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, url =>
+            {
+                _loadProfileWithPathUrlJSON.valNoCallback = null;
+                new Storage(_context).LoadProfile(url);
+            }, SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
             {
                 allowFullComputerBrowse = false,
                 allowBrowseAboveSuggestedPath = true,
@@ -179,7 +183,10 @@ public class Embody : MVRScript, IEmbody
                 }
             };
             RegisterUrl(_loadProfileWithPathUrlJSON);
-            _loadProfileWithPathJSON = new JSONStorableActionPresetFilePath("LoadProfileWithPath", url => _loadProfileWithPathUrlJSON.SetFilePath(url), _loadProfileWithPathUrlJSON);
+            _loadProfileWithPathJSON = new JSONStorableActionPresetFilePath("LoadProfileWithPath", url =>
+            {
+                _loadProfileWithPathUrlJSON.SetFilePath(url);
+            }, _loadProfileWithPathUrlJSON);
             RegisterPresetFilePathAction(_loadProfileWithPathJSON);
 
             var launchWizardJSON = new JSONStorableAction("LaunchWizard", () => StartCoroutine(LaunchWizard()));
