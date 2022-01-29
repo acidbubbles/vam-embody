@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Handlers
@@ -6,18 +7,22 @@ namespace Handlers
     public class SkinHandler : IHandler
     {
         private readonly DAZSkinV2 _skin;
+        private readonly IEnumerable<string> _materialsToHide;
+        private readonly int _materialsToHideMax;
         private List<SkinShaderMaterialSnapshot> _materialRefs;
 
-        public SkinHandler(DAZSkinV2 skin)
+        public SkinHandler(DAZSkinV2 skin, IEnumerable<string> materialsToHide, int materialsToHideMax)
         {
             _skin = skin;
+            _materialsToHide = materialsToHide;
+            _materialsToHideMax = materialsToHideMax;
         }
 
         public bool Prepare()
         {
             _materialRefs = new List<SkinShaderMaterialSnapshot>();
 
-            foreach (var material in KnownMaterials.GetMaterialsToHide(_skin))
+            foreach (var material in GetMaterialsToHide())
             {
                 var materialInfo = SkinShaderMaterialSnapshot.FromMaterial(material);
 
@@ -45,6 +50,23 @@ namespace Handlers
             // This is a hack to force a refresh of the shaders cache
             _skin.BroadcastMessage("OnApplicationFocus", true);
             return true;
+        }
+
+        private IEnumerable<Material> GetMaterialsToHide()
+        {
+            var materials = new List<Material>(_materialsToHideMax);
+
+            foreach (var material in _skin.GPUmaterials)
+            {
+                if (material == null)
+                    continue;
+                if (!_materialsToHide.Any(materialToHide => material.name.StartsWith(materialToHide)))
+                    continue;
+
+                materials.Add(material);
+            }
+
+            return materials;
         }
 
         public void Dispose()

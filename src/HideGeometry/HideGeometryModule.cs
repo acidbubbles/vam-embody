@@ -11,6 +11,7 @@ public interface IHideGeometryModule : IEmbodyModule
     JSONStorableBool hideFaceJSON { get; }
     JSONStorableBool hideHairJSON { get; }
     JSONStorableBool hideClothingJSON { get; }
+    JSONStorableBool[] hideFaceMaterials { get; }
 }
 
 public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
@@ -25,6 +26,27 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     public JSONStorableBool hideFaceJSON { get; set; }
     public JSONStorableBool hideHairJSON { get; set; }
     public JSONStorableBool hideClothingJSON { get; set; }
+
+    public JSONStorableBool[] hideFaceMaterials { get; } = new[]
+    {
+        new JSONStorableBool("Lacrimals", true),
+        new JSONStorableBool("Pupils", true),
+        new JSONStorableBool("Lips", true),
+        new JSONStorableBool("Gums", true),
+        new JSONStorableBool("Irises", true),
+        new JSONStorableBool("Teeth", true),
+        new JSONStorableBool("Face", true),
+        new JSONStorableBool("Head", true),
+        new JSONStorableBool("InnerMouth", true),
+        new JSONStorableBool("Tongue", true),
+        new JSONStorableBool("EyeReflection", true),
+        new JSONStorableBool("Nostrils", true),
+        new JSONStorableBool("Cornea", true),
+        new JSONStorableBool("Eyelashes", true),
+        new JSONStorableBool("Sclera", true),
+        new JSONStorableBool("Ears", true),
+        new JSONStorableBool("Tear", true),
+    };
 
     private readonly List<IHandler> _handlers = new List<IHandler>();
 
@@ -46,6 +68,11 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
         hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());
         hideClothingJSON = new JSONStorableBool("HideClothing", true, (bool _) => RefreshHandlers());
+
+        foreach (var hideFaceMaterial in hideFaceMaterials)
+        {
+            hideFaceMaterial.setCallbackFunction = _ => RefreshHandlers();
+        }
     }
 
     public override void InitReferences()
@@ -159,7 +186,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
         if (hideFaceJSON.val)
         {
-            if (!RegisterHandler(new SkinHandler(_character.skin)))
+            if (!RegisterHandler(new SkinHandler(_character.skin, hideFaceMaterials.Where(x => x.val).Select(x => x.name), hideFaceMaterials.Length)))
                 return;
         }
 
@@ -341,6 +368,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         hideFaceJSON.StoreJSON(jc);
         hideHairJSON.StoreJSON(jc);
         hideClothingJSON.StoreJSON(jc);
+        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.StoreJSON(jc);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
@@ -350,6 +378,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         hideFaceJSON.RestoreFromJSON(jc);
         hideHairJSON.RestoreFromJSON(jc);
         hideClothingJSON.RestoreFromJSON(jc);
+        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.RestoreFromJSON(jc);
     }
 
     public override void ResetToDefault()
@@ -359,5 +388,6 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         hideFaceJSON.SetValToDefault();
         hideHairJSON.SetValToDefault();
         hideClothingJSON.SetValToDefault();
+        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.SetValToDefault();
     }
 }

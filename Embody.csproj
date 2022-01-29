@@ -88,7 +88,6 @@
     <Compile Include="src\HideGeometry\Handlers\ClothingHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\HairHandler.cs" />
     <Compile Include="src\HideGeometry\Handlers\IHandler.cs" />
-    <Compile Include="src\HideGeometry\Handlers\KnownMaterials.cs" />
     <Compile Include="src\HideGeometry\Handlers\MaterialAlphaSnapshot.cs" />
     <Compile Include="src\HideGeometry\Handlers\ReplacementShaders.cs" />
     <Compile Include="src\HideGeometry\Handlers\SkinHandler.cs" />

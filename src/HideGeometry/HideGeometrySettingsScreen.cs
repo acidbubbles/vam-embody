@@ -1,4 +1,6 @@
-﻿public class HideGeometrySettingsScreen : ScreenBase, IScreen
+﻿using System.Linq;
+
+public class HideGeometrySettingsScreen : ScreenBase, IScreen
 {
     private readonly IHideGeometryModule _hideGeometry;
     public const string ScreenName = HideGeometryModule.Label;
@@ -16,5 +18,8 @@
         CreateToggle(_hideGeometry.hideFaceJSON, true).label = "Hide face (skin, eyes, eyelashes)";
         CreateToggle(_hideGeometry.hideHairJSON, true).label = "Hide hair";
         CreateToggle(_hideGeometry.hideClothingJSON, true).label = "Hide clothing (improved eyes, glasses)";
+
+        CreateTitle("Hide face inclusions", true);
+        CreateToggle(_hideGeometry.hideFaceMaterials.First(x => x.name == "Tongue"), true).label = "Tongue";
     }
 }

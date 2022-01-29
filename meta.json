@@ -29,7 +29,6 @@
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\ClothingHandler.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\HairHandler.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\IHandler.cs",
-    "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\KnownMaterials.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\MaterialAlphaSnapshot.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\ReplacementShaders.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\HideGeometry\\Handlers\\SkinHandler.cs",
