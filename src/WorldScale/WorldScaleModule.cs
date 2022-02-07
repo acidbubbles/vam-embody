@@ -37,6 +37,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     {
         base.InitStorables();
         selectedJSON.defaultVal = context.containingAtom.type == "Person";
+        selectedJSON.valNoCallback = selectedJSON.defaultVal;
         worldScaleMethodJSON.defaultVal = context.containingAtom.type == "Person" ? EyeDistanceMethod : NoneMethod;
         fixedWorldScaleJSON.setCallbackFunction = val => fixedWorldScaleJSON.valNoCallback = Mathf.Clamp(fixedWorldScaleJSON.val, 0, SuperController.singleton.worldScaleSlider.maxValue);
     }

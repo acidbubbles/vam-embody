@@ -64,6 +64,7 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.InitStorables();
         selectedJSON.defaultVal = true;
+        selectedJSON.valNoCallback = selectedJSON.defaultVal;
 
         hideFaceJSON = new JSONStorableBool("HideFace", true, (bool _) => RefreshHandlers());
         hideHairJSON = new JSONStorableBool("HideHair", true, (bool _) => RefreshHandlers());

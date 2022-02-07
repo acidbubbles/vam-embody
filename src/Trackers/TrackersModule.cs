@@ -53,6 +53,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     {
         base.InitStorables();
         selectedJSON.defaultVal = true;
+        selectedJSON.valNoCallback = selectedJSON.defaultVal;
 
         headMotionControl = AddMotionControl(
             MotionControlNames.Head,
