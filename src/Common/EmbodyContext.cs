@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class EmbodyContext
 {
@@ -93,6 +94,7 @@ public class EmbodyContext
         if (containingAtom.type == "Person")
         {
             bones = containingAtom.transform.Find("rescale2").GetComponentsInChildren<DAZBone>();
+            if (bones.Length == 0) throw new InvalidOperationException($"Unable to get bones from atom {containingAtom.name}");
         }
     }
 

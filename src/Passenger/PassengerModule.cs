@@ -153,8 +153,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             _cameraCenter.SetParent(_headBoneTransform, false);
         }
 
-        var lEye = context.bones.First(b => b.name == "lEye").transform;
-        var rEye = context.bones.First(b => b.name == "rEye").transform;
+        var lEye = context.bones.FirstOrDefault(b => b.name == "lEye")?.transform;
+        var rEye = context.bones.FirstOrDefault(b => b.name == "rEye")?.transform;
+        if (lEye == null || rEye == null) throw new NullReferenceException($"No lEye|rEye bones in the {context.bones.Length} bones of atom {context.containingAtom.name}");
         var eyesCenter = (lEye.localPosition + rEye.localPosition) / 2f;
         var upDelta = eyesCenter.y;
         _cameraCenter.localPosition = new Vector3(0f, upDelta, 0f);

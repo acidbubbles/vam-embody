@@ -299,6 +299,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             c.controller.canGrabRotation = c.snapshot.canGrabRotation;
             c.controller.RBHoldPositionSpring = c.snapshot.holdPositionSpring;
             c.controller.RBHoldRotationSpring = c.snapshot.holdRotationSpring;
+            c.controller.hidden = c.snapshot.hidden;
             c.snapshot = null;
         }
 
@@ -357,6 +358,8 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
         controller.canGrabPosition = false;
         controller.canGrabRotation = false;
+
+        controller.hidden = true;
     }
 
     public void ClearPersonalData()
