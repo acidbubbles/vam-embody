@@ -13,8 +13,10 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
     private CollapsibleSection _section;
     private JSONStorableStringChooser _motionControlJSON;
     private JSONStorableBool _handsToggleJSON;
+    private JSONStorableBool _keepPhysicsHoldStrengthJSON;
     private readonly TrackerAutoSetup _trackerAutoSetup;
     private MotionControllerWithCustomPossessPoint _currentMotionControl;
+    private JSONStorableBool _currentKeepPhysicsHoldStrengthJSON;
 
     public TrackersSettingsScreen(EmbodyContext context, ITrackersModule trackers)
         : base(context)
@@ -36,7 +38,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
-        _handsToggleJSON = new JSONStorableBool("Enable Hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
+        _handsToggleJSON = new JSONStorableBool("Enable hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
         CreateToggle(_handsToggleJSON, true);
         _handsToggleJSON.setCallbackFunction = val =>
         {
@@ -44,6 +46,16 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             _trackers.rightHandMotionControl.enabled = val;
             if (_currentMotionControl != null && MotionControlNames.IsHands(_currentMotionControl.name))
                 ShowMotionControl(_currentMotionControl);
+        };
+
+        _keepPhysicsHoldStrengthJSON = new JSONStorableBool("Keep physics hold strength*", _trackers.motionControls.Any(x => x.keepCurrentPhysicsHoldStrength));
+        CreateToggle(_keepPhysicsHoldStrengthJSON, true);
+        _keepPhysicsHoldStrengthJSON.setCallbackFunction = val =>
+        {
+            foreach (var motionControl in _trackers.motionControls)
+                motionControl.keepCurrentPhysicsHoldStrength = val;
+            if (_currentKeepPhysicsHoldStrengthJSON != null)
+                _currentKeepPhysicsHoldStrengthJSON.valNoCallback = val;
         };
 
         if (context.trackers.viveTrackers.Any(v => v.SyncMotionControl()))
@@ -108,6 +120,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         if (MotionControlNames.IsViveTracker(motionControl.name))
         {
+            CreateSpacer(true).height = 20f;
             _section.CreateTitle("Vive Trackers", true);
 
             _section.CreateButton("Map to Closest Control", true).button.onClick.AddListener(() =>
@@ -198,10 +211,14 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
             ), false);
         }
 
-        _section.CreateToggle(new JSONStorableBool(
+        _section.CreateToggle(_currentKeepPhysicsHoldStrengthJSON = new JSONStorableBool(
             "Keep physics hold strength*",
             motionControl.keepCurrentPhysicsHoldStrength,
-            val => motionControl.keepCurrentPhysicsHoldStrength = val), false);
+            val =>
+            {
+                motionControl.keepCurrentPhysicsHoldStrength = val;
+                _keepPhysicsHoldStrengthJSON.valNoCallback = _trackers.motionControls.Any(x => x.keepCurrentPhysicsHoldStrength);
+            }), false);
 
         _section.CreateTitle($"Controller Offset", false);
 
