@@ -206,6 +206,20 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
                     return;
             }
         }
+        else
+        {
+            var hair = _selector.hairItems
+                .Where(h => h != null)
+                .Where(h => h.active)
+                .Where(IsEyesHair)
+                .Where(HairHandler.Supports)
+                .ToArray();
+            foreach (var h in hair)
+            {
+                if (!RegisterHandler(new HairHandler(h)))
+                    return;
+            }
+        }
 
         if (hideClothingJSON.val)
         {
@@ -226,20 +240,38 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
     private static bool IsHeadHair(DAZHairGroup h)
     {
-        if(h.tagsArray == null) return true;
-        if(h.tagsArray.Length == 0) return true;
-        if (
-            Array.IndexOf(h.tagsArray, "head") > -1 ||
-            Array.IndexOf(h.tagsArray, "face") > -1
-        ) return true;
-        // Oops, forgot to tag
-        if (
-            Array.IndexOf(h.tagsArray, "arms") == -1 &&
-            Array.IndexOf(h.tagsArray, "full body") == -1 &&
-            Array.IndexOf(h.tagsArray, "genital") == -1 &&
-            Array.IndexOf(h.tagsArray, "legs") == -1 &&
-            Array.IndexOf(h.tagsArray, "torso") == -1
-        ) return true;
+        var hasTags = h.tagsArray != null && h.tagsArray.Length > 0;
+        if (hasTags)
+        {
+            if (
+                Array.IndexOf(h.tagsArray, "head") > -1 ||
+                Array.IndexOf(h.tagsArray, "face") > -1
+            ) return true;
+            // Oops, forgot to tag
+            if (
+                Array.IndexOf(h.tagsArray, "arms") == -1 &&
+                Array.IndexOf(h.tagsArray, "full body") == -1 &&
+                Array.IndexOf(h.tagsArray, "genital") == -1 &&
+                Array.IndexOf(h.tagsArray, "legs") == -1 &&
+                Array.IndexOf(h.tagsArray, "torso") == -1
+            ) return true;
+        }
+        if (h.displayName.IndexOf("lash", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (h.displayName.IndexOf("eyebrow", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        return !hasTags;
+    }
+
+    private static bool IsEyesHair(DAZHairGroup h)
+    {
+        var hasTags = h.tagsArray != null && h.tagsArray.Length > 0;
+        if (hasTags)
+        {
+            if (
+                Array.IndexOf(h.tagsArray, "face") > -1
+            ) return true;
+        }
+        if (h.displayName.IndexOf("lash", StringComparison.OrdinalIgnoreCase) > -1) return true;
+        if (h.displayName.IndexOf("eyebrow", StringComparison.OrdinalIgnoreCase) > -1) return true;
         return false;
     }
 
