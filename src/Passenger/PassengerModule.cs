@@ -76,11 +76,15 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         selectedJSON.defaultVal = context.containingAtom.type != "Person";
 
-        eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ => SyncCameraParent();
+        eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ =>
+        {
+            if (activeJSON.val) SyncCameraParent();
+        };
         rotationLockJSON.setCallbackFunction = val =>
         {
             if (val) allowPersonHeadRotationJSON.valNoCallback = false;
-            SyncCameraParent();
+            if (activeJSON.val)
+                SyncCameraParent();
         };
         rotationLockNoRollJSON.setCallbackFunction = val =>
         {
@@ -93,7 +97,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         allowPersonHeadRotationJSON.setCallbackFunction = val =>
         {
             if (val) rotationLockJSON.valNoCallback = false;
-            SyncCameraParent();
+            if (activeJSON.val)
+                SyncCameraParent();
         };
 
         // Initialized early because this contains the actual storable offsets
