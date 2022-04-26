@@ -105,7 +105,7 @@ public class EmbodyContext
 
     public void RefreshTriggers()
     {
-        leftHandToggle.valNoCallback = trackers.leftHandMotionControl.enabled;
-        rightHandToggle.valNoCallback = trackers.rightHandMotionControl.enabled;
+        if (trackers?.leftHandMotionControl != null) leftHandToggle.valNoCallback = trackers.leftHandMotionControl.enabled;
+        if (trackers?.rightHandMotionControl != null) rightHandToggle.valNoCallback = trackers.rightHandMotionControl.enabled;
     }
 }
