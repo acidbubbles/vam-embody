@@ -127,7 +127,13 @@ public class TrackerAutoSetup
     {
         foreach (var mc in _context.trackers.viveTrackers)
         {
+            var useLeapPositioning = mc.useLeapPositioning;
+            var fingersTracking = mc.fingersTracking;
+            var keepCurrentPhysicsHoldStrength = mc.keepCurrentPhysicsHoldStrength;
             mc.ResetToDefault();
+            mc.useLeapPositioning = useLeapPositioning;
+            mc.fingersTracking = fingersTracking;
+            mc.keepCurrentPhysicsHoldStrength = keepCurrentPhysicsHoldStrength;
         }
 
         var hashSet = new HashSet<string>();
