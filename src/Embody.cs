@@ -684,6 +684,7 @@ public class Embody : MVRScript, IEmbody
             "Passenger (Free Look)",
             "Leap Fingers Only",
             "Puppeteer (Head)",
+            "Hide Head",
             "Legacy Possession",
         }, "(Select To Apply)", "Apply Preset")
         {
@@ -784,6 +785,10 @@ public class Embody : MVRScript, IEmbody
                 _context.trackers.headMotionControl.mappedControllerName = null;
                 _context.trackers.leftHandMotionControl.mappedControllerName = null;
                 _context.trackers.rightHandMotionControl.mappedControllerName = VamConstants.HeadControlName;
+                break;
+            case "Hide Head":
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.hideGeometry.hideFaceJSON.val = true;
                 break;
         }
 
