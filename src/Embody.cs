@@ -247,7 +247,6 @@ public class Embody : MVRScript, IEmbody
 
         if (!enabled || !containingAtom.on || (!force && activeToggle != null && !activeToggle.toggle.interactable))
         {
-            SuperController.LogError("Embody: Cannot activate because the atom or plugin is currently disabled");
             activeJSON.valNoCallback = false;
             return;
         }
