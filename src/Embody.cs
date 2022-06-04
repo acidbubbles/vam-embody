@@ -774,6 +774,12 @@ public class Embody : MVRScript, IEmbody
                 _context.passenger.selectedJSON.val = true;
                 _context.passenger.rotationLockJSON.val = false;
                 break;
+            case "Passenger (Free Move)":
+                _context.hideGeometry.selectedJSON.val = true;
+                _context.passenger.selectedJSON.val = true;
+                _context.passenger.rotationLockJSON.val = false;
+                _context.passenger.positionLockJSON.val = false;
+                break;
             case "Leap Only":
                 _context.trackers.selectedJSON.val = true;
                 _context.trackers.headMotionControl.enabled = false;
