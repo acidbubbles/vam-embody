@@ -753,6 +753,8 @@ public class Embody : MVRScript, IEmbody
             case "Passenger":
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
+                _context.passenger.rotationLockJSON.val = true;
+                _context.passenger.positionLockJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
             case "Passenger w/ Hands":
@@ -760,6 +762,8 @@ public class Embody : MVRScript, IEmbody
                 ConfigureHandsPresets(true, true, false, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
+                _context.passenger.rotationLockJSON.val = true;
+                _context.passenger.positionLockJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
             case "Passenger w/ Leap":
@@ -767,12 +771,15 @@ public class Embody : MVRScript, IEmbody
                 ConfigureHandsPresets(true, true, true, true);
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
+                _context.passenger.rotationLockJSON.val = true;
+                _context.passenger.positionLockJSON.val = true;
                 _context.worldScale.selectedJSON.val = true;
                 break;
             case "Passenger (Free Look)":
                 _context.hideGeometry.selectedJSON.val = true;
                 _context.passenger.selectedJSON.val = true;
                 _context.passenger.rotationLockJSON.val = false;
+                _context.passenger.positionLockJSON.val = true;
                 break;
             case "Passenger (Free Move)":
                 _context.hideGeometry.selectedJSON.val = true;
