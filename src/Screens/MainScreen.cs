@@ -85,6 +85,11 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
         }
 
         CreateConfigButton(MoreScreen.ScreenName, "<i>Other Settings...</i>");
+
+        var triggersBtn = CreateButton("Configure Triggers");
+        triggersBtn.buttonText.alignment = TextAnchor.MiddleLeft;
+        triggersBtn.buttonText.GetComponent<RectTransform>().offsetMin = new Vector2(20, 0f);
+        triggersBtn.button.onClick.AddListener(context.embody.activateTrigger.trigger.OpenTriggerActionsPanel);
     }
 
     private void CreateConfigButton(string screenName, string btnLabel)

@@ -83,6 +83,7 @@
     <Compile Include="src\Diagnostics\EmbodyDebugSnapshot.cs" />
     <Compile Include="src\Embody.cs" />
     <Compile Include="src\EmbodyScaleChangeReceiver.cs" />
+    <Compile Include="src\EmbodyTriggerHandler.cs" />
     <Compile Include="src\EyeTarget\EyeTargetModule.cs" />
     <Compile Include="src\EyeTarget\EyeTargetSettingsScreen.cs" />
     <Compile Include="src\HideGeometry\Handlers\ClothingHandler.cs" />

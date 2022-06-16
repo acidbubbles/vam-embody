@@ -77,3 +77,4 @@ src\WorldScale\WorldScaleModule.cs
 src\WorldScale\WorldScaleSettingsScreen.cs
 src\Embody.cs
 src\EmbodyScaleChangeReceiver.cs
+src\EmbodyTriggerHandler.cs

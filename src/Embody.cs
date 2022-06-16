@@ -12,6 +12,7 @@ public interface IEmbody
     JSONStorableBool activateOnLoadJSON { get; }
     JSONStorableStringChooser returnToSpawnPoint { get; }
     UIDynamicToggle activeToggle { get; }
+    EmbodyTriggerHandler activateTrigger { get; }
     JSONStorableStringChooser presetsJSON { get; }
     void ActivateManually();
     void ActivateForced();
@@ -33,6 +34,8 @@ public class Embody : MVRScript, IEmbody
     public JSONStorableBool activateOnLoadJSON { get; private set; }
     public JSONStorableStringChooser returnToSpawnPoint { get; private set; }
     public UIDynamicToggle activeToggle { get; private set; }
+
+    public EmbodyTriggerHandler activateTrigger { get; private set; }
     public JSONStorableStringChooser presetsJSON { get; private set; }
 
     private JSONStorableUrl _loadProfileWithPathUrlJSON;
@@ -114,6 +117,9 @@ public class Embody : MVRScript, IEmbody
                 _scaleChangeReceiver.context = _context;
                 containingAtom.RegisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
             }
+
+            activateTrigger = new EmbodyTriggerHandler();
+            SuperController.singleton.onAtomUIDRenameHandlers += OnAtomRename;
 
             _modules.SetActive(true);
 
@@ -204,6 +210,8 @@ public class Embody : MVRScript, IEmbody
                 TryInitializeModuleReferences();
 
             SuperController.singleton.StartCoroutine(DeferredInit());
+
+            StartCoroutine(activateTrigger.LoadUIAssets());
         }
         catch (Exception)
         {
@@ -314,6 +322,15 @@ public class Embody : MVRScript, IEmbody
         if (_navigationRigSnapshot == null && ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false)))
         {
             _navigationRigSnapshot = NavigationRigSnapshot.Snap();
+        }
+
+        try
+        {
+            activateTrigger.trigger.active = true;
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: An error was thrown by a trigger: {exc}");
         }
 
         if ((_context.trackers?.selectedJSON?.val ?? false) && _context.trackers?.restorePoseAfterPossessJSON.val == true)
@@ -461,6 +478,15 @@ public class Embody : MVRScript, IEmbody
                 }
             }));
         }
+
+        try
+        {
+            activateTrigger.trigger.active = false;
+        }
+        catch (Exception exc)
+        {
+            SuperController.LogError($"Embody: An error was thrown by a trigger: {exc}");
+        }
     }
 
     private IEnumerator ReinitializeIfActiveCo()
@@ -577,6 +603,7 @@ public class Embody : MVRScript, IEmbody
         base.InitUI();
         if (UITransform == null) return;
         _screensManager?.Init(this, MainScreen.ScreenName);
+        activateTrigger.trigger.triggerActionsParent = UITransform;
     }
 
     public void OnBindingsListRequested(List<object> bindings)
@@ -968,6 +995,7 @@ public class Embody : MVRScript, IEmbody
 
     public void OnDestroy()
     {
+        SuperController.singleton.onAtomUIDRenameHandlers -= OnAtomRename;
         if (_context?.containingAtom != null)
             _context.containingAtom.DeregisterDynamicScaleChangeReceiver(_scaleChangeReceiver);
         Destroy(_scaleChangeReceiver);
@@ -994,6 +1022,9 @@ public class Embody : MVRScript, IEmbody
             c.StoreJSON(jc, toProfile || _context.diagnostics.enabledJSON.val, toScene);
             json[c.storeId] = jc;
         }
+
+        if (toScene)
+            json["Triggers"] = activateTrigger.trigger.GetJSON();
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool restorePhysical = true, bool restoreAppearance = true, JSONArray presetAtoms = null, bool setMissingToDefault = true)
@@ -1023,6 +1054,24 @@ public class Embody : MVRScript, IEmbody
 
         _context.RefreshTriggers();
 
+        if (jc.HasKey("Triggers"))
+            activateTrigger.trigger.RestoreFromJSON(jc["Triggers"].AsObject);
+
         return false;
     }
+
+    #region Triggers
+
+    public override void Validate()
+    {
+        base.Validate();
+        activateTrigger?.trigger?.Validate();
+    }
+
+    private void OnAtomRename(string from, string to)
+    {
+        activateTrigger?.trigger.SyncAtomNames();
+    }
+
+    #endregion
 }

@@ -88,6 +88,7 @@
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\WorldScale\\WorldScaleSettingsScreen.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\Embody.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\src\\EmbodyScaleChangeReceiver.cs",
+    "Custom\\Scripts\\AcidBubbles\\Embody\\src\\EmbodyTriggerHandler.cs",
     "Custom\\Scripts\\AcidBubbles\\Embody\\Embody.cslist"
    ],
    "dependencies" : { 
