@@ -74,7 +74,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         base.InitStorables();
 
-        selectedJSON.defaultVal = context.containingAtom.type != "Person";
+        selectedJSON.valNoCallback = selectedJSON.defaultVal = context.containingAtom.type != "Person";
 
         eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ =>
         {
