@@ -36,7 +36,7 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
 
     public virtual void InitStorables()
     {
-        selectedJSON = new JSONStorableBool("Selected", false, (bool val) => context.embody.Refresh());
+        selectedJSON = new JSONStorableBool("Selected", false, (bool val) => context.embody.Deactivate());
         enabledJSON = new JSONStorableBool("Enabled", false, val => enabled = val);
     }
 
