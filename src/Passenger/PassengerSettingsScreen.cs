@@ -32,6 +32,8 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
 
         if (context.containingAtom.type == "Person")
         {
+            CreateToggle(_passenger.bufferPosition).label = "Buffer Position";
+
             // TODO: Lock for user
             CreateTitle("Look At");
             CreateToggle(_passenger.lookAtJSON).label = "Look At Eye Target";

@@ -20,6 +20,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableFloat positionSmoothingJSON { get; }
     JSONStorableBool allowPersonHeadRotationJSON { get; }
     JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }
+    JSONStorableBool bufferPosition { get; }
     Vector3 positionOffset { get; set; }
     Vector3 rotationOffset { get; set; }
 }
@@ -43,6 +44,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableFloat positionSmoothingJSON { get; } = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
     public JSONStorableBool allowPersonHeadRotationJSON { get; } = new JSONStorableBool("AllowPersonHeadRotationJSON", false);
     public JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }  = new JSONStorableFloat("EyesToHeadDistanceOffset", 0f, -0.1f, 0.2f, false);
+    public JSONStorableBool bufferPosition { get; } = new JSONStorableBool("BufferPosition", false);
 
     public Vector3 positionOffset
     {
@@ -75,6 +77,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         base.InitStorables();
 
         selectedJSON.valNoCallback = selectedJSON.defaultVal = context.containingAtom.type != "Person";
+        bufferPosition.valNoCallback = bufferPosition.defaultVal = context.containingAtom.type == "Person";
 
         eyesToHeadDistanceOffsetJSON.setCallbackFunction = _ =>
         {
@@ -133,6 +136,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         _rigRotationOffsetSource = Vector3.zero;
         _rigRotationOffset = Quaternion.identity;
+
+        UpdatePositions();
     }
 
     private void SyncCameraParent()
@@ -259,13 +264,28 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
                 0f) * Time.unscaledDeltaTime;
             _rigRotationOffset = Quaternion.identity * Quaternion.Euler(_rigRotationOffsetSource);
 
+            if (!bufferPosition.val) UpdatePositions();
             UpdateNavigationRig(false);
+            if (bufferPosition.val) UpdatePositions();
         }
         catch (Exception e)
         {
             SuperController.LogError($"Embody: Failed to apply Passenger.\n{e}");
             enabled = false;
         }
+    }
+
+    private Vector3 _cameraCenterTargetPosition;
+    private Quaternion _cameraCenterTargetRotation;
+    private Vector3 _cameraCenterTargetUp;
+    private Vector3 _cameraCenterTargetLocalEulerAngles;
+
+    private void UpdatePositions()
+    {
+        _cameraCenterTargetPosition = _cameraCenterTarget.position;
+        _cameraCenterTargetRotation = _cameraCenterTarget.rotation;
+        _cameraCenterTargetUp = _cameraCenterTarget.up;
+        _cameraCenterTargetLocalEulerAngles = _cameraCenterTarget.localEulerAngles;
     }
 
     [MethodImpl(256)]
@@ -276,17 +296,16 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
         var centerTargetTransform = CameraTarget.centerTarget.transform;
-        var linkTransform = _cameraCenterTarget;
 
         // Desired camera position
 
-        var position = linkTransform.position;
-        var rotation = linkTransform.rotation * _rigRotationOffset;
+        var position = _cameraCenterTargetPosition;
+        var rotation = _cameraCenterTargetRotation * _rigRotationOffset;
 
         if (lookAtJSON.val && lookAtWeightJSON.val > 0 && !ReferenceEquals(_eyeTargetControl, null))
         {
-            var lookAtRotation = Quaternion.LookRotation(_eyeTargetControl.transform.position - linkTransform.position, linkTransform.up);
-            lookAtRotation.eulerAngles += _cameraCenterTarget.localEulerAngles;
+            var lookAtRotation = Quaternion.LookRotation(_eyeTargetControl.transform.position - _cameraCenterTargetPosition, _cameraCenterTargetUp);
+            lookAtRotation.eulerAngles += _cameraCenterTargetLocalEulerAngles;
             rotation = Quaternion.Slerp(rotation, lookAtRotation, lookAtWeightJSON.val);
         }
 
@@ -362,6 +381,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionSmoothingJSON.StoreJSON(jc);
         allowPersonHeadRotationJSON.StoreJSON(jc);
         eyesToHeadDistanceOffsetJSON.StoreJSON(jc);
+        bufferPosition.StoreJSON(jc);
         jc["PositionOffset"] = positionOffset.ToJSON();
         jc["RotationOffset"] = rotationOffset.ToJSON();
     }
@@ -390,6 +410,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         positionSmoothingJSON.RestoreFromJSON(jc);
         allowPersonHeadRotationJSON.RestoreFromJSON(jc);
         eyesToHeadDistanceOffsetJSON.RestoreFromJSON(jc);
+        bufferPosition.RestoreFromJSON(jc);
         positionOffset = jc["PositionOffset"].ToVector3(Vector3.zero);
         rotationOffset = jc["RotationOffset"].ToVector3(Vector3.zero);
     }
@@ -408,6 +429,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         rotationLockNoRollJSON.SetValToDefault();
         rotationLockNoTiltJSON.SetValToDefault();
         eyesToHeadDistanceOffsetJSON.SetValToDefault();
+        bufferPosition.SetValToDefault();
         positionOffset = Vector3.zero;
         rotationOffset = Vector3.zero;
     }
