@@ -117,10 +117,9 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         _currentMotionControl = motionControl;
         _currentMotionControl.highlighted = true;
 
-
         if (MotionControlNames.IsViveTracker(motionControl.name))
         {
-            CreateSpacer(true).height = 20f;
+            _section.CreateSpacer(true).height = 20f;
             _section.CreateTitle("Vive Trackers", true);
 
             _section.CreateButton("Map to Closest Control", true).button.onClick.AddListener(() =>
