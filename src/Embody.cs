@@ -174,6 +174,8 @@ public class Embody : MVRScript, IEmbody
             {
                 _loadProfileWithPathUrlJSON.valNoCallback = null;
                 new Storage(_context).LoadProfile(url);
+                _screensManager.Show(null);
+                _screensManager.Show(MainScreen.ScreenName);
             }, SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
             {
                 allowFullComputerBrowse = false,

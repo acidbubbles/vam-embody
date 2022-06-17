@@ -40,7 +40,7 @@ public class ScreensManager : IScreensManager
 
     public bool Show(string screenName)
     {
-        if (screenName == _currentScreenName || string.IsNullOrEmpty(screenName)) return false;
+        if (screenName == _currentScreenName) return false;
 
         IScreen screen;
         if (_currentScreenName != null)
@@ -51,14 +51,17 @@ public class ScreensManager : IScreensManager
             screensJSON.valNoCallback = screenName;
         }
 
-        if (!_screens.TryGetValue(screenName, out screen))
-            return false;
-
-        screen.Show();
         _currentScreenName = screenName;
         screensJSON.valNoCallback = screenName;
         _backButton.button.interactable = screenName != _mainScreenName;
         _backButton.label = _backButton.button.interactable ? "< Back" : "Welcome to Embody <3";
+
+        if (screenName == null)
+            return false;
+        if (!_screens.TryGetValue(screenName, out screen))
+            return false;
+
+        screen.Show();
 
         return true;
     }
