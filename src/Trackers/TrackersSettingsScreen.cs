@@ -223,75 +223,75 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset X*",
-            motionControl.offsetControllerCustom.x,
+            0,
             val => motionControl.offsetControllerCustom = new Vector3(val, motionControl.offsetControllerCustom.y, motionControl.offsetControllerCustom.z),
             -0.5f,
             0.5f,
-            false), false);
+            false) { valNoCallback = motionControl.offsetControllerCustom.x }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset Y*",
-            motionControl.offsetControllerCustom.y,
+            0,
             val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, val, motionControl.offsetControllerCustom.z),
             -0.5f,
             0.5f,
-            false), false);
+            false) { valNoCallback = motionControl.offsetControllerCustom.y }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Offset Z*",
-            motionControl.offsetControllerCustom.z,
+            0,
             val => motionControl.offsetControllerCustom = new Vector3(motionControl.offsetControllerCustom.x, motionControl.offsetControllerCustom.y, val),
             -0.5f,
             0.5f,
-            false), false);
+            false) { valNoCallback = motionControl.offsetControllerCustom.z }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller X*",
-            motionControl.rotateControllerCustom.x,
+            0,
             val => motionControl.rotateControllerCustom = new Vector3(val, motionControl.rotateControllerCustom.y, motionControl.rotateControllerCustom.z),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateControllerCustom.x }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller Y*",
-            motionControl.rotateControllerCustom.y,
+            0,
             val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, val, motionControl.rotateControllerCustom.z),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateControllerCustom.y }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Controller Z*",
-            motionControl.rotateControllerCustom.z,
+            0,
             val => motionControl.rotateControllerCustom = new Vector3(motionControl.rotateControllerCustom.x, motionControl.rotateControllerCustom.y, val),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateControllerCustom.z }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker X*",
-            motionControl.rotateAroundTrackerCustom.x,
+            0,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(val, motionControl.rotateAroundTrackerCustom.y, motionControl.rotateAroundTrackerCustom.z),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateAroundTrackerCustom.x }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Y*",
-            motionControl.rotateAroundTrackerCustom.y,
+            0,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, val, motionControl.rotateAroundTrackerCustom.z),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateAroundTrackerCustom.y }, false);
 
         _section.CreateSlider(new JSONStorableFloat(
             $"Rotate Around Tracker Z*",
-            motionControl.rotateAroundTrackerCustom.z,
+            0,
             val => motionControl.rotateAroundTrackerCustom = new Vector3(motionControl.rotateAroundTrackerCustom.x, motionControl.rotateAroundTrackerCustom.y, val),
             -180,
             180,
-            false), false);
+            false) { valNoCallback = motionControl.rotateAroundTrackerCustom.z }, false);
 
         if (MotionControlNames.IsHands(motionControl.name))
         {
