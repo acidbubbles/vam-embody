@@ -259,8 +259,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             const float yawSpeed = 40f;
             const float pitchSpeed = 32f;
             _rigRotationOffsetSource += new Vector3(
-                JoystickControl.GetAxis(SuperController.singleton.navigationUpAxis) * pitchSpeed,
-                JoystickControl.GetAxis(SuperController.singleton.navigationTurnAxis) * yawSpeed,
+                -SuperController.singleton.GetFreeNavigateVector(SuperController.singleton.freeMoveAction).w * pitchSpeed,
+                SuperController.singleton.GetFreeNavigateVector(SuperController.singleton.freeMoveAction).z * yawSpeed,
                 0f) * Time.unscaledDeltaTime;
             _rigRotationOffset = Quaternion.identity * Quaternion.Euler(_rigRotationOffsetSource);
 
