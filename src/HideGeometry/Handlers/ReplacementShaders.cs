@@ -24,6 +24,9 @@ namespace Handlers
             // Hunting-Succubus' tesselation material
             { "Custom/Subsurface/GlossNMTessMappedFixedComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMDetailNoCullSeparateAlphaComputeBuff") },
 
+            // NorthernShikima.SkinMicroDetail tesselation material
+            { "Custom/Subsurface/GlossNMDetailTessMappedComputeBuff", Shader.Find("Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff") },
+
             // If we currently work with incorrectly restored materials, let's just keep them
             { "Custom/Subsurface/TransparentGlossSeparateAlphaComputeBuff", null },
             { "Custom/Subsurface/TransparentGlossNMSeparateAlphaComputeBuff", null },
