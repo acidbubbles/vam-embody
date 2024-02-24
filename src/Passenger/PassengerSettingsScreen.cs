@@ -70,6 +70,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         ) { valNoCallback = _passenger.rotationOffset.z }, true);
         CreateTitle("Position", true);
         CreateSlider(_passenger.positionSmoothingJSON, true);
+        CreateSlider(_passenger.positionDeadzoneJSON, true);
         CreateSlider(new JSONStorableFloat(
             "Position X",
             0f,

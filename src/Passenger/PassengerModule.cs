@@ -18,6 +18,7 @@ public interface IPassengerModule : IEmbodyModule
     JSONStorableFloat rotationSmoothingJSON { get; }
     JSONStorableBool positionLockJSON { get; }
     JSONStorableFloat positionSmoothingJSON { get; }
+    JSONStorableFloat positionDeadzoneJSON { get; }
     JSONStorableBool allowPersonHeadRotationJSON { get; }
     JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }
     JSONStorableBool bufferPosition { get; }
@@ -42,6 +43,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public JSONStorableFloat rotationSmoothingJSON { get; } = new JSONStorableFloat("RotationSmoothing", 0f, 0f, 1f, true);
     public JSONStorableBool positionLockJSON { get; } = new JSONStorableBool("ControlPosition", true);
     public JSONStorableFloat positionSmoothingJSON { get; } = new JSONStorableFloat("PositionSmoothing", 0f, 0f, 1f, true);
+    public JSONStorableFloat positionDeadzoneJSON { get; } = new JSONStorableFloat("PositionDeadzone", 0f, 0f, 1f, true);
     public JSONStorableBool allowPersonHeadRotationJSON { get; } = new JSONStorableBool("AllowPersonHeadRotationJSON", false);
     public JSONStorableFloat eyesToHeadDistanceOffsetJSON { get; }  = new JSONStorableFloat("EyesToHeadDistanceOffset", 0f, -0.1f, 0.2f, false);
     public JSONStorableBool bufferPosition { get; } = new JSONStorableBool("BufferPosition", false);
@@ -293,6 +295,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     {
         // Context
         var positionSmoothing = positionSmoothingJSON.val;
+        var positionDeadzone  = positionDeadzoneJSON.val;
         var rotationSmoothing = rotationSmoothingJSON.val;
         var navigationRig = SuperController.singleton.navigationRig;
         var centerTargetTransform = CameraTarget.centerTarget.transform;
@@ -348,7 +351,20 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         if (!force)
         {
             if (positionSmoothing > 0)
-                navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, Mathf.Infinity, Time.smoothDeltaTime);
+            {
+                var effectiveSmoothing = positionSmoothing;
+                var maxSpeed = Mathf.Infinity;
+                var offset   = navigationRigPosition - navigationRig.position;
+                var dist     = offset.magnitude;
+                if (dist < positionDeadzone)
+                {
+                    // within the deadzone, slow down the adjustment speed
+                    // pow(x,8) to have a fairly "thin transition ring"
+                    maxSpeed = Mathf.Pow(dist / positionDeadzone, 8);
+                }
+
+                navigationRigPosition = Vector3.SmoothDamp(navigationRig.position, navigationRigPosition, ref _currentPositionVelocity, positionSmoothing, maxSpeed, Time.smoothDeltaTime);
+            }
         }
 
         if (force || positionLockJSON.val)
@@ -379,6 +395,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         rotationSmoothingJSON.StoreJSON(jc);
         positionLockJSON.StoreJSON(jc);
         positionSmoothingJSON.StoreJSON(jc);
+        positionDeadzoneJSON.StoreJSON(jc);
         allowPersonHeadRotationJSON.StoreJSON(jc);
         eyesToHeadDistanceOffsetJSON.StoreJSON(jc);
         bufferPosition.StoreJSON(jc);
@@ -408,6 +425,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         rotationSmoothingJSON.RestoreFromJSON(jc);
         positionLockJSON.RestoreFromJSON(jc);
         positionSmoothingJSON.RestoreFromJSON(jc);
+        positionDeadzoneJSON.RestoreFromJSON(jc);
         allowPersonHeadRotationJSON.RestoreFromJSON(jc);
         eyesToHeadDistanceOffsetJSON.RestoreFromJSON(jc);
         bufferPosition.RestoreFromJSON(jc);
@@ -422,6 +440,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         lookAtJSON.SetValToDefault();
         positionLockJSON.SetValToDefault();
         positionSmoothingJSON.SetValToDefault();
+        positionDeadzoneJSON.SetValToDefault();
         rotationLockJSON.SetValToDefault();
         rotationSmoothingJSON.SetValToDefault();
         lookAtWeightJSON.SetValToDefault();
