@@ -97,10 +97,13 @@ namespace Handlers
         {
             // ReSharper disable once Unity.NoNullPropagation
             _hairMaterial?.SetFloat(_hairShaderProperty, _hairShaderHiddenValue);
-            for (var i = 0; i < _materialRefs.Count; i++)
+            if (_materialRefs != null)
             {
-                var materialRef = _materialRefs[i];
-                materialRef.material.SetFloat("_AlphaAdjust", -1f);
+                for (var i = 0; i < _materialRefs.Count; i++)
+                {
+                    var materialRef = _materialRefs[i];
+                    materialRef.material.SetFloat("_AlphaAdjust", -1f);
+                }
             }
         }
 
@@ -108,10 +111,13 @@ namespace Handlers
         {
             // ReSharper disable once Unity.NoNullPropagation
             _hairMaterial?.SetFloat(_hairShaderProperty, _hairShaderOriginalValue);
-            for (var i = 0; i < _materialRefs.Count; i++)
+            if (_materialRefs != null)
             {
-                var materialRef = _materialRefs[i];
-                materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+                for (var i = 0; i < _materialRefs.Count; i++)
+                {
+                    var materialRef = _materialRefs[i];
+                    materialRef.material.SetFloat("_AlphaAdjust", materialRef.originalAlphaAdjust);
+                }
             }
         }
     }
