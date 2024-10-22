@@ -63,19 +63,21 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
     {
         try
         {
-            var mainCamera = CameraTarget.centerTarget.targetCamera;
-            mainCamera.nearClipPlane = active ? clipDistanceJSON.val : 0.01f;
-            var mainCameraTransform = mainCamera.transform;
-            var cameraDepth = active ? cameraDepthJSON.val : 0;
-            var cameraHeight = active ? cameraHeightJSON.val : 0;
-            var cameraPitch = active ? cameraPitchJSON.val : 0;
-
-            var possessorTransform = _possessor.transform;
-            var pos = possessorTransform.position;
-            var mainCameraRotation = mainCameraTransform.rotation;
-            mainCameraTransform.position = pos - mainCameraRotation * Vector3.forward * cameraDepth - mainCameraRotation * Vector3.down * cameraHeight;
-            possessorTransform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
-            possessorTransform.position = pos;
+            if (_possessor != null)
+            {
+                var mainCamera = CameraTarget.centerTarget.targetCamera;
+                mainCamera.nearClipPlane = active ? clipDistanceJSON.val : 0.01f;
+                var mainCameraTransform = mainCamera.transform;
+                var cameraDepth  = active ? cameraDepthJSON.val : 0;
+                var cameraHeight = active ? cameraHeightJSON.val : 0;
+                var cameraPitch  = active ? cameraPitchJSON.val : 0;
+                var possessorTransform = _possessor.transform;
+                var pos                = possessorTransform.position;
+                var mainCameraRotation = mainCameraTransform.rotation;
+                mainCameraTransform.position = pos - mainCameraRotation * Vector3.forward * cameraDepth - mainCameraRotation * Vector3.down * cameraHeight;
+                possessorTransform.localEulerAngles = new Vector3(cameraPitch, 0f, 0f);
+                possessorTransform.position = pos;
+            }
         }
         catch (Exception e)
         {
