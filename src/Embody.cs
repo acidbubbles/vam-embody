@@ -173,9 +173,7 @@ public class Embody : MVRScript, IEmbody
             _loadProfileWithPathUrlJSON = new JSONStorableUrl("ProfilePathUrl", string.Empty, url =>
             {
                 _loadProfileWithPathUrlJSON.valNoCallback = null;
-                new Storage(_context).LoadProfile(url);
-                _screensManager.Show(null);
-                _screensManager.Show(MainScreen.ScreenName);
+                LoadProfileFromPath(url);
             }, SaveFormat.SaveExt, SaveFormat.SaveFolder, true)
             {
                 allowFullComputerBrowse = false,
@@ -191,10 +189,29 @@ public class Embody : MVRScript, IEmbody
                 }
             };
             RegisterUrl(_loadProfileWithPathUrlJSON);
+            // The trigger editor's "choose file" button calls Browse() on the url given here, and Browse() replaces that
+            // url's setCallbackFunction with the trigger editor's own. Sharing ProfilePathUrl here therefore broke
+            // ProfilePathUrl (and this action) until Embody was reloaded, so this action gets its own browse-only url
+            // and loads the profile directly.
+            var loadProfileWithPathBrowseJSON = new JSONStorableUrl("LoadProfileWithPathBrowse", string.Empty, SaveFormat.SaveExt, SaveFormat.SaveFolder)
+            {
+                allowFullComputerBrowse = false,
+                allowBrowseAboveSuggestedPath = true,
+                hideExtension = false,
+                showDirs = true,
+                isRestorable = false,
+                isStorable = false,
+                beginBrowseWithObjectCallback = jsurl =>
+                {
+                    FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
+                    jsurl.shortCuts = FileManagerSecure.GetShortCutsForDirectory(SaveFormat.SaveFolder, false, false, true, true);
+                }
+            };
             _loadProfileWithPathJSON = new JSONStorableActionPresetFilePath("LoadProfileWithPath", url =>
             {
-                _loadProfileWithPathUrlJSON.SetFilePath(url);
-            }, _loadProfileWithPathUrlJSON);
+                if (string.IsNullOrEmpty(url)) return;
+                LoadProfileFromPath(SuperController.singleton.NormalizeMediaPath(url));
+            }, loadProfileWithPathBrowseJSON);
             RegisterPresetFilePathAction(_loadProfileWithPathJSON);
 
             var launchWizardJSON = new JSONStorableAction("LaunchWizard", () => StartCoroutine(LaunchWizard()));
@@ -583,6 +600,13 @@ public class Embody : MVRScript, IEmbody
             if (this != null && enabled)
                 Activate(false);
         }
+    }
+
+    private void LoadProfileFromPath(string path)
+    {
+        if (!new Storage(_context).LoadProfile(path)) return;
+        _screensManager.Show(null);
+        _screensManager.Show(MainScreen.ScreenName);
     }
 
     public void LoadFromDefaults()
