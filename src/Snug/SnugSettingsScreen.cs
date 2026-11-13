@@ -56,7 +56,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         );
         CreateScrollablePopup(_selectedAnchorsJSON);
 
-        _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
+        _anchorActiveJSON = new JSONStorableBool("Anchor Active*", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
         CreateToggle(_anchorActiveJSON);
 
         _anchorRealSizeXJSON = new JSONStorableFloat("Size X (Width)*", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};

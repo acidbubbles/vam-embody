@@ -166,6 +166,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             anchorPoint.realLifeSize = anchorPoint.realLifeSizeDefault;
             anchorPoint.realLifeOffset = anchorPoint.realLifeOffsetDefault;
+            anchorPoint.active = true;
             anchorPoint.Update();
         }
     }
@@ -566,8 +567,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                     */
                     anchor.realLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.realLifeOffset);
                     anchor.realLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.realLifeSize);
-                    if (!fromProfile)
-                        anchor.active = anchorJSON["Active"]?.Value != "false";
+                    anchor.active = anchorJSON["Active"]?.Value != "false";
                     anchor.Update();
                 }
             }
@@ -586,6 +586,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         foreach (var anchor in anchorPoints)
         {
             anchor.InitFromDefault();
+            anchor.active = true;
             anchor.Update();
         }
     }
