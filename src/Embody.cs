@@ -516,14 +516,38 @@ public class Embody : MVRScript, IEmbody
             yield break;
         }
 
-        var previousRigSnapshot = _navigationRigSnapshot;
-        var restorePoseAfterPossess = _context.trackers.restorePoseAfterPossessJSON.val;
-        _context.trackers.restorePoseAfterPossessJSON.val = false;
+        var resume = ResumeAfterReloadCo(SuspendForReload());
+        while (resume.MoveNext())
+            yield return resume.Current;
+    }
+
+    private class ReloadState
+    {
+        public NavigationRigSnapshot rigSnapshot;
+        public bool activatedManually;
+    }
+
+    // Turns Embody off without restoring the pose, so it can be turned back on a frame later with new settings.
+    // Remembers the navigation rig snapshot (so exiting still returns the player to where they started) and whether
+    // the activation was manual (only a non-manual activation returns the player to a spawn point on exit).
+    private ReloadState SuspendForReload()
+    {
+        var state = new ReloadState { rigSnapshot = _navigationRigSnapshot, activatedManually = _activatedManually };
+        var trackers = _context.trackers;
+        var restorePoseAfterPossess = trackers != null && trackers.restorePoseAfterPossessJSON.val;
+        if (trackers != null) trackers.restorePoseAfterPossessJSON.val = false;
         Deactivate(false);
-        _context.trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
+        if (trackers != null) trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
+        return state;
+    }
+
+    private IEnumerator ResumeAfterReloadCo(ReloadState state)
+    {
         yield return 0;
-        ActivateManually();
-        _navigationRigSnapshot = previousRigSnapshot;
+        if (_active) yield break;
+        Activate(state.activatedManually);
+        if (_active)
+            _navigationRigSnapshot = state.rigSnapshot;
     }
 
     public void EmbodyDeactivateImmediate()
@@ -611,34 +635,15 @@ public class Embody : MVRScript, IEmbody
         if (profile == null) return;
 
         // Settings are applied on activation, so a profile is always loaded while inactive. If Embody was active,
-        // switch it back on afterwards, the same way ReinitializeIfActive does (no pose restore, keep the original
-        // navigation rig snapshot so exiting still returns the player to where they started).
-        var wasActive = _active;
-        var previousRigSnapshot = _navigationRigSnapshot;
-        if (wasActive)
-        {
-            var trackers = _context.trackers;
-            var restorePoseAfterPossess = trackers != null && trackers.restorePoseAfterPossessJSON.val;
-            if (trackers != null) trackers.restorePoseAfterPossessJSON.val = false;
-            Deactivate(false);
-            if (trackers != null) trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
-        }
+        // it is switched back on a frame later, the same way ReinitializeIfActive does it.
+        var reloadState = _active ? SuspendForReload() : null;
 
         storage.ApplyProfile(profile, path);
         _screensManager.Show(null);
         _screensManager.Show(MainScreen.ScreenName);
 
-        if (wasActive)
-            StartCoroutine(ReactivateAfterProfileLoadCo(previousRigSnapshot));
-    }
-
-    private IEnumerator ReactivateAfterProfileLoadCo(NavigationRigSnapshot previousRigSnapshot)
-    {
-        yield return 0;
-        if (_active) yield break;
-        ActivateManually();
-        if (_active)
-            _navigationRigSnapshot = previousRigSnapshot;
+        if (reloadState != null)
+            StartCoroutine(ResumeAfterReloadCo(reloadState));
     }
 
     // Runs silently on every init when there is no default profile; reports the outcome when the user asked for it.

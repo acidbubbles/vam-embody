@@ -21,28 +21,51 @@ public class Storage
         SaveWithFeedback(jc, path, $"Embody: Saved profile '{path}'.", $"profile '{path}'");
     }
 
-    // VaM may ask the user to confirm overwriting a file, so the outcome is only known in these callbacks.
+    // VaM may ask the user to confirm overwriting a file, so the outcome is only known in these callbacks. VaM logs a
+    // failed write itself and still calls the confirm callback, so check the file was actually written.
     private void SaveWithFeedback(JSONClass jc, string path, string savedMessage, string what)
     {
+        var startedAt = DateTime.Now.AddSeconds(-2);
         _context.plugin.SaveJSON(
             jc,
             path,
-            () => SuperController.LogMessage(savedMessage),
+            () =>
+            {
+                if (FileManagerSecure.FileExists(path) && FileManagerSecure.FileLastWriteTime(path) >= startedAt)
+                    SuperController.LogMessage(savedMessage);
+                else
+                    SuperController.LogError($"Embody: Could not save the {what}. See the error above.");
+            },
             () => SuperController.LogMessage($"Embody: The {what} was not saved."),
             e => SuperController.LogError($"Embody: Could not save the {what}: {e.Message}"));
     }
 
     // Reads and validates a profile without touching anything, so a missing or invalid file leaves the current
-    // settings intact. Returns null (after logging why) when the file cannot be used.
+    // settings intact. Returns null (after logging why) when the file cannot be used. Expects a resolved path.
     public JSONClass ReadProfile(string path)
     {
-        path = ResolveProfilePath(path);
         if (string.IsNullOrEmpty(path)) return null;
+        bool exists;
+        try
+        {
+            exists = FileManagerSecure.FileExists(path);
+        }
+        catch (Exception e)
+        {
+            // VaM throws for a path plugins may not read, e.g. outside the VaM folder.
+            SuperController.LogError($"Embody: Could not load profile '{path}'. {e.Message}. Your current settings were kept.");
+            return null;
+        }
+        if (!exists)
+        {
+            SuperController.LogError($"Embody: Could not load profile '{path}'. The file does not exist. Your current settings were kept.");
+            return null;
+        }
         var node = _context.plugin.LoadJSON(path);
         var jc = node != null ? node.AsObject : null;
         if (jc == null)
         {
-            SuperController.LogError($"Embody: Could not load profile '{path}'. The file is missing or is not valid JSON. Your current settings were kept.");
+            SuperController.LogError($"Embody: Could not load profile '{path}'. The file is not valid JSON. Your current settings were kept.");
             return null;
         }
         var version = jc["Version"].AsInt;
@@ -61,7 +84,7 @@ public class Storage
 
     public void ApplyProfile(JSONClass jc, string path)
     {
-        _context.embody.Deactivate();
+        // ResetToDefaults deactivates Embody first.
         Utilities.ResetToDefaults(_context);
         _context.embody.RestoreFromJSONInternal(jc, true, false);
         SuperController.LogMessage($"Embody: Loaded profile '{path}'.");
