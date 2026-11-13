@@ -32,7 +32,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public JSONStorableBool previewSnugOffsetJSON { get; } = new JSONStorableBool("PreviewSnugOffset", false);
     public JSONStorableBool disableSelfGrabJSON { get; } = new JSONStorableBool("DisablePersonGrab", true);
     public JSONStorableFloat falloffDistanceJSON { get; } = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
-    public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
+    public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("FalloffMidPoint", 0.3f, 0.01f, 0.99f, true);
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
 
     private SnugHand _lHand;
@@ -517,6 +517,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         if (toScene && !useProfileJSON.val || toProfile)
         {
             falloffDistanceJSON.StoreJSON(jc);
+            falloffMidPointJSON.StoreJSON(jc);
             disableSelfGrabJSON.StoreJSON(jc);
 
             var anchors = new JSONClass();
@@ -551,6 +552,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             disableSelfGrabJSON.RestoreFromJSON(jc);
             falloffDistanceJSON.RestoreFromJSON(jc);
+            falloffMidPointJSON.RestoreFromJSON(jc);
             var anchorsJSON = jc["Anchors"];
             if (anchorsJSON != null)
             {
@@ -579,6 +581,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         useProfileJSON.SetValToDefault();
         disableSelfGrabJSON.SetValToDefault();
         falloffDistanceJSON.SetValToDefault();
+        falloffMidPointJSON.SetValToDefault();
 
         foreach (var anchor in anchorPoints)
         {
