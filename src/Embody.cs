@@ -56,6 +56,7 @@ public class Embody : MVRScript, IEmbody
     private bool? _restoreRightHandEnabled;
     private bool _activatedManually;
     private bool _active;
+    private ReloadState _pendingResume;
     private bool _storablesReferencesInitialized;
 
     public override void Init()
@@ -409,7 +410,16 @@ public class Embody : MVRScript, IEmbody
 
     public void Deactivate()
     {
+        CancelPendingResume();
         Deactivate(true);
+    }
+
+    // An explicit deactivation wins over a reload that is about to switch Embody back on.
+    private void CancelPendingResume()
+    {
+        if (_pendingResume == null) return;
+        _pendingResume = null;
+        if (!_active) activeJSON.valNoCallback = false;
     }
 
     private void Deactivate(bool asyncNavigationRigRestore)
@@ -516,7 +526,9 @@ public class Embody : MVRScript, IEmbody
             yield break;
         }
 
-        var resume = ResumeAfterReloadCo(SuspendForReload());
+        var state = SuspendForReload();
+        _pendingResume = state;
+        var resume = ResumeAfterReloadCo(state);
         while (resume.MoveNext())
             yield return resume.Current;
     }
@@ -532,18 +544,39 @@ public class Embody : MVRScript, IEmbody
     // the activation was manual (only a non-manual activation returns the player to a spawn point on exit).
     private ReloadState SuspendForReload()
     {
+        // Already suspended (a second reload in the same frame): take over the state captured by the first one, so
+        // this reload's own deactivation can't cancel it. The caller schedules the resume again.
+        if (!_active && _pendingResume != null)
+        {
+            var pending = _pendingResume;
+            _pendingResume = null;
+            return pending;
+        }
         var state = new ReloadState { rigSnapshot = _navigationRigSnapshot, activatedManually = _activatedManually };
         var trackers = _context.trackers;
         var restorePoseAfterPossess = trackers != null && trackers.restorePoseAfterPossessJSON.val;
         if (trackers != null) trackers.restorePoseAfterPossessJSON.val = false;
         Deactivate(false);
         if (trackers != null) trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
+        // Keep Active reading true for the one-frame gap, so that setting it to false (a trigger, the toggle) still
+        // runs Deactivate() and cancels the resume instead of being ignored as "already false".
+        activeJSON.valNoCallback = true;
         return state;
     }
 
+    private void ScheduleResume(ReloadState state)
+    {
+        _pendingResume = state;
+        StartCoroutine(ResumeAfterReloadCo(state));
+    }
+
+    // Switches Embody back on a frame after a reload, unless something deactivated it in the meantime (the Active
+    // toggle, a trigger, another Embody taking over), which cancels the pending resume.
     private IEnumerator ResumeAfterReloadCo(ReloadState state)
     {
         yield return 0;
+        if (_pendingResume != state) yield break;
+        _pendingResume = null;
         if (_active) yield break;
         Activate(state.activatedManually);
         if (_active)
@@ -552,6 +585,7 @@ public class Embody : MVRScript, IEmbody
 
     public void EmbodyDeactivateImmediate()
     {
+        CancelPendingResume();
         if (!activeJSON.val) return;
         Deactivate(false);
     }
@@ -636,14 +670,14 @@ public class Embody : MVRScript, IEmbody
 
         // Settings are applied on activation, so a profile is always loaded while inactive. If Embody was active,
         // it is switched back on a frame later, the same way ReinitializeIfActive does it.
-        var reloadState = _active ? SuspendForReload() : null;
+        var reloadState = _active || _pendingResume != null ? SuspendForReload() : null;
 
         storage.ApplyProfile(profile, path);
         _screensManager.Show(null);
         _screensManager.Show(MainScreen.ScreenName);
 
         if (reloadState != null)
-            StartCoroutine(ResumeAfterReloadCo(reloadState));
+            ScheduleResume(reloadState);
     }
 
     // Runs silently on every init when there is no default profile; reports the outcome when the user asked for it.
@@ -660,9 +694,9 @@ public class Embody : MVRScript, IEmbody
             if (profile == null) return;
             // Settings are applied on activation, so switch Embody off and back on around the load (no reset: the
             // default profile only fills in values on top of the current ones).
-            var reloadState = _active ? SuspendForReload() : null;
+            var reloadState = _active || _pendingResume != null ? SuspendForReload() : null;
             RestoreFromJSONInternal(profile, true, false);
-            if (reloadState != null) StartCoroutine(ResumeAfterReloadCo(reloadState));
+            if (reloadState != null) ScheduleResume(reloadState);
             if (requestedByUser) SuperController.LogMessage("Embody: Loaded your default profile.");
         }
         catch (Exception exc)
