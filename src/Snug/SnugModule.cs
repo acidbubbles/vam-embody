@@ -234,13 +234,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
+    // Whether Snug takes this hand controller. Trackers uses the same check to leave Snug's hands alone.
+    // A hand controller mapped to another control (e.g. used as a hip tracker) is left to Trackers.
+    // Not a pure query: SyncMotionControl() can rebuild the motion control's child transforms, as EnableHand needs.
+    public static bool CanDriveHand(MotionControllerWithCustomPossessPoint motionControl)
+    {
+        return motionControl.enabled
+            && TrackersModule.IsMappedToOwnHand(motionControl)
+            && motionControl.SyncMotionControl()
+            && motionControl.controlPosition;
+    }
+
     private void EnableHand(SnugHand hand, string motionControlName)
     {
         var motionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
         if (motionControl == null) return;
-        if (!motionControl.enabled) return;
-        if (!motionControl.SyncMotionControl()) return;
-        if (!motionControl.controlPosition) return;
+        if (!CanDriveHand(motionControl)) return;
         hand.motionControl = motionControl;
         hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
         hand.active = true;

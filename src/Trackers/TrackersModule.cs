@@ -222,13 +222,13 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
 
     public void BindFingers()
     {
-        if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null && leftHandMotionControl.mappedControllerName == VamConstants.LeftHandControlName)
+        if (leftHandMotionControl.enabled && leftHandMotionControl.fingersTracking && _leftHandController.handControl != null && IsMappedToOwnHand(leftHandMotionControl))
         {
             if (leftHandMotionControl.fingersTracking)
                 _leftHandController.handControl.allowPossessFingerControlJSON.val = true;
             _leftHandController.handControl.possessed = true;
         }
-        if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null && rightHandMotionControl.mappedControllerName == VamConstants.RightHandControlName)
+        if (rightHandMotionControl.enabled && rightHandMotionControl.fingersTracking && _rightHandController.handControl != null && IsMappedToOwnHand(rightHandMotionControl))
         {
             if (rightHandMotionControl.fingersTracking)
                 _rightHandController.handControl.allowPossessFingerControlJSON.val = true;
@@ -244,17 +244,33 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
             _rightHandController.handControl.possessed = false;
     }
 
+    public static bool IsMappedToOwnHand(MotionControllerWithCustomPossessPoint motionControl)
+    {
+        return motionControl.name == MotionControlNames.LeftHand && motionControl.mappedControllerName == VamConstants.LeftHandControlName
+            || motionControl.name == MotionControlNames.RightHand && motionControl.mappedControllerName == VamConstants.RightHandControlName;
+    }
+
+    private bool IsDrivenBySnug(string controllerName)
+    {
+        if (!context.snug.selectedJSON.val) return false;
+        MotionControllerWithCustomPossessPoint hand;
+        if (controllerName == VamConstants.LeftHandControlName) hand = leftHandMotionControl;
+        else if (controllerName == VamConstants.RightHandControlName) hand = rightHandMotionControl;
+        else return false;
+        return SnugModule.CanDriveHand(hand);
+    }
+
     private FreeControllerV3WithSnapshot FindController(MotionControllerWithCustomPossessPoint motionControl)
     {
         if (!motionControl.enabled) return null;
         if (motionControl.mappedControllerName == null) return null;
         if (context.passenger.selectedJSON.val && motionControl.name == MotionControlNames.Head) return null;
-        if (context.snug.selectedJSON.val && (motionControl.name == MotionControlNames.LeftHand || motionControl.name == MotionControlNames.RightHand))
+        if (IsDrivenBySnug(motionControl.mappedControllerName))
         {
-            if (motionControl.name == MotionControlNames.LeftHand && motionControl.mappedControllerName != VamConstants.LeftHandControlName)
-                SuperController.LogError($"Embody: Left hand control is mapped to {motionControl.mappedControllerName} but since Snug is activated, your setting will be ignored");
-            if (motionControl.name == MotionControlNames.RightHand && motionControl.mappedControllerName != VamConstants.RightHandControlName)
-                SuperController.LogError($"Embody: Left hand control is mapped to {motionControl.mappedControllerName} but since Snug is activated, your setting will be ignored");
+            // Snug drives this hand. A hand controller mapped to its own hand is Snug's to drive; anything else mapped
+            // onto that hand would be overridden by Snug, so it is ignored.
+            if (!IsMappedToOwnHand(motionControl))
+                SuperController.LogError($"Embody: {motionControl.name} is mapped to {motionControl.mappedControllerName}, which Snug is driving, so this mapping is ignored.");
             return null;
         }
         var controllerWithSnapshot = controllers.FirstOrDefault(cs => cs.controller.name == motionControl.mappedControllerName);
