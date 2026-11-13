@@ -19,7 +19,8 @@ public interface IEmbody
     void Deactivate();
     void Refresh();
     void RefreshDelayed();
-    void LoadFromDefaults();
+    void LoadFromDefaults(bool requestedByUser = false);
+    void LoadProfileFromPath(string path);
     void StoreJSON(JSONClass json, bool toProfile, bool toScene);
     bool RestoreFromJSONInternal(JSONClass jc, bool fromProfile, bool fromScene);
 }
@@ -602,7 +603,7 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
-    private void LoadProfileFromPath(string path)
+    public void LoadProfileFromPath(string path)
     {
         path = Storage.ResolveProfilePath(path);
         var storage = new Storage(_context);
@@ -640,14 +641,20 @@ public class Embody : MVRScript, IEmbody
             _navigationRigSnapshot = previousRigSnapshot;
     }
 
-    public void LoadFromDefaults()
+    // Runs silently on every init when there is no default profile; reports the outcome when the user asked for it.
+    public void LoadFromDefaults(bool requestedByUser = false)
     {
         try
         {
-            if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath)) return;
-            var profile = LoadJSON(SaveFormat.DefaultsPath)?.AsObject;
+            if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
+            {
+                if (requestedByUser) SuperController.LogMessage("Embody: There is no default profile to load. Save one first with Save Default Profile.");
+                return;
+            }
+            var profile = new Storage(_context).ReadProfile(SaveFormat.DefaultsPath);
             if (profile == null) return;
             RestoreFromJSONInternal(profile, true, false);
+            if (requestedByUser) SuperController.LogMessage("Embody: Loaded your default profile.");
         }
         catch (Exception exc)
         {

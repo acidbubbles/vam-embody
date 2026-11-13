@@ -18,16 +18,18 @@ public class Storage
         if (!path.EndsWith($".{SaveFormat.SaveExt}", StringComparison.InvariantCultureIgnoreCase)) path += $".{SaveFormat.SaveExt}";
         var jc = new JSONClass();
         _context.embody.StoreJSON(jc, true, false);
-        _context.plugin.SaveJSON(jc, path);
+        SaveWithFeedback(jc, path, $"Embody: Saved profile '{path}'.", $"profile '{path}'");
     }
 
-    public bool LoadProfile(string path)
+    // VaM may ask the user to confirm overwriting a file, so the outcome is only known in these callbacks.
+    private void SaveWithFeedback(JSONClass jc, string path, string savedMessage, string what)
     {
-        path = ResolveProfilePath(path);
-        var jc = ReadProfile(path);
-        if (jc == null) return false;
-        ApplyProfile(jc, path);
-        return true;
+        _context.plugin.SaveJSON(
+            jc,
+            path,
+            () => SuperController.LogMessage(savedMessage),
+            () => SuperController.LogMessage($"Embody: The {what} was not saved."),
+            e => SuperController.LogError($"Embody: Could not save the {what}: {e.Message}"));
     }
 
     // Reads and validates a profile without touching anything, so a missing or invalid file leaves the current
@@ -44,6 +46,11 @@ public class Storage
             return null;
         }
         var version = jc["Version"].AsInt;
+        if (version <= 0)
+        {
+            SuperController.LogError($"Embody: Could not load profile '{path}'. The file is not a valid Embody profile. Your current settings were kept.");
+            return null;
+        }
         if (version < 2 || version > SaveFormat.Version)
         {
             SuperController.LogError($"Embody: Could not load profile '{path}'. Its save format ({version}) is not supported by this version of Embody (supports 2 to {SaveFormat.Version}). Your current settings were kept.");
@@ -80,7 +87,21 @@ public class Storage
         var jc = new JSONClass();
         _context.embody.StoreJSON(jc, true, false);
         jc.Remove(_context.diagnostics.storeId);
-        _context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
+        SaveWithFeedback(jc, SaveFormat.DefaultsPath, "Embody: Saved your default profile. It is applied whenever Embody is added to a person.", "default profile");
+    }
+
+    public void DeleteDefault()
+    {
+        if (!FileManagerSecure.FileExists(SaveFormat.DefaultsPath))
+        {
+            SuperController.LogMessage("Embody: There is no default profile to delete.");
+            return;
+        }
+        FileManagerSecure.DeleteFile(
+            SaveFormat.DefaultsPath,
+            () => SuperController.LogMessage("Embody: Deleted your default profile."),
+            () => SuperController.LogMessage("Embody: The default profile was not deleted."),
+            e => SuperController.LogError($"Embody: Could not delete the default profile: {e.Message}"));
     }
 
     public void ClearPersonalData()
@@ -89,5 +110,6 @@ public class Storage
         _context.snug.ClearPersonalData();
         _context.worldScale.ClearPersonalData();
         _context.trackers.ClearPersonalData();
+        SuperController.LogMessage("Embody: Cleared personal data from this instance: player height, world scale method, Snug body sizes and offsets, and tracker offsets.");
     }
 }
