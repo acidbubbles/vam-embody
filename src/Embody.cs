@@ -604,9 +604,39 @@ public class Embody : MVRScript, IEmbody
 
     private void LoadProfileFromPath(string path)
     {
-        if (!new Storage(_context).LoadProfile(path)) return;
+        var storage = new Storage(_context);
+        var profile = storage.ReadProfile(path);
+        if (profile == null) return;
+
+        // Settings are applied on activation, so a profile is always loaded while inactive. If Embody was active,
+        // switch it back on afterwards, the same way ReinitializeIfActive does (no pose restore, keep the original
+        // navigation rig snapshot so exiting still returns the player to where they started).
+        var wasActive = _active;
+        var previousRigSnapshot = _navigationRigSnapshot;
+        if (wasActive)
+        {
+            var trackers = _context.trackers;
+            var restorePoseAfterPossess = trackers != null && trackers.restorePoseAfterPossessJSON.val;
+            if (trackers != null) trackers.restorePoseAfterPossessJSON.val = false;
+            Deactivate(false);
+            if (trackers != null) trackers.restorePoseAfterPossessJSON.val = restorePoseAfterPossess;
+        }
+
+        storage.ApplyProfile(profile, path);
         _screensManager.Show(null);
         _screensManager.Show(MainScreen.ScreenName);
+
+        if (wasActive)
+            StartCoroutine(ReactivateAfterProfileLoadCo(previousRigSnapshot));
+    }
+
+    private IEnumerator ReactivateAfterProfileLoadCo(NavigationRigSnapshot previousRigSnapshot)
+    {
+        yield return 0;
+        if (_active) yield break;
+        ActivateManually();
+        if (_active)
+            _navigationRigSnapshot = previousRigSnapshot;
     }
 
     public void LoadFromDefaults()

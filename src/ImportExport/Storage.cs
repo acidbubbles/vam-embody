@@ -23,26 +23,39 @@ public class Storage
 
     public bool LoadProfile(string path)
     {
-        if (string.IsNullOrEmpty(path)) return false;
-        // Read and validate before touching anything, so a missing or invalid file leaves the current settings intact.
+        var jc = ReadProfile(path);
+        if (jc == null) return false;
+        ApplyProfile(jc, path);
+        return true;
+    }
+
+    // Reads and validates a profile without touching anything, so a missing or invalid file leaves the current
+    // settings intact. Returns null (after logging why) when the file cannot be used.
+    public JSONClass ReadProfile(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
         var node = _context.plugin.LoadJSON(path);
         var jc = node != null ? node.AsObject : null;
         if (jc == null)
         {
             SuperController.LogError($"Embody: Could not load profile '{path}'. The file is missing or is not valid JSON. Your current settings were kept.");
-            return false;
+            return null;
         }
         var version = jc["Version"].AsInt;
         if (version < 2 || version > SaveFormat.Version)
         {
             SuperController.LogError($"Embody: Could not load profile '{path}'. Its save format ({version}) is not supported by this version of Embody (supports 2 to {SaveFormat.Version}). Your current settings were kept.");
-            return false;
+            return null;
         }
+        return jc;
+    }
+
+    public void ApplyProfile(JSONClass jc, string path)
+    {
         _context.embody.Deactivate();
         Utilities.ResetToDefaults(_context);
         _context.embody.RestoreFromJSONInternal(jc, true, false);
         SuperController.LogMessage($"Embody: Loaded profile '{path}'.");
-        return true;
     }
 
     public void MakeDefault()
