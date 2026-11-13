@@ -1,7 +1,4 @@
-﻿using MVR.FileManagementSecure;
-using SimpleJSON;
-
-public class MakeDefaultsStep : WizardStepBase, IWizardStep
+﻿public class MakeDefaultsStep : WizardStepBase, IWizardStep
 {
     public string helpText => @"
 Do you want to <b>use these settings by default</b>? When you add Embody to other persons, these settings will <b>automatically be applied</b>.
@@ -26,10 +23,7 @@ Skip to keep the defaults untouched.".TrimStart();
 
     public bool Apply()
     {
-        FileManagerSecure.CreateDirectory(SaveFormat.SaveFolder);
-        var jc = new JSONClass();
-        context.embody.StoreJSON(jc, true, false);
-        context.plugin.SaveJSON(jc, SaveFormat.DefaultsPath);
+        new Storage(context).MakeDefault();
         return true;
     }
 }

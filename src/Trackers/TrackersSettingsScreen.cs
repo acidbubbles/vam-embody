@@ -31,7 +31,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
 
         CreateTitle("Settings", true);
         CreateToggle(_trackers.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
-        CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession";
+        CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession*";
 
         CreateSpacer(true).height = 20f;
         CreateTitle("Utilities", true);
