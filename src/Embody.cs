@@ -658,7 +658,11 @@ public class Embody : MVRScript, IEmbody
             }
             var profile = new Storage(_context).ReadProfile(SaveFormat.DefaultsPath);
             if (profile == null) return;
+            // Settings are applied on activation, so switch Embody off and back on around the load (no reset: the
+            // default profile only fills in values on top of the current ones).
+            var reloadState = _active ? SuspendForReload() : null;
             RestoreFromJSONInternal(profile, true, false);
+            if (reloadState != null) StartCoroutine(ResumeAfterReloadCo(reloadState));
             if (requestedByUser) SuperController.LogMessage("Embody: Loaded your default profile.");
         }
         catch (Exception exc)
