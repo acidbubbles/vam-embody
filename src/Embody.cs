@@ -604,6 +604,7 @@ public class Embody : MVRScript, IEmbody
 
     private void LoadProfileFromPath(string path)
     {
+        path = Storage.ResolveProfilePath(path);
         var storage = new Storage(_context);
         var profile = storage.ReadProfile(path);
         if (profile == null) return;

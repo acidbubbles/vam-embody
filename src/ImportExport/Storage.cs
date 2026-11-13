@@ -23,6 +23,7 @@ public class Storage
 
     public bool LoadProfile(string path)
     {
+        path = ResolveProfilePath(path);
         var jc = ReadProfile(path);
         if (jc == null) return false;
         ApplyProfile(jc, path);
@@ -33,6 +34,7 @@ public class Storage
     // settings intact. Returns null (after logging why) when the file cannot be used.
     public JSONClass ReadProfile(string path)
     {
+        path = ResolveProfilePath(path);
         if (string.IsNullOrEmpty(path)) return null;
         var node = _context.plugin.LoadJSON(path);
         var jc = node != null ? node.AsObject : null;
@@ -56,6 +58,20 @@ public class Storage
         Utilities.ResetToDefaults(_context);
         _context.embody.RestoreFromJSONInternal(jc, true, false);
         SuperController.LogMessage($"Embody: Loaded profile '{path}'.");
+    }
+
+    // Makes typed paths forgiving: surrounding quotes (as Windows "Copy as path" adds) are removed, and a bare profile
+    // name such as "MyProfile" or "MyProfile.embodyprofile" means that profile in the default profiles folder.
+    public static string ResolveProfilePath(string path)
+    {
+        if (path == null) return null;
+        path = path.Trim();
+        if (path.Length >= 2 && (path[0] == '"' && path[path.Length - 1] == '"' || path[0] == '\'' && path[path.Length - 1] == '\''))
+            path = path.Substring(1, path.Length - 2).Trim();
+        if (path.Length == 0) return path;
+        if (path.IndexOf('/') >= 0 || path.IndexOf('\\') >= 0 || path.IndexOf(':') >= 0) return path;
+        if (!path.EndsWith($".{SaveFormat.SaveExt}", StringComparison.InvariantCultureIgnoreCase)) path += $".{SaveFormat.SaveExt}";
+        return $@"{SaveFormat.SaveFolder}\{path}";
     }
 
     public void MakeDefault()
