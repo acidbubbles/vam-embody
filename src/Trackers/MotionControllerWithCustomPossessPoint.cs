@@ -9,7 +9,19 @@ public class MotionControllerWithCustomPossessPoint
     public Transform trackerPointTransform;
     public Transform controllerPointTransform;
     public Rigidbody controllerPointRB;
-    public bool enabled = true;
+    // On/off is a scene-first (**) setting: the scene's value when the scene sets one, otherwise the player's.
+    public readonly SceneFirstSettings sceneFirst = new SceneFirstSettings();
+    private bool _enabled = true;
+    public bool enabled
+    {
+        get { return _enabled; }
+        set { _enabled = value; sceneFirst.Changed(); }
+    }
+
+    public MotionControllerWithCustomPossessPoint()
+    {
+        sceneFirst.Add("Enabled", () => _enabled, v => _enabled = v, true);
+    }
     public bool controlPosition = true;
     public bool controlRotation = true;
     public bool useLeapPositioning;
@@ -182,36 +194,30 @@ public class MotionControllerWithCustomPossessPoint
         };
     }
 
-    public JSONClass GetJSON(bool exportDefaults)
+    // The tracker's other settings describe the player's hardware, so they are saved in and read from profiles only.
+    public JSONClass GetJSON(bool toProfile, bool toScene)
     {
-        if (!exportDefaults)
-        {
-            return new JSONClass
-            {
-                {"Enabled", enabled ? "true" : "false"},
-            };
-        }
-
-        return new JSONClass
-        {
-            {"Enabled", enabled ? "true" : "false"},
-            {"OffsetPosition", offsetControllerCustom.ToJSON()},
-            {"OffsetRotation", rotateControllerCustom.ToJSON()},
-            {"PossessPointRotation", rotateAroundTrackerCustom.ToJSON()},
-            {"Controller", mappedControllerName},
-            {"ControlRotation", controlRotation ? "true" : "false"},
-            {"ControlPosition", controlPosition ? "true" : "false"},
-            {"UseLeap", useLeapPositioning ? "true" : "false"},
-            {"FingersTracking", fingersTracking ? "true" : "false"},
-            {"KeepCurrentPhysicsHoldStrength", keepCurrentPhysicsHoldStrength ? "true" : "false"},
-        };
+        var jc = new JSONClass();
+        sceneFirst.StoreJSON(jc, toProfile, toScene);
+        if (!toProfile) return jc;
+        jc["OffsetPosition"] = offsetControllerCustom.ToJSON();
+        jc["OffsetRotation"] = rotateControllerCustom.ToJSON();
+        jc["PossessPointRotation"] = rotateAroundTrackerCustom.ToJSON();
+        jc["Controller"] = mappedControllerName;
+        jc["ControlRotation"] = controlRotation ? "true" : "false";
+        jc["ControlPosition"] = controlPosition ? "true" : "false";
+        jc["UseLeap"] = useLeapPositioning ? "true" : "false";
+        jc["FingersTracking"] = fingersTracking ? "true" : "false";
+        jc["KeepCurrentPhysicsHoldStrength"] = keepCurrentPhysicsHoldStrength ? "true" : "false";
+        return jc;
     }
 
-    public void RestoreFromJSON(JSONNode jc, bool importDefaults)
+    // jc is empty when the file has no entry for this tracker.
+    public void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        enabled = jc["Enabled"].Value != "false";
+        sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
         if (mappedControllerName == "") mappedControllerName = defaultControllerName;
-        if (!importDefaults) return;
+        if (!fromProfile || jc.Count == 0) return;
         offsetControllerCustom = jc["OffsetPosition"].AsObject.ToVector3(Vector3.zero);
         rotateControllerCustom = jc["OffsetRotation"].AsObject.ToVector3(Vector3.zero);
         rotateAroundTrackerCustom = jc["PossessPointRotation"].AsObject.ToVector3(Vector3.zero);
@@ -229,7 +235,7 @@ public class MotionControllerWithCustomPossessPoint
         rotateControllerCustom = Vector3.zero;
         rotateAroundTrackerCustom = Vector3.zero;
         if (onlyPersonalData) return;
-        enabled = true;
+        sceneFirst.ResetToDefault();
         mappedControllerName = defaultControllerName;
         controlRotation = true;
         controlPosition = true;

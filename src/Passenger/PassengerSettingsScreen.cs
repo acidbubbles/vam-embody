@@ -20,18 +20,16 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Driven Rotation**";
 
         CreateTitle("Exit");
-        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open*";
+        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open**";
 
         CreateTitle("Adjustments");
         CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll**";
         CreateToggle(_passenger.rotationLockNoTiltJSON).label = "Prevent Camera Tilt**";
         CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
 
-        CreateTitle("Settings");
-        CreateToggle(_passenger.useProfileJSON, false, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
-
         if (context.containingAtom.type == "Person")
         {
+            CreateTitle("Settings");
             CreateToggle(_passenger.bufferPosition).label = "Buffer Position";
 
             // TODO: Lock for user

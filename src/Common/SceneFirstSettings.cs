@@ -101,6 +101,29 @@ public class SceneFirstSettings
         };
     }
 
+    public void Add(JSONStorableStringChooser storable)
+    {
+        Add(storable.name, () => storable.val, v => storable.val = v, storable.defaultVal,
+            n => n.Value,
+            (jc, k, v) => jc[k] = v,
+            (a, b) => a == b);
+        var callback = storable.setCallbackFunction;
+        storable.setCallbackFunction = val =>
+        {
+            if (callback != null) callback(val);
+            Changed();
+        };
+    }
+
+    // For a value without a storable; its setter must call Changed() when the player changes it.
+    public void Add(string key, Func<bool> get, Action<bool> set, bool defaultVal)
+    {
+        Add(key, get, set, defaultVal,
+            n => n.Value == "true",
+            (jc, k, v) => jc[k] = v ? "true" : "false",
+            (a, b) => a == b);
+    }
+
     // For a value without a storable; its setter must call Changed() when the player changes it.
     public void Add(string key, Func<Vector3> get, Action<Vector3> set)
     {
@@ -144,6 +167,23 @@ public class SceneFirstSettings
         {
             if (e.CaptureIfChanged())
                 e.setByScene = true;
+        }
+    }
+
+    // Makes a change that is not the scene's choice (e.g. clearing personal data): the result is not marked as set by
+    // the scene.
+    public void ChangeWithoutMarking(Action change)
+    {
+        _applying = true;
+        try
+        {
+            change();
+            foreach (var e in _entries)
+                e.SyncApplied();
+        }
+        finally
+        {
+            _applying = false;
         }
     }
 

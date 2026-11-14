@@ -30,7 +30,6 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         CreateText(new JSONStorableString("", "Binds VR trackers (such as the headset or controllers) to an atom's controllers.\n\nHands have no effect when Snug is enabled, and Head has no effect when Passenger is enabled."), true);
 
         CreateTitle("Settings", true);
-        CreateToggle(_trackers.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
         CreateToggle(_trackers.restorePoseAfterPossessJSON, true).label = "Restore pose after possession*";
 
         CreateSpacer(true).height = 20f;
@@ -39,7 +38,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         CreateToggle(_trackers.previewTrackerOffsetJSON, true).label = "Preview offset in 3D";
 
         _handsToggleJSON = new JSONStorableBool("Enable hands", _trackers.leftHandMotionControl.enabled || _trackers.rightHandMotionControl.enabled);
-        CreateToggle(_handsToggleJSON, true);
+        CreateToggle(_handsToggleJSON, true).label = "Enable hands**";
         _handsToggleJSON.setCallbackFunction = val =>
         {
             _trackers.leftHandMotionControl.enabled = val;
@@ -144,7 +143,7 @@ public class TrackersSettingsScreen : ScreenBase, IScreen
         _section.CreateTitle($"{motionControl.name} Options", false);
 
         _section.CreateToggle(new JSONStorableBool(
-            "Enabled",
+            "Enabled**",
             motionControl.enabled,
             val =>
             {

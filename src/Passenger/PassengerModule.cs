@@ -8,7 +8,6 @@ using UnityEngine;
 
 public interface IPassengerModule : IEmbodyModule
 {
-    JSONStorableBool useProfileJSON { get; }
     JSONStorableBool exitOnMenuOpen { get; }
     JSONStorableBool lookAtJSON { get; }
     JSONStorableFloat lookAtWeightJSON { get; }
@@ -34,7 +33,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     protected override bool selectedFromProfile => true;
     public override string label => Label;
 
-    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool exitOnMenuOpen { get; } = new JSONStorableBool("ExitOnMenuOpen", true);
     public JSONStorableBool lookAtJSON { get; } = new JSONStorableBool("LookAtEyeTarget", false);
     public JSONStorableFloat lookAtWeightJSON { get; } = new JSONStorableFloat("LookAtWeight", 1f, 0f, 1f);
@@ -115,6 +113,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
 
+        _sceneFirst.Add(exitOnMenuOpen);
         _sceneFirst.Add(positionLockJSON);
         _sceneFirst.Add(rotationLockJSON);
         _sceneFirst.Add(allowPersonHeadRotationJSON);
@@ -391,17 +390,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
         base.StoreJSON(jc, toProfile, toScene);
-
-        if (toScene)
-        {
-            useProfileJSON.StoreJSON(jc);
-        }
-
-        if (toScene && !useProfileJSON.val || toProfile)
-        {
-            exitOnMenuOpen.StoreJSON(jc);
-        }
-
         _sceneFirst.StoreJSON(jc, toProfile, toScene);
 
         // The rest belongs to the scene, so it is not part of a profile.
@@ -415,17 +403,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
-
-        if (fromScene)
-        {
-            useProfileJSON.RestoreFromJSON(jc);
-        }
-
-        if (fromScene && !useProfileJSON.val || fromProfile)
-        {
-            exitOnMenuOpen.RestoreFromJSON(jc);
-        }
-
+        // Older scenes kept Exit On Menu Open with Use Profile off; a scene that turned it off still counts as setting it.
         _sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
 
         // The rest belongs to the scene; older profiles also hold it, so it is ignored when loading a profile.
@@ -439,7 +417,6 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public override void ResetToDefault()
     {
         base.ResetToDefault();
-        useProfileJSON.SetValToDefault();
         lookAtJSON.SetValToDefault();
         lookAtWeightJSON.SetValToDefault();
         eyesToHeadDistanceOffsetJSON.SetValToDefault();

@@ -6,11 +6,11 @@ using UnityEngine;
 
 public interface IWorldScaleModule : IEmbodyModule
 {
-    JSONStorableBool useProfileJSON { get; }
     JSONStorableStringChooser worldScaleMethodJSON { get; }
     JSONStorableFloat playerHeightJSON { get; }
     JSONStorableFloat fixedWorldScaleJSON { get; }
     void ApplyWorldScale();
+    void UsePlayerHeight(float height);
     void ClearPersonalData();
 }
 
@@ -24,11 +24,12 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public override string storeId => "WorldScale";
     protected override bool selectedFromProfile => true;
     public override string label => Label;
-    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{NoneMethod, EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");
     public JSONStorableFloat playerHeightJSON { get; } = new JSONStorableFloat("PlayerHeight", 1.7f, 0f, 2f, false);
     public JSONStorableFloat fixedWorldScaleJSON { get; } = new JSONStorableFloat("FixedWorldScale", 0, 0, 10, false);
 
+    // The method: the scene's when it sets one (e.g. None), otherwise the player's (marked **).
+    private readonly SceneFirstSettings _sceneFirst = new SceneFirstSettings();
     private float _originalWorldScale;
     private bool _originalShowNavigationHologrid;
     private Transform _navigationHologrid;
@@ -41,6 +42,15 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
         selectedJSON.valNoCallback = selectedJSON.defaultVal;
         worldScaleMethodJSON.defaultVal = context.containingAtom.type == "Person" ? EyeDistanceMethod : NoneMethod;
         fixedWorldScaleJSON.setCallbackFunction = val => fixedWorldScaleJSON.valNoCallback = Mathf.Clamp(fixedWorldScaleJSON.val, 0, SuperController.singleton.worldScaleSlider.maxValue);
+        _sceneFirst.Add(worldScaleMethodJSON);
+    }
+
+    // Recording the player's height is calibration, not a choice for the scene, so the method it switches to is not
+    // marked as set by the scene.
+    public void UsePlayerHeight(float height)
+    {
+        playerHeightJSON.val = height;
+        _sceneFirst.ChangeWithoutMarking(() => worldScaleMethodJSON.val = PlayerHeightMethod);
     }
 
     public override bool Validate()
@@ -167,51 +177,43 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public void ClearPersonalData()
     {
         playerHeightJSON.valNoCallback = playerHeightJSON.defaultVal;
-        worldScaleMethodJSON.valNoCallback = EyeDistanceMethod;
+        _sceneFirst.ChangeWithoutMarking(() => worldScaleMethodJSON.valNoCallback = EyeDistanceMethod);
     }
 
     public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
         base.StoreJSON(jc, toProfile, toScene);
+        _sceneFirst.StoreJSON(jc, toProfile, toScene);
 
         if (toScene)
-        {
-            useProfileJSON.StoreJSON(jc);
             fixedWorldScaleJSON.StoreJSON(jc);
-        }
 
-        if (toScene && !useProfileJSON.val || toProfile)
-        {
-            worldScaleMethodJSON.StoreJSON(jc);
+        // The player's height is personal, so it is saved in profiles only.
+        if (toProfile)
             playerHeightJSON.StoreJSON(jc);
-        }
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
+        // Older scenes kept the method with Use Profile off; one that saved a method still counts as setting it.
+        _sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
 
         if (fromScene)
-        {
-            useProfileJSON.RestoreFromJSON(jc);
             fixedWorldScaleJSON.RestoreFromJSON(jc);
-        }
 
-        if (fromScene && !useProfileJSON.val || fromProfile)
-        {
-            worldScaleMethodJSON.RestoreFromJSON(jc);
+        // Older scenes saved with Use Profile off may also hold their creator's height; it is ignored.
+        if (fromProfile)
             playerHeightJSON.RestoreFromJSON(jc);
-        }
     }
 
     public override void ResetToDefault()
     {
         base.ResetToDefault();
 
-        useProfileJSON.SetValToDefault();
         fixedWorldScaleJSON.SetValToDefault();
-        worldScaleMethodJSON.SetValToDefault();
         playerHeightJSON.SetValToDefault();
+        _sceneFirst.ResetToDefault();
     }
 
     private void OnDestroy()

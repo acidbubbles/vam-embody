@@ -37,7 +37,7 @@ public class MoreScreen : ScreenBase, IScreen
         }
 
         CreateTitle("Deactivating Behavior");
-        CreateToggle(context.passenger.exitOnMenuOpen).label = "Exit On Menu Open (Passenger)*";
+        CreateToggle(context.passenger.exitOnMenuOpen).label = "Exit On Menu Open (Passenger)**";
         CreateFilterablePopup(context.embody.returnToSpawnPoint).label = "Deactivate to Spawn Point (Trigger)";
 
         CreateTitle("General Settings", true);
