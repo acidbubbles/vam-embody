@@ -24,6 +24,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     public const string Label = "Snug";
 
     public override string storeId => "Snug";
+    protected override bool selectedFromProfile => true;
     public override string label => Label;
 
     public SnugAutoSetup autoSetup { get; private set; }

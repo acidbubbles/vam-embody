@@ -20,7 +20,7 @@
         {
             CreateTitle("Automatic World Scale");
 
-            CreateScrollablePopup(_worldScale.worldScaleMethodJSON).label = "Method*";
+            CreateScrollablePopup(_worldScale.worldScaleMethodJSON).label = "Method**";
             CreateSlider(_worldScale.playerHeightJSON).label = "Player Eyes Height*";
             var recordHeightBtn = CreateButton("Record Player Eyes Height Now");
             recordHeightBtn.button.onClick.AddListener(() => recordHeightBtn.label = RecordPlayerHeight());
@@ -32,10 +32,6 @@
 
         if (context.containingAtom.type == "Person")
         {
-            CreateTitle("Settings", true);
-            CreateToggle(_worldScale.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
-
-            CreateSpacer(true).height = 20f;
             CreateTitle("Utilities", true);
 
             var showPersonHeight = CreateButton("Show Person Height", true);
@@ -52,8 +48,7 @@
     private string RecordPlayerHeight()
     {
         context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
-        _worldScale.playerHeightJSON.val = new PlayerMeasurements(context).MeasureHeight();
-        _worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
+        _worldScale.UsePlayerHeight(new PlayerMeasurements(context).MeasureHeight());
         context.diagnostics.TakeSnapshot($"{nameof(WorldScaleSettingsScreen)}.{nameof(RecordPlayerHeight)}.Before");
 
         return PlayerMeasurements.lastMeasurementUsedControllerAsFloor

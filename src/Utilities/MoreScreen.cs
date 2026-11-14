@@ -13,7 +13,7 @@ public class MoreScreen : ScreenBase, IScreen
 
     public void Show()
     {
-        CreateText(new JSONStorableString("", "Additional tools and options can be found here.\n\nOptions marked with an asterisk will only be saved in your profile."), true);
+        CreateText(new JSONStorableString("", "Additional tools and options can be found here.\n\nOptions marked with an asterisk will only be saved in your profile. Options marked with two asterisks are also saved in your profile, but a scene that sets its own value keeps it."), true);
 
         if (context.containingAtom.type == "Person")
         {
@@ -37,7 +37,7 @@ public class MoreScreen : ScreenBase, IScreen
         }
 
         CreateTitle("Deactivating Behavior");
-        CreateToggle(context.passenger.exitOnMenuOpen).label = "Exit On Menu Open (Passenger)*";
+        CreateToggle(context.passenger.exitOnMenuOpen).label = "Exit On Menu Open (Passenger)**";
         CreateFilterablePopup(context.embody.returnToSpawnPoint).label = "Deactivate to Spawn Point (Trigger)";
 
         CreateTitle("General Settings", true);
@@ -49,8 +49,11 @@ public class MoreScreen : ScreenBase, IScreen
             CreateToggle(context.automation.takeOverVamPossess, true).label = "Take Over Virt-A-Mate Possession*";
         }
 #endif
-        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key",
-            val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); });
+        var toggleKeyJSON = new JSONStorableStringChooser("Toggle Key", GetKeys(), KeyCode.None.ToString(), "Toggle Key**",
+            val => { context.automation.toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), val); })
+        {
+            valNoCallback = context.automation.toggleKey.ToString()
+        };
         var toggleKeyPopup = CreateFilterablePopup(toggleKeyJSON, true);
         toggleKeyPopup.popupPanelHeight = 700f;
 

@@ -53,6 +53,8 @@ Instead of you possessing the VR model, the VR model will ""possess you"". This 
 <b>About profiles</b>
 
 Whenever you add this plugin, you default profile will be loaded. Options with an asterisk* will be overwritten by what you saved in your profile and not with the scene, so make sure to save your default profile if you make changes to them! For example if you record your height, every scene you load will use your real height, so the world scale will feel right without having to manually tweak scenes you download.
+
+Options with two asterisks** are also saved in your profile, but a scene that sets its own value keeps it. For example, your Passenger smoothing applies in every scene that doesn't choose its own.
 ".Trim()), true);
         }
         else
@@ -66,7 +68,7 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
 
         if (context.containingAtom.type == "Person")
         {
-            CreateButton("Manage Presets...", true).button.onClick.AddListener(() => screensManager.Show(ProfilesScreen.ScreenName));
+            CreateButton("Manage Profiles...", true).button.onClick.AddListener(() => screensManager.Show(ProfilesScreen.ScreenName));
             CreateButton("Save As Default Profile", true).button.onClick.AddListener(() => new Storage(context).MakeDefault());
             CreateFilterablePopup(context.embody.presetsJSON, true);
         }
@@ -79,7 +81,8 @@ Welcome to <b>Embody</b>! Since the plugin was applied on a non-person atom, onl
             if (module.storeId == WizardModule.Label) continue;
             if (module.storeId == DiagnosticsModule.Label) continue;
             var selectToggle = CreateToggle(module.selectedJSON, false);
-            selectToggle.label = $"Select {module.label}";
+            // Hide Geometry's selection is a ** setting.
+            selectToggle.label = module is IHideGeometryModule ? $"Select {module.label}**" : $"Select {module.label}";
             var label = module.label;
             CreateConfigButton(label, $"Configure {label}...");
         }

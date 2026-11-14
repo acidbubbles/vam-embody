@@ -19,8 +19,7 @@ Press <b>Next</b> when ready.".TrimStart();
 
     public bool Apply()
     {
-        context.worldScale.playerHeightJSON.val = _playerMeasurements.MeasureHeight();
-        context.worldScale.worldScaleMethodJSON.val = WorldScaleModule.PlayerHeightMethod;
+        context.worldScale.UsePlayerHeight(_playerMeasurements.MeasureHeight());
 
         context.diagnostics.TakeSnapshot($"{nameof(RecordPlayerHeightStep)}.{nameof(Apply)}");
 

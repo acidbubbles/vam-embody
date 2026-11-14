@@ -333,6 +333,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
+        // These belong to the scene, so they are not part of a profile.
+        if (!toScene) return;
         trackMirrorsJSON.StoreJSON(jc);
         trackWindowCameraJSON.StoreJSON(jc);
         frustumJSON.StoreJSON(jc);
@@ -346,6 +348,8 @@ public class EyeTargetModule : EmbodyModuleBase, IEyeTargetModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
+        // These belong to the scene; older profiles also hold them, so they are ignored when loading a profile.
+        if (!fromScene) return;
         trackMirrorsJSON.RestoreFromJSON(jc);
         trackWindowCameraJSON.RestoreFromJSON(jc);
         frustumJSON.RestoreFromJSON(jc);

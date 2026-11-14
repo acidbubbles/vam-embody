@@ -26,8 +26,8 @@ public class ProfilesScreen : ScreenBase, IScreen
             SuperController.singleton.GetMediaPathDialog(
                 path =>
                 {
-                    _storage.LoadProfile(path);
-                    screensManager.Show(MainScreen.ScreenName);
+                    if (string.IsNullOrEmpty(path)) return;
+                    context.embody.LoadProfileFromPath(path);
                 },
                 SaveFormat.SaveExt,
                 SaveFormat.SaveFolder,
@@ -65,15 +65,19 @@ public class ProfilesScreen : ScreenBase, IScreen
         makeDefaults.button.onClick.AddListener(_storage.MakeDefault);
 
         var applyDefaults = CreateButton("Load Default Profile", true);
-        applyDefaults.button.onClick.AddListener(() => context.embody.LoadFromDefaults());
+        applyDefaults.button.onClick.AddListener(() => context.embody.LoadFromDefaults(true));
 
         var clearDefaults = CreateButton("Delete Default Profile", true);
-        clearDefaults.button.onClick.AddListener(() => FileManagerSecure.DeleteFile(SaveFormat.DefaultsPath));
+        clearDefaults.button.onClick.AddListener(_storage.DeleteDefault);
 
         CreateSpacer(true).height = 40f;
         CreateTitle("Clear Data", true);
 
         CreateButton("Clear Personal Data From Plugin", true).button.onClick.AddListener(_storage.ClearPersonalData);
-        CreateButton("Reset To Built-In Defaults", true).button.onClick.AddListener(() => Utilities.ResetToDefaults(context));
+        CreateButton("Reset To Built-In Defaults", true).button.onClick.AddListener(() =>
+        {
+            Utilities.ResetToDefaults(context);
+            SuperController.LogMessage("Embody: Reset all settings to the built-in defaults.");
+        });
     }
 }

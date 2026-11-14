@@ -89,6 +89,8 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
+        // These belong to the scene, so they are not part of a profile.
+        if (!toScene) return;
         cameraDepthJSON.StoreJSON(jc);
         cameraHeightJSON.StoreJSON(jc);
         cameraPitchJSON.StoreJSON(jc);
@@ -99,6 +101,8 @@ public class OffsetCameraModule : EmbodyModuleBase, IOffsetCameraModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
+        // These belong to the scene; older profiles also hold them, so they are ignored when loading a profile.
+        if (!fromScene) return;
         cameraDepthJSON.RestoreFromJSON(jc);
         cameraHeightJSON.RestoreFromJSON(jc);
         cameraPitchJSON.RestoreFromJSON(jc);

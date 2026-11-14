@@ -48,6 +48,10 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         new JSONStorableBool("Tear", true),
     };
 
+    // Whether and what to hide: the scene's choice when it makes one, otherwise the player's (marked **). This includes
+    // the module's own selection, so the base class's handling of it is not used.
+    private readonly SceneFirstSettings _sceneFirst = new SceneFirstSettings();
+
     private readonly List<IHandler> _handlers = new List<IHandler>();
 
     private bool _dirty;
@@ -74,6 +78,13 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
         {
             hideFaceMaterial.setCallbackFunction = _ => RefreshHandlers();
         }
+
+        _sceneFirst.Add(selectedJSON);
+        _sceneFirst.Add(hideFaceJSON);
+        _sceneFirst.Add(hideHairJSON);
+        _sceneFirst.Add(hideClothingJSON);
+        foreach (var hideFaceMaterial in hideFaceMaterials)
+            _sceneFirst.Add(hideFaceMaterial);
     }
 
     public override void InitReferences()
@@ -396,31 +407,16 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
 
     public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        base.StoreJSON(jc, toProfile, toScene);
-
-        hideFaceJSON.StoreJSON(jc);
-        hideHairJSON.StoreJSON(jc);
-        hideClothingJSON.StoreJSON(jc);
-        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.StoreJSON(jc);
+        _sceneFirst.StoreJSON(jc, toProfile, toScene);
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        base.RestoreFromJSON(jc, fromProfile, fromScene);
-
-        hideFaceJSON.RestoreFromJSON(jc);
-        hideHairJSON.RestoreFromJSON(jc);
-        hideClothingJSON.RestoreFromJSON(jc);
-        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.RestoreFromJSON(jc);
+        _sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
     }
 
     public override void ResetToDefault()
     {
-        base.ResetToDefault();
-
-        hideFaceJSON.SetValToDefault();
-        hideHairJSON.SetValToDefault();
-        hideClothingJSON.SetValToDefault();
-        foreach (var hideFaceMaterial in hideFaceMaterials) hideFaceMaterial.SetValToDefault();
+        _sceneFirst.ResetToDefault();
     }
 }

@@ -15,23 +15,21 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
     public void Show()
     {
         CreateTitle("Control");
-        CreateToggle(_passenger.positionLockJSON).label = "Lock Camera Position";
-        CreateToggle(_passenger.rotationLockJSON).label = "Lock Camera Rotation";
-        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Driven Rotation";
+        CreateToggle(_passenger.positionLockJSON).label = "Lock Camera Position**";
+        CreateToggle(_passenger.rotationLockJSON).label = "Lock Camera Rotation**";
+        CreateToggle(_passenger.allowPersonHeadRotationJSON).label = "User-Driven Rotation**";
 
         CreateTitle("Exit");
-        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open*";
+        CreateToggle(_passenger.exitOnMenuOpen).label = "Exit On Menu Open**";
 
         CreateTitle("Adjustments");
-        CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll";
-        CreateToggle(_passenger.rotationLockNoTiltJSON).label = "Prevent Camera Tilt";
+        CreateToggle(_passenger.rotationLockNoRollJSON).label = "Prevent Camera Roll**";
+        CreateToggle(_passenger.rotationLockNoTiltJSON).label = "Prevent Camera Tilt**";
         CreateSlider(_passenger.eyesToHeadDistanceOffsetJSON).label = "Head-eyes Distance Offset";
-
-        CreateTitle("Settings");
-        CreateToggle(_passenger.useProfileJSON, false, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
 
         if (context.containingAtom.type == "Person")
         {
+            CreateTitle("Settings");
             CreateToggle(_passenger.bufferPosition).label = "Buffer Position";
 
             // TODO: Lock for user
@@ -46,33 +44,33 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
         }
 
         CreateTitle("Rotation", true);
-        CreateSlider(_passenger.rotationSmoothingJSON, true);
+        CreateSlider(_passenger.rotationSmoothingJSON, true).label = "Rotation Smoothing**";
         CreateSlider(new JSONStorableFloat(
-            "Rotation X",
+            "Rotation X**",
             0f,
             val => _passenger.rotationOffset = new Vector3(val, _passenger.rotationOffset.y, _passenger.rotationOffset.z),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.x }, true);
         CreateSlider(new JSONStorableFloat(
-            "Rotation Y",
+            "Rotation Y**",
             0f,
             val => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, val, _passenger.rotationOffset.z),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.y }, true);
         CreateSlider(new JSONStorableFloat(
-            "Rotation Z",
+            "Rotation Z**",
             0f,
             val => _passenger.rotationOffset = new Vector3(_passenger.rotationOffset.x, _passenger.rotationOffset.y, val),
             -180f,
             180f
         ) { valNoCallback = _passenger.rotationOffset.z }, true);
         CreateTitle("Position", true);
-        CreateSlider(_passenger.positionSmoothingJSON, true);
-        CreateSlider(_passenger.positionDeadzoneJSON, true);
+        CreateSlider(_passenger.positionSmoothingJSON, true).label = "Position Smoothing**";
+        CreateSlider(_passenger.positionDeadzoneJSON, true).label = "Position Deadzone**";
         CreateSlider(new JSONStorableFloat(
-            "Position X",
+            "Position X**",
             0f,
             val => _passenger.positionOffset = new Vector3(val, _passenger.positionOffset.y, _passenger.positionOffset.z),
             -2f,
@@ -80,7 +78,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             false
         ) { valNoCallback = _passenger.positionOffset.x }, true).valueFormat = "F4";
         CreateSlider(new JSONStorableFloat(
-            "Position Y",
+            "Position Y**",
             0f,
             val => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, val, _passenger.positionOffset.z),
             -2f,
@@ -88,7 +86,7 @@ public class PassengerSettingsScreen : ScreenBase, IScreen
             false
         ) { valNoCallback = _passenger.positionOffset.y }, true).valueFormat = "F4";
         CreateSlider(new JSONStorableFloat(
-            "Position Z",
+            "Position Z**",
             0f,
             val => _passenger.positionOffset = new Vector3(_passenger.positionOffset.x, _passenger.positionOffset.y, val),
             -2f,
