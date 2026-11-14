@@ -32,7 +32,6 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         if (!context.embody.activeJSON.val)
             _snug.autoSetup.AutoSetup();
 
-        CreateToggle(_snug.useProfileJSON, true, "*Use Profile <i>(Not Saved In Scene)</i>", "*Use Profile <i>(Saved In Scene)</i>");
         CreateToggle(_snug.previewSnugOffsetJSON, true).label = "Preview Offset (Real v.s. In-Game)";
         CreateToggle(_snug.disableSelfGrabJSON, true).label = "Disable Person Grab*";
         CreateSlider(_snug.falloffDistanceJSON, true).label = "Falloff Distance*";
@@ -56,7 +55,7 @@ public class SnugSettingsScreen : ScreenBase, IScreen
         );
         CreateScrollablePopup(_selectedAnchorsJSON);
 
-        _anchorActiveJSON = new JSONStorableBool("Anchor Active", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
+        _anchorActiveJSON = new JSONStorableBool("Anchor Active*", true, (bool _) => UpdateAnchor(0)) {isStorable = false};
         CreateToggle(_anchorActiveJSON);
 
         _anchorRealSizeXJSON = new JSONStorableFloat("Size X (Width)*", 1f, UpdateAnchor, 0.01f, 1f, true) {isStorable = false};

@@ -7,7 +7,6 @@ using UnityEngine;
 
 public interface ISnugModule : IEmbodyModule
 {
-    JSONStorableBool useProfileJSON { get; }
     List<ControllerAnchorPoint> anchorPoints { get; }
     JSONStorableFloat falloffDistanceJSON { get; }
     JSONStorableFloat falloffMidPointJSON { get; }
@@ -28,11 +27,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
 
     public SnugAutoSetup autoSetup { get; private set; }
 
-    public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableBool previewSnugOffsetJSON { get; } = new JSONStorableBool("PreviewSnugOffset", false);
     public JSONStorableBool disableSelfGrabJSON { get; } = new JSONStorableBool("DisablePersonGrab", true);
     public JSONStorableFloat falloffDistanceJSON { get; } = new JSONStorableFloat("Falloff", 0.15f, 0f, 5f, false);
-    public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("Falloff", 0.3f, 0.01f, 0.99f, true);
+    public JSONStorableFloat falloffMidPointJSON { get; } = new JSONStorableFloat("FalloffMidPoint", 0.3f, 0.01f, 0.99f, true);
     public List<ControllerAnchorPoint> anchorPoints { get; } = new List<ControllerAnchorPoint>();
 
     private SnugHand _lHand;
@@ -166,6 +164,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         {
             anchorPoint.realLifeSize = anchorPoint.realLifeSizeDefault;
             anchorPoint.realLifeOffset = anchorPoint.realLifeOffsetDefault;
+            anchorPoint.active = true;
             anchorPoint.Update();
         }
     }
@@ -234,13 +233,22 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
         }
     }
 
+    // Whether Snug takes this hand controller. Trackers uses the same check to leave Snug's hands alone.
+    // A hand controller mapped to another control (e.g. used as a hip tracker) is left to Trackers.
+    // Not a pure query: SyncMotionControl() can rebuild the motion control's child transforms, as EnableHand needs.
+    public static bool CanDriveHand(MotionControllerWithCustomPossessPoint motionControl)
+    {
+        return motionControl.enabled
+            && TrackersModule.IsMappedToOwnHand(motionControl)
+            && motionControl.SyncMotionControl()
+            && motionControl.controlPosition;
+    }
+
     private void EnableHand(SnugHand hand, string motionControlName)
     {
         var motionControl = context.trackers.motionControls.FirstOrDefault(mc => mc.name == motionControlName);
         if (motionControl == null) return;
-        if (!motionControl.enabled) return;
-        if (!motionControl.SyncMotionControl()) return;
-        if (!motionControl.controlPosition) return;
+        if (!CanDriveHand(motionControl)) return;
         hand.motionControl = motionControl;
         hand.snapshot = FreeControllerV3Snapshot.Snap(hand.controller);
         hand.active = true;
@@ -500,14 +508,10 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
-        if (toScene)
-        {
-            useProfileJSON.StoreJSON(jc);
-        }
-
-        if (toScene && !useProfileJSON.val || toProfile)
+        if (toProfile)
         {
             falloffDistanceJSON.StoreJSON(jc);
+            falloffMidPointJSON.StoreJSON(jc);
             disableSelfGrabJSON.StoreJSON(jc);
 
             var anchors = new JSONClass();
@@ -533,15 +537,11 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        if (fromScene)
-        {
-            useProfileJSON.RestoreFromJSON(jc);
-        }
-
-        if (fromScene && !useProfileJSON.val || fromProfile)
+        if (fromProfile)
         {
             disableSelfGrabJSON.RestoreFromJSON(jc);
             falloffDistanceJSON.RestoreFromJSON(jc);
+            falloffMidPointJSON.RestoreFromJSON(jc);
             var anchorsJSON = jc["Anchors"];
             if (anchorsJSON != null)
             {
@@ -555,8 +555,7 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
                     */
                     anchor.realLifeOffset = anchorJSON["RealLifeOffset"].ToVector3(anchor.realLifeOffset);
                     anchor.realLifeSize = anchorJSON["RealLifeScale"].ToVector3(anchor.realLifeSize);
-                    if (!fromProfile)
-                        anchor.active = anchorJSON["Active"]?.Value != "false";
+                    anchor.active = anchorJSON["Active"]?.Value != "false";
                     anchor.Update();
                 }
             }
@@ -567,13 +566,14 @@ public class SnugModule : EmbodyModuleBase, ISnugModule
     {
         base.ResetToDefault();
 
-        useProfileJSON.SetValToDefault();
         disableSelfGrabJSON.SetValToDefault();
         falloffDistanceJSON.SetValToDefault();
+        falloffMidPointJSON.SetValToDefault();
 
         foreach (var anchor in anchorPoints)
         {
             anchor.InitFromDefault();
+            anchor.active = true;
             anchor.Update();
         }
     }
