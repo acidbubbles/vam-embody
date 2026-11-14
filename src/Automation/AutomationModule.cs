@@ -101,8 +101,8 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         jc["ToggleKey"] = toggleKey.ToString();
         if (toProfile)
         {
-            autoArmForRecord.val = true;
-            takeOverVamPossess.val = true;
+            autoArmForRecord.StoreJSON(jc);
+            takeOverVamPossess.StoreJSON(jc);
         }
     }
 
