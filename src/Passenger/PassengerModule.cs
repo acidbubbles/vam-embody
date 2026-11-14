@@ -52,14 +52,17 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public Vector3 positionOffset
     {
         get { return _cameraCenterTarget.localPosition; }
-        set { _cameraCenterTarget.localPosition = value; }
+        set { _cameraCenterTarget.localPosition = value; _sceneFirst.Changed(); }
     }
 
     public Vector3 rotationOffset
     {
         get { return _cameraCenterTarget.localEulerAngles; }
-        set { _cameraCenterTarget.localEulerAngles = value; }
+        set { _cameraCenterTarget.localEulerAngles = value; _sceneFirst.Changed(); }
     }
+
+    // Comfort and camera placement: the scene's values when it sets them, otherwise the player's (marked **).
+    private readonly SceneFirstSettings _sceneFirst = new SceneFirstSettings();
 
     private Rigidbody _headControlRB;
     private Transform _headBoneTransform;
@@ -111,6 +114,17 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         _cameraCenter = new GameObject("Passenger_CameraCenter").transform;
         _cameraCenterTarget = new GameObject("Passenger_CameraCenterTarget").transform;
         _cameraCenterTarget.SetParent(_cameraCenter, false);
+
+        _sceneFirst.Add(positionLockJSON);
+        _sceneFirst.Add(rotationLockJSON);
+        _sceneFirst.Add(allowPersonHeadRotationJSON);
+        _sceneFirst.Add(rotationLockNoRollJSON);
+        _sceneFirst.Add(rotationLockNoTiltJSON);
+        _sceneFirst.Add(rotationSmoothingJSON);
+        _sceneFirst.Add(positionSmoothingJSON);
+        _sceneFirst.Add(positionDeadzoneJSON);
+        _sceneFirst.Add("PositionOffset", () => positionOffset, v => positionOffset = v);
+        _sceneFirst.Add("RotationOffset", () => rotationOffset, v => rotationOffset = v);
     }
 
     public override void InitReferences()
@@ -388,22 +402,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             exitOnMenuOpen.StoreJSON(jc);
         }
 
+        _sceneFirst.StoreJSON(jc, toProfile, toScene);
+
         // The rest belongs to the scene, so it is not part of a profile.
         if (!toScene) return;
         lookAtJSON.StoreJSON(jc);
         lookAtWeightJSON.StoreJSON(jc);
-        rotationLockJSON.StoreJSON(jc);
-        rotationLockNoRollJSON.StoreJSON(jc);
-        rotationLockNoTiltJSON.StoreJSON(jc);
-        rotationSmoothingJSON.StoreJSON(jc);
-        positionLockJSON.StoreJSON(jc);
-        positionSmoothingJSON.StoreJSON(jc);
-        positionDeadzoneJSON.StoreJSON(jc);
-        allowPersonHeadRotationJSON.StoreJSON(jc);
         eyesToHeadDistanceOffsetJSON.StoreJSON(jc);
         bufferPosition.StoreJSON(jc);
-        jc["PositionOffset"] = positionOffset.ToJSON();
-        jc["RotationOffset"] = rotationOffset.ToJSON();
     }
 
     public override void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
@@ -420,22 +426,14 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             exitOnMenuOpen.RestoreFromJSON(jc);
         }
 
+        _sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
+
         // The rest belongs to the scene; older profiles also hold it, so it is ignored when loading a profile.
         if (!fromScene) return;
         lookAtJSON.RestoreFromJSON(jc);
         lookAtWeightJSON.RestoreFromJSON(jc);
-        rotationLockJSON.RestoreFromJSON(jc);
-        rotationLockNoRollJSON.RestoreFromJSON(jc);
-        rotationLockNoTiltJSON.RestoreFromJSON(jc);
-        rotationSmoothingJSON.RestoreFromJSON(jc);
-        positionLockJSON.RestoreFromJSON(jc);
-        positionSmoothingJSON.RestoreFromJSON(jc);
-        positionDeadzoneJSON.RestoreFromJSON(jc);
-        allowPersonHeadRotationJSON.RestoreFromJSON(jc);
         eyesToHeadDistanceOffsetJSON.RestoreFromJSON(jc);
         bufferPosition.RestoreFromJSON(jc);
-        positionOffset = jc["PositionOffset"].ToVector3(Vector3.zero);
-        rotationOffset = jc["RotationOffset"].ToVector3(Vector3.zero);
     }
 
     public override void ResetToDefault()
@@ -443,18 +441,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
         base.ResetToDefault();
         useProfileJSON.SetValToDefault();
         lookAtJSON.SetValToDefault();
-        positionLockJSON.SetValToDefault();
-        positionSmoothingJSON.SetValToDefault();
-        positionDeadzoneJSON.SetValToDefault();
-        rotationLockJSON.SetValToDefault();
-        rotationSmoothingJSON.SetValToDefault();
         lookAtWeightJSON.SetValToDefault();
-        allowPersonHeadRotationJSON.SetValToDefault();
-        rotationLockNoRollJSON.SetValToDefault();
-        rotationLockNoTiltJSON.SetValToDefault();
         eyesToHeadDistanceOffsetJSON.SetValToDefault();
         bufferPosition.SetValToDefault();
-        positionOffset = Vector3.zero;
-        rotationOffset = Vector3.zero;
+        _sceneFirst.ResetToDefault();
     }
 }

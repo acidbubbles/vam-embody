@@ -20,12 +20,24 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
 
     public JSONStorableBool takeOverVamPossess { get; } = new JSONStorableBool("TakeOverVamPossess", true);
     public JSONStorableBool autoArmForRecord { get; } = new JSONStorableBool("AutoArmForRecord", false);
-    public KeyCode toggleKey { get; set; } = KeyCode.None;
+    public KeyCode toggleKey
+    {
+        get { return _toggleKey; }
+        set { _toggleKey = value; _sceneFirst.Changed(); }
+    }
 
     private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
     private FreeControllerV3 _headControl;
     private bool _activatedByVam;
-    private bool _toggleKeySetByScene;
+    private KeyCode _toggleKey = KeyCode.None;
+    // The toggle key: the scene's key when it sets one, otherwise the player's (marked **).
+    private readonly SceneFirstSettings _sceneFirst = new SceneFirstSettings();
+
+    public override void InitStorables()
+    {
+        base.InitStorables();
+        _sceneFirst.Add("ToggleKey", () => _toggleKey, v => _toggleKey = v);
+    }
 
     public void Start()
     {
@@ -98,7 +110,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
-        jc["ToggleKey"] = toggleKey.ToString();
+        _sceneFirst.StoreJSON(jc, toProfile, toScene);
         if (toProfile)
         {
             autoArmForRecord.StoreJSON(jc);
@@ -110,20 +122,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
-        // The scene's toggle key wins when the scene sets one; otherwise the player's key from their profile applies.
-        var toggleKeyString = jc["ToggleKey"].Value;
-        var key = !string.IsNullOrEmpty(toggleKeyString) && toggleKeyString != KeyCode.None.ToString()
-            ? (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString)
-            : KeyCode.None;
-        if (fromScene)
-        {
-            _toggleKeySetByScene = key != KeyCode.None;
-            if (_toggleKeySetByScene) toggleKey = key;
-        }
-        else if (fromProfile && !_toggleKeySetByScene)
-        {
-            toggleKey = key;
-        }
+        _sceneFirst.RestoreFromJSON(jc, fromProfile, fromScene);
 
         if (fromProfile)
         {
@@ -140,8 +139,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public override void ResetToDefault()
     {
         base.ResetToDefault();
-        toggleKey = KeyCode.None;
-        _toggleKeySetByScene = false;
+        _sceneFirst.ResetToDefault();
         takeOverVamPossess.SetValToDefault();
         autoArmForRecord.SetValToDefault();
     }
