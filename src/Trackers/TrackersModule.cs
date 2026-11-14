@@ -392,7 +392,10 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
         var motionControlsJSON = jc.HasKey("MotionControls") ? jc["MotionControls"].AsObject : new JSONClass();
         foreach (var motionControl in motionControls)
         {
-            var motionControlJSON = motionControlsJSON.HasKey(motionControl.name) ? motionControlsJSON[motionControl.name].AsObject : new JSONClass();
+            var hasEntry = motionControlsJSON.HasKey(motionControl.name);
+            // A profile without an entry for a tracker leaves it as it is; a scene without one doesn't set it.
+            if (!hasEntry && !fromScene) continue;
+            var motionControlJSON = hasEntry ? motionControlsJSON[motionControl.name].AsObject : new JSONClass();
             motionControl.RestoreFromJSON(motionControlJSON, fromProfile, fromScene);
         }
     }

@@ -394,6 +394,9 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
 
         // The rest belongs to the scene, so it is not part of a profile.
         if (!toScene) return;
+        // Older versions only read Exit On Menu Open from a scene with Use Profile off, which was its only * setting.
+        if (_sceneFirst.IsSetByScene(exitOnMenuOpen.name))
+            jc["ImportDefaultsOnLoad"] = "false";
         lookAtJSON.StoreJSON(jc);
         lookAtWeightJSON.StoreJSON(jc);
         eyesToHeadDistanceOffsetJSON.StoreJSON(jc);

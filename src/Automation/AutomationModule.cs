@@ -6,6 +6,7 @@ using UnityEngine;
 public interface IAutomationModule : IEmbodyModule
 {
     KeyCode toggleKey { get; set; }
+    void KeepToggleKey(KeyCode key);
     JSONStorableBool takeOverVamPossess { get; }
     JSONStorableBool autoArmForRecord { get; }
     void Reset();
@@ -37,6 +38,12 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.InitStorables();
         _sceneFirst.Add("ToggleKey", () => _toggleKey, v => _toggleKey = v);
+    }
+
+    // Puts the player's key back (e.g. after the wizard resets everything) without counting it as the scene's choice.
+    public void KeepToggleKey(KeyCode key)
+    {
+        _sceneFirst.ChangeWithoutMarking(() => _toggleKey = key);
     }
 
     public void Start()

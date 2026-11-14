@@ -23,7 +23,7 @@ Only skip this if you know what you are doing!").TrimStart();
         var rightRotateControllerCustom = context.trackers.rightHandMotionControl.rotateControllerCustom;
         var rightRotateAroundTrackerCustom = context.trackers.rightHandMotionControl.rotateAroundTrackerCustom;
         Utilities.ResetToDefaults(context);
-        context.automation.toggleKey = key;
+        context.automation.KeepToggleKey(key);
         context.trackers.headMotionControl.offsetControllerCustom = headOffsetControllerCustom;
         context.trackers.headMotionControl.rotateControllerCustom = headRotateControllerCustom;
         context.trackers.headMotionControl.rotateAroundTrackerCustom = headRotateAroundTrackerCustom;

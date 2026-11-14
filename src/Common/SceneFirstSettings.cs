@@ -28,8 +28,11 @@ public class SceneFirstSettings
         // Called after any change: returns true when the live value is not the one last applied, i.e. the player
         // changed it, and makes it the player's value too.
         public abstract bool CaptureIfChanged();
-        // After loading: the live value, which linked settings may have adjusted, is the one applied.
+        // Whether the live value differs from the one in place after the last load.
+        public abstract bool DiffersFromLoaded();
+        // After loading: the live value, which linked settings may have adjusted, is the one applied and the one loaded.
         public abstract void SyncApplied();
+        public bool loadedSetByScene;
     }
 
     private class Entry<T> : Entry
@@ -42,6 +45,7 @@ public class SceneFirstSettings
         public Func<T, T, bool> equals;
         public T player;
         public T applied;
+        public T loaded;
 
         public override bool IsDefaultLive() => equals(get(), defaultVal);
         public override bool HoldsNonDefault(JSONClass jc) => jc.HasKey(key) && !equals(read(jc[key]), defaultVal);
@@ -66,7 +70,14 @@ public class SceneFirstSettings
             return true;
         }
 
-        public override void SyncApplied() => applied = get();
+        public override bool DiffersFromLoaded() => !equals(get(), loaded);
+
+        public override void SyncApplied()
+        {
+            applied = get();
+            loaded = applied;
+            loadedSetByScene = setByScene;
+        }
     }
 
     private readonly List<Entry> _entries = new List<Entry>();
@@ -155,23 +166,25 @@ public class SceneFirstSettings
             equals = equals,
             player = defaultVal,
             applied = defaultVal,
+            loaded = defaultVal,
         });
     }
 
-    // A change made by the player (in the UI, a preset or the wizard). It is what the scene now uses, so it is saved with
-    // the scene, and it becomes the player's value too. Changes made while loading are ignored.
+    // A change made in the scene (in the UI, a preset, a trigger). A value that ends up different from the one loaded is
+    // what the scene now uses, so it is saved with the scene; one that is changed and put back (e.g. by the wizard) is
+    // not. Either way it becomes the player's value too. Changes made while loading are ignored.
     public void Changed()
     {
         if (_applying) return;
         foreach (var e in _entries)
         {
             if (e.CaptureIfChanged())
-                e.setByScene = true;
+                e.setByScene = e.loadedSetByScene || e.DiffersFromLoaded();
         }
     }
 
-    // Makes a change that is not the scene's choice (e.g. clearing personal data): the result is not marked as set by
-    // the scene.
+    // A change that is the player's own and not a choice for the scene (calibration, clearing personal data): it becomes
+    // the player's value and is not marked as set by the scene.
     public void ChangeWithoutMarking(Action change)
     {
         _applying = true;
@@ -179,12 +192,20 @@ public class SceneFirstSettings
         {
             change();
             foreach (var e in _entries)
+            {
+                e.CaptureIfChanged();
                 e.SyncApplied();
+            }
         }
         finally
         {
             _applying = false;
         }
+    }
+
+    public bool IsSetByScene(string key)
+    {
+        return _entries.Any(e => e.key == key && e.setByScene);
     }
 
     public void StoreJSON(JSONClass jc, bool toProfile, bool toScene)

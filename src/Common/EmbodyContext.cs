@@ -75,18 +75,20 @@ public class EmbodyContext
         this.embody = embody;
         containingAtom = plugin.containingAtom;
 
+        // These mirror the hand trackers' on/off for triggers. They are not saved, and restoring them would turn the hands
+        // back on (they have no saved value) before the trackers read their own setting.
         leftHandToggle = new JSONStorableBool("Left Hand Enabled", true, val =>
         {
             trackers.leftHandMotionControl.enabled = val;
             trackers.RefreshHands();
             embody.Refresh();
-        }) { isStorable = false };
+        }) { isStorable = false, isRestorable = false };
         rightHandToggle = new JSONStorableBool("Right Hand Enabled", true, val =>
         {
             trackers.rightHandMotionControl.enabled = val;
             trackers.RefreshHands();
             embody.Refresh();
-        }) { isStorable = false };
+        }) { isStorable = false, isRestorable = false };
     }
 
     public void InitReferences()
