@@ -82,11 +82,21 @@ public class Storage
         return jc;
     }
 
-    public void ApplyProfile(JSONClass jc, string path)
+    // A profile only holds the player's settings and the possession mode, and each module reads only those from it, so
+    // the scene's settings are left as they are. Settings missing from the file go back to their defaults.
+    // With replaceSceneSettings, everything is reset and the file is also read as scene settings.
+    public void ApplyProfile(JSONClass jc, string path, bool replaceSceneSettings)
     {
-        // ResetToDefaults deactivates Embody first.
-        Utilities.ResetToDefaults(_context);
-        _context.embody.RestoreFromJSONInternal(jc, true, false);
+        if (replaceSceneSettings)
+        {
+            // ResetToDefaults deactivates Embody first.
+            Utilities.ResetToDefaults(_context);
+            _context.embody.RestoreFromJSONInternal(jc, true, true);
+        }
+        else
+        {
+            _context.embody.RestoreFromJSONInternal(jc, true, false);
+        }
         SuperController.LogMessage($"Embody: Loaded profile '{path}'.");
     }
 

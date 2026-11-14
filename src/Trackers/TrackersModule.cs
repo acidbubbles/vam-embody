@@ -28,6 +28,7 @@ public class TrackersModule : EmbodyModuleBase, ITrackersModule
     public const string Label = "Trackers";
 
     public override string storeId => "Trackers";
+    protected override bool selectedFromProfile => true;
     public override string label => Label;
 
     public List<MotionControllerWithCustomPossessPoint> motionControls { get; } = new List<MotionControllerWithCustomPossessPoint>();

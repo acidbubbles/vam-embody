@@ -20,7 +20,7 @@ public interface IEmbody
     void Refresh();
     void RefreshDelayed();
     void LoadFromDefaults(bool requestedByUser = false);
-    void LoadProfileFromPath(string path);
+    void LoadProfileFromPath(string path, bool replaceSceneSettings = false);
     void StoreJSON(JSONClass json, bool toProfile, bool toScene);
     bool RestoreFromJSONInternal(JSONClass jc, bool fromProfile, bool fromScene);
 }
@@ -212,7 +212,9 @@ public class Embody : MVRScript, IEmbody
             _loadProfileWithPathJSON = new JSONStorableActionPresetFilePath("LoadProfileWithPath", url =>
             {
                 if (string.IsNullOrEmpty(url)) return;
-                LoadProfileFromPath(SuperController.singleton.NormalizeMediaPath(url));
+                // Scenes use this action to apply profiles they ship with, including scene settings such as camera
+                // offsets (e.g. FlyRoxy's passenger profiles), so it still applies everything in the file.
+                LoadProfileFromPath(SuperController.singleton.NormalizeMediaPath(url), true);
             }, loadProfileWithPathBrowseJSON);
             RegisterPresetFilePathAction(_loadProfileWithPathJSON);
 
@@ -661,7 +663,9 @@ public class Embody : MVRScript, IEmbody
         }
     }
 
-    public void LoadProfileFromPath(string path)
+    // A profile changes the player's settings (marked *) and the possession mode, and keeps the scene's settings.
+    // With replaceSceneSettings, every setting is reset and the file is also read as scene settings.
+    public void LoadProfileFromPath(string path, bool replaceSceneSettings = false)
     {
         path = Storage.ResolveProfilePath(path);
         var storage = new Storage(_context);
@@ -672,7 +676,7 @@ public class Embody : MVRScript, IEmbody
         // it is switched back on a frame later, the same way ReinitializeIfActive does it.
         var reloadState = _active || _pendingResume != null ? SuspendForReload() : null;
 
-        storage.ApplyProfile(profile, path);
+        storage.ApplyProfile(profile, path, replaceSceneSettings);
         _screensManager.Show(null);
         _screensManager.Show(MainScreen.ScreenName);
 

@@ -31,6 +31,7 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
     public const string Label = "Passenger";
 
     public override string storeId => "Passenger";
+    protected override bool selectedFromProfile => true;
     public override string label => Label;
 
     public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
@@ -387,6 +388,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             exitOnMenuOpen.StoreJSON(jc);
         }
 
+        // The rest belongs to the scene, so it is not part of a profile.
+        if (!toScene) return;
         lookAtJSON.StoreJSON(jc);
         lookAtWeightJSON.StoreJSON(jc);
         rotationLockJSON.StoreJSON(jc);
@@ -417,6 +420,8 @@ public class PassengerModule : EmbodyModuleBase, IPassengerModule
             exitOnMenuOpen.RestoreFromJSON(jc);
         }
 
+        // The rest belongs to the scene; older profiles also hold it, so it is ignored when loading a profile.
+        if (!fromScene) return;
         lookAtJSON.RestoreFromJSON(jc);
         lookAtWeightJSON.RestoreFromJSON(jc);
         rotationLockJSON.RestoreFromJSON(jc);

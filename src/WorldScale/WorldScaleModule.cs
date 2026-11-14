@@ -22,6 +22,7 @@ public class WorldScaleModule : EmbodyModuleBase, IWorldScaleModule
     public const string EyeDistanceMethod = "Eyes Distance";
 
     public override string storeId => "WorldScale";
+    protected override bool selectedFromProfile => true;
     public override string label => Label;
     public JSONStorableBool useProfileJSON { get; } = new JSONStorableBool("ImportDefaultsOnLoad", true);
     public JSONStorableStringChooser worldScaleMethodJSON { get; } = new JSONStorableStringChooser("WorldScaleMethod", new List<string>{NoneMethod, EyeDistanceMethod, PlayerHeightMethod}, EyeDistanceMethod, "Method");

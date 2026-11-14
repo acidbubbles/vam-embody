@@ -25,6 +25,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
     private FreeControllerV3 _headControl;
     private bool _activatedByVam;
+    private bool _toggleKeySetByScene;
 
     public void Start()
     {
@@ -109,9 +110,20 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
+        // The scene's toggle key wins when the scene sets one; otherwise the player's key from their profile applies.
         var toggleKeyString = jc["ToggleKey"].Value;
-        if (!string.IsNullOrEmpty(toggleKeyString) && toggleKeyString != KeyCode.None.ToString())
-            toggleKey = (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString);
+        var key = !string.IsNullOrEmpty(toggleKeyString) && toggleKeyString != KeyCode.None.ToString()
+            ? (KeyCode) Enum.Parse(typeof(KeyCode), toggleKeyString)
+            : KeyCode.None;
+        if (fromScene)
+        {
+            _toggleKeySetByScene = key != KeyCode.None;
+            if (_toggleKeySetByScene) toggleKey = key;
+        }
+        else if (fromProfile && !_toggleKeySetByScene)
+        {
+            toggleKey = key;
+        }
 
         if (fromProfile)
         {
@@ -129,6 +141,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     {
         base.ResetToDefault();
         toggleKey = KeyCode.None;
+        _toggleKeySetByScene = false;
         takeOverVamPossess.SetValToDefault();
         autoArmForRecord.SetValToDefault();
     }

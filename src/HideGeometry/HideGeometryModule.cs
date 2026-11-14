@@ -398,6 +398,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.StoreJSON(jc, toProfile, toScene);
 
+        // These belong to the scene, so they are not part of a profile.
+        if (!toScene) return;
         hideFaceJSON.StoreJSON(jc);
         hideHairJSON.StoreJSON(jc);
         hideClothingJSON.StoreJSON(jc);
@@ -408,6 +410,8 @@ public class HideGeometryModule : EmbodyModuleBase, IHideGeometryModule
     {
         base.RestoreFromJSON(jc, fromProfile, fromScene);
 
+        // These belong to the scene; older profiles also hold them, so they are ignored when loading a profile.
+        if (!fromScene) return;
         hideFaceJSON.RestoreFromJSON(jc);
         hideHairJSON.RestoreFromJSON(jc);
         hideClothingJSON.RestoreFromJSON(jc);

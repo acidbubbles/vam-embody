@@ -67,14 +67,20 @@ public abstract class EmbodyModuleBase : MonoBehaviour, IEmbodyModule
         enabledJSON.valNoCallback = false;
     }
 
+    // Whether a profile picks this module, i.e. it is part of how the player possesses (World Scale, Trackers, Snug,
+    // Passenger). The scene still picks it on scene load; other modules are picked by the scene only.
+    protected virtual bool selectedFromProfile => false;
+
     public virtual void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
-        selectedJSON.StoreJSON(jc);
+        if (toScene || toProfile && selectedFromProfile)
+            selectedJSON.StoreJSON(jc);
     }
 
     public virtual void RestoreFromJSON(JSONClass jc, bool fromProfile, bool fromScene)
     {
-        selectedJSON.RestoreFromJSON(jc);
+        if (fromScene || fromProfile && selectedFromProfile)
+            selectedJSON.RestoreFromJSON(jc);
     }
 
     public virtual void ResetToDefault()
