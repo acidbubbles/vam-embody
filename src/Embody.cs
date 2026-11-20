@@ -429,8 +429,11 @@ public class Embody : MVRScript, IEmbody
                 var controller = storable as FreeControllerV3;
                 // NOTE: We use startedPossess to notify users of this (e.g. Timeline) that this is not a recordable movement
                 if (controller != null) controller.startedPossess = true;
+                var jc = storableJSON.AsObject;
                 storable.PreRestore();
-                storable.RestoreFromJSON(storableJSON.AsObject);
+                storable.RestoreFromJSON(jc);
+                // RestoreFromJSON unlinks a controller; VaM only puts the link back ("linkTo") in LateRestoreFromJSON.
+                storable.LateRestoreFromJSON(jc, true, true, true);
                 storable.PostRestore();
                 if (controller != null) controller.startedPossess = false;
             }
