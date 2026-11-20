@@ -23,6 +23,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public KeyCode toggleKey { get; set; } = KeyCode.None;
 
     private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
+    private bool _headPossessedSinceActivatedByVam;
 #if(VAM_GT_1_20_77_0)
     private bool _selectedBeforePossessMode;
 #endif
@@ -86,10 +87,19 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
             }
         }
 
-        if (_activatedByVam && context.embody.activeJSON.val && !_headControl.possessed)
+        if (_activatedByVam && context.embody.activeJSON.val)
         {
-            context.embody.Deactivate();
-            return;
+            // Turn off when the head possession ends. Passenger (or Trackers without the head) never possesses the head,
+            // so only react once it has been possessed since activating, or Embody turns off as soon as it starts.
+            if (_headControl.possessed)
+            {
+                _headPossessedSinceActivatedByVam = true;
+            }
+            else if (_headPossessedSinceActivatedByVam)
+            {
+                context.embody.Deactivate();
+                return;
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.Escape) || toggleKey != KeyCode.None && Input.GetKeyDown(toggleKey))
@@ -136,6 +146,7 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public void Reset()
     {
         _activatedByVam = false;
+        _headPossessedSinceActivatedByVam = false;
     }
 
     public override void ResetToDefault()
