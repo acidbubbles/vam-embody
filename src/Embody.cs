@@ -420,6 +420,7 @@ public class Embody : MVRScript, IEmbody
 
         if (_poseJSON != null && _context.trackers?.restorePoseAfterPossessJSON.val == true)
         {
+            var restored = new List<KeyValuePair<JSONStorable, JSONClass>>();
             foreach (var storableJSON in _poseJSON.Childs)
             {
                 var storableId = storableJSON["id"].Value;
@@ -432,9 +433,16 @@ public class Embody : MVRScript, IEmbody
                 var jc = storableJSON.AsObject;
                 storable.PreRestore();
                 storable.RestoreFromJSON(jc);
-                // RestoreFromJSON unlinks a controller; VaM only puts the link back ("linkTo") in LateRestoreFromJSON.
-                storable.LateRestoreFromJSON(jc, true, true, true);
-                storable.PostRestore();
+                restored.Add(new KeyValuePair<JSONStorable, JSONClass>(storable, jc));
+            }
+            // RestoreFromJSON unlinks a controller; VaM only puts the link back ("linkTo") in LateRestoreFromJSON. Like a scene
+            // load, link once every controller is back in place, so a link to another controller of this person keeps its offset.
+            foreach (var r in restored)
+                r.Key.LateRestoreFromJSON(r.Value, true, true, true);
+            foreach (var r in restored)
+            {
+                r.Key.PostRestore();
+                var controller = r.Key as FreeControllerV3;
                 if (controller != null) controller.startedPossess = false;
             }
             _poseJSON = null;
