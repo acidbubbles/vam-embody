@@ -23,6 +23,9 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     public KeyCode toggleKey { get; set; } = KeyCode.None;
 
     private bool headPossessedInVam => !ReferenceEquals(_headControl, null) && _headControl.possessed;
+#if(VAM_GT_1_20_77_0)
+    private bool _selectedBeforePossessMode;
+#endif
     private FreeControllerV3 _headControl;
     private bool _activatedByVam;
 
@@ -34,12 +37,16 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
     [SuppressMessage("ReSharper", "RedundantJumpStatement")]
     public void Update()
     {
+#if(VAM_GT_1_20_77_0)
+        // VaM clears the selection when it enters a possess mode, so remember whether this atom was selected just before.
+        if (!inVamPossessMode)
+            _selectedBeforePossessMode = SuperController.singleton.GetSelectedAtom() == context.containingAtom;
+#endif
+
         if (context.embody.activeJSON.val)
         {
 #if(VAM_GT_1_20_77_0)
-            if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
-                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
-                || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
+            if (inVamPossessMode)
             {
                 SuperController.singleton.SelectModeOff();
                 context.embody.Deactivate();
@@ -59,11 +66,10 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
 #if(VAM_GT_1_20_77_0)
             if (takeOverVamPossess.val)
             {
-                if (SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
-                    || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
-                    || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess)
+                if (inVamPossessMode)
                 {
-                    if (SuperController.singleton.GetSelectedAtom() == context.containingAtom)
+                    // The Take Over toggle is only offered on a Person.
+                    if (context.containingAtom.type == "Person" && (_selectedBeforePossessMode || SuperController.singleton.GetSelectedAtom() == context.containingAtom))
                     {
                         SuperController.singleton.SelectModeOff();
                         context.embody.ActivateManually();
@@ -92,6 +98,13 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
             return;
         }
     }
+
+#if(VAM_GT_1_20_77_0)
+    private static bool inVamPossessMode =>
+        SuperController.singleton.currentSelectMode == SuperController.SelectMode.Possess
+        || SuperController.singleton.currentSelectMode == SuperController.SelectMode.PossessAndAlign
+        || SuperController.singleton.currentSelectMode == SuperController.SelectMode.TwoStagePossess;
+#endif
 
     public override void StoreJSON(JSONClass jc, bool toProfile, bool toScene)
     {
