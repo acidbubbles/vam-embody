@@ -290,10 +290,11 @@ public class Embody : MVRScript, IEmbody
         activeJSON.valNoCallback = true;
         _activatedManually = activatedManually;
 
-        SuperController.singleton.ClearPossess();
-
-        if ((_context.trackers?.selectedJSON?.val ?? false) || (_context.passenger?.selectedJSON?.val ?? false))
+        if (_context.replacesVamPossession)
         {
+            // Embody possesses the person itself, so VaM's own possession has to end.
+            SuperController.singleton.ClearPossess();
+
             _restoreLeftHandEnabled = SuperController.singleton.commonHandModelControl.leftHandEnabled;
             SuperController.singleton.commonHandModelControl.leftHandEnabled = false;
             _restoreRightHandEnabled = SuperController.singleton.commonHandModelControl.rightHandEnabled;
