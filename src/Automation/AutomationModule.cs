@@ -47,7 +47,8 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
         if (context.embody.activeJSON.val)
         {
 #if(VAM_GT_1_20_77_0)
-            if (inVamPossessMode)
+            // Modes that work alongside VaM's possession (e.g. Legacy Possession) let VaM's possess mode carry on.
+            if (inVamPossessMode && context.replacesVamPossession)
             {
                 SuperController.singleton.SelectModeOff();
                 context.embody.Deactivate();
@@ -65,7 +66,9 @@ public class AutomationModule : EmbodyModuleBase, IAutomationModule
             }
 
 #if(VAM_GT_1_20_77_0)
-            if (takeOverVamPossess.val)
+            // Without Trackers or Passenger, Embody needs VaM's own possession, so let VaM's possess mode carry on.
+            // Embody then starts when VaM possesses the head (above).
+            if (takeOverVamPossess.val && context.replacesVamPossession)
             {
                 if (inVamPossessMode)
                 {

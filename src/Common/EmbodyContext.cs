@@ -20,6 +20,10 @@ public class EmbodyContext
     public IWizard wizard;
     public EmbodyScaleChangeReceiver scaleChangeReceiver;
 
+    // Trackers and Passenger replace VaM's own possession. Without them (e.g. Legacy Possession), Embody works alongside it.
+    // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
+    public bool replacesVamPossession => (trackers?.selectedJSON?.val ?? false) || (passenger?.selectedJSON?.val ?? false);
+
     // ReSharper disable once Unity.NoNullPropagation Unity.NoNullCoalescing
     public MotionAnimationMaster motionAnimationMaster => containingAtom.subSceneComponent?.motionAnimationMaster ?? SuperController.singleton.motionAnimationMaster;
 
